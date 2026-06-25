@@ -1,0 +1,53 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
+
+export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const application = await prisma.application.findUnique({
+    where: { id },
+    include: {
+      applicant: true,
+      caseHandler: true,
+      auditLogs: {
+        include: { user: { select: { id: true, name: true, role: true } } },
+        orderBy: { createdAt: 'asc' },
+      },
+      notes: {
+        include: { author: { select: { id: true, name: true, role: true } } },
+        orderBy: { createdAt: 'desc' },
+      },
+      documents: { orderBy: { uploadedAt: 'desc' } },
+    },
+  });
+
+  if (!application) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  return NextResponse.json(application);
+}
+
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const body = await req.json();
+
+  const application = await prisma.application.update({
+    where: { id },
+    data: {
+      ...(body.title !== undefined ? { title: body.title } : {}),
+      ...(body.projectDescription !== undefined ? { projectDescription: body.projectDescription } : {}),
+      ...(body.purposeCategory !== undefined ? { purposeCategory: body.purposeCategory } : {}),
+      ...(body.requestedDatasets !== undefined ? { requestedDatasets: body.requestedDatasets } : {}),
+      ...(body.requestedVariables !== undefined ? { requestedVariables: body.requestedVariables } : {}),
+      ...(body.studyPopulation !== undefined ? { studyPopulation: body.studyPopulation } : {}),
+      ...(body.inclusionCriteria !== undefined ? { inclusionCriteria: body.inclusionCriteria } : {}),
+      ...(body.exclusionCriteria !== undefined ? { exclusionCriteria: body.exclusionCriteria } : {}),
+      ...(body.legalBasis !== undefined ? { legalBasis: body.legalBasis } : {}),
+      ...(body.isCrossBorder !== undefined ? { isCrossBorder: body.isCrossBorder } : {}),
+      ...(body.caseHandlerId !== undefined ? { caseHandlerId: body.caseHandlerId } : {}),
+      ...(body.decisionSummary !== undefined ? { decisionSummary: body.decisionSummary } : {}),
+      ...(body.permitNumber !== undefined ? { permitNumber: body.permitNumber } : {}),
+      ...(body.permitValidFrom !== undefined ? { permitValidFrom: new Date(body.permitValidFrom) } : {}),
+      ...(body.permitValidUntil !== undefined ? { permitValidUntil: new Date(body.permitValidUntil) } : {}),
+    },
+  });
+
+  return NextResponse.json(application);
+}
