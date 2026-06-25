@@ -20,6 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <nav className="flex items-center gap-6 text-sm">
               <a href="/" className="text-gray-600 hover:text-gray-900">Dashboard</a>
               <a href="/applications" className="text-gray-600 hover:text-gray-900">Applications</a>
+              <a href="/import" className="text-gray-600 hover:text-gray-900">HD@EU import</a>
               <a href="/applications/new" className="rounded-lg bg-blue-600 px-3 py-1.5 text-white font-medium hover:bg-blue-700">+ New</a>
             </nav>
           </div>
@@ -28,7 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
         </main>
         <footer className="border-t border-gray-200 text-center text-xs text-gray-400 py-4">
-          HDAB-NL DAAMS &mdash; implementing TEHDAS2 national workflow &mdash; EHDS Regulation (EU) 2025/327
+          HDAB-NL DAAMS — implementing TEHDAS2 national workflow — EHDS Regulation (EU) 2025/327
         </footer>
       </body>
     </html>

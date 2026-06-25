@@ -38,6 +38,11 @@ enum UserRole {
   ADMIN
 }
 
+enum ApplicationSource {
+  NATIONAL    // Submitted directly through HDAB-NL DAAMS
+  HDEU        // Received via HealthData@EU NCP (cross-border)
+}
+
 model User {
   id           String   @id @default(cuid())
   name         String
@@ -57,6 +62,13 @@ model Application {
   referenceNumber String            @unique
   type            ApplicationType
   status          ApplicationStatus @default(DRAFT)
+  source          ApplicationSource @default(NATIONAL)
+
+  // For HD@EU cross-border applications
+  hdeuApplicationId   String?   // The originating DAAMS reference from the sending Member State
+  hdeuSendingCountry  String?   // ISO 3166-1 alpha-2 country code of the sending MS
+  hdeuReceivedAt      DateTime? // Timestamp when received via NCP
+  hdeuRawPayload      String?   @db.Text // Original JSON payload as received
 
   // Applicant info
   applicantId     String
@@ -69,8 +81,8 @@ model Application {
   // Application form fields (EHDS common data access application form)
   title                 String
   projectDescription    String            @db.Text
-  purposeCategory       String            // Art. 34 purpose code
-  requestedDatasets     String[]          // Dataset identifiers
+  purposeCategory       String
+  requestedDatasets     String[]
   requestedVariables    String            @db.Text
   studyPopulation       String            @db.Text
   inclusionCriteria     String            @db.Text
@@ -85,10 +97,10 @@ model Application {
 
   // Statutory deadlines (EHDS Reg. Art. 46)
   submittedAt           DateTime?
-  admissibilityDeadline DateTime?         // submitted + 2 months
-  decisionDeadline      DateTime?         // submitted + 2 months (extendable to 4)
+  admissibilityDeadline DateTime?
+  decisionDeadline      DateTime?
   deadlineExtended      Boolean           @default(false)
-  incompleteDeadline    DateTime?         // sent back + 4 weeks
+  incompleteDeadline    DateTime?
 
   // Decision
   decisionAt            DateTime?
