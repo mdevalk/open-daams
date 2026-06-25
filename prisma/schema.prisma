@@ -1,0 +1,141 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ApplicationType {
+  DATA_ACCESS_APPLICATION  // Full data permit – personal data in SPE
+  DATA_REQUEST             // Art. 69 – anonymised/aggregated results
+}
+
+enum ApplicationStatus {
+  DRAFT                  // Applicant composing the form
+  SUBMITTED              // Lodged with HDAB; statutory clock starts
+  ADMISSIBILITY_CHECK    // HDAB verifying completeness (pre-screening)
+  INCOMPLETE             // Returned to applicant; 4-week response window
+  UNDER_ASSESSMENT       // Substantive legal/technical assessment
+  INFO_REQUESTED         // HDAB asked for additional info during assessment
+  PERMIT_GRANTED         // Data permit issued (Art. 46)
+  PERMIT_REFUSED         // Application refused
+  REQUEST_APPROVED       // Data request approved (Art. 69)
+  REQUEST_REJECTED       // Data request rejected
+  DATA_PROVISIONING      // Data being prepared / transferred to SPE
+  ACTIVE                 // Access live – SPE access granted
+  COMPLETED              // Project closed; data access ended
+  WITHDRAWN              // Withdrawn by applicant or lapsed (no response)
+  INADMISSIBLE           // Rejected at admissibility check
+}
+
+enum UserRole {
+  APPLICANT
+  CASE_HANDLER
+  DECISION_MAKER
+  DATA_HOLDER
+  ADMIN
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  role         UserRole
+  organisation String
+  createdAt    DateTime @default(now())
+
+  applications    Application[]   @relation("Applicant")
+  handledCases    Application[]   @relation("CaseHandler")
+  auditLogs       AuditLog[]
+  notes           Note[]
+}
+
+model Application {
+  id              String            @id @default(cuid())
+  referenceNumber String            @unique
+  type            ApplicationType
+  status          ApplicationStatus @default(DRAFT)
+
+  // Applicant info
+  applicantId     String
+  applicant       User              @relation("Applicant", fields: [applicantId], references: [id])
+
+  // HDAB staff
+  caseHandlerId   String?
+  caseHandler     User?             @relation("CaseHandler", fields: [caseHandlerId], references: [id])
+
+  // Application form fields (EHDS common data access application form)
+  title                 String
+  projectDescription    String            @db.Text
+  purposeCategory       String            // Art. 34 purpose code
+  requestedDatasets     String[]          // Dataset identifiers
+  requestedVariables    String            @db.Text
+  studyPopulation       String            @db.Text
+  inclusionCriteria     String            @db.Text
+  exclusionCriteria     String            @db.Text
+  dataStartDate         DateTime?
+  dataEndDate           DateTime?
+  projectStartDate      DateTime?
+  projectEndDate        DateTime?
+  legalBasis            String
+  dataProcessingCountry String
+  isCrossBorder         Boolean           @default(false)
+
+  // Statutory deadlines (EHDS Reg. Art. 46)
+  submittedAt           DateTime?
+  admissibilityDeadline DateTime?         // submitted + 2 months
+  decisionDeadline      DateTime?         // submitted + 2 months (extendable to 4)
+  deadlineExtended      Boolean           @default(false)
+  incompleteDeadline    DateTime?         // sent back + 4 weeks
+
+  // Decision
+  decisionAt            DateTime?
+  decisionSummary       String?           @db.Text
+  permitNumber          String?           @unique
+  permitValidFrom       DateTime?
+  permitValidUntil      DateTime?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  auditLogs    AuditLog[]
+  notes        Note[]
+  documents    Document[]
+}
+
+model AuditLog {
+  id            String            @id @default(cuid())
+  applicationId String
+  application   Application       @relation(fields: [applicationId], references: [id])
+  userId        String
+  user          User              @relation(fields: [userId], references: [id])
+  fromStatus    ApplicationStatus?
+  toStatus      ApplicationStatus
+  action        String
+  comment       String?           @db.Text
+  createdAt     DateTime          @default(now())
+}
+
+model Note {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id])
+  authorId      String
+  author        User        @relation(fields: [authorId], references: [id])
+  content       String      @db.Text
+  isInternal    Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+}
+
+model Document {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id])
+  filename      String
+  mimeType      String
+  sizeBytes     Int
+  uploadedAt    DateTime    @default(now())
+  description   String?
+}
