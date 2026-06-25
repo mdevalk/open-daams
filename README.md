@@ -1,4 +1,64 @@
 # HDAB-NL DAAMS
 
-National Data Access Application Management System (DAAMS) for HDAB-NL,
-implementing the TEHDAS2 workflow for the European Health Data Space (EHDS).
+National **Data Access Application Management System** for HDAB-NL, implementing the TEHDAS2 national workflow for the European Health Data Space (EHDS) Regulation (EU) 2025/327.
+
+## Features
+
+- **Full TEHDAS2 DAAMS workflow** — 15-state machine covering the complete application lifecycle
+- **Two application types** — Data Permit (Art. 46) and Data Request (Art. 69, anonymised)
+- **Statutory deadlines** — EHDS 2-month decision deadline (Art. 46), extendable to 4 months; 4-week incomplete response window; visual overdue/warning indicators
+- **Role-based transitions** — APPLICANT, CASE_HANDLER, DECISION_MAKER, DATA_HOLDER, ADMIN
+- **Case dashboard** — KPIs, overdue alerts, status breakdown, recent activity
+- **Audit trail** — immutable log of every state transition with actor, timestamp, and comment
+- **Notes** — internal (staff-only) and external notes per application
+- **EHDS common form** — application form aligned with TEHDAS2 D6.2 fields
+
+## Workflow states
+
+```
+DRAFT → SUBMITTED → ADMISSIBILITY_CHECK → INCOMPLETE ↺
+                               ↓                     ↓ WITHDRAWN
+                         UNDER_ASSESSMENT → INFO_REQUESTED ↺
+                               ↓
+                    PERMIT_GRANTED / PERMIT_REFUSED
+                    REQUEST_APPROVED / REQUEST_REJECTED
+                    INADMISSIBLE
+                               ↓ (if granted/approved)
+                         DATA_PROVISIONING → ACTIVE → COMPLETED
+```
+
+## Tech stack
+
+- **Next.js 15** (App Router, server components)
+- **PostgreSQL** + **Prisma** ORM
+- **Tailwind CSS**
+- TypeScript
+
+## Getting started
+
+```bash
+# 1. Start the database
+docker compose up -d
+
+# 2. Install dependencies
+npm install
+
+# 3. Copy env file and configure
+cp .env.example .env
+
+# 4. Push schema and seed demo data
+npm run db:push
+npm run db:seed
+
+# 5. Start dev server
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+## References
+
+- [TEHDAS2 D6.4 — Technical Specifications for DAAMS](https://tehdas.eu/wp-content/uploads/2025/09/technical-specifications-for-data-access-application-management-system-daams-for-health-data-access-bodies-hdabs.pdf)
+- [TEHDAS2 D6.3 — Guideline for HDABs on procedures and formats](https://tehdas.eu/wp-content/uploads/2025/09/draft-guideline-for-health-data-access-bodies-on-the-procedures-and-formats-for-data-access.pdf)
+- [TEHDAS2 D6.2 — Guideline for data users](https://tehdas.eu/wp-content/uploads/2025/10/d6.2-guideline-for-data-users-on-good-application-and-access-practice.pdf)
+- EHDS Regulation (EU) 2025/327, Articles 34, 46, 69
