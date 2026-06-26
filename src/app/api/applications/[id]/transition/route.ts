@@ -34,19 +34,30 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   const now = new Date();
   const toStatus = body.toStatus as ApplicationStatus;
-
   const updates: Record<string, unknown> = { status: toStatus };
 
   if (toStatus === 'SUBMITTED') {
     updates.submittedAt = now;
     updates.decisionDeadline = calculateDecisionDeadline(now);
   }
+
   if (toStatus === 'AWAITING_ADDITIONAL_INFORMATION') {
+    // D6.4 §8: void the decision deadline while awaiting additional information
+    updates.decisionDeadline = null;
     updates.additionalInfoDeadline = calculateAdditionalInfoDeadline(now);
   }
+
+  if (toStatus === 'PRE_SCREENING' && application.status === 'AWAITING_ADDITIONAL_INFORMATION') {
+    // D6.4 §8: recalculate decision deadline from timestamp of additional info receipt
+    updates.additionalInfoDeadline = null;
+    updates.additionalInfoReceivedAt = now;
+    updates.decisionDeadline = calculateDecisionDeadline(now, application.deadlineExtended);
+  }
+
   if (toStatus === 'DECISION_ISSUED') {
     updates.decisionOutcome = body.decisionOutcome as DecisionOutcome;
     updates.decisionAt = now;
+    updates.decisionSummary = body.comment ?? null;
     updates.additionalInfoDeadline = null;
   }
 

@@ -8,26 +8,41 @@ datasource db {
 }
 
 enum ApplicationType {
-  DATA_ACCESS_APPLICATION  // Full data permit – personal data in SPE
-  DATA_REQUEST             // Art. 69 – anonymised/aggregated results
+  DATA_ACCESS_APPLICATION
+  DATA_REQUEST
 }
 
-// States per TEHDAS2 D6.4 Figure 1 (Data Access Application State Machine Diagram)
-// DRAFT is a pre-submission state not shown in the diagram but required by D6.4
+// TEHDAS2 D6.4 Section 7.6 / 7.7 — identical for both application types
 enum ApplicationStatus {
-  DRAFT                           // Applicant composing the form (pre-submission)
-  SUBMITTED                       // Lodged with HDAB; statutory clock starts
-  PRE_SCREENING                   // HDAB pre-screens the application for completeness
-  AWAITING_ADDITIONAL_INFORMATION // HDAB requested additional info during pre-screening
-  PROCESSING                      // HDAB substantively processes the application
-  DECISION_ISSUED                 // HDAB has taken a decision (see decisionOutcome)
-  WITHDRAWN                       // Withdrawn by applicant at any stage
+  DRAFT
+  SUBMITTED
+  PRE_SCREENING
+  AWAITING_ADDITIONAL_INFORMATION
+  PROCESSING
+  DECISION_ISSUED
+  WITHDRAWN
 }
 
-// Sub-state of DECISION_ISSUED per TEHDAS2 Figure 1
+// TEHDAS2 D6.4 Section 9 — sub-state of DECISION_ISSUED
 enum DecisionOutcome {
   POSITIVE
   NEGATIVE
+}
+
+// TEHDAS2 D6.4 Section 9.1 — optional step between positive decision and permit issuance
+enum PermitAcceptanceStatus {
+  PENDING    // Conditions sent to applicant, awaiting confirmation
+  ACCEPTED   // Applicant confirmed — proceed to issue permit
+  DECLINED   // Applicant declined — application treated as withdrawn
+}
+
+// TEHDAS2 D6.4 Section 9.2
+enum DataPermitStatus {
+  GRANTED
+  AMENDED
+  RENEWED
+  REVOKED
+  EXPIRED
 }
 
 enum UserRole {
@@ -39,8 +54,8 @@ enum UserRole {
 }
 
 enum ApplicationSource {
-  NATIONAL    // Submitted directly through HDAB-NL DAAMS
-  HDEU        // Received via HealthData@EU NCP (cross-border)
+  NATIONAL
+  HDEU
 }
 
 model User {
@@ -55,6 +70,7 @@ model User {
   handledCases    Application[]   @relation("CaseHandler")
   auditLogs       AuditLog[]
   notes           Note[]
+  permitActions   DataPermitLog[]
 }
 
 model Application {
@@ -64,53 +80,52 @@ model Application {
   status          ApplicationStatus @default(DRAFT)
   source          ApplicationSource @default(NATIONAL)
 
-  // Set when status = DECISION_ISSUED
-  decisionOutcome DecisionOutcome?
+  // Sub-state of DECISION_ISSUED (D6.4 §9)
+  decisionOutcome         DecisionOutcome?
+  decisionAt              DateTime?
+  decisionSummary         String?   @db.Text
 
-  // For HD@EU cross-border applications
+  // Optional permit-pending-acceptance step (D6.4 §9.1, SHOULD)
+  permitAcceptanceStatus  PermitAcceptanceStatus?
+  permitConditionsSentAt  DateTime?
+  permitAcceptedAt        DateTime?
+
+  // HD@EU cross-border fields
   hdeuApplicationId   String?
   hdeuSendingCountry  String?
   hdeuReceivedAt      DateTime?
   hdeuRawPayload      String?   @db.Text
 
-  // Applicant info
   applicantId     String
   applicant       User              @relation("Applicant", fields: [applicantId], references: [id])
 
-  // HDAB staff
   caseHandlerId   String?
   caseHandler     User?             @relation("CaseHandler", fields: [caseHandlerId], references: [id])
 
-  // Application form fields (EHDS common data access application form)
+  // EHDS common data access application form fields
   title                 String
-  projectDescription    String            @db.Text
+  projectDescription    String    @db.Text
   purposeCategory       String
   requestedDatasets     String[]
-  requestedVariables    String            @db.Text
-  studyPopulation       String            @db.Text
-  inclusionCriteria     String            @db.Text
-  exclusionCriteria     String            @db.Text
+  requestedVariables    String    @db.Text
+  studyPopulation       String    @db.Text
+  inclusionCriteria     String    @db.Text
+  exclusionCriteria     String    @db.Text
   dataStartDate         DateTime?
   dataEndDate           DateTime?
   projectStartDate      DateTime?
   projectEndDate        DateTime?
   legalBasis            String
   dataProcessingCountry String
-  isCrossBorder         Boolean           @default(false)
+  isCrossBorder         Boolean   @default(false)
 
-  // Statutory deadlines (EHDS Reg. Art. 46)
-  submittedAt           DateTime?
-  decisionDeadline      DateTime?         // submitted + 2 months (extendable to 4)
-  deadlineExtended      Boolean           @default(false)
-  // Deadline for applicant to respond to AWAITING_ADDITIONAL_INFORMATION
-  additionalInfoDeadline DateTime?
-
-  // Decision
-  decisionAt            DateTime?
-  decisionSummary       String?           @db.Text
-  permitNumber          String?           @unique
-  permitValidFrom       DateTime?
-  permitValidUntil      DateTime?
+  // Statutory deadlines
+  // D6.4 §8: voided when AWAITING_ADDITIONAL_INFORMATION, recalculated on return to PROCESSING
+  submittedAt            DateTime?
+  decisionDeadline       DateTime?
+  deadlineExtended       Boolean   @default(false)
+  additionalInfoDeadline DateTime? // Applicant response window
+  additionalInfoReceivedAt DateTime? // Recalculation anchor (D6.4 §8)
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -118,6 +133,44 @@ model Application {
   auditLogs    AuditLog[]
   notes        Note[]
   documents    Document[]
+  dataPermit   DataPermit?
+}
+
+// TEHDAS2 D6.4 Section 9.2 — permit lifecycle, separate from application
+model DataPermit {
+  id              String           @id @default(cuid())
+  permitNumber    String           @unique  // e.g. DP-NL-2025-0001
+  applicationId   String           @unique
+  application     Application      @relation(fields: [applicationId], references: [id])
+  status          DataPermitStatus @default(GRANTED)
+
+  validFrom       DateTime
+  validUntil      DateTime
+
+  // Populated when AMENDED or RENEWED — new permit ID issued (D6.4 §9.2)
+  previousPermitId String?
+
+  revocationReason String?  @db.Text
+  revocationAt     DateTime?
+
+  issuedAt   DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  logs       DataPermitLog[]
+}
+
+// Immutable audit log for the permit lifecycle
+model DataPermitLog {
+  id          String           @id @default(cuid())
+  permitId    String
+  permit      DataPermit       @relation(fields: [permitId], references: [id])
+  userId      String
+  user        User             @relation(fields: [userId], references: [id])
+  fromStatus  DataPermitStatus?
+  toStatus    DataPermitStatus
+  action      String
+  comment     String?          @db.Text
+  createdAt   DateTime         @default(now())
 }
 
 model AuditLog {

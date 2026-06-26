@@ -9,15 +9,20 @@ export type Transition = {
 };
 
 /**
- * TEHDAS2 D6.4 Figure 1 — Data Access Application State Machine Diagram.
+ * TEHDAS2 D6.4 Figures 1 & 2 — state machine for both Data Access Applications
+ * and Data Requests (diagrams are identical).
  *
- * States: SUBMITTED → PRE_SCREENING ⇆ AWAITING_ADDITIONAL_INFORMATION
- *         PRE_SCREENING → PROCESSING → DECISION_ISSUED (POSITIVE | NEGATIVE)
- *         Any → WITHDRAWN
- *         AWAITING_ADDITIONAL_INFORMATION → DECISION_ISSUED (no response)
+ * Application states: SUBMITTED → PRE_SCREENING ⇆ AWAITING_ADDITIONAL_INFORMATION
+ *                     PRE_SCREENING → PROCESSING → DECISION_ISSUED (POSITIVE|NEGATIVE)
+ *                     AWAITING_ADDITIONAL_INFORMATION → DECISION_ISSUED (no response)
+ *                     Any active state → WITHDRAWN
  *
- * DRAFT is a pre-submission state required by D6.4 (applicant workspace)
- * but not shown in the state machine diagram itself.
+ * DRAFT is a pre-submission state required by D6.4 §6 (applicant workspace) but
+ * not shown in the state machine diagrams.
+ *
+ * After a positive DECISION_ISSUED a DataPermit is created with its own lifecycle
+ * (D6.4 §9.2): GRANTED → AMENDED | RENEWED | REVOKED | EXPIRED.
+ * That lifecycle is managed separately via /api/permits/[id]/.
  */
 export const TRANSITIONS: Record<ApplicationStatus, Transition[]> = {
   DRAFT: [
@@ -29,9 +34,9 @@ export const TRANSITIONS: Record<ApplicationStatus, Transition[]> = {
     },
     {
       to: 'WITHDRAWN',
-      label: 'Withdraw',
+      label: 'Withdraw draft',
       requiredRole: ['APPLICANT'],
-      description: 'Withdraw this draft without submitting.',
+      description: 'Discard this draft without submitting.',
     },
   ],
 
@@ -40,7 +45,7 @@ export const TRANSITIONS: Record<ApplicationStatus, Transition[]> = {
       to: 'PRE_SCREENING',
       label: 'Start pre-screening',
       requiredRole: ['CASE_HANDLER', 'ADMIN'],
-      description: 'Begin the pre-screening completeness check (TEHDAS2 Fig. 1).',
+      description: 'Begin the pre-screening completeness check (TEHDAS2 D6.4 Fig. 1/2).',
     },
     {
       to: 'WITHDRAWN',
@@ -55,13 +60,14 @@ export const TRANSITIONS: Record<ApplicationStatus, Transition[]> = {
       to: 'AWAITING_ADDITIONAL_INFORMATION',
       label: 'Request additional information',
       requiredRole: ['CASE_HANDLER', 'ADMIN'],
-      description: 'HDAB requests additional information on the data access application (TEHDAS2 Fig. 1).',
+      // D6.4 §8: decision deadline is voided when this transition is taken
+      description: 'HDAB requests additional information. Decision clock is paused (D6.4 §8).',
     },
     {
       to: 'PROCESSING',
       label: 'Complete pre-screening — proceed to processing',
       requiredRole: ['CASE_HANDLER', 'ADMIN'],
-      description: 'HDAB completes pre-screening of the data access application (TEHDAS2 Fig. 1).',
+      description: 'HDAB completes pre-screening; application proceeds to substantive processing (D6.4 Fig. 1/2).',
     },
     {
       to: 'WITHDRAWN',
@@ -76,13 +82,14 @@ export const TRANSITIONS: Record<ApplicationStatus, Transition[]> = {
       to: 'PRE_SCREENING',
       label: 'Additional information received — resume pre-screening',
       requiredRole: ['CASE_HANDLER', 'ADMIN'],
-      description: 'Applicant submits additional information; pre-screening resumes (TEHDAS2 Fig. 1).',
+      // D6.4 §8: deadline recalculated from timestamp of additional info receipt
+      description: 'Applicant submitted additional information; pre-screening resumes. Decision clock recalculated (D6.4 §8).',
     },
     {
       to: 'DECISION_ISSUED',
       label: 'Issue negative decision — no response received',
       requiredRole: ['DECISION_MAKER', 'ADMIN'],
-      description: 'Applicant did not submit additional information; HDAB issues a negative decision (TEHDAS2 Fig. 1).',
+      description: 'Applicant did not submit additional information within the deadline (D6.4 Fig. 1/2).',
       requiresDecisionOutcome: 'NEGATIVE',
     },
     {
@@ -98,14 +105,14 @@ export const TRANSITIONS: Record<ApplicationStatus, Transition[]> = {
       to: 'DECISION_ISSUED',
       label: 'Issue positive decision',
       requiredRole: ['DECISION_MAKER', 'ADMIN'],
-      description: 'HDAB takes a positive decision on the data access application (TEHDAS2 Fig. 1).',
+      description: 'HDAB takes a positive decision on the application (D6.4 Fig. 1/2).',
       requiresDecisionOutcome: 'POSITIVE',
     },
     {
       to: 'DECISION_ISSUED',
       label: 'Issue negative decision',
       requiredRole: ['DECISION_MAKER', 'ADMIN'],
-      description: 'HDAB takes a negative decision on the data access application (TEHDAS2 Fig. 1).',
+      description: 'HDAB takes a negative decision on the application (D6.4 Fig. 1/2).',
       requiresDecisionOutcome: 'NEGATIVE',
     },
     {
@@ -116,7 +123,8 @@ export const TRANSITIONS: Record<ApplicationStatus, Transition[]> = {
     },
   ],
 
-  // Terminal states — no further transitions
+  // Terminal — no further application transitions.
+  // A positive DECISION_ISSUED creates a DataPermit with its own lifecycle.
   DECISION_ISSUED: [],
   WITHDRAWN:       [],
 };
@@ -153,21 +161,21 @@ export function isTerminal(status: ApplicationStatus): boolean {
   return status === 'DECISION_ISSUED' || status === 'WITHDRAWN';
 }
 
-export function calculateDecisionDeadline(submittedAt: Date, extended = false): Date {
-  const d = new Date(submittedAt);
+export function calculateDecisionDeadline(from: Date, extended = false): Date {
+  const d = new Date(from);
   d.setMonth(d.getMonth() + (extended ? 4 : 2));
   return d;
 }
 
 export function calculateAdditionalInfoDeadline(requestedAt: Date): Date {
   const d = new Date(requestedAt);
-  d.setDate(d.getDate() + 28);
+  d.setDate(d.getDate() + 28); // ~1 month per D6.4 §6
   return d;
 }
 
-export function deadlineStatus(deadline: Date | null): 'ok' | 'warning' | 'overdue' | null {
+export function deadlineStatus(deadline: Date | null | undefined): 'ok' | 'warning' | 'overdue' | null {
   if (!deadline) return null;
-  const days = (deadline.getTime() - Date.now()) / 86_400_000;
+  const days = (new Date(deadline).getTime() - Date.now()) / 86_400_000;
   if (days < 0) return 'overdue';
   if (days < 14) return 'warning';
   return 'ok';
