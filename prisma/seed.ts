@@ -1,66 +1,43 @@
-import { PrismaClient, UserRole, ApplicationType, ApplicationStatus } from '@prisma/client';
-import { addMonths, addWeeks, subDays } from 'date-fns';
+import { PrismaClient, UserRole, ApplicationType, ApplicationStatus, DecisionOutcome } from '@prisma/client';
+import { addMonths, subDays, subWeeks } from 'date-fns';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  // Seed users
   const applicant1 = await prisma.user.upsert({
     where: { email: 'researcher@umcu.nl' },
     update: {},
-    create: {
-      name: 'Dr. A. de Vries',
-      email: 'researcher@umcu.nl',
-      role: UserRole.APPLICANT,
-      organisation: 'UMC Utrecht',
-    },
+    create: { name: 'Dr. A. de Vries', email: 'researcher@umcu.nl', role: UserRole.APPLICANT, organisation: 'UMC Utrecht' },
   });
-
   const applicant2 = await prisma.user.upsert({
     where: { email: 'analyst@rivm.nl' },
     update: {},
-    create: {
-      name: 'M. Jansen',
-      email: 'analyst@rivm.nl',
-      role: UserRole.APPLICANT,
-      organisation: 'RIVM',
-    },
+    create: { name: 'M. Jansen', email: 'analyst@rivm.nl', role: UserRole.APPLICANT, organisation: 'RIVM' },
   });
-
   const handler = await prisma.user.upsert({
     where: { email: 'casehandler@hdab.nl' },
     update: {},
-    create: {
-      name: 'S. Bakker',
-      email: 'casehandler@hdab.nl',
-      role: UserRole.CASE_HANDLER,
-      organisation: 'HDAB-NL',
-    },
+    create: { name: 'S. Bakker', email: 'casehandler@hdab.nl', role: UserRole.CASE_HANDLER, organisation: 'HDAB-NL' },
   });
-
   const decisionMaker = await prisma.user.upsert({
     where: { email: 'director@hdab.nl' },
     update: {},
-    create: {
-      name: 'P. van den Berg',
-      email: 'director@hdab.nl',
-      role: UserRole.DECISION_MAKER,
-      organisation: 'HDAB-NL',
-    },
+    create: { name: 'P. van den Berg', email: 'director@hdab.nl', role: UserRole.DECISION_MAKER, organisation: 'HDAB-NL' },
   });
 
-  // Seed applications
+  // App 1: in PROCESSING
+  const submittedAt1 = subDays(new Date(), 35);
   const app1 = await prisma.application.upsert({
     where: { referenceNumber: 'HDAB-2025-0001' },
     update: {},
     create: {
       referenceNumber: 'HDAB-2025-0001',
       type: ApplicationType.DATA_ACCESS_APPLICATION,
-      status: ApplicationStatus.UNDER_ASSESSMENT,
+      status: ApplicationStatus.PROCESSING,
       applicantId: applicant1.id,
       caseHandlerId: handler.id,
       title: 'Cardiovascular risk factors in Dutch primary care 2015-2024',
-      projectDescription: 'Retrospective cohort study analysing the long-term trends in cardiovascular risk factor prevalence using routine primary care data.',
+      projectDescription: 'Retrospective cohort study analysing long-term trends in cardiovascular risk factor prevalence using routine primary care data.',
       purposeCategory: 'SCIENTIFIC_RESEARCH',
       requestedDatasets: ['GP_ELECTRONIC_RECORDS', 'MEDICATION_DISPENSING'],
       requestedVariables: 'Age, sex, BMI, blood pressure, HbA1c, lipid panel, medication records (ATC codes C01-C10)',
@@ -73,19 +50,20 @@ async function main() {
       projectEndDate: new Date('2027-02-28'),
       legalBasis: 'EHDS Art. 34(1)(a) – scientific research',
       dataProcessingCountry: 'NL',
-      isCrossBorder: false,
-      submittedAt: subDays(new Date(), 35),
-      decisionDeadline: addMonths(subDays(new Date(), 35), 2),
+      submittedAt: submittedAt1,
+      decisionDeadline: addMonths(submittedAt1, 2),
     },
   });
 
+  // App 2: AWAITING_ADDITIONAL_INFORMATION
+  const submittedAt2 = subDays(new Date(), 20);
   const app2 = await prisma.application.upsert({
     where: { referenceNumber: 'HDAB-2025-0002' },
     update: {},
     create: {
       referenceNumber: 'HDAB-2025-0002',
       type: ApplicationType.DATA_REQUEST,
-      status: ApplicationStatus.INCOMPLETE,
+      status: ApplicationStatus.AWAITING_ADDITIONAL_INFORMATION,
       applicantId: applicant2.id,
       caseHandlerId: handler.id,
       title: 'COVID-19 vaccination coverage by municipality 2021-2023',
@@ -102,14 +80,14 @@ async function main() {
       projectEndDate: new Date('2025-12-31'),
       legalBasis: 'EHDS Art. 69 – statistical data request',
       dataProcessingCountry: 'NL',
-      isCrossBorder: false,
-      submittedAt: subDays(new Date(), 20),
-      incompleteDeadline: addWeeks(subDays(new Date(), 5), 4),
-      decisionDeadline: addMonths(subDays(new Date(), 20), 2),
+      submittedAt: submittedAt2,
+      decisionDeadline: addMonths(submittedAt2, 2),
+      additionalInfoDeadline: addMonths(subWeeks(new Date(), 1), 0),
     },
   });
 
-  const app3 = await prisma.application.upsert({
+  // App 3: DRAFT
+  await prisma.application.upsert({
     where: { referenceNumber: 'HDAB-2025-0003' },
     update: {},
     create: {
@@ -131,74 +109,46 @@ async function main() {
       projectEndDate: new Date('2027-05-31'),
       legalBasis: 'EHDS Art. 34(1)(a) – scientific research',
       dataProcessingCountry: 'NL',
-      isCrossBorder: false,
     },
   });
 
-  // Audit logs
-  await prisma.auditLog.createMany({
-    data: [
-      {
+  // Audit logs for app1
+  for (const entry of [
+    { from: null, to: ApplicationStatus.DRAFT, action: 'Application created', userId: applicant1.id },
+    { from: ApplicationStatus.DRAFT, to: ApplicationStatus.SUBMITTED, action: 'Application submitted', userId: applicant1.id },
+    { from: ApplicationStatus.SUBMITTED, to: ApplicationStatus.PRE_SCREENING, action: 'Start pre-screening', userId: handler.id },
+    { from: ApplicationStatus.PRE_SCREENING, to: ApplicationStatus.PROCESSING, action: 'Complete pre-screening — proceed to processing', userId: handler.id, comment: 'All mandatory fields complete and consistent.' },
+  ]) {
+    await prisma.auditLog.create({
+      data: {
         applicationId: app1.id,
-        userId: applicant1.id,
-        fromStatus: null,
-        toStatus: ApplicationStatus.DRAFT,
-        action: 'Application created',
+        userId: entry.userId,
+        fromStatus: entry.from ?? undefined,
+        toStatus: entry.to,
+        action: entry.action,
+        comment: (entry as { comment?: string }).comment,
       },
-      {
-        applicationId: app1.id,
-        userId: applicant1.id,
-        fromStatus: ApplicationStatus.DRAFT,
-        toStatus: ApplicationStatus.SUBMITTED,
-        action: 'Application submitted',
-      },
-      {
-        applicationId: app1.id,
-        userId: handler.id,
-        fromStatus: ApplicationStatus.SUBMITTED,
-        toStatus: ApplicationStatus.ADMISSIBILITY_CHECK,
-        action: 'Admissibility check started',
-      },
-      {
-        applicationId: app1.id,
-        userId: handler.id,
-        fromStatus: ApplicationStatus.ADMISSIBILITY_CHECK,
-        toStatus: ApplicationStatus.UNDER_ASSESSMENT,
-        action: 'Application declared admissible',
-        comment: 'All required fields complete. Proceeding to substantive assessment.',
-      },
-      {
+    });
+  }
+
+  // Audit logs for app2
+  for (const entry of [
+    { from: null, to: ApplicationStatus.DRAFT, action: 'Application created', userId: applicant2.id },
+    { from: ApplicationStatus.DRAFT, to: ApplicationStatus.SUBMITTED, action: 'Application submitted', userId: applicant2.id },
+    { from: ApplicationStatus.SUBMITTED, to: ApplicationStatus.PRE_SCREENING, action: 'Start pre-screening', userId: handler.id },
+    { from: ApplicationStatus.PRE_SCREENING, to: ApplicationStatus.AWAITING_ADDITIONAL_INFORMATION, action: 'Request additional information', userId: handler.id, comment: 'Missing: exact CBS socioeconomic variable codes and aggregation method.' },
+  ]) {
+    await prisma.auditLog.create({
+      data: {
         applicationId: app2.id,
-        userId: applicant2.id,
-        fromStatus: null,
-        toStatus: ApplicationStatus.DRAFT,
-        action: 'Application created',
+        userId: entry.userId,
+        fromStatus: entry.from ?? undefined,
+        toStatus: entry.to,
+        action: entry.action,
+        comment: (entry as { comment?: string }).comment,
       },
-      {
-        applicationId: app2.id,
-        userId: applicant2.id,
-        fromStatus: ApplicationStatus.DRAFT,
-        toStatus: ApplicationStatus.SUBMITTED,
-        action: 'Application submitted',
-      },
-      {
-        applicationId: app2.id,
-        userId: handler.id,
-        fromStatus: ApplicationStatus.SUBMITTED,
-        toStatus: ApplicationStatus.ADMISSIBILITY_CHECK,
-        action: 'Admissibility check started',
-      },
-      {
-        applicationId: app2.id,
-        userId: handler.id,
-        fromStatus: ApplicationStatus.ADMISSIBILITY_CHECK,
-        toStatus: ApplicationStatus.INCOMPLETE,
-        action: 'Application returned as incomplete',
-        comment: 'Missing: specification of CBS socioeconomic quintile variable. Please provide the exact variable codes and any aggregation method.',
-      },
-    ],
-    skipDuplicates: true,
-  });
+    });
+  }
 
   console.log('Seed complete.');
 }

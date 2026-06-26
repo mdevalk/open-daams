@@ -30,7 +30,7 @@ export function ApplicationCard({ application: app }: Props) {
             </div>
             <h3 className="mt-0.5 font-semibold text-gray-900 line-clamp-2">{app.title}</h3>
           </div>
-          <StatusBadge status={app.status} />
+          <StatusBadge status={app.status} decisionOutcome={app.decisionOutcome} />
         </div>
         <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
           <span>{app.type === 'DATA_ACCESS_APPLICATION' ? 'Data Permit' : 'Data Request (Art. 69)'}</span>

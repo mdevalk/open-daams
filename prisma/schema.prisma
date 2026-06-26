@@ -12,22 +12,22 @@ enum ApplicationType {
   DATA_REQUEST             // Art. 69 – anonymised/aggregated results
 }
 
+// States per TEHDAS2 D6.4 Figure 1 (Data Access Application State Machine Diagram)
+// DRAFT is a pre-submission state not shown in the diagram but required by D6.4
 enum ApplicationStatus {
-  DRAFT                  // Applicant composing the form
-  SUBMITTED              // Lodged with HDAB; statutory clock starts
-  ADMISSIBILITY_CHECK    // HDAB verifying completeness (pre-screening)
-  INCOMPLETE             // Returned to applicant; 4-week response window
-  UNDER_ASSESSMENT       // Substantive legal/technical assessment
-  INFO_REQUESTED         // HDAB asked for additional info during assessment
-  PERMIT_GRANTED         // Data permit issued (Art. 46)
-  PERMIT_REFUSED         // Application refused
-  REQUEST_APPROVED       // Data request approved (Art. 69)
-  REQUEST_REJECTED       // Data request rejected
-  DATA_PROVISIONING      // Data being prepared / transferred to SPE
-  ACTIVE                 // Access live – SPE access granted
-  COMPLETED              // Project closed; data access ended
-  WITHDRAWN              // Withdrawn by applicant or lapsed (no response)
-  INADMISSIBLE           // Rejected at admissibility check
+  DRAFT                           // Applicant composing the form (pre-submission)
+  SUBMITTED                       // Lodged with HDAB; statutory clock starts
+  PRE_SCREENING                   // HDAB pre-screens the application for completeness
+  AWAITING_ADDITIONAL_INFORMATION // HDAB requested additional info during pre-screening
+  PROCESSING                      // HDAB substantively processes the application
+  DECISION_ISSUED                 // HDAB has taken a decision (see decisionOutcome)
+  WITHDRAWN                       // Withdrawn by applicant at any stage
+}
+
+// Sub-state of DECISION_ISSUED per TEHDAS2 Figure 1
+enum DecisionOutcome {
+  POSITIVE
+  NEGATIVE
 }
 
 enum UserRole {
@@ -64,11 +64,14 @@ model Application {
   status          ApplicationStatus @default(DRAFT)
   source          ApplicationSource @default(NATIONAL)
 
+  // Set when status = DECISION_ISSUED
+  decisionOutcome DecisionOutcome?
+
   // For HD@EU cross-border applications
-  hdeuApplicationId   String?   // The originating DAAMS reference from the sending Member State
-  hdeuSendingCountry  String?   // ISO 3166-1 alpha-2 country code of the sending MS
-  hdeuReceivedAt      DateTime? // Timestamp when received via NCP
-  hdeuRawPayload      String?   @db.Text // Original JSON payload as received
+  hdeuApplicationId   String?
+  hdeuSendingCountry  String?
+  hdeuReceivedAt      DateTime?
+  hdeuRawPayload      String?   @db.Text
 
   // Applicant info
   applicantId     String
@@ -97,10 +100,10 @@ model Application {
 
   // Statutory deadlines (EHDS Reg. Art. 46)
   submittedAt           DateTime?
-  admissibilityDeadline DateTime?
-  decisionDeadline      DateTime?
+  decisionDeadline      DateTime?         // submitted + 2 months (extendable to 4)
   deadlineExtended      Boolean           @default(false)
-  incompleteDeadline    DateTime?
+  // Deadline for applicant to respond to AWAITING_ADDITIONAL_INFORMATION
+  additionalInfoDeadline DateTime?
 
   // Decision
   decisionAt            DateTime?
@@ -118,16 +121,16 @@ model Application {
 }
 
 model AuditLog {
-  id            String            @id @default(cuid())
+  id            String             @id @default(cuid())
   applicationId String
-  application   Application       @relation(fields: [applicationId], references: [id])
+  application   Application        @relation(fields: [applicationId], references: [id])
   userId        String
-  user          User              @relation(fields: [userId], references: [id])
+  user          User               @relation(fields: [userId], references: [id])
   fromStatus    ApplicationStatus?
   toStatus      ApplicationStatus
   action        String
-  comment       String?           @db.Text
-  createdAt     DateTime          @default(now())
+  comment       String?            @db.Text
+  createdAt     DateTime           @default(now())
 }
 
 model Note {
