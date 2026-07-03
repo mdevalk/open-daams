@@ -1,8 +1,7 @@
-import { deadlineStatus, daysUntil } from '@/lib/workflow';
+import { deadlineStatus } from '@/lib/workflow';
 import { formatDate } from '@/lib/utils';
-import { cn } from '@/lib/utils';
 
-function daysUntilLocal(date: Date | null): number | null {
+function daysUntil(date: Date | null): number | null {
   if (!date) return null;
   return Math.ceil((new Date(date).getTime() - Date.now()) / 86_400_000);
 }
@@ -15,33 +14,32 @@ export function DeadlineBanner({
   deadline: Date | null | undefined;
 }) {
   if (!deadline) return null;
-  const status = deadlineStatus(deadline);
-  const days = daysUntilLocal(deadline);
+  const s = deadlineStatus(deadline);
+  const days = daysUntil(deadline);
+  if (!s) return null;
 
-  const styles = {
-    ok:      'bg-blue-50 border-blue-200 text-blue-800',
-    warning: 'bg-amber-50 border-amber-300 text-amber-800',
-    overdue: 'bg-red-50 border-red-300 text-red-800',
-  };
+  const cls = {
+    ok:      'deadline-ok',
+    warning: 'deadline-warning',
+    overdue: 'deadline-overdue',
+  }[s];
 
-  const icons = {
-    ok:      '⏰',
-    warning: '⚠️',
-    overdue: '🔴',
-  };
+  const icon = { ok: '⏰', warning: '⚠️', overdue: '🔴' }[s];
 
   return (
-    <div className={cn('rounded-lg border px-4 py-3 text-sm flex items-center gap-2', styles[status!])}>
-      <span>{icons[status!]}</span>
-      <span>
-        <span className="font-semibold">{label}:</span>{' '}
-        {formatDate(deadline)}
+    <div className={`rounded px-4 py-3 text-sm flex items-start gap-3 ${cls}`} role="status">
+      <span aria-hidden="true" className="mt-0.5">{icon}</span>
+      <div>
+        <span className="font-semibold">{label}</span>
+        <span className="ml-2">{formatDate(deadline)}</span>
         {days !== null && (
-          <span className="ml-2">
-            ({days < 0 ? `${Math.abs(days)} days overdue` : `${days} days remaining`})
+          <span className="ml-2 text-xs">
+            ({days < 0
+              ? `${Math.abs(days)} dag${Math.abs(days) !== 1 ? 'en' : ''} verlopen`
+              : `${days} dag${days !== 1 ? 'en' : ''} resterend`})
           </span>
         )}
-      </span>
+      </div>
     </div>
   );
 }

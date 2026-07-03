@@ -32,42 +32,45 @@ export function TransitionPanel({ application, currentUser }: Props) {
           decisionOutcome: selected.requiresDecisionOutcome ?? null,
         }),
       });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error ?? 'Transition failed');
-      }
+      if (!res.ok) throw new Error((await res.json()).error ?? 'Transition mislukt');
       setSelected(null);
       setComment('');
       router.refresh();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Unexpected error');
+      setError(e instanceof Error ? e.message : 'Onbekende fout');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5">
-      <h2 className="font-semibold text-gray-900 mb-3">Available actions</h2>
+    <div className="rounded border border-gray-200 bg-white p-5">
+      <h2 className="font-semibold text-gray-900 mb-3">Beschikbare acties</h2>
       <div className="space-y-2">
         {transitions.map((t, i) => {
-          const isSelected = selected?.to === t.to && selected?.requiresDecisionOutcome === t.requiresDecisionOutcome;
-          const outcomeColor =
-            t.requiresDecisionOutcome === 'POSITIVE'
-              ? 'border-emerald-400 bg-emerald-50 text-emerald-900'
+          const isSelected =
+            selected?.to === t.to &&
+            selected?.requiresDecisionOutcome === t.requiresDecisionOutcome;
+
+          const positiveStyle = 'border-[#39870c] bg-[#e6f5ea] text-[#1a5c2e]';
+          const negativeStyle = 'border-[#d52b1e] bg-[#fce8e6] text-[#7a1711]';
+          const defaultStyle  = 'border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-800';
+          const selectedStyle = 'border-[#01689b] bg-[#e8f4fb] text-[#154273]';
+
+          const baseStyle =
+            isSelected
+              ? selectedStyle
+              : t.requiresDecisionOutcome === 'POSITIVE'
+              ? positiveStyle
               : t.requiresDecisionOutcome === 'NEGATIVE'
-              ? 'border-red-300 bg-red-50 text-red-900'\n              : '';
+              ? negativeStyle
+              : defaultStyle;
+
           return (
             <button
               key={`${t.to}-${i}`}
               onClick={() => setSelected(isSelected ? null : t)}
-              className={`w-full text-left rounded-lg border px-4 py-3 text-sm transition-colors ${
-                isSelected
-                  ? 'border-blue-500 bg-blue-50 text-blue-900'
-                  : t.requiresDecisionOutcome
-                  ? outcomeColor
-                  : 'border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-800'
-              }`}
+              className={`w-full text-left rounded border px-4 py-3 text-sm transition-colors ${baseStyle}`}
             >
               <p className="font-medium">{t.label}</p>
               <p className="text-xs opacity-70 mt-0.5">{t.description}</p>
@@ -78,21 +81,27 @@ export function TransitionPanel({ application, currentUser }: Props) {
 
       {selected && (
         <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Comment</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Toelichting
+            {selected.requiresDecisionOutcome === 'NEGATIVE' &&
+              <span className="text-[#d52b1e] ml-1">(verplicht bij negatief besluit)</span>}
+          </label>
           <textarea
             rows={3}
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            placeholder="Add a reason or note..."
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Voeg een motivering of opmerking toe..."
+            className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
           />
-          {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+          {error && (
+            <p role="alert" className="mt-1 text-xs text-[#d52b1e]">{error}</p>
+          )}
           <button
             disabled={loading}
             onClick={submit}
-            className="mt-2 w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="mt-2 w-full rounded px-4 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors"
           >
-            {loading ? 'Processing...' : `Confirm: ${selected.label}`}
+            {loading ? 'Bezig...' : `Bevestig: ${selected.label}`}
           </button>
         </div>
       )}

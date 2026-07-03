@@ -1,9 +1,63 @@
+/* NL Design System — Rijkshuisstijl Community design tokens */
+@import "@rijkshuisstijl-community/design-tokens/dist/index.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  body {
-    @apply bg-gray-50 text-gray-900;
-  }
+/*
+  Page chrome — wraps the government page structure.
+  We apply the rvo-theme class on <body> (set in layout.tsx) which activates
+  all Rijkshuisstijl CSS custom properties.
+*/
+
+/* Ensure the font stack picks up the NL Design System tokens */
+body {
+  font-family: var(
+    --rvo-typography-sans-serif-font-family,
+    var(--utrecht-document-font-family, 'RO Sans', 'Rijksoverheid Sans Web', Arial, sans-serif)
+  );
+  background: var(--rvo-color-background, #f5f5f5);
+  color: var(--rvo-color-text, #000000);
 }
+
+/* Government page layout */
+.hdab-page-header {
+  background: var(--rvo-color-primary-dark, #154273);
+  color: #ffffff;
+  border-bottom: 4px solid var(--rvo-color-secondary, #d52b1e);
+}
+
+.hdab-page-header a {
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.hdab-page-header a:hover {
+  text-decoration: underline;
+}
+
+.hdab-breadcrumb {
+  font-size: 0.875rem;
+  color: var(--rvo-color-text-subtle, #595959);
+}
+
+.hdab-breadcrumb a {
+  color: var(--rvo-color-link, #01689b);
+}
+
+/* Status badge overrides using NL Design System color roles */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--rvo-border-radius-md, 4px);
+  padding: 2px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Deadline banner */
+.deadline-ok      { background: #e8f4fb; border-left: 4px solid #01689b; color: #154273; }
+.deadline-warning { background: #fff3cd; border-left: 4px solid #f0a500; color: #6b4c00; }
+.deadline-overdue { background: #fce8e6; border-left: 4px solid #d52b1e; color: #7a1711; }
