@@ -28,98 +28,101 @@ export const TRANSITIONS: Record<ApplicationStatus, Transition[]> = {
   DRAFT: [
     {
       to: 'SUBMITTED',
-      label: 'Submit application',
+      label: 'Aanvraag indienen',
       requiredRole: ['APPLICANT'],
-      description: 'Lodge the application with HDAB-NL. The statutory clock starts on receipt.',
+      description: 'Dien de aanvraag in bij HDAB-NL. De wettelijke termijn start bij ontvangst.',
     },
     {
       to: 'WITHDRAWN',
-      label: 'Withdraw draft',
+      label: 'Concept intrekken',
       requiredRole: ['APPLICANT'],
-      description: 'Discard this draft without submitting.',
+      description: 'Verwijder dit concept zonder in te dienen.',
     },
   ],
 
   SUBMITTED: [
     {
       to: 'PRE_SCREENING',
-      label: 'Start pre-screening',
+      label: 'Pre-screening starten',
       requiredRole: ['CASE_HANDLER', 'ADMIN'],
-      description: 'Begin the pre-screening completeness check (TEHDAS2 D6.4 Fig. 1/2).',
+      description: 'Start de volledigheidstoets (TEHDAS2 D6.4 Fig. 1/2).',
     },
     {
       to: 'WITHDRAWN',
-      label: 'Mark as withdrawn',
+      label: 'Aanvraag intrekken',
       requiredRole: ['APPLICANT', 'CASE_HANDLER', 'ADMIN'],
-      description: 'Applicant withdraws the application.',
+      description: 'Aanvrager trekt de aanvraag in.',
     },
   ],
 
   PRE_SCREENING: [
     {
       to: 'AWAITING_ADDITIONAL_INFORMATION',
-      label: 'Request additional information',
+      label: 'Aanvullende informatie opvragen',
       requiredRole: ['CASE_HANDLER', 'ADMIN'],
       // D6.4 §8: decision deadline is voided when this transition is taken
-      description: 'HDAB requests additional information. Decision clock is paused (D6.4 §8).',
+      description: 'HDAB vraagt aanvullende informatie. Beslissingstermijn wordt opgeschort (D6.4 §8).',
     },
     {
       to: 'PROCESSING',
-      label: 'Complete pre-screening — proceed to processing',
+      label: 'Pre-screening afronden — doorzetten naar beoordeling',
       requiredRole: ['CASE_HANDLER', 'ADMIN'],
-      description: 'HDAB completes pre-screening; application proceeds to substantive processing (D6.4 Fig. 1/2).',
+      description: 'HDAB rondt pre-screening af; aanvraag gaat naar inhoudelijke beoordeling (D6.4 Fig. 1/2).',
     },
     {
       to: 'WITHDRAWN',
-      label: 'Mark as withdrawn',
+      label: 'Aanvraag intrekken',
       requiredRole: ['APPLICANT', 'CASE_HANDLER', 'ADMIN'],
-      description: 'Applicant withdraws the application.',
+      description: 'Aanvrager trekt de aanvraag in.',
     },
   ],
 
   AWAITING_ADDITIONAL_INFORMATION: [
     {
       to: 'PRE_SCREENING',
-      label: 'Additional information received — resume pre-screening',
-      requiredRole: ['CASE_HANDLER', 'ADMIN'],
+      label: 'Aanvullende informatie ingediend — pre-screening hervatten',
+      // D6.4 §6: "updated information MUST be transmitted to the HDAB" — the
+      // applicant initiates this by submitting their response; CASE_HANDLER/ADMIN
+      // can also record receipt on their behalf.
+      requiredRole: ['APPLICANT', 'CASE_HANDLER', 'ADMIN'],
       // D6.4 §8: deadline recalculated from timestamp of additional info receipt
-      description: 'Applicant submitted additional information; pre-screening resumes. Decision clock recalculated (D6.4 §8).',
+      description: 'Aanvrager heeft aanvullende informatie ingediend; pre-screening hervat. Termijn herberekend (D6.4 §8).',
     },
     {
       to: 'DECISION_ISSUED',
-      label: 'Issue negative decision — no response received',
+      label: 'Negatief besluit — geen reactie ontvangen',
       requiredRole: ['DECISION_MAKER', 'ADMIN'],
-      description: 'Applicant did not submit additional information within the deadline (D6.4 Fig. 1/2).',
+      description: 'Aanvrager heeft geen aanvullende informatie ingediend binnen de termijn (D6.4 Fig. 1/2).',
       requiresDecisionOutcome: 'NEGATIVE',
     },
     {
       to: 'WITHDRAWN',
-      label: 'Mark as withdrawn',
+      label: 'Aanvraag intrekken',
       requiredRole: ['APPLICANT', 'CASE_HANDLER', 'ADMIN'],
-      description: 'Applicant withdraws the application.',
+      description: 'Aanvrager trekt de aanvraag in.',
     },
   ],
 
   PROCESSING: [
     {
       to: 'DECISION_ISSUED',
-      label: 'Issue positive decision',
+      label: 'Positief besluit uitbrengen',
       requiredRole: ['DECISION_MAKER', 'ADMIN'],
-      description: 'HDAB takes a positive decision on the application (D6.4 Fig. 1/2).',
+      description: 'HDAB neemt een positief besluit op de aanvraag (D6.4 Fig. 1/2).',
       requiresDecisionOutcome: 'POSITIVE',
     },
     {
       to: 'DECISION_ISSUED',
-      label: 'Issue negative decision',
+      label: 'Negatief besluit uitbrengen',
       requiredRole: ['DECISION_MAKER', 'ADMIN'],
-      description: 'HDAB takes a negative decision on the application (D6.4 Fig. 1/2).',
+      description: 'HDAB neemt een negatief besluit op de aanvraag (D6.4 Fig. 1/2).',
       requiresDecisionOutcome: 'NEGATIVE',
     },
     {
       to: 'WITHDRAWN',
-      label: 'Mark as withdrawn',
+      label: 'Aanvraag intrekken',
       requiredRole: ['APPLICANT', 'CASE_HANDLER', 'ADMIN'],
-      description: 'Applicant withdraws the application.',
+      description: 'Aanvrager trekt de aanvraag in.',
     },
   ],
 
@@ -138,13 +141,13 @@ export function getAvailableTransitions(
 }
 
 export const STATUS_LABELS: Record<ApplicationStatus, string> = {
-  DRAFT:                           'Draft',
-  SUBMITTED:                       'Submitted',
+  DRAFT:                           'Concept',
+  SUBMITTED:                       'Ingediend',
   PRE_SCREENING:                   'Pre-screening',
-  AWAITING_ADDITIONAL_INFORMATION: 'Awaiting additional information',
-  PROCESSING:                      'Processing',
-  DECISION_ISSUED:                 'Decision issued',
-  WITHDRAWN:                       'Withdrawn',
+  AWAITING_ADDITIONAL_INFORMATION: 'Aanvullende informatie gevraagd',
+  PROCESSING:                      'In behandeling',
+  DECISION_ISSUED:                 'Besluit genomen',
+  WITHDRAWN:                       'Ingetrokken',
 };
 
 export const STATUS_COLORS: Record<ApplicationStatus, string> = {
