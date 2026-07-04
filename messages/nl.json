@@ -5,7 +5,8 @@
     "permits": "Vergunningen",
     "import": "HD@EU import",
     "newApplication": "+ Nieuwe aanvraag",
-    "skipToContent": "Ga naar hoofdinhoud"
+    "skipToContent": "Ga naar hoofdinhoud",
+    "testEnvironment": "Testomgeving"
   },
   "footer": {
     "hdab": "HDAB-NL",

@@ -44,6 +44,9 @@ export default async function LocaleLayout({
                   <a href={`/${locale}`} className="font-bold text-xl tracking-tight">HDAB-NL</a>
                   <span className="text-white/40 text-lg">|</span>
                   <span className="text-white/90 font-medium">DAAMS</span>
+                  <span className="ml-1 rounded text-xs bg-amber-400/90 text-amber-950 px-2 py-0.5 font-semibold tracking-wide">
+                    {t('testEnvironment')}
+                  </span>
                 </div>
                 <div className="flex items-center gap-1">
                   <nav aria-label="Hoofdnavigatie" className="flex items-center gap-1">

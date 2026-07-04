@@ -5,7 +5,8 @@
     "permits": "Permits",
     "import": "HD@EU import",
     "newApplication": "+ New application",
-    "skipToContent": "Skip to main content"
+    "skipToContent": "Skip to main content",
+    "testEnvironment": "Test environment"
   },
   "footer": {
     "hdab": "HDAB-NL",
@@ -16,7 +17,7 @@
     "legalArticles": "Articles 46, 67–69",
     "standards": "Standards",
     "standardsRef": "TEHDAS2 D6.4 DAAMS specification",
-    "openSource": "HDAB-NL DAAMS is open source (EUPL). Built with the {nlDesignSystem} using {rijkshuisstijl} components.",
+    "openSource": "HDAB-NL DAAMS is open source (EUPL). Built using the {nlDesignSystem} with {rijkshuisstijl} components.",
     "nlDesignSystem": "NL Design System",
     "rijkshuisstijl": "Rijkshuisstijl Community"
   },
@@ -47,8 +48,8 @@
     "allStatuses": "All statuses",
     "typeLabel": "Type",
     "allTypes": "All types",
-    "typeDataAccess": "Data Access Application (Art. 46)",
-    "typeDataRequest": "Data Request (Art. 69)",
+    "typeDataAccess": "Data access application (Art. 46)",
+    "typeDataRequest": "Data request (Art. 69)",
     "sourceLabel": "Source",
     "allSources": "All sources",
     "sourceNational": "National",
@@ -88,8 +89,8 @@
     "decisionTitle": "Decision",
     "notesTitle": "Notes",
     "historyTitle": "History",
-    "typeDataAccess": "Data Access Application (Art. 46)",
-    "typeDataRequest": "Data Request (Art. 69)"
+    "typeDataAccess": "Data access application (Art. 46)",
+    "typeDataRequest": "Data request (Art. 69)"
   },
   "permits": {
     "title": "Permits",
@@ -122,9 +123,9 @@
     "viewDetails": "View details →",
     "actionsTitle": "Permit actions",
     "newValidUntil": "New expiry date",
-    "revocationReason": "Reason for revocation (required)",
+    "revocationReason": "Revocation reason (required)",
     "comment": "Comment",
-    "revocationPlaceholder": "Provide justification for revocation...",
+    "revocationPlaceholder": "Provide a reason for revocation...",
     "commentPlaceholder": "Optional comment...",
     "confirm": "Confirm"
   },
@@ -156,12 +157,12 @@
   },
   "import": {
     "title": "HD@EU incoming applications",
-    "subtitle": "Register cross-border data access applications received via the HealthData@EU National Contact Point (NCP). Each imported application is automatically placed in Submitted status and the 2-month decision clock starts from the transmission timestamp.",
+    "subtitle": "Register cross-border applications received via the HealthData@EU National Contact Point (NCP). Each imported application is automatically placed in Submitted status and the 2-month deadline starts from the submission timestamp.",
     "infoTitle": "About cross-border applications",
-    "infoItem1": "Applications are submitted by a researcher via a sending Member State HDAB",
-    "infoItem2": "The sending HDAB transmits the application to HDAB-NL via the HealthData@EU NCP",
+    "infoItem1": "Applications are submitted by a researcher via a sending HDAB in a member state",
+    "infoItem2": "The sending HDAB forwards the application to HDAB-NL via the HealthData@EU NCP",
     "infoItem3": "HDAB-NL assesses the application against Dutch legal and technical requirements",
-    "infoItem4": "The outcome (permit / refusal) is communicated back through the NCP"
+    "infoItem4": "The outcome (permit / refusal) is communicated back via the NCP"
   },
   "common": {
     "none": "—",
