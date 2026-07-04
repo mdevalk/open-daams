@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { generatePermitPdf } from '@/lib/permit-pdf';
+import { generatePermitPdf } from '@/lib/generate-permit-pdf';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
