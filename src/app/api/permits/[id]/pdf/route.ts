@@ -19,8 +19,18 @@ export async function GET(
           referenceNumber: true,
           title: true,
           type: true,
+          projectDescription: true,
+          purposeCategory: true,
+          requestedDatasets: true,
+          requestedVariables: true,
+          studyPopulation: true,
+          inclusionCriteria: true,
+          exclusionCriteria: true,
+          dataStartDate: true,
+          dataEndDate: true,
           legalBasis: true,
           dataProcessingCountry: true,
+          isCrossBorder: true,
           applicant: { select: { name: true, organisation: true, email: true } },
         },
       },
@@ -34,7 +44,7 @@ export async function GET(
   const pdfBytes = await generatePermitPdf(permit);
   const filename = `vergunning-${permit.permitNumber.replace(/\//g, '-')}.pdf`;
 
-  return new NextResponse(pdfBytes, {
+  return new NextResponse(Buffer.from(pdfBytes), {
     status: 200,
     headers: {
       'Content-Type': 'application/pdf',
