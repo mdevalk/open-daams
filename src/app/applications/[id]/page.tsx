@@ -6,16 +6,20 @@ import { WorkflowTimeline } from '@/components/WorkflowTimeline';
 import { TransitionPanel } from '@/components/TransitionPanel';
 import { NotesList } from '@/components/NotesList';
 import { PermitPanel } from '@/components/PermitPanel';
+import { UserSwitcher } from '@/components/UserSwitcher';
 import { formatDate, formatDateTime, purposeLabel } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ApplicationDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ userId?: string }>;
 }) {
   const { id } = await params;
+  const { userId: queryUserId } = await searchParams;
 
   const [application, users] = await Promise.all([
     prisma.application.findUnique({
@@ -40,9 +44,14 @@ export default async function ApplicationDetailPage({
 
   if (!application) notFound();
 
+  // Prefer ?userId from query, else pick a sensible default per status
   const currentUser =
-    users.find((u) => u.role === 'CASE_HANDLER') ??
-    users.find((u) => u.role === 'DECISION_MAKER') ??
+    (queryUserId ? users.find(u => u.id === queryUserId) : null) ??
+    (application.status === 'PROCESSING'
+      ? users.find(u => u.role === 'DECISION_MAKER')
+      : null) ??
+    users.find(u => u.role === 'CASE_HANDLER') ??
+    users.find(u => u.role === 'DECISION_MAKER') ??
     users[0];
 
   if (!currentUser) notFound();
@@ -89,7 +98,6 @@ export default async function ApplicationDetailPage({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main content */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Application details */}
           <section className="rounded-xl border border-gray-200 bg-white p-5">
             <h2 className="font-semibold text-gray-900 mb-4">Aanvraaggegevens</h2>
             <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
@@ -159,7 +167,6 @@ export default async function ApplicationDetailPage({
             </dl>
           </section>
 
-          {/* Requested datasets */}
           <section className="rounded-xl border border-gray-200 bg-white p-5">
             <h2 className="font-semibold text-gray-900 mb-3">Gevraagde datasets</h2>
             <div className="flex flex-wrap gap-2">
@@ -187,13 +194,11 @@ export default async function ApplicationDetailPage({
             </div>
           </section>
 
-          {/* Project description */}
           <section className="rounded-xl border border-gray-200 bg-white p-5">
             <h2 className="font-semibold text-gray-900 mb-3">Projectbeschrijving</h2>
             <p className="text-sm text-gray-700 whitespace-pre-wrap">{application.projectDescription}</p>
           </section>
 
-          {/* Decision summary */}
           {application.decisionSummary && (
             <section className="rounded-xl border border-gray-200 bg-white p-5">
               <h2 className="font-semibold text-gray-900 mb-3">Besluit</h2>
@@ -201,7 +206,6 @@ export default async function ApplicationDetailPage({
             </section>
           )}
 
-          {/* Notes */}
           <section className="rounded-xl border border-gray-200 bg-white p-5">
             <h2 className="font-semibold text-gray-900 mb-4">Notities</h2>
             <NotesList applicationId={application.id} notes={application.notes} currentUser={currentUser} />
@@ -209,7 +213,8 @@ export default async function ApplicationDetailPage({
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-6">
+        <div className="space-y-4">
+          <UserSwitcher users={users} currentUserId={currentUser.id} />
           <TransitionPanel application={application} currentUser={currentUser} />
           <PermitPanel application={application} currentUser={currentUser} />
           <section className="rounded-xl border border-gray-200 bg-white p-5">
