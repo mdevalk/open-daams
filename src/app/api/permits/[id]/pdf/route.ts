@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { renderToBuffer } from '@react-pdf/renderer';
-import React from 'react';
 import { prisma } from '@/lib/db';
-import { PermitPdfDocument } from '@/lib/permit-pdf';
+import { generatePermitPdf } from '@/lib/permit-pdf';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +19,6 @@ export async function GET(
           title: true,
           type: true,
           legalBasis: true,
-          purposeCategory: true,
           dataProcessingCountry: true,
           applicant: { select: { name: true, organisation: true, email: true } },
         },
@@ -33,10 +30,7 @@ export async function GET(
     return new NextResponse('Not found', { status: 404 });
   }
 
-  const buffer = await renderToBuffer(
-    React.createElement(PermitPdfDocument, { permit }),
-  );
-
+  const buffer = await generatePermitPdf(permit);
   const filename = `vergunning-${permit.permitNumber.replace(/\//g, '-')}.pdf`;
 
   return new NextResponse(buffer, {
