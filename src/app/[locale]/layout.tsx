@@ -22,6 +22,7 @@ export default async function LocaleLayout({
   const t = await getTranslations({ locale, namespace: 'nav' });
   const tFooter = await getTranslations({ locale, namespace: 'footer' });
   const tLang = await getTranslations({ locale, namespace: 'lang' });
+  const tCommon = await getTranslations({ locale, namespace: 'common' });
 
   const locales = ['nl', 'en', 'fr'] as const;
 
@@ -44,7 +45,7 @@ export default async function LocaleLayout({
                   <a href={`/${locale}`} className="font-bold text-xl tracking-tight text-white">HDAB-NL</a>
                   <span className="text-white/40 text-lg">|</span>
                   <span className="text-white/90 font-medium">DAAMS</span>
-                  <span className="ml-2 rounded text-xs bg-white/20 px-2 py-0.5 font-mono">{t('..common.beta', { fallback: 'beta' })}</span>
+                  <span className="ml-2 rounded text-xs bg-white/20 px-2 py-0.5 font-mono">{tCommon('beta')}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <nav aria-label="Hoofdnavigatie" className="flex items-center gap-1">
