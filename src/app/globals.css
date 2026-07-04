@@ -28,6 +28,15 @@ body {
   text-decoration: underline;
 }
 
+.hdab-page-header a.hdab-btn-primary {
+  color: #154273;
+  text-decoration: none;
+}
+
+.hdab-page-header a.hdab-btn-primary:hover {
+  text-decoration: none;
+}
+
 .hdab-breadcrumb {
   font-size: 0.875rem;
   color: var(--rvo-color-text-subtle, #595959);

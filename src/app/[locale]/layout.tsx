@@ -42,7 +42,7 @@ export default async function LocaleLayout({
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex items-center justify-between h-14">
                 <div className="flex items-center gap-3">
-                  <a href={`/${locale}`} className="font-bold text-xl tracking-tight text-white">HDAB-NL</a>
+                  <a href={`/${locale}`} className="font-bold text-xl tracking-tight">HDAB-NL</a>
                   <span className="text-white/40 text-lg">|</span>
                   <span className="text-white/90 font-medium">DAAMS</span>
                   <span className="ml-2 rounded text-xs bg-white/20 px-2 py-0.5 font-mono">{tCommon('beta')}</span>
@@ -58,14 +58,14 @@ export default async function LocaleLayout({
                       <a
                         key={item.href}
                         href={item.href}
-                        className="px-3 py-1.5 rounded text-sm hover:bg-white/10 transition-colors text-white"
+                        className="px-3 py-1.5 rounded text-sm hover:bg-white/10 transition-colors"
                       >
                         {item.label}
                       </a>
                     ))}
                     <a
                       href={`/${locale}/applications/new`}
-                      className="ml-2 px-4 py-1.5 rounded text-sm font-semibold bg-white text-[#154273] hover:bg-white/90 transition-colors"
+                      className="hdab-btn-primary ml-2 px-4 py-1.5 rounded text-sm font-semibold bg-white hover:bg-white/90 transition-colors"
                     >
                       {t('newApplication')}
                     </a>
@@ -78,7 +78,7 @@ export default async function LocaleLayout({
                         href={`/${l}`}
                         className={`px-2 py-1 rounded text-xs font-semibold transition-colors ${
                           l === locale
-                            ? 'bg-white text-[#154273]'
+                            ? 'hdab-btn-primary bg-white'
                             : 'text-white/80 hover:bg-white/10'
                         }`}
                       >
