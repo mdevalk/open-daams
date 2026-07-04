@@ -56,7 +56,6 @@ export default async function PermitDetailPage({
 
   return (
     <div className="space-y-6">
-      {/* Breadcrumb */}
       <div className="text-sm text-gray-500">
         <a href={`/${locale}/permits`} className="hover:text-gray-900">{t('breadcrumb')}</a>
         <span className="mx-2">/</span>
@@ -72,15 +71,15 @@ export default async function PermitDetailPage({
         </div>
         <div className="flex items-center gap-2">
           <a
-            href={`/api/permits/${permit.id}/pdf`}
-            download
+            href={`/${locale}/permits/${permit.id}/print`}
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 rounded border border-[#154273] px-3 py-1.5 text-sm font-medium text-[#154273] hover:bg-[#e8f4fb] transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-              <path d="M10.75 2.75a.75.75 0 0 0-1.5 0v8.614L6.295 8.235a.75.75 0 1 0-1.09 1.03l4.25 4.5a.75.75 0 0 0 1.09 0l4.25-4.5a.75.75 0 0 0-1.09-1.03l-2.955 3.129V2.75Z" />
-              <path d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z" />
+              <path fillRule="evenodd" d="M5 4v3H4a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v2a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-2h1a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-1V4a1 1 0 0 0-1-1H6a1 1 0 0 0-1 1Zm2 0h6v3H7V4Zm-1 9v-1h8v1H6Zm-1-4a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z" clipRule="evenodd" />
             </svg>
-            PDF downloaden
+            PDF / Afdrukken
           </a>
           <a
             href={`/${locale}/applications/${permit.application?.id}`}
@@ -92,7 +91,6 @@ export default async function PermitDetailPage({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main */}
         <div className="lg:col-span-2 space-y-6">
           <section className="rounded-xl border border-gray-200 bg-white p-5">
             <h2 className="font-semibold text-gray-900 mb-4">{t('detailsTitle')}</h2>
@@ -103,25 +101,12 @@ export default async function PermitDetailPage({
             <section className="rounded-xl border border-gray-200 bg-white p-5">
               <h2 className="font-semibold text-gray-900 mb-4">{t('applicantTitle')}</h2>
               <dl className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <dt className="text-gray-500">{t('name')}</dt>
-                  <dd className="font-medium">{permit.application.applicant.name}</dd>
-                </div>
-                <div>
-                  <dt className="text-gray-500">{t('organisation')}</dt>
-                  <dd className="font-medium">{permit.application.applicant.organisation}</dd>
-                </div>
-                <div>
-                  <dt className="text-gray-500">{t('email')}</dt>
-                  <dd className="font-medium">{permit.application.applicant.email}</dd>
-                </div>
+                <div><dt className="text-gray-500">{t('name')}</dt><dd className="font-medium">{permit.application.applicant.name}</dd></div>
+                <div><dt className="text-gray-500">{t('organisation')}</dt><dd className="font-medium">{permit.application.applicant.organisation}</dd></div>
+                <div><dt className="text-gray-500">{t('email')}</dt><dd className="font-medium">{permit.application.applicant.email}</dd></div>
                 <div>
                   <dt className="text-gray-500">{t('applicationType')}</dt>
-                  <dd className="font-medium">
-                    {permit.application.type === 'DATA_ACCESS_APPLICATION'
-                      ? 'Data-toegangsaanvraag (Art. 46)'
-                      : 'Dataverzoek (Art. 69)'}
-                  </dd>
+                  <dd className="font-medium">{permit.application.type === 'DATA_ACCESS_APPLICATION' ? 'Data-toegangsaanvraag (Art. 46)' : 'Dataverzoek (Art. 69)'}</dd>
                 </div>
               </dl>
             </section>
@@ -136,26 +121,14 @@ export default async function PermitDetailPage({
                 {permit.logs.map((log, i) => (
                   <li key={log.id} className="flex gap-3 text-sm">
                     <div className="flex flex-col items-center">
-                      <span className="w-6 h-6 rounded-full bg-[#154273] text-white text-xs flex items-center justify-center font-bold flex-shrink-0">
-                        {i + 1}
-                      </span>
-                      {i < permit.logs.length - 1 && (
-                        <div className="w-px flex-1 bg-gray-200 my-1" />
-                      )}
+                      <span className="w-6 h-6 rounded-full bg-[#154273] text-white text-xs flex items-center justify-center font-bold flex-shrink-0">{i + 1}</span>
+                      {i < permit.logs.length - 1 && <div className="w-px flex-1 bg-gray-200 my-1" />}
                     </div>
                     <div className="pb-3">
                       <p className="font-medium text-gray-900">{log.action}</p>
-                      {log.fromStatus && (
-                        <p className="text-xs text-gray-500">
-                          {PERMIT_STATUS_LABELS[log.fromStatus]} → {PERMIT_STATUS_LABELS[log.toStatus]}
-                        </p>
-                      )}
-                      {log.comment && (
-                        <p className="text-xs text-gray-600 mt-1 italic">{log.comment}</p>
-                      )}
-                      <p className="text-xs text-gray-400 mt-1">
-                        {log.user.name} · {log.user.role} · {formatDateTime(log.createdAt)}
-                      </p>
+                      {log.fromStatus && <p className="text-xs text-gray-500">{PERMIT_STATUS_LABELS[log.fromStatus]} → {PERMIT_STATUS_LABELS[log.toStatus]}</p>}
+                      {log.comment && <p className="text-xs text-gray-600 mt-1 italic">{log.comment}</p>}
+                      <p className="text-xs text-gray-400 mt-1">{log.user.name} · {log.user.role} · {formatDateTime(log.createdAt)}</p>
                     </div>
                   </li>
                 ))}
@@ -164,7 +137,6 @@ export default async function PermitDetailPage({
           </section>
         </div>
 
-        {/* Sidebar */}
         <div>
           <PermitPanel application={fakeApplication} currentUser={currentUser} />
         </div>

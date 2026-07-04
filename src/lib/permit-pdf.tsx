@@ -1,2 +1,2 @@
-// Intentionally empty — see permit-pdf.ts
+// Intentionally empty — PDF generation uses browser print (see /[locale]/permits/[id]/print)
 export {};

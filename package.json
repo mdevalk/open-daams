@@ -21,13 +21,11 @@
     "date-fns": "^4.1.0",
     "next": "^15.3.3",
     "next-intl": "^3.26.3",
-    "pdfkit": "^0.15.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@types/node": "^20",
-    "@types/pdfkit": "^0.13.9",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.0.1",
