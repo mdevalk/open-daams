@@ -8,15 +8,16 @@ type Props = {
     applicant: Pick<User, 'name' | 'organisation'>;
     caseHandler: Pick<User, 'name'> | null;
   };
+  locale?: string;
 };
 
-export function ApplicationCard({ application: app }: Props) {
+export function ApplicationCard({ application: app, locale = 'nl' }: Props) {
   const days = daysUntil(app.decisionDeadline);
   const overdue = days !== null && days < 0;
   const warning = days !== null && days >= 0 && days < 14;
 
   return (
-    <Link href={`/applications/${app.id}`} className="block group">
+    <Link href={`/${locale}/applications/${app.id}`} className="block group">
       <article className="rounded border border-gray-200 bg-white p-5 group-hover:shadow-md group-hover:border-[#01689b] transition-all">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
