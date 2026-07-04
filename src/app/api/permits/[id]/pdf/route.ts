@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { generatePermitPdf } from '@/lib/permit-pdf';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 export async function GET(
   _req: NextRequest,
