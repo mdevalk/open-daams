@@ -1,5 +1,3 @@
-import PDFDocument from 'pdfkit';
-
 const DARK_BLUE = '#154273';
 const LIGHT_BLUE = '#01689b';
 const GRAY = '#595959';
@@ -8,7 +6,11 @@ const GREEN = '#1a5c2e';
 
 function fmt(d: Date | null | undefined): string {
   if (!d) return '—';
-  return new Date(d).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  return new Date(d).toLocaleDateString('nl-NL', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
 }
 
 const STATUS_NL: Record<string, string> = {
@@ -40,65 +42,55 @@ export type PermitPdfData = {
   } | null;
 };
 
-export function generatePermitPdf(permit: PermitPdfData): Promise<Buffer> {
+export async function generatePermitPdf(permit: PermitPdfData): Promise<Buffer> {
+  // Dynamic import avoids ESM/CJS bundling issues with pdfkit
+  const PDFDocumentModule = await import('pdfkit');
+  const PDFDocument = PDFDocumentModule.default as typeof import('pdfkit');
+
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ size: 'A4', margin: 0, bufferPages: true });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const doc = new (PDFDocument as any)({ size: 'A4', margin: 0 });
     const chunks: Buffer[] = [];
 
     doc.on('data', (chunk: Buffer) => chunks.push(chunk));
     doc.on('end', () => resolve(Buffer.concat(chunks)));
     doc.on('error', reject);
 
-    const W = doc.page.width;
+    const W = doc.page.width as number;
     const M = 40;
     const CW = W - M * 2;
 
-    // ── Header ──────────────────────────────────────────────────────
+    // Header
     doc.rect(0, 0, W, 70).fill(DARK_BLUE);
+    doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(16).text('HDAB-NL | DAAMS', M, 18);
     doc
-      .fillColor('#ffffff')
-      .font('Helvetica-Bold')
-      .fontSize(16)
-      .text('HDAB-NL | DAAMS', M, 18);
-    doc
-      .fillColor('rgba(255,255,255,0.7)')
+      .fillColor('#ffffffaa')
       .font('Helvetica')
       .fontSize(8.5)
       .text('Health Data Access Body Nederland — EHDS Dataverwerkingsvergunning', M, 40);
 
     let y = 90;
 
-    // ── Permit number box ────────────────────────────────────────────
+    // Permit number box
     doc.rect(M, y, CW, 56).fill(LIGHT_GRAY);
     doc.rect(M, y, 4, 56).fill(DARK_BLUE);
-    doc
-      .fillColor(GRAY)
-      .font('Helvetica')
-      .fontSize(7.5)
-      .text('VERGUNNINGSNUMMER', M + 14, y + 10);
-    doc
-      .fillColor(DARK_BLUE)
-      .font('Helvetica-Bold')
-      .fontSize(15)
-      .text(permit.permitNumber, M + 14, y + 22);
+    doc.fillColor(GRAY).font('Helvetica').fontSize(7.5).text('VERGUNNINGSNUMMER', M + 14, y + 10);
+    doc.fillColor(DARK_BLUE).font('Helvetica-Bold').fontSize(15).text(permit.permitNumber, M + 14, y + 22);
 
-    // Status badge
     const statusLabel = STATUS_NL[permit.status] ?? permit.status;
-    const badgeX = M + 14;
-    const badgeY = y + 40;
-    doc.roundedRect(badgeX, badgeY, statusLabel.length * 5.5 + 16, 14, 3).fill('#e6f5ea');
-    doc.fillColor(GREEN).font('Helvetica-Bold').fontSize(7.5).text(statusLabel, badgeX + 8, badgeY + 3);
+    const badgeW = statusLabel.length * 5.5 + 16;
+    doc.roundedRect(M + 14, y + 40, badgeW, 14, 3).fill('#e6f5ea');
+    doc.fillColor(GREEN).font('Helvetica-Bold').fontSize(7.5).text(statusLabel, M + 22, y + 43);
 
     y += 72;
 
-    // ── Validity row ─────────────────────────────────────────────────
+    // Validity boxes
     const boxW = (CW - 16) / 3;
-    const validityItems = [
+    [
       { label: 'GELDIG VANAF', value: fmt(permit.validFrom) },
       { label: 'GELDIG TOT EN MET', value: fmt(permit.validUntil) },
       { label: 'UITGEGEVEN OP', value: fmt(permit.issuedAt) },
-    ];
-    validityItems.forEach((item, i) => {
+    ].forEach((item, i) => {
       const bx = M + i * (boxW + 8);
       doc.rect(bx, y, boxW, 44).fill(LIGHT_GRAY);
       doc.fillColor(GRAY).font('Helvetica').fontSize(7).text(item.label, bx + 10, y + 8);
@@ -107,20 +99,20 @@ export function generatePermitPdf(permit: PermitPdfData): Promise<Buffer> {
 
     y += 60;
 
-    function sectionTitle(title: string) {
+    const sectionTitle = (title: string) => {
       doc.fillColor(DARK_BLUE).font('Helvetica-Bold').fontSize(8).text(title, M, y);
       y += 12;
       doc.moveTo(M, y).lineTo(M + CW, y).strokeColor('#d0d0d0').lineWidth(0.5).stroke();
       y += 8;
-    }
+    };
 
-    function field(label: string, value: string) {
-      doc.fillColor(GRAY).font('Helvetica').fontSize(8.5).text(label, M, y, { width: 140 });
+    const field = (label: string, value: string) => {
+      const before = doc.y as number;
+      doc.fillColor(GRAY).font('Helvetica').fontSize(8.5).text(label, M, y, { width: 140, lineBreak: false });
       doc.fillColor('#000000').font('Helvetica-Bold').fontSize(8.5).text(value, M + 150, y, { width: CW - 150 });
-      y += 16;
-    }
+      y = Math.max(doc.y as number, before) + 6;
+    };
 
-    // ── Applicant ────────────────────────────────────────────────────
     if (permit.application) {
       sectionTitle('AANVRAGER');
       field('Naam', permit.application.applicant.name);
@@ -128,7 +120,6 @@ export function generatePermitPdf(permit: PermitPdfData): Promise<Buffer> {
       field('E-mail', permit.application.applicant.email);
       y += 6;
 
-      // ── Application details ──────────────────────────────────────
       sectionTitle('AANVRAAGGEGEVENS');
       field('Kenmerk', permit.application.referenceNumber);
       field('Titel', permit.application.title);
@@ -143,17 +134,16 @@ export function generatePermitPdf(permit: PermitPdfData): Promise<Buffer> {
       y += 6;
     }
 
-    // ── Revocation ───────────────────────────────────────────────────
     if (permit.revocationReason) {
       sectionTitle('REDEN INTREKKING');
       doc.fillColor('#7a1711').font('Helvetica').fontSize(8.5).text(permit.revocationReason, M, y, { width: CW });
       y += 20;
     }
 
-    // ── Legal notice ─────────────────────────────────────────────────
+    // Legal notice
     y += 4;
-    doc.rect(M, y, CW, 44).fill('#e8f4fb');
-    doc.rect(M, y, 4, 44).fill(LIGHT_BLUE);
+    doc.rect(M, y, CW, 48).fill('#e8f4fb');
+    doc.rect(M, y, 4, 48).fill(LIGHT_BLUE);
     doc
       .fillColor(DARK_BLUE)
       .font('Helvetica')
@@ -167,19 +157,21 @@ export function generatePermitPdf(permit: PermitPdfData): Promise<Buffer> {
         { width: CW - 24 },
       );
 
-    // ── Footer ───────────────────────────────────────────────────────
-    const totalPages = (doc.bufferedPageRange().count);
-    for (let i = 0; i < totalPages; i++) {
-      doc.switchToPage(i);
-      const footerY = doc.page.height - 30;
-      doc.moveTo(M, footerY).lineTo(W - M, footerY).strokeColor('#d0d0d0').lineWidth(0.5).stroke();
-      doc
-        .fillColor(GRAY)
-        .font('Helvetica')
-        .fontSize(7)
-        .text('HDAB-NL | Health Data Access Body Nederland | EHDS Verordening (EU) 2025/327', M, footerY + 6)
-        .text(`Pagina ${i + 1} van ${totalPages}`, M, footerY + 6, { align: 'right', width: CW });
-    }
+    y += 60;
+
+    // Footer
+    const footerY = (doc.page.height as number) - 30;
+    doc.moveTo(M, footerY).lineTo(W - M, footerY).strokeColor('#d0d0d0').lineWidth(0.5).stroke();
+    doc
+      .fillColor(GRAY)
+      .font('Helvetica')
+      .fontSize(7)
+      .text(
+        'HDAB-NL | Health Data Access Body Nederland | EHDS Verordening (EU) 2025/327',
+        M,
+        footerY + 6,
+        { width: CW },
+      );
 
     doc.end();
   });
