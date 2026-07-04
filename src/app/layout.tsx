@@ -31,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 {[
                   { href: '/', label: 'Dashboard' },
                   { href: '/applications', label: 'Aanvragen' },
+                  { href: '/permits', label: 'Vergunningen' },
                   { href: '/import', label: 'HD@EU import' },
                 ].map((item) => (
                   <a
