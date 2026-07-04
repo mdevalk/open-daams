@@ -1,10 +1,12 @@
+'use client';
+
+import { useTranslations } from 'next-intl';
 import { Application } from '@prisma/client';
-import { STATUS_LABELS, STATUS_COLORS } from '@/lib/workflow';
+import { STATUS_COLORS } from '@/lib/workflow';
 import { cn } from '@/lib/utils';
 
 type Props = Pick<Application, 'status' | 'decisionOutcome'>;
 
-// NL Design System status badge — uses Rijkshuisstijl color tokens
 const NL_STATUS_COLORS: Record<string, string> = {
   DRAFT:                           'bg-gray-100 text-gray-700 border border-gray-300',
   SUBMITTED:                       'bg-[#e8f4fb] text-[#154273] border border-[#01689b]',
@@ -16,10 +18,13 @@ const NL_STATUS_COLORS: Record<string, string> = {
 };
 
 export function StatusBadge({ status, decisionOutcome }: Props) {
+  const tStatus = useTranslations('status');
+  const tDetail = useTranslations('applicationDetail');
+
   const label =
     status === 'DECISION_ISSUED' && decisionOutcome
-      ? `Besluit: ${decisionOutcome === 'POSITIVE' ? 'Positief' : 'Negatief'}`
-      : STATUS_LABELS[status];
+      ? `${tDetail('decision')}: ${decisionOutcome === 'POSITIVE' ? tDetail('positive') : tDetail('negative')}`
+      : tStatus(status);
 
   const color =
     status === 'DECISION_ISSUED'
