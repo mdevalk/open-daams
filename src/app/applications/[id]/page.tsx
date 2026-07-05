@@ -7,7 +7,7 @@ import { TransitionPanel } from '@/components/TransitionPanel';
 import { NotesList } from '@/components/NotesList';
 import { PermitPanel } from '@/components/PermitPanel';
 import { UserSwitcher } from '@/components/UserSwitcher';
-import { formatDate, formatDateTime, purposeLabel } from '@/lib/utils';
+import { formatDate, formatDateTime, purposeLabel, serializePrisma } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +21,7 @@ export default async function ApplicationDetailPage({
   const { id } = await params;
   const { userId: queryUserId } = await searchParams;
 
-  const [application, users] = await Promise.all([
+  const [rawApplication, users] = await Promise.all([
     prisma.application.findUnique({
       where: { id },
       include: {
@@ -42,7 +42,11 @@ export default async function ApplicationDetailPage({
     prisma.user.findMany({ orderBy: { name: 'asc' } }),
   ]);
 
-  if (!application) notFound();
+  if (!rawApplication) notFound();
+
+  // DataPermit carries Prisma Decimal fee fields, which the RSC boundary
+  // can't serialise when passed to the client panels below.
+  const application = serializePrisma(rawApplication);
 
   // Prefer ?userId from query, else pick a sensible default per status
   const currentUser =

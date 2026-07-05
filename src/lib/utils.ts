@@ -27,6 +27,18 @@ export function daysUntil(date: Date | null | undefined): number | null {
   return Math.ceil((new Date(date).getTime() - Date.now()) / 86_400_000);
 }
 
+/**
+ * Server Components may only pass plain objects as props to Client
+ * Components. Prisma's Decimal fields (and other non-plain values) break
+ * that boundary even when the receiving component never reads them, because
+ * React serialises the whole prop tree. Both Decimal and Date define
+ * toJSON(), so a stringify/parse round-trip converts them to plain
+ * strings/numbers safely.
+ */
+export function serializePrisma<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value));
+}
+
 export async function readErrorMessage(res: Response, fallback: string): Promise<string> {
   try {
     const data = await res.json();

@@ -14,7 +14,7 @@ import { CompletenessCheckPanel } from '@/components/CompletenessCheckPanel';
 import { ExtractionRequestsPanel } from '@/components/ExtractionRequestsPanel';
 import { UserSwitcher } from '@/components/UserSwitcher';
 import type { CompletenessItem } from '@/app/api/applications/[id]/completeness-check/route';
-import { formatDate, formatDateTime, purposeLabel } from '@/lib/utils';
+import { formatDate, formatDateTime, purposeLabel, serializePrisma } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,7 +30,7 @@ export default async function ApplicationDetailPage({
 
   const t = await getTranslations({ locale, namespace: 'applicationDetail' });
 
-  const [application, users] = await Promise.all([
+  const [rawApplication, users] = await Promise.all([
     prisma.application.findUnique({
       where: { id },
       include: {
@@ -55,7 +55,11 @@ export default async function ApplicationDetailPage({
     prisma.user.findMany({ orderBy: { name: 'asc' } }),
   ]);
 
-  if (!application) notFound();
+  if (!rawApplication) notFound();
+
+  // FeeEstimate/DataPermit carry Prisma Decimal fields, which the RSC
+  // boundary can't serialise when passed to the client panels below.
+  const application = serializePrisma(rawApplication);
 
   const currentUser =
     (queryUserId ? users.find(u => u.id === queryUserId) : null) ??

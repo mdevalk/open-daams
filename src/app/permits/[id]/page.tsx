@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db';
 import { PermitCard } from '@/components/PermitCard';
 import { PermitPanel } from '@/components/PermitPanel';
 import { PERMIT_STATUS_LABELS } from '@/lib/permit';
-import { formatDate, formatDateTime } from '@/lib/utils';
+import { formatDate, formatDateTime, serializePrisma } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +14,7 @@ export default async function PermitDetailPage({
 }) {
   const { id } = await params;
 
-  const [permit, users] = await Promise.all([
+  const [rawPermit, users] = await Promise.all([
     prisma.dataPermit.findUnique({
       where: { id },
       include: {
@@ -38,7 +38,11 @@ export default async function PermitDetailPage({
     prisma.user.findMany({ orderBy: { name: 'asc' } }),
   ]);
 
-  if (!permit) notFound();
+  if (!rawPermit) notFound();
+
+  // DataPermit carries Prisma Decimal fee fields, which the RSC boundary
+  // can't serialise when passed to the client panels below.
+  const permit = serializePrisma(rawPermit);
 
   const currentUser =
     users.find(u => u.role === 'DECISION_MAKER') ??
