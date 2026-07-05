@@ -8,6 +8,8 @@ import { TransitionPanel } from '@/components/TransitionPanel';
 import { NotesList } from '@/components/NotesList';
 import { PermitPanel } from '@/components/PermitPanel';
 import { FeeEstimatePanel } from '@/components/FeeEstimatePanel';
+import { EthicalReviewPanel } from '@/components/EthicalReviewPanel';
+import { AppealsPanel } from '@/components/AppealsPanel';
 import { UserSwitcher } from '@/components/UserSwitcher';
 import { formatDate, formatDateTime, purposeLabel } from '@/lib/utils';
 
@@ -42,6 +44,7 @@ export default async function ApplicationDetailPage({
           orderBy: { createdAt: 'desc' },
         },
         documents: { orderBy: { uploadedAt: 'desc' } },
+        appeals: { orderBy: { submittedAt: 'desc' } },
       },
     }),
     prisma.user.findMany({ orderBy: { name: 'asc' } }),
@@ -207,6 +210,11 @@ export default async function ApplicationDetailPage({
             <p className="text-sm text-gray-700 whitespace-pre-wrap">{application.projectDescription}</p>
           </section>
 
+          <EthicalReviewPanel
+            application={application}
+            canManage={['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(currentUser.role)}
+          />
+
           {application.decisionSummary && (
             <section className="rounded-xl border border-gray-200 bg-white p-5">
               <h2 className="font-semibold text-gray-900 mb-3">{t('decisionTitle')}</h2>
@@ -226,6 +234,13 @@ export default async function ApplicationDetailPage({
           <TransitionPanel application={application} currentUser={currentUser} />
           <FeeEstimatePanel application={application} currentUser={currentUser} />
           <PermitPanel application={application} currentUser={currentUser} />
+          {(application.decisionOutcome || application.appeals.length > 0) && (
+            <AppealsPanel
+              applicationId={application.id}
+              appeals={application.appeals}
+              canManage={['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(currentUser.role)}
+            />
+          )}
           <section className="rounded-xl border border-gray-200 bg-white p-5">
             <h2 className="font-semibold text-gray-900 mb-4">{t('historyTitle')}</h2>
             <WorkflowTimeline logs={application.auditLogs} />

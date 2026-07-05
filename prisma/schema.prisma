@@ -53,6 +53,25 @@ enum DataPermitStatus {
   EXPIRED
 }
 
+// TEHDAS2 D6.3 §6.1 — ethical review referenced in the application assessment
+// (required where member state law mandates it for the type of project)
+enum EthicalReviewStatus {
+  NOT_REQUIRED
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// EHDS Art. 63 / national administrative law — appeal (bezwaar) and further
+// judicial appeal (beroep) against a decision issued by the HDAB
+enum AppealStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  UPHELD // Appeal successful — original decision revised
+  REJECTED // Appeal rejected — original decision stands
+  WITHDRAWN
+}
+
 enum UserRole {
   APPLICANT
   CASE_HANDLER
@@ -127,6 +146,13 @@ model Application {
   dataProcessingCountry String
   isCrossBorder         Boolean   @default(false)
 
+  // Ethical review (D6.3 §6.1, required where member state law mandates it)
+  ethicalReviewRequired  Boolean              @default(false)
+  ethicalReviewStatus    EthicalReviewStatus?
+  ethicalReviewBody      String? // name of the ethics committee/IRB
+  ethicalReviewReference String? // approval reference/case number
+  ethicalReviewDate      DateTime?
+
   // Statutory deadlines
   // D6.4 §8: voided when AWAITING_ADDITIONAL_INFORMATION, recalculated on return to PROCESSING
   submittedAt              DateTime?
@@ -143,6 +169,28 @@ model Application {
   documents   Document[]
   dataPermit  DataPermit?
   feeEstimate FeeEstimate?
+  appeals     Appeal[]
+}
+
+// EHDS Art. 63 / national administrative law — tracks bezwaar (objection) and
+// beroep (judicial appeal) lodged against a decision issued on this
+// application (or its permit, e.g. a revocation)
+model Appeal {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id])
+
+  submittedAt DateTime @default(now())
+  submittedBy String // name of the appellant (may differ from the applicant)
+  grounds     String   @db.Text
+  authority   String? // body handling the appeal, e.g. "HDAB-NL (bezwaar)" or "Rechtbank Den Haag"
+
+  status          AppealStatus @default(SUBMITTED)
+  decisionAt      DateTime?
+  decisionSummary String?      @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // TEHDAS2 D6.3 §6.5 — cost estimate for data holder + HDAB processing fees,

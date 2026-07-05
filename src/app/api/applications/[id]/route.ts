@@ -17,6 +17,7 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
         orderBy: { createdAt: 'desc' },
       },
       documents: { orderBy: { uploadedAt: 'desc' } },
+      appeals: { orderBy: { submittedAt: 'desc' } },
     },
   });
 
@@ -43,6 +44,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       ...(body.isCrossBorder !== undefined ? { isCrossBorder: body.isCrossBorder } : {}),
       ...(body.caseHandlerId !== undefined ? { caseHandlerId: body.caseHandlerId } : {}),
       ...(body.decisionSummary !== undefined ? { decisionSummary: body.decisionSummary } : {}),
+      ...(body.ethicalReviewRequired !== undefined ? { ethicalReviewRequired: body.ethicalReviewRequired } : {}),
+      ...(body.ethicalReviewStatus !== undefined ? { ethicalReviewStatus: body.ethicalReviewStatus } : {}),
+      ...(body.ethicalReviewBody !== undefined ? { ethicalReviewBody: body.ethicalReviewBody } : {}),
+      ...(body.ethicalReviewReference !== undefined ? { ethicalReviewReference: body.ethicalReviewReference } : {}),
+      ...(body.ethicalReviewDate !== undefined
+        ? { ethicalReviewDate: body.ethicalReviewDate ? new Date(body.ethicalReviewDate) : null }
+        : {}),
       ...(body.permitNumber !== undefined ? { permitNumber: body.permitNumber } : {}),
       ...(body.permitValidFrom !== undefined ? { permitValidFrom: new Date(body.permitValidFrom) } : {}),
       ...(body.permitValidUntil !== undefined ? { permitValidUntil: new Date(body.permitValidUntil) } : {}),

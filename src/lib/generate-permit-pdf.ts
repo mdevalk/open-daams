@@ -92,6 +92,11 @@ export type PermitPdfData = {
     studyPopulation?: string | null;
     inclusionCriteria?: string | null;
     exclusionCriteria?: string | null;
+    ethicalReviewRequired?: boolean | null;
+    ethicalReviewStatus?: string | null;
+    ethicalReviewBody?: string | null;
+    ethicalReviewReference?: string | null;
+    ethicalReviewDate?: Date | null;
     dataStartDate?: Date | null;
     dataEndDate?: Date | null;
     legalBasis?: string | null;
@@ -402,7 +407,21 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
   doc.spacer(6);
 
   doc.subheading('6.2  Ontvangen verklaringen');
-  doc.placeholder('Overzicht van relevante andere vergunningen, ethische toetsingsverklaringen e.d. (afgevende autoriteit, dossiernummer, datum van afgifte) — nog niet geregistreerd in DAAMS');
+  if (app?.ethicalReviewRequired && app.ethicalReviewStatus && app.ethicalReviewStatus !== 'NOT_REQUIRED') {
+    const ETHICAL_STATUS_NL: Record<string, string> = {
+      PENDING: 'in afwachting',
+      APPROVED: 'goedgekeurd',
+      REJECTED: 'afgewezen',
+    };
+    doc.field('Ethische toetsing', ETHICAL_STATUS_NL[app.ethicalReviewStatus] ?? app.ethicalReviewStatus);
+    if (app.ethicalReviewBody) doc.field('Toetsingscommissie', app.ethicalReviewBody);
+    if (app.ethicalReviewReference) doc.field('Referentie', app.ethicalReviewReference);
+    if (app.ethicalReviewDate) doc.field('Datum', fmt(app.ethicalReviewDate));
+  } else {
+    doc.paragraph('Voor dit project is geen ethische toetsing vereist gesteld.', { size: 8, color: C.gray });
+  }
+  doc.spacer(4);
+  doc.placeholder('Overzicht van overige relevante vergunningen e.d. (afgevende autoriteit, dossiernummer, datum van afgifte) — nog niet geregistreerd in DAAMS');
   doc.spacer(6);
 
   doc.subheading('6.3  Beschrijving van het doel van gebruik');
