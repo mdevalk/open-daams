@@ -21,6 +21,12 @@ async function generatePermitNumber(year: number): Promise<string> {
   return `${prefix}${String(lastSeq + 1).padStart(4, '0')}`;
 }
 
+function toDecimalOrNull(v: unknown): number | null {
+  if (v === undefined || v === null || v === '') return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
 /**
  * POST /api/permits
  * Issue a new data permit after a positive DECISION_ISSUED.
@@ -57,6 +63,13 @@ export async function POST(req: NextRequest) {
             status: 'GRANTED',
             validFrom: new Date(body.validFrom),
             validUntil: new Date(body.validUntil),
+            permitProcessingFee: toDecimalOrNull(body.permitProcessingFee),
+            dataPreparationFee: toDecimalOrNull(body.dataPreparationFee),
+            speSetupFee: toDecimalOrNull(body.speSetupFee),
+            speUsageFee: toDecimalOrNull(body.speUsageFee),
+            additionalServicesFee: toDecimalOrNull(body.additionalServicesFee),
+            dataHolderFee: toDecimalOrNull(body.dataHolderFee),
+            paymentTerms: body.paymentTerms || null,
           },
         });
         break;

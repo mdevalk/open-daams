@@ -31,9 +31,17 @@ enum DecisionOutcome {
 
 // TEHDAS2 D6.4 Section 9.1 — optional step between positive decision and permit issuance
 enum PermitAcceptanceStatus {
-  PENDING    // Conditions sent to applicant, awaiting confirmation
-  ACCEPTED   // Applicant confirmed — proceed to issue permit
-  DECLINED   // Applicant declined — application treated as withdrawn
+  PENDING // Conditions sent to applicant, awaiting confirmation
+  ACCEPTED // Applicant confirmed — proceed to issue permit
+  DECLINED // Applicant declined — application treated as withdrawn
+}
+
+// TEHDAS2 D6.3 §6.5 / EHDS Art. 62 — cost estimate sent to the applicant
+// during assessment, before a decision is made
+enum FeeEstimateStatus {
+  PENDING // Sent to applicant, awaiting confirmation
+  ACCEPTED // Applicant confirmed — assessment continues
+  REJECTED // Applicant did not accept — application may be withdrawn/scoped down
 }
 
 // TEHDAS2 D6.4 Section 9.2
@@ -66,11 +74,11 @@ model User {
   organisation String
   createdAt    DateTime @default(now())
 
-  applications    Application[]   @relation("Applicant")
-  handledCases    Application[]   @relation("CaseHandler")
-  auditLogs       AuditLog[]
-  notes           Note[]
-  permitActions   DataPermitLog[]
+  applications  Application[]   @relation("Applicant")
+  handledCases  Application[]   @relation("CaseHandler")
+  auditLogs     AuditLog[]
+  notes         Note[]
+  permitActions DataPermitLog[]
 }
 
 model Application {
@@ -81,26 +89,26 @@ model Application {
   source          ApplicationSource @default(NATIONAL)
 
   // Sub-state of DECISION_ISSUED (D6.4 §9)
-  decisionOutcome         DecisionOutcome?
-  decisionAt              DateTime?
-  decisionSummary         String?   @db.Text
+  decisionOutcome DecisionOutcome?
+  decisionAt      DateTime?
+  decisionSummary String?          @db.Text
 
   // Optional permit-pending-acceptance step (D6.4 §9.1, SHOULD)
-  permitAcceptanceStatus  PermitAcceptanceStatus?
-  permitConditionsSentAt  DateTime?
-  permitAcceptedAt        DateTime?
+  permitAcceptanceStatus PermitAcceptanceStatus?
+  permitConditionsSentAt DateTime?
+  permitAcceptedAt       DateTime?
 
   // HD@EU cross-border fields
-  hdeuApplicationId   String?
-  hdeuSendingCountry  String?
-  hdeuReceivedAt      DateTime?
-  hdeuRawPayload      String?   @db.Text
+  hdeuApplicationId  String?
+  hdeuSendingCountry String?
+  hdeuReceivedAt     DateTime?
+  hdeuRawPayload     String?   @db.Text
 
-  applicantId     String
-  applicant       User              @relation("Applicant", fields: [applicantId], references: [id])
+  applicantId String
+  applicant   User   @relation("Applicant", fields: [applicantId], references: [id])
 
-  caseHandlerId   String?
-  caseHandler     User?             @relation("CaseHandler", fields: [caseHandlerId], references: [id])
+  caseHandlerId String?
+  caseHandler   User?   @relation("CaseHandler", fields: [caseHandlerId], references: [id])
 
   // EHDS common data access application form fields
   title                 String
@@ -121,56 +129,91 @@ model Application {
 
   // Statutory deadlines
   // D6.4 §8: voided when AWAITING_ADDITIONAL_INFORMATION, recalculated on return to PROCESSING
-  submittedAt            DateTime?
-  decisionDeadline       DateTime?
-  deadlineExtended       Boolean   @default(false)
-  additionalInfoDeadline DateTime? // Applicant response window
+  submittedAt              DateTime?
+  decisionDeadline         DateTime?
+  deadlineExtended         Boolean   @default(false)
+  additionalInfoDeadline   DateTime? // Applicant response window
   additionalInfoReceivedAt DateTime? // Recalculation anchor (D6.4 §8)
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  auditLogs    AuditLog[]
-  notes        Note[]
-  documents    Document[]
-  dataPermit   DataPermit?
+  auditLogs   AuditLog[]
+  notes       Note[]
+  documents   Document[]
+  dataPermit  DataPermit?
+  feeEstimate FeeEstimate?
+}
+
+// TEHDAS2 D6.3 §6.5 — cost estimate for data holder + HDAB processing fees,
+// sent to the applicant for confirmation before assessment continues
+// (EHDS Art. 62(5))
+model FeeEstimate {
+  id            String      @id @default(cuid())
+  applicationId String      @unique
+  application   Application @relation(fields: [applicationId], references: [id])
+  currency      String      @default("EUR")
+
+  administrativeFee  Decimal? @db.Decimal(10, 2) // processing/application management
+  dataPreparationFee Decimal? @db.Decimal(10, 2) // anonymisation, pseudonymisation, etc.
+  dataHolderFee      Decimal? @db.Decimal(10, 2) // fees charged by health data holder(s)
+  totalAmount        Decimal  @db.Decimal(10, 2)
+
+  notes  String?           @db.Text
+  status FeeEstimateStatus @default(PENDING)
+
+  sentAt      DateTime  @default(now())
+  respondedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // TEHDAS2 D6.4 Section 9.2 — permit lifecycle, separate from application
 model DataPermit {
-  id              String           @id @default(cuid())
-  permitNumber    String           @unique  // e.g. DP-NL-2025-0001
-  applicationId   String           @unique
-  application     Application      @relation(fields: [applicationId], references: [id])
-  status          DataPermitStatus @default(GRANTED)
+  id            String           @id @default(cuid())
+  permitNumber  String           @unique // e.g. DP-NL-2025-0001
+  applicationId String           @unique
+  application   Application      @relation(fields: [applicationId], references: [id])
+  status        DataPermitStatus @default(GRANTED)
 
-  validFrom       DateTime
-  validUntil      DateTime
+  validFrom  DateTime
+  validUntil DateTime
 
   // Populated when AMENDED or RENEWED — new permit ID issued (D6.4 §9.2)
   previousPermitId String?
 
-  revocationReason String?  @db.Text
+  revocationReason String?   @db.Text
   revocationAt     DateTime?
 
-  issuedAt   DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  // Fees for data permit and processing services (Annex 9 §7 / EHDS Art. 62)
+  currency              String   @default("EUR")
+  permitProcessingFee   Decimal? @db.Decimal(10, 2)
+  dataPreparationFee    Decimal? @db.Decimal(10, 2)
+  speSetupFee           Decimal? @db.Decimal(10, 2)
+  speUsageFee           Decimal? @db.Decimal(10, 2)
+  additionalServicesFee Decimal? @db.Decimal(10, 2)
+  dataHolderFee         Decimal? @db.Decimal(10, 2)
+  paymentTerms          String?  @db.Text
 
-  logs       DataPermitLog[]
+  issuedAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  logs DataPermitLog[]
 }
 
 // Immutable audit log for the permit lifecycle
 model DataPermitLog {
-  id          String           @id @default(cuid())
-  permitId    String
-  permit      DataPermit       @relation(fields: [permitId], references: [id])
-  userId      String
-  user        User             @relation(fields: [userId], references: [id])
-  fromStatus  DataPermitStatus?
-  toStatus    DataPermitStatus
-  action      String
-  comment     String?          @db.Text
-  createdAt   DateTime         @default(now())
+  id         String            @id @default(cuid())
+  permitId   String
+  permit     DataPermit        @relation(fields: [permitId], references: [id])
+  userId     String
+  user       User              @relation(fields: [userId], references: [id])
+  fromStatus DataPermitStatus?
+  toStatus   DataPermitStatus
+  action     String
+  comment    String?           @db.Text
+  createdAt  DateTime          @default(now())
 }
 
 model AuditLog {

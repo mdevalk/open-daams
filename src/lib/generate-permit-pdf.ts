@@ -42,6 +42,13 @@ function sanitizeText(str: string): string {
   return replaced.replace(/[^\x00-\xFF]/g, '?');
 }
 
+function fmtMoney(v: unknown, currency: string): string | null {
+  if (v === null || v === undefined) return null;
+  const n = Number(v);
+  if (!Number.isFinite(n)) return null;
+  return new Intl.NumberFormat('nl-NL', { style: 'currency', currency }).format(n);
+}
+
 function fmt(d: Date | null | undefined): string {
   if (!d) return '—';
   return new Date(d).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -64,6 +71,14 @@ export type PermitPdfData = {
   previousPermitId?: string | null;
   revocationReason?: string | null;
   revocationAt?: Date | null;
+  currency?: string | null;
+  permitProcessingFee?: unknown;
+  dataPreparationFee?: unknown;
+  speSetupFee?: unknown;
+  speUsageFee?: unknown;
+  additionalServicesFee?: unknown;
+  dataHolderFee?: unknown;
+  paymentTerms?: string | null;
   application: {
     referenceNumber: string;
     title: string;
@@ -467,17 +482,49 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
 
   // 7. Fees
   doc.heading('7', 'KOSTEN VOOR VERGUNNING EN GEGEVENSVERWERKING');
-  doc.paragraph('Kosten worden vermeld in euro (EUR), conform artikel 62 EHDS.', { size: 8, color: C.gray });
-  doc.spacer(4);
-  doc.bullet('Behandelkosten vergunning: mogelijk reeds voldaan bij indiening van de aanvraag');
-  doc.bullet('Kosten gegevensvoorbereiding (anonimisering, pseudonimisering, koppeling, variabelenselectie)');
-  if (!isDataRequest) {
-    doc.bullet('SPE-gebruikskosten: opstartkosten en doorlopende gebruikskosten (opslag, rekencapaciteit)');
+  {
+    const currency = permit.currency ?? 'EUR';
+    const feeLines: Array<[string, unknown]> = [
+      ['Behandelkosten vergunning', permit.permitProcessingFee],
+      ['Kosten gegevensvoorbereiding', permit.dataPreparationFee],
+      ...(!isDataRequest ? ([
+        ['SPE opstartkosten', permit.speSetupFee],
+        ['SPE gebruikskosten', permit.speUsageFee],
+      ] as Array<[string, unknown]>) : []),
+      ['Aanvullende diensten', permit.additionalServicesFee],
+      ['Kosten gegevenshouder(s)', permit.dataHolderFee],
+    ];
+    const known = feeLines.filter(([, v]) => fmtMoney(v, currency) !== null);
+
+    if (known.length > 0) {
+      doc.paragraph(`Kosten worden vermeld in ${currency}, conform artikel 62 EHDS.`, { size: 8, color: C.gray });
+      doc.spacer(4);
+      let total = 0;
+      for (const [label, v] of known) {
+        const formatted = fmtMoney(v, currency)!;
+        total += Number(v);
+        doc.field(label, formatted);
+      }
+      doc.spacer(2);
+      doc.field('Totaal', fmtMoney(total, currency) ?? '—');
+      if (permit.paymentTerms) {
+        doc.spacer(4);
+        doc.paragraph(permit.paymentTerms, { size: 8 });
+      }
+    } else {
+      doc.paragraph(`Kosten worden vermeld in ${currency}, conform artikel 62 EHDS.`, { size: 8, color: C.gray });
+      doc.spacer(4);
+      doc.bullet('Behandelkosten vergunning: mogelijk reeds voldaan bij indiening van de aanvraag');
+      doc.bullet('Kosten gegevensvoorbereiding (anonimisering, pseudonimisering, koppeling, variabelenselectie)');
+      if (!isDataRequest) {
+        doc.bullet('SPE-gebruikskosten: opstartkosten en doorlopende gebruikskosten (opslag, rekencapaciteit)');
+      }
+      doc.bullet('Aanvullende diensten (technische ondersteuning, aanpassingen aan variabelen)');
+      doc.bullet('Kosten in rekening gebracht door gegevenshouders');
+      doc.spacer(4);
+      doc.placeholder('Bedragen, betalingstermijnen en eventuele kortingen/vrijstellingen — nog niet geregistreerd in DAAMS');
+    }
   }
-  doc.bullet('Aanvullende diensten (technische ondersteuning, aanpassingen aan variabelen)');
-  doc.bullet('Kosten in rekening gebracht door gegevenshouders');
-  doc.spacer(4);
-  doc.placeholder('Bedragen, betalingstermijnen en eventuele kortingen/vrijstellingen — nog niet geregistreerd in DAAMS');
   doc.spacer(4);
 
   // 8. Applicable legislation

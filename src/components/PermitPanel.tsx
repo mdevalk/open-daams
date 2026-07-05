@@ -1,14 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { Application, DataPermit, User } from '@prisma/client';
+import { Application, DataPermit, FeeEstimate, User } from '@prisma/client';
 import { PERMIT_TRANSITIONS, PERMIT_STATUS_LABELS, PERMIT_STATUS_COLORS } from '@/lib/permit';
 import { PermitCard } from './PermitCard';
 import { useRouter } from 'next/navigation';
 import { formatDate, readErrorMessage } from '@/lib/utils';
 
 type Props = {
-  application: Application & { dataPermit: DataPermit | null };
+  application: Application & { dataPermit: DataPermit | null; feeEstimate?: FeeEstimate | null };
   currentUser: User;
 };
 
@@ -22,6 +22,14 @@ export function PermitPanel({ application, currentUser }: Props) {
   const [validUntil, setValidUntil] = useState(
     new Date(Date.now() + 2 * 365.25 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
   );
+  const estimate = application.feeEstimate;
+  const [permitProcessingFee, setPermitProcessingFee] = useState(estimate?.administrativeFee?.toString() ?? '');
+  const [dataPreparationFee, setDataPreparationFee] = useState(estimate?.dataPreparationFee?.toString() ?? '');
+  const [speSetupFee, setSpeSetupFee] = useState('');
+  const [speUsageFee, setSpeUsageFee] = useState('');
+  const [additionalServicesFee, setAdditionalServicesFee] = useState('');
+  const [dataHolderFee, setDataHolderFee] = useState(estimate?.dataHolderFee?.toString() ?? '');
+  const [paymentTerms, setPaymentTerms] = useState('');
 
   // Lifecycle transition state
   const [selectedTransition, setSelectedTransition] = useState<string | null>(null);
@@ -48,6 +56,13 @@ export function PermitPanel({ application, currentUser }: Props) {
           validFrom,
           validUntil,
           issuedByUserId: currentUser.id,
+          permitProcessingFee,
+          dataPreparationFee,
+          speSetupFee,
+          speUsageFee,
+          additionalServicesFee,
+          dataHolderFee,
+          paymentTerms,
         }),
       });
       if (!res.ok) throw new Error(await readErrorMessage(res, 'Uitgifte mislukt'));
@@ -116,6 +131,49 @@ export function PermitPanel({ application, currentUser }: Props) {
                 className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
               />
             </div>
+
+            <div className="border-t border-emerald-200 pt-3 space-y-2">
+              <p className="text-xs font-semibold text-emerald-900">Kosten (Annex 9 §7)</p>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs text-gray-700 mb-1">Behandelkosten</label>
+                  <input type="number" step="0.01" value={permitProcessingFee} onChange={e => setPermitProcessingFee(e.target.value)}
+                    className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-700 mb-1">Gegevensvoorbereiding</label>
+                  <input type="number" step="0.01" value={dataPreparationFee} onChange={e => setDataPreparationFee(e.target.value)}
+                    className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-700 mb-1">SPE opstartkosten</label>
+                  <input type="number" step="0.01" value={speSetupFee} onChange={e => setSpeSetupFee(e.target.value)}
+                    className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-700 mb-1">SPE gebruikskosten</label>
+                  <input type="number" step="0.01" value={speUsageFee} onChange={e => setSpeUsageFee(e.target.value)}
+                    className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-700 mb-1">Aanvullende diensten</label>
+                  <input type="number" step="0.01" value={additionalServicesFee} onChange={e => setAdditionalServicesFee(e.target.value)}
+                    className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-700 mb-1">Kosten gegevenshouder(s)</label>
+                  <input type="number" step="0.01" value={dataHolderFee} onChange={e => setDataHolderFee(e.target.value)}
+                    className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-700 mb-1">Betalingsvoorwaarden</label>
+                <textarea rows={2} value={paymentTerms} onChange={e => setPaymentTerms(e.target.value)}
+                  placeholder="Betalingstermijn, factuurproces, kortingen..."
+                  className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
+              </div>
+            </div>
+
             {error && <p className="text-xs text-red-600">{error}</p>}
             <button
               disabled={loading}

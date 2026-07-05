@@ -7,6 +7,7 @@ import { WorkflowTimeline } from '@/components/WorkflowTimeline';
 import { TransitionPanel } from '@/components/TransitionPanel';
 import { NotesList } from '@/components/NotesList';
 import { PermitPanel } from '@/components/PermitPanel';
+import { FeeEstimatePanel } from '@/components/FeeEstimatePanel';
 import { UserSwitcher } from '@/components/UserSwitcher';
 import { formatDate, formatDateTime, purposeLabel } from '@/lib/utils';
 
@@ -31,6 +32,7 @@ export default async function ApplicationDetailPage({
         applicant: true,
         caseHandler: true,
         dataPermit: true,
+        feeEstimate: true,
         auditLogs: {
           include: { user: { select: { id: true, name: true, role: true } } },
           orderBy: { createdAt: 'asc' },
@@ -222,6 +224,7 @@ export default async function ApplicationDetailPage({
         <div className="space-y-4">
           <UserSwitcher users={users} currentUserId={currentUser.id} />
           <TransitionPanel application={application} currentUser={currentUser} />
+          <FeeEstimatePanel application={application} currentUser={currentUser} />
           <PermitPanel application={application} currentUser={currentUser} />
           <section className="rounded-xl border border-gray-200 bg-white p-5">
             <h2 className="font-semibold text-gray-900 mb-4">{t('historyTitle')}</h2>
