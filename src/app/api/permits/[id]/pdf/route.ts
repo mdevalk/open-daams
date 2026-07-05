@@ -41,6 +41,7 @@ export async function GET(
           applicant: { select: { name: true, organisation: true, email: true } },
         },
       },
+      authorizedPersons: { orderBy: { addedAt: 'asc' } },
     },
   });
 

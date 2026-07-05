@@ -10,7 +10,10 @@ import { PermitPanel } from '@/components/PermitPanel';
 import { FeeEstimatePanel } from '@/components/FeeEstimatePanel';
 import { EthicalReviewPanel } from '@/components/EthicalReviewPanel';
 import { AppealsPanel } from '@/components/AppealsPanel';
+import { CompletenessCheckPanel } from '@/components/CompletenessCheckPanel';
+import { ExtractionRequestsPanel } from '@/components/ExtractionRequestsPanel';
 import { UserSwitcher } from '@/components/UserSwitcher';
+import type { CompletenessItem } from '@/app/api/applications/[id]/completeness-check/route';
 import { formatDate, formatDateTime, purposeLabel } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
@@ -45,6 +48,8 @@ export default async function ApplicationDetailPage({
         },
         documents: { orderBy: { uploadedAt: 'desc' } },
         appeals: { orderBy: { submittedAt: 'desc' } },
+        completenessCheck: true,
+        extractionRequests: { orderBy: { requestedAt: 'desc' } },
       },
     }),
     prisma.user.findMany({ orderBy: { name: 'asc' } }),
@@ -109,6 +114,22 @@ export default async function ApplicationDetailPage({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main content */}
         <div className="lg:col-span-2 space-y-6">
+          {['SUBMITTED', 'PRE_SCREENING'].includes(application.status) && (
+            <CompletenessCheckPanel
+              applicationId={application.id}
+              currentUserId={currentUser.id}
+              canManage={['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(currentUser.role)}
+              existing={
+                application.completenessCheck
+                  ? {
+                      items: application.completenessCheck.items as unknown as CompletenessItem[],
+                      result: application.completenessCheck.result,
+                    }
+                  : null
+              }
+            />
+          )}
+
           <section className="rounded-xl border border-gray-200 bg-white p-5">
             <h2 className="font-semibold text-gray-900 mb-4">{t('detailsTitle')}</h2>
             <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
@@ -234,6 +255,14 @@ export default async function ApplicationDetailPage({
           <TransitionPanel application={application} currentUser={currentUser} />
           <FeeEstimatePanel application={application} currentUser={currentUser} />
           <PermitPanel application={application} currentUser={currentUser} />
+          {application.decisionOutcome === 'POSITIVE' && (
+            <ExtractionRequestsPanel
+              applicationId={application.id}
+              currentUserId={currentUser.id}
+              requests={application.extractionRequests}
+              canManage={['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(currentUser.role)}
+            />
+          )}
           {(application.decisionOutcome || application.appeals.length > 0) && (
             <AppealsPanel
               applicationId={application.id}

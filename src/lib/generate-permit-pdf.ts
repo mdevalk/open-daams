@@ -79,6 +79,7 @@ export type PermitPdfData = {
   additionalServicesFee?: unknown;
   dataHolderFee?: unknown;
   paymentTerms?: string | null;
+  authorizedPersons?: Array<{ name: string; affiliation: string; email: string }> | null;
   application: {
     referenceNumber: string;
     title: string;
@@ -499,8 +500,13 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
   doc.spacer(6);
 
   doc.subheading('6.8  Personen die gemachtigd zijn de gegevens te verwerken');
-  doc.paragraph('De lijst van personen die gemachtigd zijn de op grond van deze vergunning verstrekte gegevens te verwerken, is opgenomen in bijlage 2.', { size: 8, color: C.gray });
-  doc.placeholder('Lijst van gemachtigde personen (naam, affiliatie, e-mailadres) — nog niet geregistreerd in DAAMS');
+  if (permit.authorizedPersons && permit.authorizedPersons.length > 0) {
+    for (const person of permit.authorizedPersons) {
+      doc.bullet(`${person.name} — ${person.affiliation} (${person.email})`);
+    }
+  } else {
+    doc.placeholder('Lijst van gemachtigde personen (naam, affiliatie, e-mailadres) — nog niet geregistreerd in DAAMS');
+  }
   doc.spacer(4);
 
   // 7. Fees

@@ -72,6 +72,22 @@ enum AppealStatus {
   WITHDRAWN
 }
 
+// TEHDAS2 D6.3 §5.5 — outcome of the completeness check
+enum CompletenessResult {
+  PENDING
+  COMPLETE
+  INCOMPLETE
+}
+
+// TEHDAS2 D6.3 §7.1 / EHDS Art. 60, 68(7) — extraction request lifecycle
+// between the HDAB and a health data holder
+enum ExtractionStatus {
+  REQUESTED
+  CONFIRMED
+  DELIVERED
+  DECLINED
+}
+
 enum UserRole {
   APPLICANT
   CASE_HANDLER
@@ -93,11 +109,13 @@ model User {
   organisation String
   createdAt    DateTime @default(now())
 
-  applications  Application[]   @relation("Applicant")
-  handledCases  Application[]   @relation("CaseHandler")
-  auditLogs     AuditLog[]
-  notes         Note[]
-  permitActions DataPermitLog[]
+  applications       Application[]           @relation("Applicant")
+  handledCases       Application[]           @relation("CaseHandler")
+  auditLogs          AuditLog[]
+  notes              Note[]
+  permitActions      DataPermitLog[]
+  completenessChecks CompletenessCheck[]
+  extractionRequests DataExtractionRequest[]
 }
 
 model Application {
@@ -161,15 +179,62 @@ model Application {
   additionalInfoDeadline   DateTime? // Applicant response window
   additionalInfoReceivedAt DateTime? // Recalculation anchor (D6.4 §8)
 
+  // Public disclosure (Art. 57(1)(j)(ii), 58, 61(4), D6.3 §5.1/§7.11)
+  publishedAt         DateTime? // application made public, without undue delay after reception
+  decisionPublishedAt DateTime? // decision/permit made public (within 30 working days)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  auditLogs   AuditLog[]
-  notes       Note[]
-  documents   Document[]
-  dataPermit  DataPermit?
-  feeEstimate FeeEstimate?
-  appeals     Appeal[]
+  auditLogs          AuditLog[]
+  notes              Note[]
+  documents          Document[]
+  dataPermit         DataPermit?
+  feeEstimate        FeeEstimate?
+  appeals            Appeal[]
+  completenessCheck  CompletenessCheck?
+  extractionRequests DataExtractionRequest[]
+}
+
+// TEHDAS2 D6.3 Ch. 5 / Annex 7-8 — structured completeness check preceding
+// the substantive assessment (distinct from the assessment itself)
+model CompletenessCheck {
+  id            String      @id @default(cuid())
+  applicationId String      @unique
+  application   Application @relation(fields: [applicationId], references: [id])
+
+  // [{ key: string, label: string, passed: boolean, comment?: string }]
+  items  Json
+  result CompletenessResult @default(PENDING)
+
+  checkedById String?
+  checkedBy   User?     @relation(fields: [checkedById], references: [id])
+  checkedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// TEHDAS2 D6.3 §7.1 / EHDS Art. 60, 68(7) — request to a health data holder
+// to extract the data covered by an issued permit, through to delivery
+model DataExtractionRequest {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id])
+
+  dataHolderName     String
+  datasetDescription String @db.Text
+
+  requestedAt   DateTime @default(now())
+  requestedById String
+  requestedBy   User     @relation(fields: [requestedById], references: [id])
+
+  status        ExtractionStatus @default(REQUESTED)
+  deliveredAt   DateTime?
+  deliveryNotes String?          @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // EHDS Art. 63 / national administrative law — tracks bezwaar (objection) and
@@ -247,7 +312,20 @@ model DataPermit {
   issuedAt  DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  logs DataPermitLog[]
+  logs              DataPermitLog[]
+  authorizedPersons AuthorizedPerson[]
+}
+
+// Annex 9 §6.8 — persons entitled to process the data granted under this
+// permit within the secure processing environment (SPE)
+model AuthorizedPerson {
+  id          String     @id @default(cuid())
+  permitId    String
+  permit      DataPermit @relation(fields: [permitId], references: [id])
+  name        String
+  affiliation String
+  email       String
+  addedAt     DateTime   @default(now())
 }
 
 // Immutable audit log for the permit lifecycle

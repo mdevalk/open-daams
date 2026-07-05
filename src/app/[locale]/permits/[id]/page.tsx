@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import { prisma } from '@/lib/db';
 import { PermitCard } from '@/components/PermitCard';
 import { PermitPanel } from '@/components/PermitPanel';
+import { AuthorizedPersonsPanel } from '@/components/AuthorizedPersonsPanel';
 import { PERMIT_STATUS_LABELS } from '@/lib/permit';
 import { formatDate, formatDateTime } from '@/lib/utils';
 
@@ -35,6 +36,7 @@ export default async function PermitDetailPage({
           include: { user: { select: { name: true, role: true } } },
           orderBy: { createdAt: 'asc' },
         },
+        authorizedPersons: { orderBy: { addedAt: 'asc' } },
       },
     }),
     prisma.user.findMany({ orderBy: { name: 'asc' } }),
@@ -137,8 +139,13 @@ export default async function PermitDetailPage({
           </section>
         </div>
 
-        <div>
+        <div className="space-y-4">
           <PermitPanel application={fakeApplication} currentUser={currentUser} />
+          <AuthorizedPersonsPanel
+            permitId={permit.id}
+            persons={permit.authorizedPersons}
+            canManage={['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(currentUser.role)}
+          />
         </div>
       </div>
     </div>
