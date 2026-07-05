@@ -23,6 +23,25 @@ const C = {
   placeholder: rgb(0.55, 0.55, 0.55),
 };
 
+// pdf-lib's standard fonts use WinAnsi encoding (roughly Latin-1) and throw on
+// anything outside it (e.g. ≥, ≤, curly quotes, em dashes) — free-text fields
+// from the database can contain such characters, so normalise them here.
+const WINANSI_REPLACEMENTS: Record<string, string> = {
+  '≥': '>=', '≤': '<=', '≠': '!=',
+  '‘': "'", '’': "'", '“': '"', '”': '"',
+  '–': '-', '—': '-', '…': '...',
+  ' ': ' ',
+};
+
+function sanitizeText(str: string): string {
+  const replaced = str.replace(
+    /[≥≤≠‘’“”–—… ]/g,
+    (ch) => WINANSI_REPLACEMENTS[ch] ?? ch,
+  );
+  // eslint-disable-next-line no-control-regex
+  return replaced.replace(/[^\x00-\xFF]/g, '?');
+}
+
 function fmt(d: Date | null | undefined): string {
   if (!d) return '—';
   return new Date(d).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -107,9 +126,10 @@ class Doc {
   }
 
   text(
-    str: string, x: number, y: number, font: PDFFont, size: number,
+    rawStr: string, x: number, y: number, font: PDFFont, size: number,
     color: ReturnType<typeof rgb>, maxWidth?: number,
   ): number {
+    const str = sanitizeText(rawStr);
     if (!maxWidth) {
       this.page.drawText(str, { x, y: PH - y - size, font, size, color });
       return y + size * 1.4;
@@ -131,10 +151,10 @@ class Doc {
     return curY + size * 1.4;
   }
 
-  paragraph(str: string, opts: { size?: number; color?: ReturnType<typeof rgb>; indent?: number; font?: PDFFont } = {}) {
+  paragraph(rawStr: string, opts: { size?: number; color?: ReturnType<typeof rgb>; indent?: number; font?: PDFFont } = {}) {
     const { size = 8.5, color = C.black, indent = 0, font = this.regular } = opts;
     const lineH = size * 1.4;
-    const words = str.replace(/\s+/g, ' ').trim().split(' ');
+    const words = sanitizeText(rawStr).replace(/\s+/g, ' ').trim().split(' ');
     const maxWidth = CW - indent;
     let line = '';
     const lines: string[] = [];
