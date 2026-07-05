@@ -93,8 +93,12 @@ export default async function ApplicationDetailPage({
 
       {/* Deadline banners */}
       <div className="space-y-2">
-        <DeadlineBanner label={t('decisionDeadline')} deadline={application.decisionDeadline} />
-        <DeadlineBanner label={t('additionalInfoDeadline')} deadline={application.additionalInfoDeadline} />
+        {application.status !== 'DECISION_ISSUED' && application.status !== 'WITHDRAWN' && (
+          <DeadlineBanner label={t('decisionDeadline')} deadline={application.decisionDeadline} />
+        )}
+        {application.status === 'AWAITING_ADDITIONAL_INFORMATION' && (
+          <DeadlineBanner label={t('additionalInfoDeadline')} deadline={application.additionalInfoDeadline} />
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

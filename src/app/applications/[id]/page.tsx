@@ -91,8 +91,12 @@ export default async function ApplicationDetailPage({
 
       {/* Deadline banners */}
       <div className="space-y-2">
-        <DeadlineBanner label="Beslissingstermijn (Art. 46)" deadline={application.decisionDeadline} />
-        <DeadlineBanner label="Termijn aanvullende informatie" deadline={application.additionalInfoDeadline} />
+        {application.status !== 'DECISION_ISSUED' && application.status !== 'WITHDRAWN' && (
+          <DeadlineBanner label="Beslissingstermijn (Art. 46)" deadline={application.decisionDeadline} />
+        )}
+        {application.status === 'AWAITING_ADDITIONAL_INFORMATION' && (
+          <DeadlineBanner label="Termijn aanvullende informatie" deadline={application.additionalInfoDeadline} />
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
