@@ -3,6 +3,7 @@ import { PDFDocument, rgb, StandardFonts, PDFFont, PDFPage } from 'pdf-lib';
 // Layout follows TEHDAS2 D6.3 "Guideline for Health Data Access Bodies on the
 // procedures and formats for data access", Annex 9 - Data permit template
 // (17 September 2025, accepted by TEHDAS2 Project Steering Group 11 Sep 2025).
+// Section numbers/headings below (1-10, 6.1-6.8) mirror the Annex 9 structure.
 
 const C = {
   darkBlue: rgb(0.082, 0.259, 0.451),
@@ -19,6 +20,7 @@ const C = {
   redBg: rgb(0.988, 0.910, 0.902),
   amberText: rgb(0.541, 0.361, 0.024),
   amberBg: rgb(0.996, 0.953, 0.831),
+  placeholder: rgb(0.55, 0.55, 0.55),
 };
 
 function fmt(d: Date | null | undefined): string {
@@ -40,11 +42,15 @@ export type PermitPdfData = {
   issuedAt: Date | null;
   validFrom: Date | null;
   validUntil: Date | null;
+  previousPermitId?: string | null;
   revocationReason?: string | null;
+  revocationAt?: Date | null;
   application: {
     referenceNumber: string;
     title: string;
     type: string;
+    submittedAt?: Date | null;
+    decisionSummary?: string | null;
     projectDescription?: string | null;
     purposeCategory?: string | null;
     requestedDatasets?: string[] | null;
@@ -83,11 +89,10 @@ class Doc {
     this.italic = await this.pdfDoc.embedFont(StandardFonts.HelveticaOblique);
   }
 
-  newPage(withHeader = true) {
+  newPage() {
     this.page = this.pdfDoc.addPage([PW, PH]);
     this.pageNum += 1;
     this.y = 40;
-    if (!withHeader) return;
   }
 
   ensureSpace(needed: number) {
@@ -126,7 +131,8 @@ class Doc {
     return curY + size * 1.4;
   }
 
-  paragraph(str: string, size = 8.5, color = C.black, indent = 0) {
+  paragraph(str: string, opts: { size?: number; color?: ReturnType<typeof rgb>; indent?: number; font?: PDFFont } = {}) {
+    const { size = 8.5, color = C.black, indent = 0, font = this.regular } = opts;
     const lineH = size * 1.4;
     const words = str.replace(/\s+/g, ' ').trim().split(' ');
     const maxWidth = CW - indent;
@@ -134,7 +140,7 @@ class Doc {
     const lines: string[] = [];
     for (const word of words) {
       const test = line ? `${line} ${word}` : word;
-      if (this.regular.widthOfTextAtSize(test, size) > maxWidth && line) {
+      if (font.widthOfTextAtSize(test, size) > maxWidth && line) {
         lines.push(line);
         line = word;
       } else {
@@ -144,9 +150,13 @@ class Doc {
     if (line) lines.push(line);
     for (const l of lines) {
       this.ensureSpace(lineH);
-      this.page.drawText(l, { x: M + indent, y: PH - this.y - size, font: this.regular, size, color });
+      this.page.drawText(l, { x: M + indent, y: PH - this.y - size, font, size, color });
       this.y += lineH;
     }
+  }
+
+  placeholder(str: string, indent = 0) {
+    this.paragraph(`[${str}]`, { size: 8, color: C.placeholder, indent, font: this.italic });
   }
 
   heading(num: string, title: string) {
@@ -171,6 +181,10 @@ class Doc {
     this.text(label, M, this.y, this.regular, 8.5, C.gray);
     const nextY = this.text(clean, M + labelWidth, startY, this.bold, 8.5, C.black, CW - labelWidth);
     this.y = Math.max(startY + 13, nextY) + 2;
+  }
+
+  bullet(str: string) {
+    this.paragraph(`•  ${str}`, { indent: 4 });
   }
 
   spacer(h = 8) {
@@ -207,35 +221,57 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
 
   const app = permit.application;
   const isRevoked = permit.status === 'REVOKED';
+  const isAmendment = !!permit.previousPermitId;
+  const isDataRequest = app?.type === 'DATA_REQUEST';
   const statusLabel = STATUS_NL[permit.status] ?? permit.status;
 
   doc.newPage();
 
-  // Decision header block, per Annex 9 running header
+  // Running header, per Annex 9 top block
   doc.rect(0, 0, PW, 62, C.darkBlue);
   doc.text('BESLUIT', M, 12, doc.bold, 15, C.white);
-  doc.text(`Kenmerk / vergunningsnummer: ${permit.permitNumber}`, M, 32, doc.regular, 8.5, rgb(0.85, 0.9, 0.95));
-  doc.text('Health Data Access Body Nederland (HDAB-NL)', M, 44, doc.regular, 8.5, rgb(0.85, 0.9, 0.95));
+  doc.text(`Dossier- / vergunningsnummer: ${permit.permitNumber}`, M, 32, doc.regular, 8.5, rgb(0.85, 0.9, 0.95));
+  doc.text('Health Data Access Body Nederland (HDAB-NL) | Nederland', M, 44, doc.regular, 8.5, rgb(0.85, 0.9, 0.95));
   doc.y = 78;
 
   const badgeW = doc.bold.widthOfTextAtSize(statusLabel, 8) + 16;
   doc.rect(M, doc.y, badgeW, 15, isRevoked ? C.redBg : C.greenBg);
   doc.text(statusLabel, M + 8, doc.y + 4, doc.bold, 8, isRevoked ? C.redText : C.green);
   doc.text(`Datum van afgifte: ${fmt(permit.issuedAt)}`, M + badgeW + 12, doc.y + 4, doc.regular, 8, C.gray);
-  doc.y += 26;
+  doc.y += 22;
+
+  doc.paragraph(
+    `Uw aanvraag ${app?.referenceNumber ?? '—'}, ingediend op ${fmt(app?.submittedAt)}.`,
+    { size: 8, color: C.gray, font: doc.italic },
+  );
+  doc.paragraph(
+    isDataRequest ? 'Besluit op gezondheidsgegevensverzoek' : 'Dataverwerkingsvergunning / besluit op gezondheidsgegevensaanvraag',
+    { size: 8, color: C.gray, font: doc.italic },
+  );
+  doc.spacer(6);
 
   // 1. Issuing authority
   doc.heading('1', 'AFGEVENDE AUTORITEIT');
   doc.field('Naam', 'Health Data Access Body Nederland (HDAB-NL)');
   doc.field('Contactgegevens', 'info@hdab.nl');
-  doc.spacer(4);
+  doc.spacer(6);
+  doc.text('Ondertekening:', M, doc.y, doc.regular, 8.5, C.gray);
+  doc.y += 16;
+  doc.page.drawLine({ start: { x: M, y: PH - doc.y }, end: { x: M + 200, y: PH - doc.y }, thickness: 0.6, color: C.divider });
+  doc.y += 4;
+  doc.spacer(8);
 
   // 2. Health data user / applicant
   doc.heading('2', 'GEZONDHEIDSGEGEVENSGEBRUIKER / AANVRAGER');
   if (app) {
-    doc.field('Naam', app.applicant.name);
-    doc.field('Organisatie', app.applicant.organisation);
+    doc.field('Type gebruiker', 'Rechtspersoon (met vertegenwoordiger)');
+    doc.field('Naam organisatie', app.applicant.organisation);
+    doc.field('Vertegenwoordiger (naam)', app.applicant.name);
     doc.field('E-mail', app.applicant.email);
+    if (app.purposeCategory === 'SCIENTIFIC_RESEARCH') {
+      doc.field('Hoofdonderzoeker', app.applicant.name);
+    }
+    doc.field('Verwerkingsverantwoordelijke', app.applicant.organisation);
   }
   doc.spacer(4);
 
@@ -244,14 +280,18 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
   doc.field('Projecttitel', app?.title ?? '—');
   doc.field('Vergunningsnummer / dossiernummer', permit.permitNumber);
   doc.field('Aanvraagreferentie', app?.referenceNumber ?? '—');
+  if (isAmendment) {
+    doc.field('Eerdere vergunning', permit.previousPermitId ?? '—');
+  }
   doc.spacer(4);
 
   // 4. Subject
   doc.heading('4', 'ONDERWERP');
   doc.paragraph(
     `De gezondheidsgegevensgebruiker heeft bij HDAB-NL een aanvraag ingediend voor het project ` +
-    `"${app?.title ?? '—'}" op grond van artikel 67 van Verordening (EU) 2025/327 van het Europees ` +
-    `Parlement en de Raad betreffende de Europese ruimte voor gezondheidsgegevens (hierna: EHDS).`,
+    `"${app?.title ?? '—'}" op grond van artikel ${isDataRequest ? '69' : '67'} van Verordening (EU) 2025/327 ` +
+    `van het Europees Parlement en de Raad betreffende de Europese ruimte voor gezondheidsgegevens ` +
+    `(hierna: EHDS).`,
   );
   if (app?.projectDescription) {
     doc.spacer(6);
@@ -263,30 +303,48 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
   doc.heading('5', 'BESLUIT');
   if (isRevoked) {
     doc.paragraph(
-      `Op grond van de EHDS trekt HDAB-NL de aan de gezondheidsgegevensgebruiker verleende vergunning in.`,
-      8.5, C.redText,
+      'Op grond van de EHDS trekt HDAB-NL de aan de gezondheidsgegevensgebruiker verleende vergunning in.',
+      { color: C.redText },
     );
+    doc.field('Datum intrekking', fmt(permit.revocationAt));
     if (permit.revocationReason) {
       doc.spacer(6);
-      doc.paragraph(`Reden van intrekking: ${permit.revocationReason}`, 8.5, C.redText);
+      doc.paragraph(`Reden van intrekking: ${permit.revocationReason}`, { color: C.redText });
     }
   } else {
     doc.paragraph(
-      `Op grond van de EHDS verleent HDAB-NL de gezondheidsgegevensgebruiker de vergunning om de in ` +
-      `dit besluit bedoelde gegevens te verwerken, overeenkomstig artikel 68, lid 3, EHDS. De vergunning ` +
-      `wordt verleend voor het project zoals beschreven in de aanvraag. HDAB-NL is van oordeel dat is ` +
-      `voldaan aan de vereisten van artikel 68, lid 1, EHDS en dat de risico's bedoeld in artikel 68, lid 2, ` +
-      `voldoende zijn beperkt. De gevraagde gegevens zijn bovendien noodzakelijk, adequaat en evenredig ` +
-      `voor de in de aanvraag beschreven doeleinden.`,
+      `Op grond van de EHDS verleent HDAB-NL de gezondheidsgegevensgebruiker ${isDataRequest ? 'de goedkeuring om een antwoord te ontvangen' : 'de vergunning om de in dit besluit bedoelde gegevens te verwerken'}, ` +
+      `overeenkomstig artikel ${isDataRequest ? '69' : '68, lid 3,'} EHDS. ${isDataRequest ? 'De goedkeuring' : 'De vergunning'} wordt verleend voor het project ` +
+      `zoals beschreven in de aanvraag. HDAB-NL is van oordeel dat is voldaan aan de vereisten van artikel ` +
+      `${isDataRequest ? '69' : '68, lid 1,'} EHDS en dat de risico's bedoeld in artikel 68, lid 2, voldoende zijn beperkt. ` +
+      `De gevraagde gegevens zijn bovendien noodzakelijk, adequaat en evenredig voor de in de aanvraag ` +
+      `beschreven doeleinden.`,
     );
+    if (app?.decisionSummary) {
+      doc.spacer(6);
+      doc.paragraph(app.decisionSummary);
+    }
     doc.spacer(8);
-    doc.field('Geldig vanaf', fmt(permit.validFrom));
-    doc.field('Geldig tot en met', fmt(permit.validUntil));
+    if (isAmendment) {
+      doc.paragraph('Deze vergunning betreft een wijziging (amendement) van een eerder verleende vergunning.', { color: C.gray, size: 8 });
+      doc.spacer(4);
+    }
+    doc.field('Toegangsperiode (SPE)', `${fmt(permit.validFrom)} — ${fmt(permit.validUntil)}`);
+    doc.field('Bewaartermijn in de SPE', `Verwijdering uiterlijk 6 maanden na ${fmt(permit.validUntil)} (Art. 68, lid 12, EHDS)`);
     if (app?.dataStartDate || app?.dataEndDate) {
-      doc.field(
-        'Periode gegevensverwerking',
-        `${fmt(app?.dataStartDate)} — ${fmt(app?.dataEndDate)}`,
+      doc.field('Periode brongegevens', `${fmt(app?.dataStartDate)} — ${fmt(app?.dataEndDate)}`);
+    }
+
+    doc.spacer(6);
+    doc.placeholder('Handelsgeheimen / intellectuele-eigendomsrechten: nog niet geregistreerd — vul aan indien van toepassing (Art. 52 EHDS)');
+    doc.placeholder('Uitzondering opt-out mechanisme: nog niet geregistreerd — vul aan indien van toepassing (Art. 71, lid 4, EHDS)');
+    if (app?.isCrossBorder) {
+      doc.spacer(4);
+      doc.paragraph(
+        `Dit betreft een grensoverschrijdende aanvraag. Gegevens worden mede verwerkt in samenwerking met ` +
+        `de bevoegde autoriteit(en) van: ${app.dataProcessingCountry ?? '—'} (Art. 76 EHDS).`,
       );
+      doc.placeholder('Wederzijdse erkenning van een door een andere HDAB verleende vergunning: nog niet geregistreerd');
     }
   }
   doc.spacer(4);
@@ -300,17 +358,25 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
     'gezondheidsgegevensaanvragen en -verzoeken op grond van artikel 55 EHDS en de Nederlandse ' +
     'uitvoeringswetgeving.',
   );
+  doc.spacer(4);
+  doc.placeholder('Indien beoordeeld door een trusted health data holder (Art. 72, lid 2 en 4, EHDS): naam, verwijzingsbesluit en datum van het advies nog niet geregistreerd');
+  doc.spacer(6);
+
+  doc.subheading('6.2  Ontvangen verklaringen');
+  doc.placeholder('Overzicht van relevante andere vergunningen, ethische toetsingsverklaringen e.d. (afgevende autoriteit, dossiernummer, datum van afgifte) — nog niet geregistreerd in DAAMS');
   doc.spacer(6);
 
   doc.subheading('6.3  Beschrijving van het doel van gebruik');
   const purposeText = app?.purposeCategory
     ? (PURPOSE_LABELS[app.purposeCategory] ?? app.purposeCategory)
     : '—';
-  doc.paragraph(`HDAB-NL verleent de vergunning voor het volgende doeleinde: ${purposeText}.`);
+  doc.paragraph(`HDAB-NL verleent ${isDataRequest ? 'de goedkeuring' : 'de vergunning'} voor het volgende doeleinde: ${purposeText}.`);
   if (app?.legalBasis) {
     doc.spacer(4);
     doc.field('Rechtsgrondslag', app.legalBasis);
   }
+  doc.spacer(4);
+  doc.paragraph('De reikwijdte en doelstellingen van het project zijn getoetst en in lijn bevonden met de EHDS.');
   doc.spacer(6);
 
   doc.subheading('6.4  Gegevens die op grond van de vergunning worden verstrekt');
@@ -332,39 +398,73 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
   if (app?.dataProcessingCountry) {
     doc.field('Land van gegevensverwerking', app.dataProcessingCountry);
   }
-  if (app?.isCrossBorder) {
-    doc.spacer(4);
-    doc.paragraph(
-      'Dit betreft een grensoverschrijdende aanvraag; de gegevens worden mede verwerkt in ' +
-      'samenwerking met de bevoegde autoriteit(en) van het/de betrokken lidsta(a)t(en) ' +
-      '(Art. 76 EHDS).',
-    );
-  }
+  doc.spacer(4);
+  doc.paragraph(
+    `De gegevens worden verstrekt in ${isDataRequest ? 'geanonimiseerd, geaggregeerd statistisch' : 'geanonimiseerd of gepseudonimiseerd individueel-niveau'} formaat.`,
+  );
+  doc.spacer(4);
+  doc.paragraph('Een gedetailleerde beschrijving van de op grond van deze vergunning verstrekte gegevens is opgenomen in bijlage 1.', { size: 8, color: C.gray });
   doc.spacer(6);
 
-  doc.subheading('6.6  Beveiligde verwerkingsomgeving');
+  doc.subheading('6.5  Voorbereiding en verstrekking van de gegevens');
   doc.paragraph(
-    'De op grond van deze vergunning verstrekte gegevens worden uitsluitend beschikbaar gesteld in ' +
-    'een beveiligde verwerkingsomgeving (Secure Processing Environment, SPE) die voldoet aan de ' +
-    'technische en organisatorische eisen van artikel 73 EHDS. Alleen anonieme resultaten mogen uit ' +
-    'de SPE worden geëxporteerd.',
+    'HDAB-NL combineert, bewerkt en anonimiseert/pseudonimiseert de gegevens voorafgaand aan verstrekking.',
   );
+  doc.placeholder('Indien voorbereiding is uitgevoerd door een trusted health data holder (Art. 72, lid 6, EHDS): naam nog niet geregistreerd');
+  doc.spacer(6);
+
+  if (!isDataRequest) {
+    doc.subheading('6.6  Beveiligde verwerkingsomgeving');
+    doc.paragraph(
+      'De op grond van deze vergunning verstrekte gegevens worden uitsluitend beschikbaar gesteld in ' +
+      'een beveiligde verwerkingsomgeving (Secure Processing Environment, SPE) die voldoet aan de ' +
+      'technische en organisatorische eisen van artikel 73 EHDS.',
+    );
+    doc.spacer(4);
+    doc.placeholder('Naam van de toegewezen SPE en technische kenmerken/tools — nog niet geregistreerd in DAAMS');
+    doc.spacer(4);
+    doc.paragraph(
+      'De gezondheidsgegevensgebruiker is verantwoordelijk voor naleving van de EHDS-voorwaarden en ' +
+      'toepasselijke wetgeving (o.a. AVG), en voor het voorkomen van verboden gebruik zoals ' +
+      're-identificatie of ongeautoriseerde doorgifte van gegevens. Alleen anonieme resultaten mogen ' +
+      'uit de SPE worden geëxporteerd.',
+    );
+    doc.spacer(6);
+  }
+
+  doc.subheading('6.7  Totstandkoming van anonieme resultaten');
+  doc.paragraph(
+    isDataRequest
+      ? 'HDAB-NL produceert de geaggregeerde statistische gegevens conform het bij de aanvraag ingediende tabulatieplan. De gezondheidsgegevensgebruiker heeft geen toegang tot de onderliggende individuele gegevens.'
+      : 'Uitsluitend geaggregeerde en geanonimiseerde resultaten mogen door de gezondheidsgegevensgebruiker uit de SPE worden geëxporteerd, conform de richtlijnen van HDAB-NL voor disclosure control.',
+  );
+  doc.spacer(6);
+
+  doc.subheading('6.8  Personen die gemachtigd zijn de gegevens te verwerken');
+  doc.paragraph('De lijst van personen die gemachtigd zijn de op grond van deze vergunning verstrekte gegevens te verwerken, is opgenomen in bijlage 2.', { size: 8, color: C.gray });
+  doc.placeholder('Lijst van gemachtigde personen (naam, affiliatie, e-mailadres) — nog niet geregistreerd in DAAMS');
   doc.spacer(4);
 
   // 7. Fees
   doc.heading('7', 'KOSTEN VOOR VERGUNNING EN GEGEVENSVERWERKING');
-  doc.paragraph(
-    'De aan deze vergunning verbonden kosten (behandelkosten, kosten voor gegevensvoorbereiding en ' +
-    'gebruik van de beveiligde verwerkingsomgeving) worden separaat aan de gezondheidsgegevensgebruiker ' +
-    'gefactureerd, conform artikel 62 EHDS.',
-  );
+  doc.paragraph('Kosten worden vermeld in euro (EUR), conform artikel 62 EHDS.', { size: 8, color: C.gray });
+  doc.spacer(4);
+  doc.bullet('Behandelkosten vergunning: mogelijk reeds voldaan bij indiening van de aanvraag');
+  doc.bullet('Kosten gegevensvoorbereiding (anonimisering, pseudonimisering, koppeling, variabelenselectie)');
+  if (!isDataRequest) {
+    doc.bullet('SPE-gebruikskosten: opstartkosten en doorlopende gebruikskosten (opslag, rekencapaciteit)');
+  }
+  doc.bullet('Aanvullende diensten (technische ondersteuning, aanpassingen aan variabelen)');
+  doc.bullet('Kosten in rekening gebracht door gegevenshouders');
+  doc.spacer(4);
+  doc.placeholder('Bedragen, betalingstermijnen en eventuele kortingen/vrijstellingen — nog niet geregistreerd in DAAMS');
   doc.spacer(4);
 
   // 8. Applicable legislation
   doc.heading('8', 'TOEPASSELIJKE WETGEVING');
-  doc.paragraph('- Verordening (EU) 2025/327 (EHDS-verordening)');
-  doc.paragraph('- Verordening (EU) 2016/679 (AVG/GDPR)');
-  doc.paragraph('- Nederlandse uitvoeringswetgeving EHDS');
+  doc.bullet('Verordening (EU) 2025/327 van het Europees Parlement en de Raad (EHDS-verordening)');
+  doc.bullet('Verordening (EU) 2016/679 (Algemene Verordening Gegevensbescherming / GDPR)');
+  doc.bullet('Nederlandse uitvoeringswetgeving EHDS');
   doc.spacer(4);
 
   // 9. Redress mechanisms
@@ -377,7 +477,9 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
 
   // 10. Appendices
   doc.heading('10', 'BIJLAGEN');
-  doc.paragraph('Geen bijlagen bijgevoegd bij dit besluit.');
+  doc.bullet('Bijlage 1 — Gedetailleerde beschrijving van de verstrekte gegevens');
+  doc.bullet('Bijlage 2 — Lijst van personen gemachtigd tot gegevensverwerking');
+  doc.bullet('Bijlage 3 — Algemene voorwaarden HDAB-NL');
 
   doc.footer();
 

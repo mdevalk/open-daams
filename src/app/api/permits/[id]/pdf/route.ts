@@ -19,6 +19,8 @@ export async function GET(
           referenceNumber: true,
           title: true,
           type: true,
+          submittedAt: true,
+          decisionSummary: true,
           projectDescription: true,
           purposeCategory: true,
           requestedDatasets: true,
