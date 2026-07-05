@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Application, User } from '@prisma/client';
 import { getAvailableTransitions, Transition } from '@/lib/workflow';
 import { useRouter } from 'next/navigation';
+import { readErrorMessage } from '@/lib/utils';
 
 type Props = { application: Application; currentUser: User };
 
@@ -32,7 +33,7 @@ export function TransitionPanel({ application, currentUser }: Props) {
           decisionOutcome: selected.requiresDecisionOutcome ?? null,
         }),
       });
-      if (!res.ok) throw new Error((await res.json()).error ?? 'Transition mislukt');
+      if (!res.ok) throw new Error(await readErrorMessage(res, 'Transition mislukt'));
       setSelected(null);
       setComment('');
       router.refresh();

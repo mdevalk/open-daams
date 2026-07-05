@@ -27,6 +27,15 @@ export function daysUntil(date: Date | null | undefined): number | null {
   return Math.ceil((new Date(date).getTime() - Date.now()) / 86_400_000);
 }
 
+export async function readErrorMessage(res: Response, fallback: string): Promise<string> {
+  try {
+    const data = await res.json();
+    return data?.error ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export function purposeLabel(code: string): string {
   const map: Record<string, string> = {
     SCIENTIFIC_RESEARCH: 'Scientific research',

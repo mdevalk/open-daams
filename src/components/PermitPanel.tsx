@@ -5,7 +5,7 @@ import { Application, DataPermit, User } from '@prisma/client';
 import { PERMIT_TRANSITIONS, PERMIT_STATUS_LABELS, PERMIT_STATUS_COLORS } from '@/lib/permit';
 import { PermitCard } from './PermitCard';
 import { useRouter } from 'next/navigation';
-import { formatDate } from '@/lib/utils';
+import { formatDate, readErrorMessage } from '@/lib/utils';
 
 type Props = {
   application: Application & { dataPermit: DataPermit | null };
@@ -50,7 +50,7 @@ export function PermitPanel({ application, currentUser }: Props) {
           issuedByUserId: currentUser.id,
         }),
       });
-      if (!res.ok) throw new Error((await res.json()).error ?? 'Uitgifte mislukt');
+      if (!res.ok) throw new Error(await readErrorMessage(res, 'Uitgifte mislukt'));
       router.refresh();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Onbekende fout');
@@ -74,7 +74,7 @@ export function PermitPanel({ application, currentUser }: Props) {
           validUntil: toStatus === 'RENEWED' ? newValidUntil : undefined,
         }),
       });
-      if (!res.ok) throw new Error((await res.json()).error ?? 'Actie mislukt');
+      if (!res.ok) throw new Error(await readErrorMessage(res, 'Actie mislukt'));
       setSelectedTransition(null);
       setComment('');
       setRevokeReason('');
