@@ -268,6 +268,7 @@ export default async function ApplicationDetailPage({
               applicationId={application.id}
               appeals={application.appeals}
               canManage={['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(currentUser.role)}
+              currentUserId={currentUser.id}
             />
           )}
           <section className="rounded-xl border border-gray-200 bg-white p-5">

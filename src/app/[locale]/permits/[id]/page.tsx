@@ -145,6 +145,7 @@ export default async function PermitDetailPage({
             permitId={permit.id}
             persons={permit.authorizedPersons}
             canManage={['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(currentUser.role)}
+            currentUserId={currentUser.id}
           />
         </div>
       </div>

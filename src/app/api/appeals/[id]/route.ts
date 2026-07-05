@@ -1,18 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { AppealStatus } from '@prisma/client';
+import { requireRole } from '@/lib/authz';
 
 const TERMINAL_STATUSES: AppealStatus[] = ['UPHELD', 'REJECTED', 'WITHDRAWN'];
 
 /**
  * PATCH /api/appeals/[id]
  * Update the status/decision of an in-progress appeal.
- * body: { status, decisionSummary? }
+ * body: { status, decisionSummary?, actingUserId }
  */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const body = await req.json();
+
+    const auth = await requireRole(body.actingUserId, ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN']);
+    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const appeal = await prisma.appeal.findUnique({ where: { id } });
     if (!appeal) return NextResponse.json({ error: 'Not found' }, { status: 404 });

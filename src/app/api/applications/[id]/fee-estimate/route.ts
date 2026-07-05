@@ -1,16 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { requireRole } from '@/lib/authz';
+
+const MANAGE_ROLES = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'] as const;
 
 /**
  * POST /api/applications/[id]/fee-estimate
  * Create or update the cost estimate sent to the applicant during
  * assessment, before a decision is made (TEHDAS2 D6.3 §6.5, EHDS Art. 62(5)).
- * body: { administrativeFee?, dataPreparationFee?, dataHolderFee?, notes?, currency? }
+ * body: { administrativeFee?, dataPreparationFee?, dataHolderFee?, notes?, currency?, actingUserId }
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const body = await req.json();
+
+    const auth = await requireRole(body.actingUserId, [...MANAGE_ROLES]);
+    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const application = await prisma.application.findUnique({ where: { id } });
     if (!application) return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -62,12 +68,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 /**
  * PATCH /api/applications/[id]/fee-estimate
  * Record the applicant's response to a pending cost estimate.
- * body: { status: 'ACCEPTED' | 'REJECTED' }
+ * body: { status: 'ACCEPTED' | 'REJECTED', actingUserId }
  */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const body = await req.json();
+
+    const auth = await requireRole(body.actingUserId, [...MANAGE_ROLES]);
+    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     if (body.status !== 'ACCEPTED' && body.status !== 'REJECTED') {
       return NextResponse.json({ error: 'status must be ACCEPTED or REJECTED' }, { status: 422 });

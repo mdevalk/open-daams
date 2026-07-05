@@ -1,16 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { requireRole } from '@/lib/authz';
 
 /**
  * POST /api/permits/[id]/authorized-persons
  * Add a person entitled to process the data granted under this permit
  * within the secure processing environment (Annex 9 §6.8).
- * body: { name, affiliation, email }
+ * body: { name, affiliation, email, actingUserId }
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const body = await req.json();
+
+    const auth = await requireRole(body.actingUserId, ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN']);
+    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const permit = await prisma.dataPermit.findUnique({ where: { id } });
     if (!permit) return NextResponse.json({ error: 'Not found' }, { status: 404 });

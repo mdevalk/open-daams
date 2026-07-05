@@ -9,9 +9,10 @@ type Props = {
   permitId: string;
   persons: AuthorizedPerson[];
   canManage: boolean;
+  currentUserId: string;
 };
 
-export function AuthorizedPersonsPanel({ permitId, persons, canManage }: Props) {
+export function AuthorizedPersonsPanel({ permitId, persons, canManage, currentUserId }: Props) {
   const router = useRouter();
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -28,7 +29,7 @@ export function AuthorizedPersonsPanel({ permitId, persons, canManage }: Props) 
       const res = await fetch(`/api/permits/${permitId}/authorized-persons`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, affiliation, email }),
+        body: JSON.stringify({ name, affiliation, email, actingUserId: currentUserId }),
       });
       if (!res.ok) throw new Error(await readErrorMessage(res, 'Toevoegen mislukt'));
       setName('');
@@ -47,7 +48,11 @@ export function AuthorizedPersonsPanel({ permitId, persons, canManage }: Props) 
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/permits/${permitId}/authorized-persons/${personId}`, { method: 'DELETE' });
+      const res = await fetch(`/api/permits/${permitId}/authorized-persons/${personId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ actingUserId: currentUserId }),
+      });
       if (!res.ok) throw new Error(await readErrorMessage(res, 'Verwijderen mislukt'));
       router.refresh();
     } catch (e: unknown) {

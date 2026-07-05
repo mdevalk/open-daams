@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
+import { requireRole } from '@/lib/authz';
 
 /**
  * Derives the next sequential permit number for the given year from the
@@ -36,6 +37,9 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     // body: { applicationId, validFrom, validUntil, issuedByUserId }
+
+    const auth = await requireRole(body.issuedByUserId, ['DECISION_MAKER', 'ADMIN']);
+    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const application = await prisma.application.findUnique({
       where: { id: body.applicationId },

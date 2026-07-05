@@ -54,7 +54,7 @@ export function FeeEstimatePanel({ application, currentUser }: Props) {
       const res = await fetch(`/api/applications/${application.id}/fee-estimate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ administrativeFee, dataPreparationFee, dataHolderFee, notes }),
+        body: JSON.stringify({ administrativeFee, dataPreparationFee, dataHolderFee, notes, actingUserId: currentUser.id }),
       });
       if (!res.ok) throw new Error(await readErrorMessage(res, 'Versturen kostenraming mislukt'));
       setEditing(false);
@@ -73,7 +73,7 @@ export function FeeEstimatePanel({ application, currentUser }: Props) {
       const res = await fetch(`/api/applications/${application.id}/fee-estimate`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, actingUserId: currentUser.id }),
       });
       if (!res.ok) throw new Error(await readErrorMessage(res, 'Bijwerken mislukt'));
       router.refresh();

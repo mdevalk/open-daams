@@ -1,16 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { requireRole } from '@/lib/authz';
 
 /**
  * DELETE /api/permits/[id]/authorized-persons/[personId]
  * Remove a person from the list entitled to process data under this permit.
+ * body: { actingUserId }
  */
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string; personId: string }> },
 ) {
   try {
     const { id, personId } = await params;
+    const body = await req.json().catch(() => ({}));
+
+    const auth = await requireRole(body.actingUserId, ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN']);
+    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const person = await prisma.authorizedPerson.findUnique({ where: { id: personId } });
     if (!person || person.permitId !== id) {

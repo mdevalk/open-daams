@@ -9,6 +9,7 @@ type Props = {
   applicationId: string;
   appeals: Appeal[];
   canManage: boolean;
+  currentUserId: string;
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -35,7 +36,7 @@ const NEXT_STATUSES: Record<string, string[]> = {
   WITHDRAWN: [],
 };
 
-export function AppealsPanel({ applicationId, appeals, canManage }: Props) {
+export function AppealsPanel({ applicationId, appeals, canManage, currentUserId }: Props) {
   const router = useRouter();
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -52,7 +53,7 @@ export function AppealsPanel({ applicationId, appeals, canManage }: Props) {
       const res = await fetch(`/api/applications/${applicationId}/appeals`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ submittedBy, grounds, authority }),
+        body: JSON.stringify({ submittedBy, grounds, authority, actingUserId: currentUserId }),
       });
       if (!res.ok) throw new Error(await readErrorMessage(res, 'Registreren mislukt'));
       setSubmittedBy('');
@@ -74,7 +75,7 @@ export function AppealsPanel({ applicationId, appeals, canManage }: Props) {
       const res = await fetch(`/api/appeals/${appealId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, actingUserId: currentUserId }),
       });
       if (!res.ok) throw new Error(await readErrorMessage(res, 'Bijwerken mislukt'));
       router.refresh();
