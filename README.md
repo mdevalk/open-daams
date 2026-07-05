@@ -1,6 +1,13 @@
 # HDAB-NL DAAMS
 
-National **Data Access Application Management System** for HDAB-NL, implementing the TEHDAS2 national workflow for the European Health Data Space (EHDS) Regulation (EU) 2025/327.
+> **Disclaimer:** This is an independent, community-built open-source project. It is **not** an official
+> product of, and is **not** affiliated with, endorsed by, or reviewed by, the European Commission,
+> TEHDAS2, HealthData@EU, or any national Health Data Access Body. "HDAB-NL" is a **fictional example
+> organisation** used throughout this codebase to illustrate what a national DAAMS implementation could
+> look like based on the publicly published TEHDAS2 deliverables (D6.2/D6.3/D6.4) — it does not represent
+> a real Dutch authority or an EHDS reference implementation. Use at your own risk; see [LICENSE](./LICENSE).
+
+An example **Data Access Application Management System** (DAAMS) for a fictional "HDAB-NL", built to explore the TEHDAS2 national workflow for the European Health Data Space (EHDS) Regulation (EU) 2025/327.
 
 ## Features
 
@@ -62,3 +69,9 @@ Open [http://localhost:3000](http://localhost:3000).
 - [TEHDAS2 D6.3 — Guideline for HDABs on procedures and formats](https://tehdas.eu/wp-content/uploads/2025/09/draft-guideline-for-health-data-access-bodies-on-the-procedures-and-formats-for-data-access.pdf)
 - [TEHDAS2 D6.2 — Guideline for data users](https://tehdas.eu/wp-content/uploads/2025/10/d6.2-guideline-for-data-users-on-good-application-and-access-practice.pdf)
 - EHDS Regulation (EU) 2025/327, Articles 34, 46, 69
+
+## License
+
+MIT — see [LICENSE](./LICENSE). This project is provided as-is with no warranty; it is not legal or
+compliance advice, and using it does not by itself satisfy any HDAB's obligations under the EHDS
+Regulation.

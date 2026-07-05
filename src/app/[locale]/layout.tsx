@@ -120,6 +120,15 @@ export default async function LocaleLayout({
                   </p>
                 </div>
               </div>
+              <div className="mt-6 pt-6 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+                <p>{tFooter('disclaimer')}</p>
+                <p>
+                  {tFooter('openSource', {
+                    nlDesignSystem: tFooter('nlDesignSystem'),
+                    rijkshuisstijl: tFooter('rijkshuisstijl'),
+                  })}
+                </p>
+              </div>
             </div>
           </footer>
 

@@ -227,12 +227,16 @@ class Doc {
   }
 
   footer() {
-    this.page.drawLine({ start: { x: M, y: PH - 32 }, end: { x: PW - M, y: PH - 32 }, thickness: 0.5, color: C.divider });
+    this.page.drawLine({ start: { x: M, y: PH - 40 }, end: { x: PW - M, y: PH - 40 }, thickness: 0.5, color: C.divider });
+    this.page.drawText(
+      'Demo-document uit een open-sourceproject — HDAB-NL is een fictieve organisatie, dit is geen officieel EHDS-document.',
+      { x: M, y: 12, font: this.italic, size: 6.5, color: C.placeholder },
+    );
     this.page.drawText('HDAB-NL | Health Data Access Body Nederland | EHDS Verordening (EU) 2025/327', {
-      x: M, y: 20, font: this.regular, size: 7, color: C.gray,
+      x: M, y: 24, font: this.regular, size: 7, color: C.gray,
     });
     this.page.drawText(`Pagina ${this.pageNum}`, {
-      x: PW - M - 40, y: 20, font: this.regular, size: 7, color: C.gray,
+      x: PW - M - 40, y: 24, font: this.regular, size: 7, color: C.gray,
     });
   }
 }

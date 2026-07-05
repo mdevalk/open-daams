@@ -11,15 +11,16 @@
   "footer": {
     "hdab": "HDAB-NL",
     "hdabSub": "Health Data Access Body Nederland",
-    "hdabOrg": "Onderdeel van RIVM",
+    "hdabOrg": "Fictieve organisatie voor demonstratiedoeleinden",
     "legal": "Juridische grondslag",
     "legalRef": "EHDS Verordening (EU) 2025/327",
     "legalArticles": "Artikelen 46, 67–69",
     "standards": "Standaarden",
     "standardsRef": "TEHDAS2 D6.4 DAAMS-specificatie",
-    "openSource": "HDAB-NL DAAMS is open source (EUPL). Gebouwd volgens het {nlDesignSystem} met de {rijkshuisstijl}-componenten.",
+    "openSource": "Dit is een open-source communityproject (MIT-licentie), gebouwd volgens het {nlDesignSystem} met {rijkshuisstijl}-componenten.",
     "nlDesignSystem": "NL Design System",
-    "rijkshuisstijl": "Rijkshuisstijl Community"
+    "rijkshuisstijl": "Rijkshuisstijl Community",
+    "disclaimer": "Niet-officieel open-sourceproject. \"HDAB-NL\" is een fictieve voorbeeldorganisatie — dit is geen product van, en niet gelieerd aan of goedgekeurd door, de Europese Commissie, TEHDAS2, HealthData@EU of enige nationale Health Data Access Body."
   },
   "lang": {
     "nl": "NL",
