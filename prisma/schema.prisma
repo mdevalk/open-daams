@@ -88,6 +88,45 @@ enum ExtractionStatus {
   DECLINED
 }
 
+// TEHDAS2 D6.3 Annex 5 §6.1 — how the study cohort was/will be formed
+// (data access applications only; not applicable to data requests)
+enum CohortFormationMethod {
+  CRITERIA // formed based on the criteria given in this application
+  PREVIOUS_COHORT // an already-established cohort
+  COMBINED // combination of criteria and a previously established cohort
+  WHOLE_POPULATION // the whole population of the indicated country/countries
+}
+
+// TEHDAS2 D6.3 Annex 5 §6.1 / Annex 6 §6.1 — cohort/dataset extraction method
+// (shared by both application types)
+enum ExtractionMethod {
+  RANDOM_SAMPLE
+  ALL_QUALIFYING
+  OTHER_SAMPLE
+}
+
+// TEHDAS2 D6.3 Annex 5 §6.1 / Annex 6 §6.1 — how often data must be extracted
+enum ExtractionFrequency {
+  ONCE
+  MULTIPLE_TIMES
+}
+
+// TEHDAS2 D6.3 Annex 5 §6.1 / Annex 6 §6.1 — interval between recurring
+// extractions, when ExtractionFrequency is MULTIPLE_TIMES
+enum ExtractionInterval {
+  YEARLY
+  HALF_YEARLY
+  QUARTERLY
+  OTHER
+}
+
+// TEHDAS2 D6.3 Annex 5 §8 — when the health data user needs access to start
+// (data access applications only)
+enum DataAccessTiming {
+  AS_SOON_AS_POSSIBLE
+  LATER
+}
+
 enum UserRole {
   APPLICANT
   CASE_HANDLER
@@ -163,6 +202,47 @@ model Application {
   legalBasis            String
   dataProcessingCountry String
   isCrossBorder         Boolean   @default(false)
+
+  // Cohort/dataset extraction (D6.3 Annex 5 §6.1 / Annex 6 §6.1 — shared)
+  cohortSizeIsEstimate      Boolean?
+  cohortSize                Int?
+  cohortSizeJustification   String?              @db.Text
+  extractionMethod          ExtractionMethod?
+  sampleSize                String? // e.g. "100000 persons" or "50%"
+  samplingMethodDescription String?              @db.Text
+  extractionFrequency       ExtractionFrequency?
+  extractionInterval        ExtractionInterval?
+  extractionIntervalOther   String?
+  extractionTimingNotes     String?              @db.Text
+
+  // Opt-out exception mechanism (Annex 5 §8 / Annex 6 §6 — EHDS Art. 71(4))
+  usesOptOutException          Boolean @default(false)
+  optOutExceptionJustification String? @db.Text
+
+  // Data access application only (Annex 5 §6.1–6.3, 7, 8) — null/unused for
+  // DATA_REQUEST, where only anonymised aggregated statistics are returned
+  cohortFormationMethod      CohortFormationMethod?
+  dataSubjectsInformed       Boolean?
+  dataSubjectsInformedDetail String?                @db.Text // "how" if informed, or "why not" if not
+  includesControls           Boolean                @default(false)
+  controlsDescription        String?                @db.Text
+  includesRelatives          Boolean                @default(false)
+  relativesDescription       String?                @db.Text
+  otherDataToCombine         Boolean                @default(false)
+  otherDataDescription       String?                @db.Text
+  speName                    String?
+  speTechnicalRequirements   String?                @db.Text
+  dataAccessTiming           DataAccessTiming?
+  dataAccessLaterDate        DateTime?
+  transfersOutsideEuEea      Boolean                @default(false)
+  transferCountries          String[]
+  transferLegalBasis         String?                @db.Text
+  dataController             String?
+  lawfulnessOfProcessing     String[] // selected GDPR Art. 6(1) grounds, stored as codes
+
+  // Data request only (Annex 6 §6) — the tabulation plan for compiling
+  // anonymised aggregated statistics; not applicable to data access applications
+  tabulationPlan String? @db.Text
 
   // Ethical review (D6.3 §6.1, required where member state law mandates it)
   ethicalReviewRequired  Boolean              @default(false)
