@@ -42,7 +42,7 @@ export default async function PermitPrintPage({
     <html lang="nl">
       <head>
         <meta charSet="utf-8" />
-        <title>Vergunning {permit.permitNumber} — HDAB-NL</title>
+        <title>Vergunning {permit.permitNumber} — DAAMS-NL</title>
         <style>{`
           * { box-sizing: border-box; margin: 0; padding: 0; }
           body { font-family: Arial, Helvetica, sans-serif; font-size: 11pt; color: #000; background: #fff; }
@@ -100,8 +100,8 @@ export default async function PermitPrintPage({
 
         <div className="page">
           <div className="header">
-            <h1>HDAB-NL | DAAMS</h1>
-            <p>Health Data Access Body Nederland — EHDS Dataverwerkingsvergunning</p>
+            <h1>DAAMS-NL</h1>
+            <p>Health Data Access Body Nederland (HDAB-NL) — EHDS Dataverwerkingsvergunning</p>
           </div>
 
           <div className="permit-box">
@@ -164,7 +164,7 @@ export default async function PermitPrintPage({
           </div>
 
           <div className="footer-bar">
-            HDAB-NL | Health Data Access Body Nederland | EHDS Verordening (EU) 2025/327
+            DAAMS-NL | Health Data Access Body Nederland (HDAB-NL) | EHDS Verordening (EU) 2025/327
           </div>
         </div>
       </body>

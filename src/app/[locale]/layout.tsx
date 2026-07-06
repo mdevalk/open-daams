@@ -5,8 +5,8 @@ import '../globals.css';
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: 'HDAB-NL | DAAMS',
-    description: 'Community DAAMS implementation — HDAB-NL',
+    title: 'DAAMS-NL',
+    description: 'Community DAAMS implementation — DAAMS-NL',
   };
 }
 
@@ -41,9 +41,7 @@ export default async function LocaleLayout({
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex items-center justify-between h-14">
                 <div className="flex items-center gap-3">
-                  <a href={`/${locale}`} className="font-bold text-xl tracking-tight">HDAB-NL</a>
-                  <span className="text-white/40 text-lg">|</span>
-                  <span className="text-white/90 font-medium">DAAMS</span>
+                  <a href={`/${locale}`} className="font-bold text-xl tracking-tight">DAAMS-NL</a>
                   <span className="ml-1 rounded text-xs bg-amber-400/90 text-amber-950 px-2 py-0.5 font-semibold tracking-wide">
                     {t('testEnvironment')}
                   </span>
