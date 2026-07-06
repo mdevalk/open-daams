@@ -7,7 +7,7 @@
 > look like based on the publicly published TEHDAS2 deliverables (D6.2/D6.3/D6.4) — it does not represent
 > a real Dutch authority or an EHDS reference implementation. Use at your own risk; see [LICENSE](./LICENSE).
 
-**Example DAAMS implementation** — a **Data Access Application Management System** for a fictional "HDAB-NL", built to explore the TEHDAS2 national workflow for the European Health Data Space (EHDS) Regulation (EU) 2025/327.
+**Community DAAMS implementation** — a **Data Access Application Management System** for a fictional "HDAB-NL", built to explore the TEHDAS2 national workflow for the European Health Data Space (EHDS) Regulation (EU) 2025/327.
 
 ## Features
 
