@@ -1,8 +1,8 @@
-import { DataPermit } from '@prisma/client';
+import { DataPermit, FeeEstimate } from '@prisma/client';
 
 // EHDS Art. 62 / TEHDAS2 D6.3 Ch. 8 — fee transparency: invoices must break
 // down the individual cost components that make up the total.
-const FEE_LINE_DEFS: Array<{ key: keyof DataPermit; description: string }> = [
+const PERMIT_FEE_LINE_DEFS: Array<{ key: keyof DataPermit; description: string }> = [
   { key: 'permitProcessingFee', description: 'Permit processing fee' },
   { key: 'dataPreparationFee', description: 'Data preparation fee' },
   { key: 'speSetupFee', description: 'Secure processing environment — setup fee' },
@@ -11,12 +11,28 @@ const FEE_LINE_DEFS: Array<{ key: keyof DataPermit; description: string }> = [
   { key: 'dataHolderFee', description: 'Data holder fee(s)' },
 ];
 
+const FEE_ESTIMATE_LINE_DEFS: Array<{ key: keyof FeeEstimate; description: string }> = [
+  { key: 'administrativeFee', description: 'Administrative / processing fee' },
+  { key: 'dataPreparationFee', description: 'Data preparation fee' },
+  { key: 'dataHolderFee', description: 'Data holder fee(s)' },
+];
+
 export type InvoiceLineItem = { description: string; amount: string };
 
 export function buildInvoiceLineItems(permit: DataPermit): InvoiceLineItem[] {
-  return FEE_LINE_DEFS.filter(({ key }) => permit[key] != null).map(({ key, description }) => ({
+  return PERMIT_FEE_LINE_DEFS.filter(({ key }) => permit[key] != null).map(({ key, description }) => ({
     description,
     amount: (permit[key] as { toString(): string }).toString(),
+  }));
+}
+
+// A provisional invoice (issued from an accepted fee estimate, before a
+// permit exists) uses the same line-item shape but a narrower fee set,
+// since permit-only fees (e.g. SPE) aren't known until the permit is granted.
+export function buildProvisionalInvoiceLineItems(estimate: FeeEstimate): InvoiceLineItem[] {
+  return FEE_ESTIMATE_LINE_DEFS.filter(({ key }) => estimate[key] != null).map(({ key, description }) => ({
+    description,
+    amount: (estimate[key] as { toString(): string }).toString(),
   }));
 }
 

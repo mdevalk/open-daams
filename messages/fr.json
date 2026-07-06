@@ -191,6 +191,7 @@
     "breadcrumb": "Factures",
     "total": "Total",
     "overdue": "En retard",
+    "provisional": "Provisoire",
     "statusDRAFT": "Brouillon",
     "statusISSUED": "Émise",
     "statusPAID": "Payée",

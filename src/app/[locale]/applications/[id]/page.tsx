@@ -37,7 +37,7 @@ export default async function ApplicationDetailPage({
         applicant: true,
         caseHandler: true,
         dataPermit: true,
-        feeEstimate: true,
+        feeEstimate: { include: { invoice: true } },
         auditLogs: {
           include: { user: { select: { id: true, name: true, role: true } } },
           orderBy: { createdAt: 'asc' },

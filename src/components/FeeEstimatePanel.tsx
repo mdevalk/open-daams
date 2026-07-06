@@ -1,13 +1,27 @@
 'use client';
 
 import { useState } from 'react';
-import { Application, FeeEstimate, User } from '@prisma/client';
+import { Application, FeeEstimate, Invoice, User } from '@prisma/client';
 import { useRouter } from 'next/navigation';
-import { formatDateTime, readErrorMessage } from '@/lib/utils';
+import { formatDate, formatDateTime, readErrorMessage } from '@/lib/utils';
 
 type Props = {
-  application: Application & { feeEstimate: FeeEstimate | null };
+  application: Application & { feeEstimate: (FeeEstimate & { invoice: Invoice | null }) | null };
   currentUser: User;
+};
+
+const INVOICE_STATUS_LABELS: Record<string, string> = {
+  DRAFT: 'Concept',
+  ISSUED: 'Verzonden',
+  PAID: 'Betaald',
+  CANCELLED: 'Geannuleerd',
+};
+
+const INVOICE_STATUS_STYLES: Record<string, string> = {
+  DRAFT: 'bg-gray-100 text-gray-600',
+  ISSUED: 'bg-blue-100 text-blue-700',
+  PAID: 'bg-emerald-100 text-emerald-700',
+  CANCELLED: 'bg-red-100 text-red-700',
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -40,12 +54,51 @@ export function FeeEstimatePanel({ application, currentUser }: Props) {
   const [dataHolderFee, setDataHolderFee] = useState(estimate?.dataHolderFee?.toString() ?? '');
   const [notes, setNotes] = useState(estimate?.notes ?? '');
 
-  // Only relevant while the application is still being assessed
-  if (!['PRE_SCREENING', 'PROCESSING', 'AWAITING_ADDITIONAL_INFORMATION'].includes(application.status)) {
+  // Only relevant while the application is being assessed — unless an
+  // estimate (and possibly its provisional invoice) already exists, in
+  // which case it should remain visible after the decision is issued.
+  if (!estimate && !['PRE_SCREENING', 'PROCESSING', 'AWAITING_ADDITIONAL_INFORMATION'].includes(application.status)) {
     return null;
   }
 
   const canManage = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(currentUser.role);
+  const canIssueInvoice = ['DECISION_MAKER', 'ADMIN'].includes(currentUser.role);
+
+  async function issueProvisionalInvoice() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/applications/${application.id}/provisional-invoice`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentUser.id }),
+      });
+      if (!res.ok) throw new Error(await readErrorMessage(res, 'Uitgeven voorlopige factuur mislukt'));
+      router.refresh();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Onbekende fout');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function updateInvoice(invoiceId: string, action: 'mark_paid' | 'cancel') {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/invoices/${invoiceId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentUser.id, action }),
+      });
+      if (!res.ok) throw new Error(await readErrorMessage(res, 'Bijwerken factuur mislukt'));
+      router.refresh();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Onbekende fout');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function sendEstimate() {
     setLoading(true);
@@ -105,6 +158,46 @@ export function FeeEstimatePanel({ application, currentUser }: Props) {
           <div className="flex justify-between font-semibold border-t border-gray-200 pt-1 mt-1"><span>Totaal</span><span>{fmtAmount(estimate.totalAmount, estimate.currency)}</span></div>
           {estimate.notes && <p className="text-xs text-gray-500 mt-1">{estimate.notes}</p>}
           <p className="text-xs text-gray-400 mt-1">Verzonden op {formatDateTime(estimate.sentAt)}</p>
+        </div>
+      )}
+
+      {estimate && estimate.status === 'ACCEPTED' && (
+        <div className="border-t border-gray-100 pt-3">
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-xs font-medium text-gray-700">Voorlopige factuur</p>
+            {estimate.invoice && (
+              <span className={`text-xs font-medium px-2 py-0.5 rounded ${INVOICE_STATUS_STYLES[estimate.invoice.status]}`}>
+                {INVOICE_STATUS_LABELS[estimate.invoice.status]}
+              </span>
+            )}
+          </div>
+          {estimate.invoice ? (
+            <div className="text-sm space-y-1">
+              <div className="flex justify-between"><span className="text-gray-500 font-mono text-xs">{estimate.invoice.invoiceNumber}</span><span>{fmtAmount(estimate.invoice.totalAmount, estimate.invoice.currency)}</span></div>
+              <p className="text-xs text-gray-400">
+                Verzonden {formatDate(estimate.invoice.issuedAt)} · Vervalt {formatDate(estimate.invoice.dueAt)}
+                {estimate.invoice.paidAt && <> · Betaald {formatDate(estimate.invoice.paidAt)}</>}
+              </p>
+              {canManage && estimate.invoice.status === 'ISSUED' && (
+                <div className="flex gap-3 pt-1">
+                  <button disabled={loading} onClick={() => updateInvoice(estimate.invoice!.id, 'mark_paid')} className="text-xs text-emerald-700 hover:underline">
+                    Markeer als betaald
+                  </button>
+                  <button disabled={loading} onClick={() => updateInvoice(estimate.invoice!.id, 'cancel')} className="text-xs text-red-600 hover:underline">
+                    Annuleren
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            canIssueInvoice ? (
+              <button disabled={loading} onClick={issueProvisionalInvoice} className="text-xs text-[#01689b] hover:underline">
+                Voorlopige factuur uitgeven
+              </button>
+            ) : (
+              <p className="text-xs text-gray-500">Nog geen voorlopige factuur uitgegeven.</p>
+            )
+          )}
         </div>
       )}
 

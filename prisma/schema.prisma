@@ -275,6 +275,7 @@ model Application {
   appeals            Appeal[]
   completenessCheck  CompletenessCheck?
   extractionRequests DataExtractionRequest[]
+  invoices           Invoice[]
 }
 
 // TEHDAS2 D6.3 Ch. 5 / Annex 7-8 — structured completeness check preceding
@@ -361,6 +362,8 @@ model FeeEstimate {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  invoice Invoice?
 }
 
 // TEHDAS2 D6.4 Section 9.2 — permit lifecycle, separate from application
@@ -398,9 +401,13 @@ model DataPermit {
   invoices          Invoice[]
 }
 
-// EHDS Art. 62 / TEHDAS2 D6.3 Ch. 8 — invoicing of fees for a granted permit.
-// Line items are a snapshot of the permit's fee breakdown at issuance time,
-// since those fees may change on later amendment/renewal.
+// EHDS Art. 62 / TEHDAS2 D6.3 Ch. 8 — invoicing of fees.
+//
+// A provisional invoice may be issued from an accepted FeeEstimate while the
+// application is still under assessment (no permit exists yet); its line
+// items are a snapshot of the estimate's fee breakdown. Once a permit is
+// granted, a final (non-provisional) invoice is issued from the permit's own
+// fee breakdown, which may differ (e.g. SPE fees only apply once granted).
 enum InvoiceStatus {
   DRAFT
   ISSUED
@@ -411,12 +418,23 @@ enum InvoiceStatus {
 model Invoice {
   id            String        @id @default(cuid())
   invoiceNumber String        @unique // e.g. INV-NL-2026-0001
-  permitId      String
-  permit        DataPermit    @relation(fields: [permitId], references: [id])
-  currency      String        @default("EUR")
-  lineItems     Json // [{ description: string, amount: string }]
-  totalAmount   Decimal       @db.Decimal(10, 2)
-  status        InvoiceStatus @default(ISSUED)
+  provisional   Boolean       @default(false)
+
+  // Set once a permit exists (final invoice)
+  permitId String?
+  permit   DataPermit? @relation(fields: [permitId], references: [id])
+
+  // Set for a provisional invoice, issued directly from the accepted
+  // fee estimate before a permit exists
+  applicationId String?
+  application   Application? @relation(fields: [applicationId], references: [id])
+  feeEstimateId String?      @unique
+  feeEstimate   FeeEstimate? @relation(fields: [feeEstimateId], references: [id])
+
+  currency    String        @default("EUR")
+  lineItems   Json // [{ description: string, amount: string }]
+  totalAmount Decimal       @db.Decimal(10, 2)
+  status      InvoiceStatus @default(ISSUED)
 
   issuedAt DateTime  @default(now())
   dueAt    DateTime

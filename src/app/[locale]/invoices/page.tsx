@@ -42,6 +42,9 @@ export default async function InvoicesPage({
           application: { select: { referenceNumber: true, title: true, applicant: { select: { name: true, organisation: true } } } },
         },
       },
+      application: {
+        select: { id: true, referenceNumber: true, title: true, applicant: { select: { name: true, organisation: true } } },
+      },
       createdBy: { select: { name: true, role: true } },
     },
     orderBy: { createdAt: 'desc' },
@@ -118,18 +121,28 @@ export default async function InvoicesPage({
         <div className="space-y-4">
           {invoices.map((invoice) => {
             const overdueRow = isOverdue(invoice);
+            const applicant = invoice.permit?.application?.applicant ?? invoice.application?.applicant;
+            const reference = invoice.permit
+              ? `${invoice.permit.permitNumber} — ${invoice.permit.application?.referenceNumber} — ${invoice.permit.application?.title}`
+              : `${invoice.application?.referenceNumber} — ${invoice.application?.title}`;
+            const href = invoice.permit
+              ? `/${locale}/permits/${invoice.permit.id}`
+              : `/${locale}/applications/${invoice.application?.id}`;
             return (
               <a
                 key={invoice.id}
-                href={`/${locale}/permits/${invoice.permit.id}`}
+                href={href}
                 className="block rounded-lg border border-gray-200 bg-white p-4 hover:border-[#01689b] transition-colors"
               >
                 <div className="flex items-start justify-between gap-4 mb-3">
                   <div>
                     <span className="font-mono text-sm font-bold text-gray-900">{invoice.invoiceNumber}</span>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      {invoice.permit.permitNumber} — {invoice.permit.application?.referenceNumber} — {invoice.permit.application?.title}
-                    </p>
+                    {invoice.provisional && (
+                      <span className="ml-2 inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium bg-purple-100 text-purple-700">
+                        {t('provisional')}
+                      </span>
+                    )}
+                    <p className="text-xs text-gray-500 mt-0.5">{reference}</p>
                   </div>
                   <span
                     className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold ${
@@ -142,8 +155,8 @@ export default async function InvoicesPage({
                 <div className="grid grid-cols-4 gap-4 text-sm">
                   <div>
                     <p className="text-xs text-gray-500">{t('applicant')}</p>
-                    <p className="font-medium">{invoice.permit.application?.applicant.name ?? '—'}</p>
-                    <p className="text-xs text-gray-400">{invoice.permit.application?.applicant.organisation}</p>
+                    <p className="font-medium">{applicant?.name ?? '—'}</p>
+                    <p className="text-xs text-gray-400">{applicant?.organisation}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">{t('amount')}</p>

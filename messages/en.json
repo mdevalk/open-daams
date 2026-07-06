@@ -191,6 +191,7 @@
     "breadcrumb": "Invoices",
     "total": "Total",
     "overdue": "Overdue",
+    "provisional": "Provisional",
     "statusDRAFT": "Draft",
     "statusISSUED": "Issued",
     "statusPAID": "Paid",

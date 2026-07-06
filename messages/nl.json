@@ -191,6 +191,7 @@
     "breadcrumb": "Facturen",
     "total": "Totaal",
     "overdue": "Achterstallig",
+    "provisional": "Voorlopig",
     "statusDRAFT": "Concept",
     "statusISSUED": "Verzonden",
     "statusPAID": "Betaald",
