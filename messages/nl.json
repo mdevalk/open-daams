@@ -59,7 +59,7 @@
   },
   "applications": {
     "title": "Aanvragen",
-    "new": "+ Nieuwe aanvraag",
+    "new": "Nieuwe aanvraag",
     "import": "HD@EU import",
     "manualEntry": "Handmatig invullen",
     "ncpFetch": "Ophalen via NCP",

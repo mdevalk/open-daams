@@ -59,7 +59,7 @@
   },
   "applications": {
     "title": "Demandes",
-    "new": "+ Nouvelle demande",
+    "new": "Nouvelle demande",
     "import": "Import HD@EU",
     "manualEntry": "Saisie manuelle",
     "ncpFetch": "Récupérer depuis le PCN",

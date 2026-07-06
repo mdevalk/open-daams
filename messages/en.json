@@ -59,7 +59,7 @@
   },
   "applications": {
     "title": "Applications",
-    "new": "+ New application",
+    "new": "New application",
     "import": "HD@EU import",
     "manualEntry": "Manual entry",
     "ncpFetch": "Fetch from NCP",
