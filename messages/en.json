@@ -3,6 +3,7 @@
     "dashboard": "Dashboard",
     "applications": "Applications",
     "permits": "Permits",
+    "invoices": "Invoices",
     "import": "HD@EU import",
     "public": "Public register",
     "newApplication": "New application",
@@ -184,6 +185,24 @@
     "infoItem2": "The sending HDAB forwards the application to HDAB-NL via the HealthData@EU NCP",
     "infoItem3": "HDAB-NL assesses the application against Dutch legal and technical requirements",
     "infoItem4": "The outcome (permit / refusal) is communicated back via the NCP"
+  },
+  "invoices": {
+    "title": "Invoices",
+    "breadcrumb": "Invoices",
+    "total": "Total",
+    "overdue": "Overdue",
+    "statusDRAFT": "Draft",
+    "statusISSUED": "Issued",
+    "statusPAID": "Paid",
+    "statusCANCELLED": "Cancelled",
+    "outstandingAmount": "Outstanding amount",
+    "paidAmount": "Paid amount",
+    "applicant": "Applicant",
+    "amount": "Amount",
+    "dueDate": "Due date",
+    "issuedBy": "Issued by",
+    "noResults": "No invoices found",
+    "noResultsSub": "Invoices are issued from a granted permit's fee breakdown (EHDS Art. 62)."
   },
   "common": {
     "none": "—",

@@ -3,6 +3,7 @@
     "dashboard": "Tableau de bord",
     "applications": "Demandes",
     "permits": "Autorisations",
+    "invoices": "Factures",
     "import": "Import HD@EU",
     "public": "Registre public",
     "newApplication": "Nouvelle demande",
@@ -184,6 +185,24 @@
     "infoItem2": "Le HDAB expéditeur transmet la demande à HDAB-NL via le PCN HealthData@EU",
     "infoItem3": "HDAB-NL évalue la demande selon les exigences juridiques et techniques néerlandaises",
     "infoItem4": "Le résultat (autorisation / refus) est communiqué en retour via le PCN"
+  },
+  "invoices": {
+    "title": "Factures",
+    "breadcrumb": "Factures",
+    "total": "Total",
+    "overdue": "En retard",
+    "statusDRAFT": "Brouillon",
+    "statusISSUED": "Émise",
+    "statusPAID": "Payée",
+    "statusCANCELLED": "Annulée",
+    "outstandingAmount": "Montant dû",
+    "paidAmount": "Montant payé",
+    "applicant": "Demandeur",
+    "amount": "Montant",
+    "dueDate": "Date d'échéance",
+    "issuedBy": "Émise par",
+    "noResults": "Aucune facture trouvée",
+    "noResultsSub": "Les factures sont émises à partir de la décomposition des coûts d'une autorisation accordée (EHDS Art. 62)."
   },
   "common": {
     "none": "—",

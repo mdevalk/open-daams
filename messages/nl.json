@@ -3,6 +3,7 @@
     "dashboard": "Dashboard",
     "applications": "Aanvragen",
     "permits": "Vergunningen",
+    "invoices": "Facturen",
     "import": "HD@EU import",
     "public": "Openbaar register",
     "newApplication": "Nieuwe aanvraag",
@@ -184,6 +185,24 @@
     "infoItem2": "Het zendende HDAB stuurt de aanvraag door naar HDAB-NL via het HealthData@EU NCP",
     "infoItem3": "HDAB-NL beoordeelt de aanvraag aan Nederlandse juridische en technische vereisten",
     "infoItem4": "De uitkomst (vergunning / weigering) wordt teruggecommuniceerd via het NCP"
+  },
+  "invoices": {
+    "title": "Facturen",
+    "breadcrumb": "Facturen",
+    "total": "Totaal",
+    "overdue": "Achterstallig",
+    "statusDRAFT": "Concept",
+    "statusISSUED": "Verzonden",
+    "statusPAID": "Betaald",
+    "statusCANCELLED": "Geannuleerd",
+    "outstandingAmount": "Openstaand bedrag",
+    "paidAmount": "Betaald bedrag",
+    "applicant": "Aanvrager",
+    "amount": "Bedrag",
+    "dueDate": "Vervaldatum",
+    "issuedBy": "Uitgegeven door",
+    "noResults": "Geen facturen gevonden",
+    "noResultsSub": "Facturen worden uitgegeven op basis van de kostenopbouw van een verleende vergunning (EHDS Art. 62)."
   },
   "common": {
     "none": "—",
