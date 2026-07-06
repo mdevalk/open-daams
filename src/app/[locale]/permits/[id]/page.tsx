@@ -1,9 +1,11 @@
+import { ComponentProps } from 'react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { prisma } from '@/lib/db';
 import { PermitCard } from '@/components/PermitCard';
 import { PermitPanel } from '@/components/PermitPanel';
 import { AuthorizedPersonsPanel } from '@/components/AuthorizedPersonsPanel';
+import { InvoicePanel } from '@/components/InvoicePanel';
 import { PERMIT_STATUS_LABELS } from '@/lib/permit';
 import { formatDate, formatDateTime, serializePrisma } from '@/lib/utils';
 
@@ -37,6 +39,10 @@ export default async function PermitDetailPage({
           orderBy: { createdAt: 'asc' },
         },
         authorizedPersons: { orderBy: { addedAt: 'asc' } },
+        invoices: {
+          include: { createdBy: { select: { name: true, role: true } } },
+          orderBy: { createdAt: 'desc' },
+        },
       },
     }),
     prisma.user.findMany({ orderBy: { name: 'asc' } }),
@@ -150,6 +156,21 @@ export default async function PermitDetailPage({
             persons={permit.authorizedPersons}
             canManage={['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(currentUser.role)}
             currentUserId={currentUser.id}
+          />
+          <InvoicePanel
+            permitId={permit.id}
+            invoices={permit.invoices as unknown as ComponentProps<typeof InvoicePanel>['invoices']}
+            canIssue={['DECISION_MAKER', 'ADMIN'].includes(currentUser.role)}
+            canManage={['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(currentUser.role)}
+            currentUserId={currentUser.id}
+            hasFeesRecorded={[
+              permit.permitProcessingFee,
+              permit.dataPreparationFee,
+              permit.speSetupFee,
+              permit.speUsageFee,
+              permit.additionalServicesFee,
+              permit.dataHolderFee,
+            ].some((v) => v != null)}
           />
         </div>
       </div>

@@ -155,6 +155,7 @@ model User {
   permitActions      DataPermitLog[]
   completenessChecks CompletenessCheck[]
   extractionRequests DataExtractionRequest[]
+  issuedInvoices     Invoice[]
 }
 
 model Application {
@@ -394,6 +395,40 @@ model DataPermit {
 
   logs              DataPermitLog[]
   authorizedPersons AuthorizedPerson[]
+  invoices          Invoice[]
+}
+
+// EHDS Art. 62 / TEHDAS2 D6.3 Ch. 8 — invoicing of fees for a granted permit.
+// Line items are a snapshot of the permit's fee breakdown at issuance time,
+// since those fees may change on later amendment/renewal.
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  PAID
+  CANCELLED
+}
+
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber String        @unique // e.g. INV-NL-2026-0001
+  permitId      String
+  permit        DataPermit    @relation(fields: [permitId], references: [id])
+  currency      String        @default("EUR")
+  lineItems     Json // [{ description: string, amount: string }]
+  totalAmount   Decimal       @db.Decimal(10, 2)
+  status        InvoiceStatus @default(ISSUED)
+
+  issuedAt DateTime  @default(now())
+  dueAt    DateTime
+  paidAt   DateTime?
+
+  notes String? @db.Text
+
+  createdById String
+  createdBy   User   @relation(fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // Annex 9 §6.8 — persons entitled to process the data granted under this
