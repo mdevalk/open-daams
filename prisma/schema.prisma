@@ -156,6 +156,7 @@ model User {
   completenessChecks CompletenessCheck[]
   extractionRequests DataExtractionRequest[]
   issuedInvoices     Invoice[]
+  speProvisioningActions SpeProvisioningLog[]
 }
 
 model Application {
@@ -399,6 +400,50 @@ model DataPermit {
   logs              DataPermitLog[]
   authorizedPersons AuthorizedPerson[]
   invoices          Invoice[]
+  speProvisioning   SpeProvisioningOrder?
+}
+
+// EHDS Art. 73 / TEHDAS2 D6.4 §9 — provisioning of the secure processing
+// environment (SPE) that authorized persons process the granted dataset in.
+// Only applicable to DATA_ACCESS_APPLICATION permits (data requests return
+// aggregated output and don't involve an SPE).
+enum SpeProvisioningStatus {
+  REQUESTED       // Provisioning requested from the SPE operator
+  PROVISIONING    // Environment being set up
+  ACTIVE          // Environment provisioned and in use
+  DECOMMISSIONING // Decommission requested (e.g. permit revoked/expired)
+  DECOMMISSIONED
+}
+
+model SpeProvisioningOrder {
+  id       String                @id @default(cuid())
+  permitId String                @unique
+  permit   DataPermit            @relation(fields: [permitId], references: [id])
+  status   SpeProvisioningStatus @default(REQUESTED)
+
+  // Reference/URL into the actual SPE operator's system, once known
+  environmentReference String?
+
+  requestedAt      DateTime  @default(now())
+  provisionedAt    DateTime?
+  decommissionedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  logs SpeProvisioningLog[]
+}
+
+model SpeProvisioningLog {
+  id         String                 @id @default(cuid())
+  orderId    String
+  order      SpeProvisioningOrder   @relation(fields: [orderId], references: [id])
+  userId     String
+  user       User                   @relation(fields: [userId], references: [id])
+  fromStatus SpeProvisioningStatus?
+  toStatus   SpeProvisioningStatus
+  comment    String?                @db.Text
+  createdAt  DateTime               @default(now())
 }
 
 // EHDS Art. 62 / TEHDAS2 D6.3 Ch. 8 — invoicing of fees.

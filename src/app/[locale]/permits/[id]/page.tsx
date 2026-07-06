@@ -6,6 +6,7 @@ import { PermitCard } from '@/components/PermitCard';
 import { PermitPanel } from '@/components/PermitPanel';
 import { AuthorizedPersonsPanel } from '@/components/AuthorizedPersonsPanel';
 import { InvoicePanel } from '@/components/InvoicePanel';
+import { SpeProvisioningPanel } from '@/components/SpeProvisioningPanel';
 import { PERMIT_STATUS_LABELS } from '@/lib/permit';
 import { formatDate, formatDateTime, serializePrisma } from '@/lib/utils';
 
@@ -42,6 +43,14 @@ export default async function PermitDetailPage({
         invoices: {
           include: { createdBy: { select: { name: true, role: true } } },
           orderBy: { createdAt: 'desc' },
+        },
+        speProvisioning: {
+          include: {
+            logs: {
+              include: { user: { select: { name: true, role: true } } },
+              orderBy: { createdAt: 'asc' },
+            },
+          },
         },
       },
     }),
@@ -172,6 +181,14 @@ export default async function PermitDetailPage({
               permit.dataHolderFee,
             ].some((v) => v != null)}
           />
+          {permit.application?.type === 'DATA_ACCESS_APPLICATION' && (
+            <SpeProvisioningPanel
+              permitId={permit.id}
+              order={permit.speProvisioning as unknown as ComponentProps<typeof SpeProvisioningPanel>['order']}
+              canManage={['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(currentUser.role)}
+              currentUserId={currentUser.id}
+            />
+          )}
         </div>
       </div>
     </div>
