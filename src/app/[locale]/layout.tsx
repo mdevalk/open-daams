@@ -6,7 +6,7 @@ import '../globals.css';
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: 'HDAB-NL | DAAMS',
-    description: 'Data Access Application Management System — HDAB-NL',
+    description: 'Example DAAMS implementation — HDAB-NL',
   };
 }
 
