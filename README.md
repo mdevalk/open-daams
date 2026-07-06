@@ -11,7 +11,7 @@ An example **Data Access Application Management System** (DAAMS) for a fictional
 
 ## Features
 
-- **Full TEHDAS2 DAAMS workflow** — 15-state machine covering the complete application lifecycle
+- **Full TEHDAS2 DAAMS workflow** — 7-state application lifecycle plus a 5-state permit lifecycle (see below)
 - **Two application types** — Data Permit (Art. 46) and Data Request (Art. 69, anonymised)
 - **Statutory deadlines** — EHDS 2-month decision deadline (Art. 46), extendable to 4 months; 4-week incomplete response window; visual overdue/warning indicators
 - **Role-based transitions** — APPLICANT, CASE_HANDLER, DECISION_MAKER, DATA_HOLDER, ADMIN
@@ -22,17 +22,46 @@ An example **Data Access Application Management System** (DAAMS) for a fictional
 
 ## Workflow states
 
+Both application types (data access application and data request) go through the same
+`ApplicationStatus` state machine (TEHDAS2 D6.4 §7.6/7.7); a positive decision then spins off a
+`DataPermit` with its own lifecycle (D6.4 §9.2).
+
+```mermaid
+flowchart TD
+    DRAFT["Draft<br/>Applicant workspace"]
+    SUBMITTED["Submitted<br/>Received by HDAB-NL"]
+    PRESCREEN["Pre-screening<br/>Completeness check"]
+    AWAITING["Awaiting additional info<br/>Deadline suspended"]
+    PROCESSING["Processing<br/>Substantive assessment"]
+    DECISION["Decision issued<br/>Terminal state"]
+    PERMIT["Permit granted<br/>Own lifecycle (D6.4 §9.2)"]
+    WITHDRAWN["Withdrawn<br/>From any active state"]
+
+    DRAFT -->|"submit — clock starts"| SUBMITTED
+    SUBMITTED -->|"case handler starts check"| PRESCREEN
+    PRESCREEN -->|"request info"| AWAITING
+    AWAITING -->|"info received"| PRESCREEN
+    PRESCREEN -->|"complete — to assessment"| PROCESSING
+    AWAITING -.->|"no response in 4 weeks → negative"| DECISION
+    PROCESSING -->|"positive or negative"| DECISION
+    DECISION -->|"if positive → permit created"| PERMIT
+
+    classDef handling fill:#dbeafe,stroke:#2563eb,color:#1e3a8a;
+    classDef waiting fill:#fef3c7,stroke:#d97706,color:#78350f;
+    classDef outcome fill:#d1fae5,stroke:#059669,color:#064e3b;
+    classDef exit fill:#e5e7eb,stroke:#6b7280,color:#374151;
+
+    class SUBMITTED,PRESCREEN,PROCESSING handling;
+    class AWAITING waiting;
+    class DECISION,PERMIT outcome;
+    class DRAFT,WITHDRAWN exit;
 ```
-DRAFT → SUBMITTED → ADMISSIBILITY_CHECK → INCOMPLETE ↺
-                               ↓                     ↓ WITHDRAWN
-                         UNDER_ASSESSMENT → INFO_REQUESTED ↺
-                               ↓
-                    PERMIT_GRANTED / PERMIT_REFUSED
-                    REQUEST_APPROVED / REQUEST_REJECTED
-                    INADMISSIBLE
-                               ↓ (if granted/approved)
-                         DATA_PROVISIONING → ACTIVE → COMPLETED
-```
+
+A granted permit can subsequently be **amended**, **renewed** (once), **revoked**, or expire
+(`DataPermitStatus`). From any active application state (`DRAFT` through `PROCESSING`), the
+applicant or case handler can withdraw the application.
+
+Blue = HDAB handling · Amber = waiting on applicant · Teal = outcome · Gray = start or exit.
 
 ## Tech stack
 
