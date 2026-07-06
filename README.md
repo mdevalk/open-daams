@@ -12,13 +12,47 @@ An example **Data Access Application Management System** (DAAMS) for a fictional
 ## Features
 
 - **Full TEHDAS2 DAAMS workflow** — 7-state application lifecycle plus a 5-state permit lifecycle (see below)
-- **Two application types** — Data Permit (Art. 46) and Data Request (Art. 69, anonymised)
-- **Statutory deadlines** — EHDS 2-month decision deadline (Art. 46), extendable to 4 months; 4-week incomplete response window; visual overdue/warning indicators
+- **Two application types** — Data Access Application (Art. 67) and Data Request (Art. 69, anonymised)
+- **Statutory deadlines** — EHDS 2-month decision deadline (Art. 68(4)/69(4)), extendable to 4 months; 4-week incomplete response window; visual overdue/warning indicators
 - **Role-based transitions** — APPLICANT, CASE_HANDLER, DECISION_MAKER, DATA_HOLDER, ADMIN
 - **Case dashboard** — KPIs, overdue alerts, status breakdown, recent activity
 - **Audit trail** — immutable log of every state transition with actor, timestamp, and comment
 - **Notes** — internal (staff-only) and external notes per application
-- **EHDS common form** — application form aligned with TEHDAS2 D6.2 fields
+- **EHDS common form** — application form aligned with TEHDAS2 D6.2 fields, with type-specific sections (Annex 5 vs Annex 6)
+
+## Functionality → EHDS articles
+
+What's implemented, and the specific EHDS Regulation (EU) 2025/327 article (or TEHDAS2 D6.x
+reference) it's based on. See [`docs/architecture.md`](./docs/architecture.md) for how these pieces
+fit together in code.
+
+| Functionality | EHDS / TEHDAS2 reference |
+|---|---|
+| Application submission & lifecycle | Art. 67 (data access application), Art. 69 (data request) |
+| Statutory decision deadlines (2 months, +2 extension; 4-week info window) | Art. 68(4), Art. 69(4) |
+| Structured completeness check (checklist, distinct from assessment) | D6.3 Ch. 5, Annex 7/8 |
+| Type-specific application fields (cohort formation, controls/relatives, tabulation plan, transfers outside EU/EEA, lawfulness of processing) | D6.3 Annex 5 (data access application) / Annex 6 (data request) |
+| Ethical review tracking (status, committee, reference) | D6.3 §6.1 |
+| Cost estimate & invoicing sent to the applicant | Art. 62(5) |
+| Opt-out exception mechanism | Art. 71(4) |
+| Decision issuance & data permit creation | Art. 68(1)–(3) |
+| Data permit document (10-section template) | D6.3 Annex 9; mandatory content per Art. 68(10) |
+| Permit validity, amendment, renewal (once) | Art. 68(12) |
+| Permit revocation for non-compliance | Art. 63(1) |
+| List of persons authorised to process data in the SPE | D6.3 Annex 9 §6.8, Art. 73 |
+| Extraction requests to health data holders | Art. 60, Art. 68(7) |
+| Appeal (bezwaar/beroep) tracking against a decision | Art. 63 / national administrative law |
+| Public transparency register (applications & decisions) | Art. 57(1)(j)(ii), Art. 58, Art. 61(4) |
+| Cross-border application import via HealthData@EU | Art. 75 |
+| Role-based access control on every state transition | Art. 57 (HDAB responsibilities), implemented as internal RBAC |
+| Immutable audit trail of application & permit changes | supports record-keeping under Art. 57(1) |
+
+Not yet implemented: the trusted-health-data-holder procedure (Art. 72), IPR/trade-secret
+contractual arrangements (Art. 52, Annex 11), mutual recognition of another HDAB's permit (Art.
+68(5)), the biennial activity report (Art. 59), tracking of the applicant's post-permit results
+publication (Art. 61(4)), ongoing compliance monitoring during a permit's validity (Art.
+57(1)(a)(ii)), the dataset metadata catalogue (Art. 77–80), and real secure processing environment
+integration (only name/requirements are recorded as text today).
 
 ## Workflow states
 
@@ -97,7 +131,7 @@ Open [http://localhost:3000](http://localhost:3000).
 - [TEHDAS2 D6.4 — Technical Specifications for DAAMS](https://tehdas.eu/wp-content/uploads/2025/09/technical-specifications-for-data-access-application-management-system-daams-for-health-data-access-bodies-hdabs.pdf)
 - [TEHDAS2 D6.3 — Guideline for HDABs on procedures and formats](https://tehdas.eu/wp-content/uploads/2025/09/draft-guideline-for-health-data-access-bodies-on-the-procedures-and-formats-for-data-access.pdf)
 - [TEHDAS2 D6.2 — Guideline for data users](https://tehdas.eu/wp-content/uploads/2025/10/d6.2-guideline-for-data-users-on-good-application-and-access-practice.pdf)
-- EHDS Regulation (EU) 2025/327, Articles 34, 46, 69
+- EHDS Regulation (EU) 2025/327, Chapter IV (Articles 51–80) — see the functionality table above for specific articles
 
 ## License
 
