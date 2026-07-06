@@ -43,17 +43,7 @@ export default async function ApplicationsPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
-        <div className="flex gap-2">
-          <a href={`/${locale}/import`} className="rounded-lg border border-blue-300 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100">
-            {t('import')}
-          </a>
-          <a href={`/${locale}/applications/new`} className="rounded-lg bg-[#154273] px-4 py-2 text-sm font-medium text-white hover:bg-[#01689b]">
-            {t('new')}
-          </a>
-        </div>
-      </div>
+      <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
 
       <form method="GET" className="flex flex-wrap gap-3 items-end">
         <div>
