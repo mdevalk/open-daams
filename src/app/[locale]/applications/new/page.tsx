@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { prisma } from '@/lib/db';
-import { NewApplicationForm } from '@/components/NewApplicationForm';
+import { NewApplicationTabs } from '@/components/NewApplicationTabs';
 
 export default async function NewApplicationPage({
   params,
@@ -28,7 +28,12 @@ export default async function NewApplicationPage({
           {t('typeDataAccess')}
         </p>
       </div>
-      <NewApplicationForm applicants={users} />
+      <NewApplicationTabs
+        applicants={users}
+        locale={locale}
+        manualLabel={t('manualEntry')}
+        hdeuLabel={t('import')}
+      />
     </div>
   );
 }

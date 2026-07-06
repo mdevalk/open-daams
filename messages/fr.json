@@ -61,6 +61,7 @@
     "title": "Demandes",
     "new": "+ Nouvelle demande",
     "import": "Import HD@EU",
+    "manualEntry": "Saisie manuelle",
     "searchLabel": "Rechercher",
     "searchPlaceholder": "Référence ou titre...",
     "statusLabel": "Statut",

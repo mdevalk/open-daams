@@ -35,8 +35,9 @@ const SAMPLE_PAYLOAD = JSON.stringify(
   2,
 );
 
-export function HdeuImportForm() {
+export function HdeuImportForm({ locale }: { locale?: string } = {}) {
   const router = useRouter();
+  const applicationHref = (id: string) => (locale ? `/${locale}/applications/${id}` : `/applications/${id}`);
   const [mode, setMode] = useState<'paste' | 'file'>('paste');
   const [json, setJson] = useState('');
   const [loading, setLoading] = useState(false);
@@ -194,7 +195,7 @@ export function HdeuImportForm() {
               <p className="mt-1">Reference: <strong>{result.ref}</strong></p>
               <p>Decision deadline: {new Intl.DateTimeFormat('nl-NL', { dateStyle: 'long' }).format(new Date(result.deadline))}</p>
               <a
-                href={`/applications/${result.id}`}
+                href={applicationHref(result.id)}
                 className="mt-2 inline-block text-green-700 underline hover:text-green-900"
               >
                 Open application →

@@ -61,6 +61,7 @@
     "title": "Applications",
     "new": "+ New application",
     "import": "HD@EU import",
+    "manualEntry": "Manual entry",
     "searchLabel": "Search",
     "searchPlaceholder": "Reference or title...",
     "statusLabel": "Status",

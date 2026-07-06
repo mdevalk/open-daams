@@ -61,6 +61,7 @@
     "title": "Aanvragen",
     "new": "+ Nieuwe aanvraag",
     "import": "HD@EU import",
+    "manualEntry": "Handmatig invullen",
     "searchLabel": "Zoeken",
     "searchPlaceholder": "Kenmerk of titel...",
     "statusLabel": "Status",

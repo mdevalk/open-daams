@@ -26,7 +26,7 @@ export default async function ImportPage({
         </ul>
       </div>
 
-      <HdeuImportForm />
+      <HdeuImportForm locale={locale} />
     </div>
   );
 }
