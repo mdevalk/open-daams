@@ -62,6 +62,7 @@
     "new": "+ Nieuwe aanvraag",
     "import": "HD@EU import",
     "manualEntry": "Handmatig invullen",
+    "ncpFetch": "Ophalen via NCP",
     "searchLabel": "Zoeken",
     "searchPlaceholder": "Kenmerk of titel...",
     "statusLabel": "Status",

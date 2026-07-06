@@ -62,6 +62,7 @@
     "new": "+ Nouvelle demande",
     "import": "Import HD@EU",
     "manualEntry": "Saisie manuelle",
+    "ncpFetch": "Récupérer depuis le PCN",
     "searchLabel": "Rechercher",
     "searchPlaceholder": "Référence ou titre...",
     "statusLabel": "Statut",

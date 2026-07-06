@@ -62,6 +62,7 @@
     "new": "+ New application",
     "import": "HD@EU import",
     "manualEntry": "Manual entry",
+    "ncpFetch": "Fetch from NCP",
     "searchLabel": "Search",
     "searchPlaceholder": "Reference or title...",
     "statusLabel": "Status",

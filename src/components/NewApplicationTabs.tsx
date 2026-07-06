@@ -4,19 +4,22 @@ import { useState } from 'react';
 import { User } from '@prisma/client';
 import { NewApplicationForm } from './NewApplicationForm';
 import { HdeuImportForm } from './HdeuImportForm';
+import { NcpFetchForm } from './NcpFetchForm';
 
-type Tab = 'manual' | 'hdeu';
+type Tab = 'manual' | 'hdeu' | 'ncp';
 
 export function NewApplicationTabs({
   applicants,
   locale,
   manualLabel,
   hdeuLabel,
+  ncpLabel,
 }: {
   applicants: User[];
   locale: string;
   manualLabel: string;
   hdeuLabel: string;
+  ncpLabel: string;
 }) {
   const [tab, setTab] = useState<Tab>('manual');
 
@@ -27,6 +30,7 @@ export function NewApplicationTabs({
           [
             ['manual', manualLabel],
             ['hdeu', hdeuLabel],
+            ['ncp', ncpLabel],
           ] as const
         ).map(([value, label]) => (
           <button
@@ -47,8 +51,10 @@ export function NewApplicationTabs({
 
       {tab === 'manual' ? (
         <NewApplicationForm applicants={applicants} />
-      ) : (
+      ) : tab === 'hdeu' ? (
         <HdeuImportForm locale={locale} />
+      ) : (
+        <NcpFetchForm locale={locale} />
       )}
     </div>
   );

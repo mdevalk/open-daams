@@ -33,6 +33,7 @@ export default async function NewApplicationPage({
         locale={locale}
         manualLabel={t('manualEntry')}
         hdeuLabel={t('import')}
+        ncpLabel={t('ncpFetch')}
       />
     </div>
   );
