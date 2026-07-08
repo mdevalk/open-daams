@@ -33,7 +33,7 @@
     "hdabOrg": "Fictieve organisatie voor demonstratiedoeleinden",
     "legal": "Juridische grondslag",
     "legalRef": "EHDS Verordening (EU) 2025/327",
-    "legalArticles": "Artikelen 46, 67–69",
+    "legalArticles": "Artikelen 67–69",
     "standards": "Referenties",
     "standardsList": [
       { "ref": "TEHDAS2 D6.4", "title": "Technische specificaties voor DAAMS", "url": "https://tehdas.eu/wp-content/uploads/2025/09/technical-specifications-for-data-access-application-management-system-daams-for-health-data-access-bodies-hdabs.pdf" },
@@ -74,7 +74,7 @@
     "allStatuses": "Alle statussen",
     "typeLabel": "Type",
     "allTypes": "Alle typen",
-    "typeDataAccess": "Data-toegangsaanvraag (Art. 46)",
+    "typeDataAccess": "Data-toegangsaanvraag (Art. 67)",
     "typeDataRequest": "Dataverzoek (Art. 69)",
     "sourceLabel": "Herkomst",
     "allSources": "Alle herkomsten",
@@ -88,12 +88,12 @@
   "applicationDetail": {
     "breadcrumb": "Aanvragen",
     "edit": "Bewerken",
-    "decisionDeadline": "Beslissingstermijn (Art. 46)",
+    "decisionDeadline": "Beslissingstermijn (Art. 68)",
     "additionalInfoDeadline": "Termijn aanvullende informatie",
     "detailsTitle": "Aanvraaggegevens",
     "applicant": "Aanvrager",
     "caseHandler": "Behandelaar",
-    "purpose": "Doel (Art. 34)",
+    "purpose": "Doel (Art. 53)",
     "legalBasis": "Juridische grondslag",
     "crossBorder": "Grensoverschrijdend",
     "yes": "Ja",
@@ -115,7 +115,7 @@
     "decisionTitle": "Besluit",
     "notesTitle": "Notities",
     "historyTitle": "Historie",
-    "typeDataAccess": "Data-toegangsaanvraag (Art. 46)",
+    "typeDataAccess": "Data-toegangsaanvraag (Art. 67)",
     "typeDataRequest": "Dataverzoek (Art. 69)"
   },
   "permits": {
