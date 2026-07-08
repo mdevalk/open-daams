@@ -38,8 +38,7 @@
     "standardsList": [
       { "ref": "TEHDAS2 D6.4", "title": "Spécifications techniques du DAAMS", "url": "https://tehdas.eu/wp-content/uploads/2025/09/technical-specifications-for-data-access-application-management-system-daams-for-health-data-access-bodies-hdabs.pdf" },
       { "ref": "TEHDAS2 D6.3", "title": "Lignes directrices pour les HDAB sur les procédures et formats", "url": "https://tehdas.eu/wp-content/uploads/2025/09/draft-guideline-for-health-data-access-bodies-on-the-procedures-and-formats-for-data-access.pdf" },
-      { "ref": "TEHDAS2 D6.2", "title": "Lignes directrices pour les utilisateurs de données", "url": "https://tehdas.eu/wp-content/uploads/2025/10/d6.2-guideline-for-data-users-on-good-application-and-access-practice.pdf" },
-      { "ref": "Règlement EHDS (UE) 2025/327", "title": "Chapitre IV (Articles 51–80)", "url": "https://eur-lex.europa.eu/eli/reg/2025/327/oj/eng" }
+      { "ref": "TEHDAS2 D6.2", "title": "Lignes directrices pour les utilisateurs de données", "url": "https://tehdas.eu/wp-content/uploads/2025/10/d6.2-guideline-for-data-users-on-good-application-and-access-practice.pdf" }
     ],
     "openSource": "Ce projet est un logiciel libre communautaire (licence MIT), construit selon le {nlDesignSystem} avec les composants {rijkshuisstijl}.",
     "nlDesignSystem": "NL Design System",
