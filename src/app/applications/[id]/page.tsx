@@ -79,7 +79,7 @@ export default async function ApplicationDetailPage({
           <p className="text-sm text-gray-500 mt-1">
             {application.referenceNumber} &middot;{' '}
             {application.type === 'DATA_ACCESS_APPLICATION'
-              ? 'Data-toegangsaanvraag (Art. 46)'
+              ? 'Data-toegangsaanvraag (Art. 67)'
               : 'Dataverzoek (Art. 69)'}
           </p>
         </div>
@@ -96,7 +96,7 @@ export default async function ApplicationDetailPage({
       {/* Deadline banners */}
       <div className="space-y-2">
         {application.status !== 'DECISION_ISSUED' && application.status !== 'WITHDRAWN' && (
-          <DeadlineBanner label="Beslissingstermijn (Art. 46)" deadline={application.decisionDeadline} />
+          <DeadlineBanner label="Beslissingstermijn (Art. 68)" deadline={application.decisionDeadline} />
         )}
         {application.status === 'AWAITING_ADDITIONAL_INFORMATION' && (
           <DeadlineBanner label="Termijn aanvullende informatie" deadline={application.additionalInfoDeadline} />
@@ -119,7 +119,7 @@ export default async function ApplicationDetailPage({
                 <dd className="font-medium">{application.caseHandler?.name ?? '—'}</dd>
               </div>
               <div>
-                <dt className="text-gray-500">Doel (Art. 34)</dt>
+                <dt className="text-gray-500">Doel (Art. 53)</dt>
                 <dd className="font-medium">{purposeLabel(application.purposeCategory)}</dd>
               </div>
               <div>

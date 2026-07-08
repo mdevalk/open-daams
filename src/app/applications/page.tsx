@@ -73,7 +73,7 @@ export default async function ApplicationsPage({
           <label className="block text-xs font-medium text-gray-600 mb-1">Type</label>
           <select name="type" defaultValue={type ?? ''} className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="">All types</option>
-            <option value="DATA_ACCESS_APPLICATION">Data Permit (Art. 46)</option>
+            <option value="DATA_ACCESS_APPLICATION">Data Permit (Art. 67)</option>
             <option value="DATA_REQUEST">Data Request (Art. 69)</option>
           </select>
         </div>

@@ -18,7 +18,7 @@ const SAMPLE_PAYLOAD = JSON.stringify(
     projectDescription:
       'Cross-national cohort study comparing long-term complications and treatment pathways for type-2 diabetes patients in Finland and the Netherlands, leveraging routine primary care and hospital data from both countries.',
     purposeCategory: 'SCIENTIFIC_RESEARCH',
-    legalBasis: 'EHDS Art. 34(1)(a) – scientific research',
+    legalBasis: 'EHDS Art. 53(1) – scientific research',
     requestedDatasets: ['GP_ELECTRONIC_RECORDS', 'HOSPITAL_DISCHARGE_RECORDS', 'MEDICATION_DISPENSING'],
     requestedVariables:
       'Age, sex, diabetes diagnosis date (ICD-10 E11), HbA1c, BMI, medication (ATC A10), hospitalisations, complications (ICD-10 E110-E149)',
@@ -162,12 +162,12 @@ export function HdeuImportForm({ locale }: { locale?: string } = {}) {
                 ['hdeuApplicationId', 'Sending DAAMS reference (e.g. FI-HDAB-2025-0042)'],
                 ['sendingCountry', 'ISO 3166-1 alpha-2 country code'],
                 ['sendingHdab', 'Name of the sending HDAB'],
-                ['transmissionTimestamp', 'ISO 8601 datetime (clock start for Art. 46)'],
+                ['transmissionTimestamp', 'ISO 8601 datetime (clock start for Art. 68)'],
                 ['applicationType', 'DATA_ACCESS_APPLICATION or DATA_REQUEST'],
                 ['applicantName / Email / Organisation', 'Researcher identity'],
                 ['title', 'Project title'],
                 ['projectDescription', 'Lay summary'],
-                ['purposeCategory', 'Art. 34 purpose code'],
+                ['purposeCategory', 'Art. 53 purpose code'],
                 ['legalBasis', 'Applicable EHDS legal basis'],
                 ['requestedDatasets', 'Array of dataset identifiers'],
                 ['requestedVariables', 'Variable-level specification'],

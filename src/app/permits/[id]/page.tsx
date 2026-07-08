@@ -110,7 +110,7 @@ export default async function PermitDetailPage({
                   <dt className="text-gray-500">Aanvraagtype</dt>
                   <dd className="font-medium">
                     {permit.application.type === 'DATA_ACCESS_APPLICATION'
-                      ? 'Data-toegangsaanvraag (Art. 46)'
+                      ? 'Data-toegangsaanvraag (Art. 67)'
                       : 'Dataverzoek (Art. 69)'}
                   </dd>
                 </div>

@@ -30,7 +30,7 @@ export function getMockNcpQueue(): NcpQueueEntry[] {
       projectDescription:
         'Cross-national cohort study comparing long-term complications and treatment pathways for type-2 diabetes patients in Finland and the Netherlands, leveraging routine primary care and hospital data from both countries.',
       purposeCategory: 'SCIENTIFIC_RESEARCH',
-      legalBasis: 'EHDS Art. 34(1)(a) – scientific research',
+      legalBasis: 'EHDS Art. 53(1) – scientific research',
       requestedDatasets: ['GP_ELECTRONIC_RECORDS', 'HOSPITAL_DISCHARGE_RECORDS', 'MEDICATION_DISPENSING'],
       requestedVariables:
         'Age, sex, diabetes diagnosis date (ICD-10 E11), HbA1c, BMI, medication (ATC A10), hospitalisations, complications (ICD-10 E110-E149)',
@@ -57,7 +57,7 @@ export function getMockNcpQueue(): NcpQueueEntry[] {
       projectDescription:
         'Request for aggregated, non-identifiable statistical output on cardiovascular comorbidity prevalence among oncology patients treated in Dutch academic hospitals, for a multi-country EHDS feasibility comparison.',
       purposeCategory: 'PUBLIC_HEALTH',
-      legalBasis: 'EHDS Art. 34(1)(c) – public health',
+      legalBasis: 'EHDS Art. 53(1) – public health',
       requestedDatasets: ['HOSPITAL_DISCHARGE_RECORDS', 'DISEASE_REGISTRIES'],
       requestedVariables: 'Aggregated counts by cancer type, cardiovascular comorbidity code (ICD-10 I00-I99), age band, sex',
       studyPopulation: 'Oncology patients treated in Dutch academic hospitals 2020-2025',

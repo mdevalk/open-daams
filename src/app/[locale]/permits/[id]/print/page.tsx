@@ -142,7 +142,7 @@ export default async function PermitPrintPage({
                 <div className="field"><span className="lbl">Titel</span><span className="val">{app.title}</span></div>
                 <div className="field">
                   <span className="lbl">Type</span>
-                  <span className="val">{app.type === 'DATA_ACCESS_APPLICATION' ? 'Data-toegangsaanvraag (Art. 46 EHDS)' : 'Dataverzoek (Art. 69 EHDS)'}</span>
+                  <span className="val">{app.type === 'DATA_ACCESS_APPLICATION' ? 'Data-toegangsaanvraag (Art. 67 EHDS)' : 'Dataverzoek (Art. 69 EHDS)'}</span>
                 </div>
                 {app.legalBasis && <div className="field"><span className="lbl">Juridische grondslag</span><span className="val">{app.legalBasis}</span></div>}
                 {app.dataProcessingCountry && <div className="field"><span className="lbl">Verwerkingsland</span><span className="val">{app.dataProcessingCountry}</span></div>}

@@ -127,7 +127,7 @@ export default async function PermitDetailPage({
                 <div><dt className="text-gray-500">{t('email')}</dt><dd className="font-medium">{permit.application.applicant.email}</dd></div>
                 <div>
                   <dt className="text-gray-500">{t('applicationType')}</dt>
-                  <dd className="font-medium">{permit.application.type === 'DATA_ACCESS_APPLICATION' ? 'Data-toegangsaanvraag (Art. 46)' : 'Dataverzoek (Art. 69)'}</dd>
+                  <dd className="font-medium">{permit.application.type === 'DATA_ACCESS_APPLICATION' ? 'Data-toegangsaanvraag (Art. 67)' : 'Dataverzoek (Art. 69)'}</dd>
                 </div>
               </dl>
             </section>

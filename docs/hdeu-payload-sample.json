@@ -11,7 +11,7 @@
   "title": "Comparative analysis of type-2 diabetes outcomes in Finland and the Netherlands 2018-2023",
   "projectDescription": "Cross-national cohort study comparing long-term complications and treatment pathways for type-2 diabetes patients in Finland and the Netherlands, leveraging routine primary care and hospital data from both countries.",
   "purposeCategory": "SCIENTIFIC_RESEARCH",
-  "legalBasis": "EHDS Art. 34(1)(a) – scientific research",
+  "legalBasis": "EHDS Art. 53(1) – scientific research",
   "requestedDatasets": ["GP_ELECTRONIC_RECORDS", "HOSPITAL_DISCHARGE_RECORDS", "MEDICATION_DISPENSING"],
   "requestedVariables": "Age, sex, diabetes diagnosis date (ICD-10 E11), HbA1c, BMI, medication (ATC A10), hospitalisations, complications (ICD-10 E110-E149)",
   "studyPopulation": "Adults aged 18+ with a diagnosis of type-2 diabetes registered in Dutch general practices",
