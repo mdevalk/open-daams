@@ -22,7 +22,7 @@ export default async function LocaleLayout({
   const t = await getTranslations({ locale, namespace: 'nav' });
   const tFooter = await getTranslations({ locale, namespace: 'footer' });
   const tLang = await getTranslations({ locale, namespace: 'lang' });
-  const standardsList = tFooter.raw('standardsList') as { ref: string; title: string }[];
+  const referenceList = tFooter.raw('standardsList') as { ref: string; title: string; url: string }[];
 
   const locales = ['nl', 'en', 'fr'] as const;
 
@@ -111,9 +111,11 @@ export default async function LocaleLayout({
                 <div>
                   <p className="font-semibold text-gray-900 mb-2">{tFooter('standards')}</p>
                   <ul className="space-y-1.5">
-                    {standardsList.map((item) => (
+                    {referenceList.map((item) => (
                       <li key={item.ref}>
-                        <span className="font-medium">{item.ref}</span>
+                        <a href={item.url} className="font-medium text-[#01689b] hover:underline" target="_blank" rel="noreferrer">
+                          {item.ref}
+                        </a>
                         <span className="block text-xs">{item.title}</span>
                       </li>
                     ))}
