@@ -34,11 +34,12 @@
     "legal": "Legal basis",
     "legalRef": "EHDS Regulation (EU) 2025/327",
     "legalArticles": "Articles 46, 67–69",
-    "standards": "Specifications",
+    "standards": "References",
     "standardsList": [
-      { "ref": "TEHDAS2 D6.3", "title": "Guideline for Health Data Access Bodies on the procedures and formats for data access" },
-      { "ref": "TEHDAS2 D6.4", "title": "Technical Specifications for DAAMS for HDABs" },
-      { "ref": "TEHDAS2 D7.1", "title": "Guideline on how to use data in a secure processing environment" }
+      { "ref": "TEHDAS2 D6.4", "title": "Technical Specifications for DAAMS", "url": "https://tehdas.eu/wp-content/uploads/2025/09/technical-specifications-for-data-access-application-management-system-daams-for-health-data-access-bodies-hdabs.pdf" },
+      { "ref": "TEHDAS2 D6.3", "title": "Guideline for HDABs on procedures and formats", "url": "https://tehdas.eu/wp-content/uploads/2025/09/draft-guideline-for-health-data-access-bodies-on-the-procedures-and-formats-for-data-access.pdf" },
+      { "ref": "TEHDAS2 D6.2", "title": "Guideline for data users", "url": "https://tehdas.eu/wp-content/uploads/2025/10/d6.2-guideline-for-data-users-on-good-application-and-access-practice.pdf" },
+      { "ref": "EHDS Regulation (EU) 2025/327", "title": "Chapter IV (Articles 51–80)", "url": "https://eur-lex.europa.eu/eli/reg/2025/327/oj/eng" }
     ],
     "openSource": "This is an open-source community project (MIT licence), built using the {nlDesignSystem} with {rijkshuisstijl} components.",
     "nlDesignSystem": "NL Design System",
