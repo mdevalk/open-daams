@@ -12,10 +12,8 @@ It is derived from the Prisma schema (`prisma/schema.prisma`), the API route str
 what the README aspires to.
 
 > **Caveats.** (1) "Present" reflects what is modelled and wired, not a guarantee that every
-> state transition is bug-free. (2) EHDS article numbers below should be verified against the
-> consolidated Official Journal text before being relied on — see
-> [Correctness flags](#cross-cutting--correctness-flags), point 2. (3) This is an unofficial
-> community project; nothing here is compliance advice.
+> state transition is bug-free. (2) This is an unofficial community project; nothing here is
+> compliance advice.
 
 ## Verdict
 
@@ -81,14 +79,30 @@ explicit about for a compliance-themed demo.
    is presentational until real identity is added. `authz.ts` is the single centralization
    point where real auth would slot in.
 
-2. **Article-number inconsistency worth fixing.** The app cites **"Art. 46"** in several
-   places (application-type labels, the decision-deadline label, the footer "Legal basis").
-   In the final Regulation (EU) 2025/327, **Art. 46 sits in the primary-use chapter (EHR
-   systems), not secondary use** — the secondary-use data access application/permit is Arts.
-   67–68 and the data request is Art. 69. This looks like leftover draft-proposal numbering.
-   Every citation should be checked against the consolidated OJ text.
+2. **Article-number citations — FIXED (2026-07-08).** The UI previously carried leftover
+   draft-proposal numbering: `Art. 46` for the data access application / decision deadline
+   and `Art. 34` for the purpose. These were corrected to the final Regulation (EU) 2025/327
+   numbering — **Art. 67** (health data access applications), **Art. 68** (data permit /
+   decision deadline), **Art. 69** (health data request), **Art. 53** (purposes for secondary
+   use) — across the message files, the new-application form, the footer, and this doc's
+   architecture companion. The permit PDF generator already used the correct numbering. A
+   repo-wide scan confirms no `Art. 34`/`Art. 46` references remain.
 
-3. **`Document` is a metadata stub.** The model stores `filename`/`mimeType`/`sizeBytes` but
+3. **Decision-deadline *duration* is still proposal-era.** Distinct from the citation fix
+   above: the app models a **2-month** deadline extendable to **4 months** (`workflow.ts`,
+   `architecture.md`, README, HD@EU import copy). Under the final Art. 68 the general deadline
+   is **3 months (+3)**, with **2 months (+1)** being only the *accelerated* track for
+   public-sector bodies. Changing this alters the deadline date-math, so it is left as a
+   deliberate open item, not a citation typo.
+
+4. **Purpose taxonomy is inconsistent across files.** The new-application form and
+   `src/lib/utils.ts` use the value set `{SCIENTIFIC_RESEARCH, PUBLIC_HEALTH, POLICY_MAKING,
+   EDUCATION_TRAINING, HEALTHCARE_DELIVERY, PERSONALISED_MEDICINE}`, while the permit PDF
+   generator (`generate-permit-pdf.ts`) expects `{…, STATISTICS, EDUCATION, CARE_IMPROVEMENT}`.
+   For the three mismatched values the PDF silently falls back to the raw enum string instead
+   of an Art. 53(1) label. Worth reconciling to one canonical set aligned with Art. 53(1).
+
+5. **`Document` is a metadata stub.** The model stores `filename`/`mimeType`/`sizeBytes` but
    there is no upload/storage route wired, so attachment handling is not real yet.
 
 ## Suggested priorities
@@ -97,8 +111,8 @@ For a demo meant to illustrate the DAAMS concept, the highest-value additions ar
 
 1. **Dataset metadata catalogue (Art. 77–80)** — restores the missing front half of the EHDS
    journey (discover data → apply).
-2. **Tighten the article citations** (flag 2 above) — cheap, and central to a project whose
-   whole value proposition is regulatory fidelity.
+2. **Align the decision-deadline duration with the final Art. 68** (flag 3 above) — the
+   article citations are now correct, but the underlying 2-month/4-month timing is not.
 
 The simulated integrations (SPE, extraction, NCP) are reasonable to leave as shells, since no
 real counterparties exist to integrate with in a demo context.
