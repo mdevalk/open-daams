@@ -1,4 +1,4 @@
-# HDAB-NL DAAMS
+# open-daams
 
 > **Disclaimer:** This is an independent, community-built open-source project. It is **not** an official
 > product of, and is **not** affiliated with, endorsed by, or reviewed by, the European Commission,
