@@ -44,7 +44,7 @@
     "openSource": "This is an open-source community project (MIT licence), built using the {nlDesignSystem} with {rijkshuisstijl} components.",
     "nlDesignSystem": "NL Design System",
     "rijkshuisstijl": "Rijkshuisstijl Community",
-    "disclaimer": "Unofficial open-source project. \"HDAB-NL\" is a fictional example organisation — this is not a product of, and is not affiliated with or endorsed by, the European Commission, TEHDAS2, HealthData@EU, or any national Health Data Access Body."
+    "disclaimer": "open-daams is an unofficial open-source project. \"HDAB-NL\" is a fictional example organisation — this is not a product of, and is not affiliated with or endorsed by, the European Commission, TEHDAS2, HealthData@EU, or any national Health Data Access Body."
   },
   "lang": {
     "nl": "NL",
