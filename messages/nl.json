@@ -35,7 +35,11 @@
     "legalRef": "EHDS Verordening (EU) 2025/327",
     "legalArticles": "Artikelen 46, 67–69",
     "standards": "Specificaties",
-    "standardsRef": "TEHDAS2 D6.4 DAAMS-specificatie",
+    "standardsList": [
+      { "ref": "TEHDAS2 D6.3", "title": "Richtsnoer voor Health Data Access Bodies over procedures en formaten voor gegevenstoegang" },
+      { "ref": "TEHDAS2 D6.4", "title": "Technische specificaties voor DAAMS voor HDAB's" },
+      { "ref": "TEHDAS2 D7.1", "title": "Richtsnoer voor het gebruik van gegevens in een beveiligde verwerkingsomgeving" }
+    ],
     "openSource": "Dit is een open-source communityproject (MIT-licentie), gebouwd volgens het {nlDesignSystem} met {rijkshuisstijl}-componenten.",
     "nlDesignSystem": "NL Design System",
     "rijkshuisstijl": "Rijkshuisstijl Community",
