@@ -5,12 +5,12 @@ import { User } from '@prisma/client';
 import { useRouter } from 'next/navigation';
 
 const PURPOSE_OPTIONS = [
-  { value: 'SCIENTIFIC_RESEARCH', label: 'Scientific research (Art. 34(1)(a))' },
-  { value: 'PUBLIC_HEALTH', label: 'Public health (Art. 34(1)(b))' },
-  { value: 'POLICY_MAKING', label: 'Policy-making & regulatory (Art. 34(1)(c))' },
-  { value: 'EDUCATION_TRAINING', label: 'Education & training (Art. 34(1)(d))' },
-  { value: 'HEALTHCARE_DELIVERY', label: 'Healthcare delivery (Art. 34(1)(e))' },
-  { value: 'PERSONALISED_MEDICINE', label: 'Personalised medicine (Art. 34(1)(f))' },
+  { value: 'SCIENTIFIC_RESEARCH', label: 'Scientific research' },
+  { value: 'PUBLIC_HEALTH', label: 'Public health' },
+  { value: 'POLICY_MAKING', label: 'Policy-making & regulatory' },
+  { value: 'EDUCATION_TRAINING', label: 'Education & training' },
+  { value: 'HEALTHCARE_DELIVERY', label: 'Healthcare delivery' },
+  { value: 'PERSONALISED_MEDICINE', label: 'Personalised medicine' },
 ];
 
 const DATASET_OPTIONS = [
@@ -161,7 +161,7 @@ export function NewApplicationForm({ applicants }: { applicants: User[] }) {
         <h2 className="font-semibold text-gray-900 mb-4">Application type</h2>
         <div className="grid grid-cols-2 gap-3">
           {[
-            { value: 'DATA_ACCESS_APPLICATION', label: 'Data Permit Application', desc: 'Full access to personal data in a Secure Processing Environment (Art. 46 EHDS)' },
+            { value: 'DATA_ACCESS_APPLICATION', label: 'Data Permit Application', desc: 'Full access to personal data in a Secure Processing Environment (Art. 67 EHDS)' },
             { value: 'DATA_REQUEST', label: 'Data Request', desc: 'Anonymised / aggregated statistical results only (Art. 69 EHDS)' },
           ].map((opt) => (
             <label key={opt.value} className="flex items-start gap-3 rounded-lg border border-gray-200 p-3 cursor-pointer has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
@@ -210,7 +210,7 @@ export function NewApplicationForm({ applicants }: { applicants: User[] }) {
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className={labelCls}>Purpose (Art. 34) <span className="text-red-500">*</span></label>
+            <label className={labelCls}>Purpose (Art. 53) <span className="text-red-500">*</span></label>
             <select name="purposeCategory" required className={inputCls}>
               <option value="">Select purpose...</option>
               {PURPOSE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -218,7 +218,7 @@ export function NewApplicationForm({ applicants }: { applicants: User[] }) {
           </div>
           <div>
             <label className={labelCls}>Legal basis</label>
-            <input name="legalBasis" placeholder="e.g. EHDS Art. 34(1)(a)" className={inputCls} />
+            <input name="legalBasis" placeholder="e.g. EHDS Art. 53(1)" className={inputCls} />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">

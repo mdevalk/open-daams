@@ -49,7 +49,7 @@ de Nationale Contactpersoon (NCP).
 |---|---|---|
 | **AVG / GDPR** | Geen echte persoonsgegevens — testdata only | Verwerkersovereenkomst, DPIA, register van verwerkingen |
 | **NEN 7510 / ISO 27001** | Buiten scope | Volledig ISMS, gecertificeerde hosting |
-| **EHDS Art. 34/46/69** | Workflow volgt D6.4; geen juridische geldigheid | Aanwijzing als HDAB door minister VWS |
+| **EHDS Art. 53/67/68/69** | Workflow volgt D6.4; geen juridische geldigheid | Aanwijzing als HDAB door minister VWS |
 | **WCAG 2.1 AA** | NL Design System tokens aanwezig; volledige audit vereist | Accessibility-audit door gecertificeerde partij |
 | **Logging & audittrail** | AuditLog model aanwezig | Onveranderlijk logarchief (bijv. WORM-opslag) |
 | **Sleutelbeheer** | `.env` bestand | HSM of KMS (bijv. Azure Key Vault) |
