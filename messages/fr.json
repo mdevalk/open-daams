@@ -34,7 +34,7 @@
     "legal": "Base juridique",
     "legalRef": "Règlement EHDS (UE) 2025/327",
     "legalArticles": "Articles 46, 67–69",
-    "standards": "Normes",
+    "standards": "Spécifications",
     "standardsRef": "Spécification TEHDAS2 D6.4 DAAMS",
     "openSource": "Ce projet est un logiciel libre communautaire (licence MIT), construit selon le {nlDesignSystem} avec les composants {rijkshuisstijl}.",
     "nlDesignSystem": "NL Design System",
