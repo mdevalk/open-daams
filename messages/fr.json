@@ -33,7 +33,7 @@
     "hdabOrg": "Organisation fictive à des fins de démonstration",
     "legal": "Base juridique",
     "legalRef": "Règlement EHDS (UE) 2025/327",
-    "legalArticles": "Articles 46, 67–69",
+    "legalArticles": "Articles 67–69",
     "standards": "Références",
     "standardsList": [
       { "ref": "TEHDAS2 D6.4", "title": "Spécifications techniques du DAAMS", "url": "https://tehdas.eu/wp-content/uploads/2025/09/technical-specifications-for-data-access-application-management-system-daams-for-health-data-access-bodies-hdabs.pdf" },
@@ -74,7 +74,7 @@
     "allStatuses": "Tous les statuts",
     "typeLabel": "Type",
     "allTypes": "Tous les types",
-    "typeDataAccess": "Demande d'accès aux données (Art. 46)",
+    "typeDataAccess": "Demande d'accès aux données (Art. 67)",
     "typeDataRequest": "Demande de données (Art. 69)",
     "sourceLabel": "Origine",
     "allSources": "Toutes les origines",
@@ -88,12 +88,12 @@
   "applicationDetail": {
     "breadcrumb": "Demandes",
     "edit": "Modifier",
-    "decisionDeadline": "Délai de décision (Art. 46)",
+    "decisionDeadline": "Délai de décision (Art. 68)",
     "additionalInfoDeadline": "Délai d'informations complémentaires",
     "detailsTitle": "Détails de la demande",
     "applicant": "Demandeur",
     "caseHandler": "Gestionnaire de dossier",
-    "purpose": "Finalité (Art. 34)",
+    "purpose": "Finalité (Art. 53)",
     "legalBasis": "Base juridique",
     "crossBorder": "Transfrontalier",
     "yes": "Oui",
@@ -115,7 +115,7 @@
     "decisionTitle": "Décision",
     "notesTitle": "Notes",
     "historyTitle": "Historique",
-    "typeDataAccess": "Demande d'accès aux données (Art. 46)",
+    "typeDataAccess": "Demande d'accès aux données (Art. 67)",
     "typeDataRequest": "Demande de données (Art. 69)"
   },
   "permits": {
