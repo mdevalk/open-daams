@@ -120,13 +120,6 @@ export default async function LocaleLayout({
                       </li>
                     ))}
                   </ul>
-                  <p className="mt-2 text-xs">
-                    <a href="https://nldesignsystem.nl" className="text-[#01689b] hover:underline" target="_blank" rel="noreferrer">
-                      {tFooter('nlDesignSystem')}
-                    </a>
-                    {' — '}
-                    <a href="https://tehdas.eu" className="text-[#01689b] hover:underline" target="_blank" rel="noreferrer">TEHDAS2</a>
-                  </p>
                 </div>
               </div>
               <div className="mt-6 pt-6 border-t border-gray-200 text-xs text-gray-500 space-y-1">
