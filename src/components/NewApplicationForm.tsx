@@ -5,12 +5,12 @@ import { User } from '@prisma/client';
 import { useRouter } from 'next/navigation';
 
 const PURPOSE_OPTIONS = [
-  { value: 'SCIENTIFIC_RESEARCH', label: 'Scientific research' },
   { value: 'PUBLIC_HEALTH', label: 'Public health' },
   { value: 'POLICY_MAKING', label: 'Policy-making & regulatory' },
-  { value: 'EDUCATION_TRAINING', label: 'Education & training' },
-  { value: 'HEALTHCARE_DELIVERY', label: 'Healthcare delivery' },
-  { value: 'PERSONALISED_MEDICINE', label: 'Personalised medicine' },
+  { value: 'STATISTICS', label: 'Statistics' },
+  { value: 'EDUCATION', label: 'Education & training' },
+  { value: 'SCIENTIFIC_RESEARCH', label: 'Scientific research' },
+  { value: 'CARE_IMPROVEMENT', label: 'Care improvement' },
 ];
 
 const DATASET_OPTIONS = [
@@ -59,6 +59,7 @@ export function NewApplicationForm({ applicants }: { applicants: User[] }) {
   const [extractionFrequency, setExtractionFrequency] = useState('');
   const [extractionInterval, setExtractionInterval] = useState('');
   const [usesOptOutException, setUsesOptOutException] = useState(false);
+  const [decisionTrack, setDecisionTrack] = useState('STANDARD');
 
   function toggleDataset(ds: string) {
     setDatasets((prev) => prev.includes(ds) ? prev.filter((d) => d !== ds) : [...prev, ds]);
@@ -92,6 +93,7 @@ export function NewApplicationForm({ applicants }: { applicants: User[] }) {
       legalBasis: form.get('legalBasis'),
       dataProcessingCountry: form.get('dataProcessingCountry') || 'NL',
       isCrossBorder: form.get('isCrossBorder') === 'on',
+      decisionTrack,
 
       // Shared cohort/extraction fields (Annex 5 §6.1 / Annex 6 §6.1)
       cohortSizeIsEstimate: cohortSizeIsEstimate === 'true',
@@ -521,6 +523,18 @@ export function NewApplicationForm({ applicants }: { applicants: User[] }) {
             <textarea name="optOutExceptionJustification" rows={2} className={inputCls} />
           </div>
         )}
+      </div>
+
+      {/* Decision timeline — Art. 68 */}
+      <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-3">
+        <h2 className="font-semibold text-gray-900">Decision timeline (Art. 68)</h2>
+        <div>
+          <label className={labelCls}>Applicable decision deadline</label>
+          <select value={decisionTrack} onChange={(e) => setDecisionTrack(e.target.value)} className={inputCls}>
+            <option value="STANDARD">Standard — 3 months, extendable by 3 (general applicants)</option>
+            <option value="EXPEDITED">Accelerated — 2 months, extendable by 1 (public-sector body / EU institution under a public-health or policy mandate)</option>
+          </select>
+        </div>
       </div>
 
       {/* Cross-border */}

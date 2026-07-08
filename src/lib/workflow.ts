@@ -1,4 +1,4 @@
-import { ApplicationStatus, ApplicationType, UserRole } from '@prisma/client';
+import { ApplicationStatus, ApplicationType, UserRole, DecisionTrack } from '@prisma/client';
 
 export type Transition = {
   to: ApplicationStatus;
@@ -164,9 +164,22 @@ export function isTerminal(status: ApplicationStatus): boolean {
   return status === 'DECISION_ISSUED' || status === 'WITHDRAWN';
 }
 
-export function calculateDecisionDeadline(from: Date, extended = false): Date {
+// EHDS Art. 68: the applicable decision deadline depends on the applicant.
+// STANDARD applicants get 3 months, extendable by 3 (total 6); EXPEDITED
+// (public-sector bodies / Union institutions under a public-health or policy
+// mandate) get 2 months, extendable by 1 (total 3).
+const DECISION_DEADLINE_MONTHS: Record<DecisionTrack, { base: number; extended: number }> = {
+  STANDARD:  { base: 3, extended: 6 },
+  EXPEDITED: { base: 2, extended: 3 },
+};
+
+export function calculateDecisionDeadline(
+  from: Date,
+  track: DecisionTrack = 'STANDARD',
+  extended = false,
+): Date {
   const d = new Date(from);
-  d.setMonth(d.getMonth() + (extended ? 4 : 2));
+  d.setMonth(d.getMonth() + DECISION_DEADLINE_MONTHS[track][extended ? 'extended' : 'base']);
   return d;
 }
 

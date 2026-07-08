@@ -99,7 +99,7 @@ WITHDRAWN  ◀── elk actief stadium
 
 ### Deadlines (D6.4 §8)
 
-- **Beslissingstermijn**: 2 maanden na `SUBMITTED` (4 maanden indien verlengd)
+- **Beslissingstermijn** (EHDS Art. 68): standaardspoor 3 maanden na een volledige aanvraag (verlengbaar met 3), of versneld spoor 2 maanden voor publieke instanties/EU-instellingen (verlengbaar met 1)
 - **Opschorting**: deadline wordt `null` bij transitie naar `AWAITING_ADDITIONAL_INFORMATION`
 - **Herberekening**: deadline herstart vanaf `additionalInfoReceivedAt` bij terugkeer naar `PRE_SCREENING`
 - **Aanvullende informatie deadline**: 28 dagen vanaf verzoek

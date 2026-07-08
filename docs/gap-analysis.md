@@ -88,19 +88,22 @@ explicit about for a compliance-themed demo.
    architecture companion. The permit PDF generator already used the correct numbering. A
    repo-wide scan confirms no `Art. 34`/`Art. 46` references remain.
 
-3. **Decision-deadline *duration* is still proposal-era.** Distinct from the citation fix
-   above: the app models a **2-month** deadline extendable to **4 months** (`workflow.ts`,
-   `architecture.md`, README, HD@EU import copy). Under the final Art. 68 the general deadline
-   is **3 months (+3)**, with **2 months (+1)** being only the *accelerated* track for
-   public-sector bodies. Changing this alters the deadline date-math, so it is left as a
-   deliberate open item, not a citation typo.
+3. **Decision-deadline duration — FIXED (2026-07-08).** Previously a single 2-month deadline
+   extendable to 4 months (proposal-era). Now models both final-Art. 68 tracks via a
+   `DecisionTrack` enum on the application: **STANDARD** = 3 months (+3, total 6) for general
+   applicants, **EXPEDITED** = 2 months (+1, total 3) for public-sector bodies / Union
+   institutions under a public-health or policy mandate. The track is selectable on the
+   new-application form, drives the date-math in `workflow.ts`, and is seeded (app 1 STANDARD,
+   app 2 EXPEDITED). **Requires `npx prisma db push`** to add the column.
 
-4. **Purpose taxonomy is inconsistent across files.** The new-application form and
-   `src/lib/utils.ts` use the value set `{SCIENTIFIC_RESEARCH, PUBLIC_HEALTH, POLICY_MAKING,
-   EDUCATION_TRAINING, HEALTHCARE_DELIVERY, PERSONALISED_MEDICINE}`, while the permit PDF
-   generator (`generate-permit-pdf.ts`) expects `{…, STATISTICS, EDUCATION, CARE_IMPROVEMENT}`.
-   For the three mismatched values the PDF silently falls back to the raw enum string instead
-   of an Art. 53(1) label. Worth reconciling to one canonical set aligned with Art. 53(1).
+4. **Purpose taxonomy — FIXED (2026-07-08).** The form and `src/lib/utils.ts` previously used a
+   value set (`EDUCATION_TRAINING`, `HEALTHCARE_DELIVERY`, `PERSONALISED_MEDICINE`) that
+   diverged from the permit PDF's (`STATISTICS`, `EDUCATION`, `CARE_IMPROVEMENT`), so the PDF
+   fell back to raw enum strings for those values. All three surfaces now share the PDF's
+   canonical set `{PUBLIC_HEALTH, POLICY_MAKING, STATISTICS, EDUCATION, SCIENTIFIC_RESEARCH,
+   CARE_IMPROVEMENT}` with its Art. 53(1)(a)–(f) labels. Residual caveat: those specific
+   sub-letters are the PDF author's mapping and have not been reconciled against the full,
+   exact Art. 53(1) list in the consolidated OJ text.
 
 5. **`Document` is a metadata stub.** The model stores `filename`/`mimeType`/`sizeBytes` but
    there is no upload/storage route wired, so attachment handling is not real yet.
@@ -110,9 +113,9 @@ explicit about for a compliance-themed demo.
 For a demo meant to illustrate the DAAMS concept, the highest-value additions are:
 
 1. **Dataset metadata catalogue (Art. 77–80)** — restores the missing front half of the EHDS
-   journey (discover data → apply).
-2. **Align the decision-deadline duration with the final Art. 68** (flag 3 above) — the
-   article citations are now correct, but the underlying 2-month/4-month timing is not.
+   journey (discover data → apply). The single largest remaining functional gap.
+2. **Real authentication** — replace the trusted-client-`userId` model in `src/lib/authz.ts`
+   (flag 1) so the RBAC and audit trail become meaningful.
 
 The simulated integrations (SPE, extraction, NCP) are reasonable to leave as shells, since no
 real counterparties exist to integrate with in a demo context.

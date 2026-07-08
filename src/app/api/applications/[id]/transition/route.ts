@@ -39,7 +39,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     if (toStatus === 'SUBMITTED') {
       updates.submittedAt = now;
-      updates.decisionDeadline = calculateDecisionDeadline(now);
+      updates.decisionDeadline = calculateDecisionDeadline(now, application.decisionTrack);
       // Art. 57(1)(j)(ii): publish without undue delay after initial reception
       updates.publishedAt = now;
     }
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       // D6.4 §8: recalculate decision deadline from timestamp of additional info receipt
       updates.additionalInfoDeadline = null;
       updates.additionalInfoReceivedAt = now;
-      updates.decisionDeadline = calculateDecisionDeadline(now, application.deadlineExtended);
+      updates.decisionDeadline = calculateDecisionDeadline(now, application.decisionTrack, application.deadlineExtended);
     }
 
     if (toStatus === 'DECISION_ISSUED') {

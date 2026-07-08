@@ -140,6 +140,15 @@ enum ApplicationSource {
   HDEU
 }
 
+// EHDS Art. 68 — the applicable decision deadline depends on the applicant.
+// STANDARD: 3 months, extendable by 3 (general applicants).
+// EXPEDITED: 2 months, extendable by 1 (public-sector bodies / Union
+// institutions acting under a public-health or policy mandate).
+enum DecisionTrack {
+  STANDARD
+  EXPEDITED
+}
+
 model User {
   id           String   @id @default(cuid())
   name         String
@@ -256,6 +265,7 @@ model Application {
   // Statutory deadlines
   // D6.4 §8: voided when AWAITING_ADDITIONAL_INFORMATION, recalculated on return to PROCESSING
   submittedAt              DateTime?
+  decisionTrack            DecisionTrack @default(STANDARD)
   decisionDeadline         DateTime?
   deadlineExtended         Boolean   @default(false)
   additionalInfoDeadline   DateTime? // Applicant response window

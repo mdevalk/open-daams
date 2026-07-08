@@ -8,7 +8,7 @@ export default function ImportPage() {
         <p className="text-sm text-gray-500 mt-1">
           Register cross-border data access applications and data requests received via the
           HealthData@EU National Contact Point (NCP). Each imported application is automatically
-          placed in <strong>Submitted</strong> state and the 2-month decision clock starts
+          placed in <strong>Submitted</strong> state and the statutory decision clock starts
           from the transmission timestamp.
         </p>
       </div>

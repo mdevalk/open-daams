@@ -183,7 +183,7 @@
   },
   "import": {
     "title": "HD@EU incoming applications",
-    "subtitle": "Register cross-border applications received via the HealthData@EU National Contact Point (NCP). Each imported application is automatically placed in Submitted status and the 2-month deadline starts from the submission timestamp.",
+    "subtitle": "Register cross-border applications received via the HealthData@EU National Contact Point (NCP). Each imported application is automatically placed in Submitted status and the statutory decision deadline starts from the submission timestamp.",
     "infoTitle": "About cross-border applications",
     "infoItem1": "Applications are submitted by a researcher via a sending HDAB in a member state",
     "infoItem2": "The sending HDAB forwards the application to HDAB-NL via the HealthData@EU NCP",

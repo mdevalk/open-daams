@@ -1,4 +1,4 @@
-import { PrismaClient, UserRole, ApplicationType, ApplicationStatus, DecisionOutcome } from '@prisma/client';
+import { PrismaClient, UserRole, ApplicationType, ApplicationStatus, DecisionOutcome, DecisionTrack } from '@prisma/client';
 import { addMonths, subDays, subWeeks } from 'date-fns';
 
 const prisma = new PrismaClient();
@@ -48,10 +48,11 @@ async function main() {
       dataEndDate: new Date('2024-12-31'),
       projectStartDate: new Date('2025-03-01'),
       projectEndDate: new Date('2027-02-28'),
-      legalBasis: 'EHDS Art. 34(1)(a) – scientific research',
+      legalBasis: 'EHDS Art. 53(1) – scientific research',
       dataProcessingCountry: 'NL',
       submittedAt: submittedAt1,
-      decisionDeadline: addMonths(submittedAt1, 2),
+      decisionTrack: DecisionTrack.STANDARD,
+      decisionDeadline: addMonths(submittedAt1, 3),
     },
   });
 
@@ -81,6 +82,7 @@ async function main() {
       legalBasis: 'EHDS Art. 69 – statistical data request',
       dataProcessingCountry: 'NL',
       submittedAt: submittedAt2,
+      decisionTrack: DecisionTrack.EXPEDITED,
       decisionDeadline: addMonths(submittedAt2, 2),
       additionalInfoDeadline: addMonths(subWeeks(new Date(), 1), 0),
     },
@@ -107,7 +109,7 @@ async function main() {
       dataEndDate: new Date('2024-12-31'),
       projectStartDate: new Date('2025-06-01'),
       projectEndDate: new Date('2027-05-31'),
-      legalBasis: 'EHDS Art. 34(1)(a) – scientific research',
+      legalBasis: 'EHDS Art. 53(1) – scientific research',
       dataProcessingCountry: 'NL',
     },
   });

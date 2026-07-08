@@ -183,7 +183,7 @@
   },
   "import": {
     "title": "HD@EU inkomende aanvragen",
-    "subtitle": "Registreer grensoverschrijdende aanvragen ontvangen via het HealthData@EU Nationaal Contactpunt (NCP). Elke geïmporteerde aanvraag wordt automatisch geplaatst in de status Ingediend en de 2-maanden termijn start vanaf de verzendtijdstempel.",
+    "subtitle": "Registreer grensoverschrijdende aanvragen ontvangen via het HealthData@EU Nationaal Contactpunt (NCP). Elke geïmporteerde aanvraag wordt automatisch geplaatst in de status Ingediend en de wettelijke beslistermijn start vanaf de verzendtijdstempel.",
     "infoTitle": "Over grensoverschrijdende aanvragen",
     "infoItem1": "Aanvragen worden ingediend door een onderzoeker via een zendend HDAB in een lidstaat",
     "infoItem2": "Het zendende HDAB stuurt de aanvraag door naar HDAB-NL via het HealthData@EU NCP",

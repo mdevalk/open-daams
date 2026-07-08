@@ -183,7 +183,7 @@
   },
   "import": {
     "title": "Demandes entrantes HD@EU",
-    "subtitle": "Enregistrez les demandes transfrontières reçues via le Point de Contact National (PCN) HealthData@EU. Chaque demande importée est automatiquement placée en statut Soumise et le délai de 2 mois commence à partir de l'horodatage d'envoi.",
+    "subtitle": "Enregistrez les demandes transfrontières reçues via le Point de Contact National (PCN) HealthData@EU. Chaque demande importée est automatiquement placée en statut Soumise et le délai de décision légal commence à partir de l'horodatage d'envoi.",
     "infoTitle": "À propos des demandes transfrontières",
     "infoItem1": "Les demandes sont soumises par un chercheur via un HDAB expéditeur dans un état membre",
     "infoItem2": "Le HDAB expéditeur transmet la demande à HDAB-NL via le PCN HealthData@EU",

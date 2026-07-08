@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
         legalBasis: body.legalBasis ?? '',
         dataProcessingCountry: body.dataProcessingCountry ?? 'NL',
         isCrossBorder: body.isCrossBorder ?? false,
+        decisionTrack: body.decisionTrack === 'EXPEDITED' ? 'EXPEDITED' : 'STANDARD',
 
         // Cohort/dataset extraction (Annex 5 §6.1 / Annex 6 §6.1 — shared)
         cohortSizeIsEstimate: body.cohortSizeIsEstimate ?? null,

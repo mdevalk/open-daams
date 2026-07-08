@@ -13,7 +13,7 @@
 
 - **Full TEHDAS2 DAAMS workflow** — 7-state application lifecycle plus a 5-state permit lifecycle (see below)
 - **Two application types** — Data Access Application (Art. 67) and Data Request (Art. 69, anonymised)
-- **Statutory deadlines** — EHDS 2-month decision deadline (Art. 68(4)/69(4)), extendable to 4 months; 4-week incomplete response window; visual overdue/warning indicators
+- **Statutory deadlines** — EHDS decision deadline (Art. 68): 3 months for standard applicants (extendable by 3) or 2 months for the accelerated public-body track (extendable by 1); 4-week incomplete response window; visual overdue/warning indicators
 - **Role-based transitions** — APPLICANT, CASE_HANDLER, DECISION_MAKER, DATA_HOLDER, ADMIN
 - **Case dashboard** — KPIs, overdue alerts, status breakdown, recent activity
 - **Audit trail** — immutable log of every state transition with actor, timestamp, and comment
@@ -29,7 +29,7 @@ fit together in code.
 | Functionality | EHDS / TEHDAS2 reference |
 |---|---|
 | Application submission & lifecycle | Art. 67 (data access application), Art. 69 (data request) |
-| Statutory decision deadlines (2 months, +2 extension; 4-week info window) | Art. 68(4), Art. 69(4) |
+| Statutory decision deadlines (standard 3 months +3; accelerated 2 months +1; 4-week info window) | Art. 68, Art. 69 |
 | Structured completeness check (checklist, distinct from assessment) | D6.3 Ch. 5, Annex 7/8 |
 | Type-specific application fields (cohort formation, controls/relatives, tabulation plan, transfers outside EU/EEA, lawfulness of processing) | D6.3 Annex 5 (data access application) / Annex 6 (data request) |
 | Ethical review tracking (status, committee, reference) | D6.3 §6.1 |

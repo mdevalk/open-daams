@@ -50,12 +50,12 @@ export async function readErrorMessage(res: Response, fallback: string): Promise
 
 export function purposeLabel(code: string): string {
   const map: Record<string, string> = {
-    SCIENTIFIC_RESEARCH: 'Scientific research',
     PUBLIC_HEALTH: 'Public health',
     POLICY_MAKING: 'Policy-making & regulatory',
-    EDUCATION_TRAINING: 'Education & training',
-    HEALTHCARE_DELIVERY: 'Healthcare delivery',
-    PERSONALISED_MEDICINE: 'Personalised medicine',
+    STATISTICS: 'Statistics',
+    EDUCATION: 'Education & training',
+    SCIENTIFIC_RESEARCH: 'Scientific research',
+    CARE_IMPROVEMENT: 'Care improvement',
   };
   return map[code] ?? code;
 }
