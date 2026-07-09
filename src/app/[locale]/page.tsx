@@ -45,15 +45,10 @@ export default async function DashboardPage({
     .reduce((sum, r) => sum + r._count.id, 0);
   const total = byStatus.reduce((sum, r) => sum + r._count.id, 0);
 
-  const dateLocale = locale === 'nl' ? 'nl-NL' : locale === 'fr' ? 'fr-FR' : 'en-GB';
-
   return (
     <div className="space-y-8">
       <div className="border-b border-gray-200 pb-4">
         <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          {t('subtitle')} — {new Intl.DateTimeFormat(dateLocale, { dateStyle: 'long' }).format(new Date())}
-        </p>
       </div>
 
       {overdueApps.length > 0 && (
