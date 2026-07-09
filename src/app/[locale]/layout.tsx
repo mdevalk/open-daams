@@ -2,11 +2,12 @@ import type { Metadata } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations } from 'next-intl/server';
 import '../globals.css';
+import { APP_NAME } from '@/lib/branding';
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: 'DAAMS-NL',
-    description: 'Community DAAMS implementation — DAAMS-NL',
+    title: APP_NAME,
+    description: `Community DAAMS implementation — ${APP_NAME}`,
   };
 }
 
@@ -42,7 +43,7 @@ export default async function LocaleLayout({
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex items-center justify-between h-14">
                 <div className="flex items-center gap-3">
-                  <a href={`/${locale}`} className="font-bold text-xl tracking-tight">DAAMS-NL</a>
+                  <a href={`/${locale}`} className="font-bold text-xl tracking-tight">{APP_NAME}</a>
                   <span className="ml-1 rounded text-xs bg-amber-400/90 text-amber-950 px-2 py-0.5 font-semibold tracking-wide">
                     {t('testEnvironment')}
                   </span>

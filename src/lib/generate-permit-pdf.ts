@@ -1,4 +1,5 @@
 import { PDFDocument, rgb, StandardFonts, PDFFont, PDFPage } from 'pdf-lib';
+import { APP_NAME } from './branding';
 
 // Layout follows TEHDAS2 D6.3 "Guideline for Health Data Access Bodies on the
 // procedures and formats for data access", Annex 9 - Data permit template
@@ -238,7 +239,7 @@ class Doc {
       'Demo-document uit een open-sourceproject — HDAB-NL is een fictieve organisatie, dit is geen officieel EHDS-document.',
       { x: M, y: 12, font: this.italic, size: 6.5, color: C.placeholder },
     );
-    this.page.drawText('DAAMS-NL | Health Data Access Body Nederland (HDAB-NL) | EHDS Verordening (EU) 2025/327', {
+    this.page.drawText(`${APP_NAME} | Health Data Access Body Nederland (HDAB-NL) | EHDS Verordening (EU) 2025/327`, {
       x: M, y: 24, font: this.regular, size: 7, color: C.gray,
     });
     this.page.drawText(`Pagina ${this.pageNum}`, {
@@ -260,7 +261,7 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
   const doc = new Doc();
   await doc.init();
   doc.pdfDoc.setTitle(`Vergunning ${permit.permitNumber}`);
-  doc.pdfDoc.setAuthor('DAAMS-NL');
+  doc.pdfDoc.setAuthor(APP_NAME);
   doc.pdfDoc.setSubject('EHDS Dataverwerkingsvergunning');
   doc.pdfDoc.setCreationDate(new Date());
 

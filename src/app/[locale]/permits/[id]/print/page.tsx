@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { PrintTrigger } from '@/components/PrintTrigger';
 import { PERMIT_STATUS_LABELS } from '@/lib/permit';
+import { APP_NAME } from '@/lib/branding';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,7 +43,7 @@ export default async function PermitPrintPage({
     <html lang="nl">
       <head>
         <meta charSet="utf-8" />
-        <title>Vergunning {permit.permitNumber} — DAAMS-NL</title>
+        <title>Vergunning {permit.permitNumber} — {APP_NAME}</title>
         <style>{`
           * { box-sizing: border-box; margin: 0; padding: 0; }
           body { font-family: Arial, Helvetica, sans-serif; font-size: 11pt; color: #000; background: #fff; }
@@ -100,7 +101,7 @@ export default async function PermitPrintPage({
 
         <div className="page">
           <div className="header">
-            <h1>DAAMS-NL</h1>
+            <h1>{APP_NAME}</h1>
             <p>Health Data Access Body Nederland (HDAB-NL) — EHDS Dataverwerkingsvergunning</p>
           </div>
 
@@ -164,7 +165,7 @@ export default async function PermitPrintPage({
           </div>
 
           <div className="footer-bar">
-            DAAMS-NL | Health Data Access Body Nederland (HDAB-NL) | EHDS Verordening (EU) 2025/327
+            {APP_NAME} | Health Data Access Body Nederland (HDAB-NL) | EHDS Verordening (EU) 2025/327
           </div>
         </div>
       </body>
