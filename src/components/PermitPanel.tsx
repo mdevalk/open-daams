@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import { formatDate, readErrorMessage } from '@/lib/utils';
 
 type Props = {
-  application: Application & { dataPermit: DataPermit | null; feeEstimate?: FeeEstimate | null };
+  application: Pick<Application, 'id' | 'status' | 'decisionOutcome'> & { dataPermit: DataPermit | null; feeEstimate?: FeeEstimate | null };
   currentUser: User;
 };
 

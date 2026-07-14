@@ -73,7 +73,7 @@ export default async function PermitDetailPage({
   const fakeApplication = {
     ...permit.application,
     dataPermit: permit,
-  } as Parameters<typeof PermitPanel>[0]['application'];
+  };
 
   return (
     <div className="space-y-6">
