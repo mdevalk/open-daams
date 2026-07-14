@@ -95,14 +95,6 @@ export default async function ApplicationDetailPage({
               : t('typeDataRequest')}
           </p>
         </div>
-        {application.status === 'DRAFT' && (
-          <a
-            href={`/${locale}/applications/${application.id}/edit`}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-100"
-          >
-            {t('edit')}
-          </a>
-        )}
       </div>
 
       {/* Deadline banners */}
