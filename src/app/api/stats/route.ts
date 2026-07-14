@@ -8,7 +8,7 @@ export async function GET() {
     prisma.application.count({
       where: {
         decisionDeadline: { lt: new Date() },
-        status: { notIn: ['PERMIT_GRANTED', 'PERMIT_REFUSED', 'REQUEST_APPROVED', 'REQUEST_REJECTED', 'COMPLETED', 'WITHDRAWN', 'INADMISSIBLE'] },
+        status: { notIn: ['DECISION_ISSUED', 'WITHDRAWN'] },
       },
     }),
   ]);
