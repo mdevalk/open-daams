@@ -209,6 +209,26 @@
     "noResults": "Geen facturen gevonden",
     "noResultsSub": "Facturen worden uitgegeven op basis van de kostenopbouw van een verleende vergunning (EHDS Art. 62)."
   },
+  "ethicalReview": {
+    "title": "Ethische toetsing (D6.3 §6.1)",
+    "statusNOT_REQUIRED": "Niet vereist",
+    "statusPENDING": "In afwachting van toetsing",
+    "statusAPPROVED": "Goedgekeurd",
+    "statusREJECTED": "Afgewezen",
+    "committee": "Toetsingscommissie",
+    "reference": "Referentie",
+    "referenceNumber": "Referentienummer",
+    "date": "Datum",
+    "notRequiredNote": "Voor dit project is geen ethische toetsing vereist volgens de aanvrager/behandelaar.",
+    "requiredCheckbox": "Ethische toetsing is vereist voor dit project",
+    "statusLabel": "Status",
+    "saving": "Bezig...",
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "edit": "Bewerken",
+    "saveError": "Opslaan mislukt",
+    "unknownError": "Onbekende fout"
+  },
   "common": {
     "none": "—",
     "beta": "beta"

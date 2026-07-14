@@ -209,6 +209,26 @@
     "noResults": "No invoices found",
     "noResultsSub": "Invoices are issued from a granted permit's fee breakdown (EHDS Art. 62)."
   },
+  "ethicalReview": {
+    "title": "Ethical review (D6.3 §6.1)",
+    "statusNOT_REQUIRED": "Not required",
+    "statusPENDING": "Awaiting review",
+    "statusAPPROVED": "Approved",
+    "statusREJECTED": "Rejected",
+    "committee": "Ethics committee",
+    "reference": "Reference",
+    "referenceNumber": "Reference number",
+    "date": "Date",
+    "notRequiredNote": "No ethical review is required for this project according to the applicant/case handler.",
+    "requiredCheckbox": "Ethical review is required for this project",
+    "statusLabel": "Status",
+    "saving": "Saving...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "saveError": "Save failed",
+    "unknownError": "Unknown error"
+  },
   "common": {
     "none": "—",
     "beta": "beta"

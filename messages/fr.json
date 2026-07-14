@@ -209,6 +209,26 @@
     "noResults": "Aucune facture trouvée",
     "noResultsSub": "Les factures sont émises à partir de la décomposition des coûts d'une autorisation accordée (EHDS Art. 62)."
   },
+  "ethicalReview": {
+    "title": "Examen éthique (D6.3 §6.1)",
+    "statusNOT_REQUIRED": "Non requis",
+    "statusPENDING": "En attente d'examen",
+    "statusAPPROVED": "Approuvé",
+    "statusREJECTED": "Rejeté",
+    "committee": "Comité d'éthique",
+    "reference": "Référence",
+    "referenceNumber": "Numéro de référence",
+    "date": "Date",
+    "notRequiredNote": "Aucun examen éthique n'est requis pour ce projet selon le demandeur/gestionnaire.",
+    "requiredCheckbox": "Un examen éthique est requis pour ce projet",
+    "statusLabel": "Statut",
+    "saving": "En cours...",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "edit": "Modifier",
+    "saveError": "Échec de l'enregistrement",
+    "unknownError": "Erreur inconnue"
+  },
   "common": {
     "none": "—",
     "beta": "beta"
