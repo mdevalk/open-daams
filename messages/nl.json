@@ -57,7 +57,7 @@
     "kpiTotal": "Totaal aanvragen",
     "kpiActive": "Actief / in behandeling",
     "kpiOverdue": "Verlopen deadlines",
-    "kpiStatusTypes": "Statustypen actief",
+    "kpiCompleted": "Afgerond",
     "byStatus": "Aanvragen per status",
     "recentActivity": "Recentelijk bijgewerkt",
     "allApplications": "Alle aanvragen →"

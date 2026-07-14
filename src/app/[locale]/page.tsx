@@ -44,6 +44,9 @@ export default async function DashboardPage({
     .filter((r) => activeStatuses.includes(r.status))
     .reduce((sum, r) => sum + r._count.id, 0);
   const total = byStatus.reduce((sum, r) => sum + r._count.id, 0);
+  const completedCount = byStatus
+    .filter((r) => r.status === 'DECISION_ISSUED')
+    .reduce((sum, r) => sum + r._count.id, 0);
 
   return (
     <div className="space-y-8">
@@ -72,7 +75,7 @@ export default async function DashboardPage({
           { label: t('kpiTotal'),       value: total },
           { label: t('kpiActive'),      value: activeCount },
           { label: t('kpiOverdue'),     value: overdueApps.length, alert: overdueApps.length > 0 },
-          { label: t('kpiStatusTypes'), value: byStatus.length },
+          { label: t('kpiCompleted'),    value: completedCount },
         ].map((kpi) => (
           <div
             key={kpi.label}

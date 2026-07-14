@@ -57,7 +57,7 @@
     "kpiTotal": "Total des demandes",
     "kpiActive": "Actif / en cours",
     "kpiOverdue": "Délais dépassés",
-    "kpiStatusTypes": "Types de statut actifs",
+    "kpiCompleted": "Clôturées",
     "byStatus": "Demandes par statut",
     "recentActivity": "Récemment mis à jour",
     "allApplications": "Toutes les demandes →"

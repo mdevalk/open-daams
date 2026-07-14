@@ -57,7 +57,7 @@
     "kpiTotal": "Total applications",
     "kpiActive": "Active / in progress",
     "kpiOverdue": "Overdue deadlines",
-    "kpiStatusTypes": "Active status types",
+    "kpiCompleted": "Completed",
     "byStatus": "Applications by status",
     "recentActivity": "Recently updated",
     "allApplications": "All applications →"
