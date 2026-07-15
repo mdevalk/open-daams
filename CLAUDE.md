@@ -68,3 +68,6 @@ specifications. Always use the **final** Regulation numbering, not the draft-pro
 - **D7.1 — Guideline on how to use data in a secure processing environment** (relevant to the
   SPE-provisioning feature) —
   <https://tehdas.eu/wp-content/uploads/2025/07/d7.1-guideline-on-how-to-use-data-in-a-secure-processing-environment.pdf>
+- **Draft Guideline on fees related to the EHDS Regulation** (TEHDAS2 4.1.1; relevant to the
+  fee-estimate and invoicing features, Art. 62) —
+  <https://tehdas.eu/wp-content/uploads/2025/09/draft-guideline-on-fees-related-to-the-ehds-regulation.pdf>
