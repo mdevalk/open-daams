@@ -1,6 +1,6 @@
 # Gap analysis: open-daams vs EHDS & TEHDAS2
 
-_Snapshot date: 2026-07-08._
+_Snapshot date: 2026-07-08 (refreshed 2026-07-14)._
 
 This document compares the functionality **actually modelled and wired** in open-daams
 against what the **EHDS Regulation (EU) 2025/327 (Chapter IV, secondary use)** and the
@@ -10,6 +10,11 @@ its Data Access Application Management System (DAAMS).
 It is derived from the Prisma schema (`prisma/schema.prisma`), the API route structure
 (`src/app/api/**`), and the domain-logic modules (`src/lib/**`) — i.e. what is built, not
 what the README aspires to.
+
+> **Scope.** This is the **EHDS-article / framework** view of the gap. For the
+> **D6.4-requirement (DAAMS technical spec) view**, see
+> [`d6.4-gap-analysis.md`](./d6.4-gap-analysis.md); for the DAAMS-relevant EHDS-article list
+> with implementation status, see [`ehds-article-map.md`](./ehds-article-map.md).
 
 > **Caveats.** (1) "Present" reflects what is modelled and wired, not a guarantee that every
 > state transition is bug-free. (2) This is an unofficial community project; nothing here is
@@ -37,7 +42,7 @@ It falls short of the Regulation in two predictable places:
 | Ethical review tracking | D6.3 §6.1 | `EthicalReviewStatus` + fields | Present (tracking) |
 | Cost estimate → applicant acceptance | EHDS Art. 62(5); D6.3 §6.5 | `FeeEstimate` | **Strong** |
 | Decision + permit issuance, 10-section permit doc | EHDS Art. 68; D6.3 Annex 9 | `DataPermit` + `generate-permit-pdf.ts` (real PDF) | **Strong** |
-| Permit lifecycle (amend / renew-once / revoke / expire) | EHDS Art. 68(12), 63(1); D6.4 §9.3 | `DataPermitStatus` + `DataPermitLog` | **Strong** |
+| Permit lifecycle + change requests (amendment / renewal / revocation appeal) | EHDS Art. 68(12), 63(1); D6.4 §9.3–9.4 | `DataPermitStatus` + `PermitChangeRequest` + `DataPermitLog` | **Strong** |
 | Invoicing (provisional + final) | EHDS Art. 62; D6.3 Ch. 8 | `Invoice` | **Strong** |
 | Authorized persons in the SPE | EHDS Art. 73; Annex 9 §6.8 | `AuthorizedPerson` | Present (list only) |
 | Appeals (bezwaar/beroep) | EHDS Art. 63 / national law | `Appeal` | Present |
