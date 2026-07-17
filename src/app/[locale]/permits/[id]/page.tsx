@@ -7,6 +7,7 @@ import { PermitPanel } from '@/components/PermitPanel';
 import { AuthorizedPersonsPanel } from '@/components/AuthorizedPersonsPanel';
 import { InvoicePanel } from '@/components/InvoicePanel';
 import { SpeProvisioningPanel } from '@/components/SpeProvisioningPanel';
+import { PermitChangeRequestPanel } from '@/components/PermitChangeRequestPanel';
 import { PERMIT_STATUS_LABELS } from '@/lib/permit';
 import { formatDate, formatDateTime, serializePrisma } from '@/lib/utils';
 
@@ -40,6 +41,13 @@ export default async function PermitDetailPage({
           orderBy: { createdAt: 'asc' },
         },
         authorizedPersons: { orderBy: { addedAt: 'asc' } },
+        changeRequests: {
+          include: {
+            requestedBy: { select: { name: true } },
+            decidedBy: { select: { name: true } },
+          },
+          orderBy: { requestedAt: 'desc' },
+        },
         invoices: {
           include: { createdBy: { select: { name: true, role: true } } },
           orderBy: { createdAt: 'desc' },
@@ -160,6 +168,14 @@ export default async function PermitDetailPage({
 
         <div className="space-y-4">
           <PermitPanel application={fakeApplication} currentUser={currentUser} />
+          <PermitChangeRequestPanel
+            permitId={permit.id}
+            permitStatus={permit.status}
+            requests={permit.changeRequests as unknown as ComponentProps<typeof PermitChangeRequestPanel>['requests']}
+            canRequest={['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(currentUser.role)}
+            canDecide={['DECISION_MAKER', 'ADMIN'].includes(currentUser.role)}
+            currentUserId={currentUser.id}
+          />
           <AuthorizedPersonsPanel
             permitId={permit.id}
             persons={permit.authorizedPersons}

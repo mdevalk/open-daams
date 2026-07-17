@@ -34,7 +34,6 @@ export function PermitPanel({ application, currentUser }: Props) {
   // Lifecycle transition state
   const [selectedTransition, setSelectedTransition] = useState<string | null>(null);
   const [comment, setComment] = useState('');
-  const [newValidUntil, setNewValidUntil] = useState('');
   const [revokeReason, setRevokeReason] = useState('');
 
   // Only show if positive decision
@@ -86,14 +85,12 @@ export function PermitPanel({ application, currentUser }: Props) {
           toStatus,
           userId: currentUser.id,
           comment: toStatus === 'REVOKED' ? revokeReason : comment,
-          validUntil: toStatus === 'RENEWED' ? newValidUntil : undefined,
         }),
       });
       if (!res.ok) throw new Error(await readErrorMessage(res, 'Actie mislukt'));
       setSelectedTransition(null);
       setComment('');
       setRevokeReason('');
-      setNewValidUntil('');
       router.refresh();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Onbekende fout');
@@ -241,17 +238,6 @@ export function PermitPanel({ application, currentUser }: Props) {
 
           {selectedTransition && (
             <div className="mt-3 space-y-2">
-              {selectedTransition === 'RENEWED' && (
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Nieuwe vervaldatum</label>
-                  <input
-                    type="date"
-                    value={newValidUntil}
-                    onChange={e => setNewValidUntil(e.target.value)}
-                    className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
-                  />
-                </div>
-              )}
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
                   {selectedTransition === 'REVOKED' ? 'Reden intrekking (verplicht)' : 'Toelichting'}
@@ -272,8 +258,7 @@ export function PermitPanel({ application, currentUser }: Props) {
               <button
                 disabled={
                   loading ||
-                  (selectedTransition === 'REVOKED' && !revokeReason.trim()) ||
-                  (selectedTransition === 'RENEWED' && !newValidUntil)
+                  (selectedTransition === 'REVOKED' && !revokeReason.trim())
                 }
                 onClick={() => applyTransition(selectedTransition)}
                 className={`w-full rounded px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 transition-colors ${

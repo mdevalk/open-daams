@@ -53,6 +53,46 @@ enum DataPermitStatus {
   EXPIRED
 }
 
+// TEHDAS2 D6.4 §9.3/§9.4 — a change requested against an already-issued permit.
+// Kept DISTINCT from the permit's own status: approving a request drives a
+// DataPermit status change (amended/renewed/reinstated); rejecting leaves the
+// permit unchanged. The 12 v0.5 permit-status values map onto {DataPermitStatus}
+// x {this request workflow}.
+enum PermitChangeType {
+  AMENDMENT
+  RENEWAL
+  REVOCATION_APPEAL
+}
+
+enum PermitChangeStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+}
+
+model PermitChangeRequest {
+  id       String             @id @default(cuid())
+  permitId String
+  permit   DataPermit         @relation(fields: [permitId], references: [id])
+  type     PermitChangeType
+  status   PermitChangeStatus @default(REQUESTED)
+
+  justification   String    @db.Text // provided by the data user, documented by the HDAB
+  decisionComment String?   @db.Text // HDAB's decision note
+  newValidUntil   DateTime? // for approved renewals
+
+  requestedById String
+  requestedBy   User     @relation("PermitChangeRequested", fields: [requestedById], references: [id])
+  requestedAt   DateTime @default(now())
+
+  decidedById String?
+  decidedBy   User?     @relation("PermitChangeDecided", fields: [decidedById], references: [id])
+  decidedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 // TEHDAS2 D6.3 §6.1 — ethical review referenced in the application assessment
 // (required where member state law mandates it for the type of project)
 enum EthicalReviewStatus {
@@ -157,15 +197,17 @@ model User {
   organisation String
   createdAt    DateTime @default(now())
 
-  applications       Application[]           @relation("Applicant")
-  handledCases       Application[]           @relation("CaseHandler")
-  auditLogs          AuditLog[]
-  notes              Note[]
-  permitActions      DataPermitLog[]
-  completenessChecks CompletenessCheck[]
-  extractionRequests DataExtractionRequest[]
-  issuedInvoices     Invoice[]
-  speProvisioningActions SpeProvisioningLog[]
+  applications                Application[]           @relation("Applicant")
+  handledCases                Application[]           @relation("CaseHandler")
+  auditLogs                   AuditLog[]
+  notes                       Note[]
+  permitActions               DataPermitLog[]
+  completenessChecks          CompletenessCheck[]
+  extractionRequests          DataExtractionRequest[]
+  issuedInvoices              Invoice[]
+  speProvisioningActions      SpeProvisioningLog[]
+  permitChangeRequestsMade    PermitChangeRequest[]   @relation("PermitChangeRequested")
+  permitChangeRequestsDecided PermitChangeRequest[]   @relation("PermitChangeDecided")
 }
 
 model Application {
@@ -267,7 +309,7 @@ model Application {
   submittedAt              DateTime?
   decisionTrack            DecisionTrack @default(STANDARD)
   decisionDeadline         DateTime?
-  deadlineExtended         Boolean   @default(false)
+  deadlineExtended         Boolean       @default(false)
   additionalInfoDeadline   DateTime? // Applicant response window
   additionalInfoReceivedAt DateTime? // Recalculation anchor (D6.4 §8)
 
@@ -411,6 +453,7 @@ model DataPermit {
   authorizedPersons AuthorizedPerson[]
   invoices          Invoice[]
   speProvisioning   SpeProvisioningOrder?
+  changeRequests    PermitChangeRequest[]
 }
 
 // EHDS Art. 73 / TEHDAS2 D6.4 §13 — provisioning of the secure processing
@@ -418,9 +461,9 @@ model DataPermit {
 // Only applicable to DATA_ACCESS_APPLICATION permits (data requests return
 // aggregated output and don't involve an SPE).
 enum SpeProvisioningStatus {
-  REQUESTED       // Provisioning requested from the SPE operator
-  PROVISIONING    // Environment being set up
-  ACTIVE          // Environment provisioned and in use
+  REQUESTED // Provisioning requested from the SPE operator
+  PROVISIONING // Environment being set up
+  ACTIVE // Environment provisioned and in use
   DECOMMISSIONING // Decommission requested (e.g. permit revoked/expired)
   DECOMMISSIONED
 }
@@ -471,9 +514,9 @@ enum InvoiceStatus {
 }
 
 model Invoice {
-  id            String        @id @default(cuid())
-  invoiceNumber String        @unique // e.g. INV-NL-2026-0001
-  provisional   Boolean       @default(false)
+  id            String  @id @default(cuid())
+  invoiceNumber String  @unique // e.g. INV-NL-2026-0001
+  provisional   Boolean @default(false)
 
   // Set once a permit exists (final invoice)
   permitId String?

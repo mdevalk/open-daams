@@ -9,46 +9,29 @@ export type PermitTransition = {
 };
 
 /**
- * TEHDAS2 D6.4 Section 9.2 — Data Permit lifecycle.
- * Figure 3: lifecycle of a permit that is amended, renewed, and revoked.
+ * TEHDAS2 D6.4 Section 9.3 — Data Permit lifecycle (the permit's OWN status).
  *
- * GRANTED → AMENDED  (new permit ID generated)
- * GRANTED → RENEWED  (new permit ID generated; MUST NOT be renewed a second time)
- * GRANTED → REVOKED
- * GRANTED → EXPIRED  (automated on validUntil date)
- * AMENDED → REVOKED
- * AMENDED → EXPIRED
- * RENEWED → REVOKED
- * RENEWED → EXPIRED
+ * Amendments, renewals and revocation appeals are a separate workflow
+ * (PermitChangeRequest, see lib/permit-change.ts); approving such a request
+ * drives the status change. The transitions below are the DIRECT HDAB actions:
+ *
+ * active (GRANTED|AMENDED|RENEWED) → REVOKED   (enforcement)
+ * active (GRANTED|AMENDED|RENEWED) → EXPIRED   (validity date passed)
  */
 export const PERMIT_TRANSITIONS: Record<DataPermitStatus, PermitTransition[]> = {
   GRANTED: [
     {
-      to: 'AMENDED',
-      label: 'Amend permit',
-      requiredRole: ['DECISION_MAKER', 'ADMIN'],
-      description: 'Document approved amendments. A new permit ID is generated (D6.4 §9.2).',
-      generatesNewPermitId: true,
-    },
-    {
-      to: 'RENEWED',
-      label: 'Renew permit',
-      requiredRole: ['DECISION_MAKER', 'ADMIN'],
-      description: 'Extend the permit validity. A new permit ID is generated (D6.4 §9.2).',
-      generatesNewPermitId: true,
-    },
-    {
       to: 'REVOKED',
       label: 'Revoke permit',
       requiredRole: ['DECISION_MAKER', 'ADMIN'],
-      description: 'Revoke the permit with documented justification (D6.4 §9.2).',
+      description: 'Revoke the permit with documented justification (D6.4 §9.3).',
       generatesNewPermitId: false,
     },
     {
       to: 'EXPIRED',
       label: 'Mark as expired',
       requiredRole: ['CASE_HANDLER', 'ADMIN'],
-      description: 'Permit has passed its validity date (D6.4 §9.2).',
+      description: 'Permit has passed its validity date (D6.4 §9.3).',
       generatesNewPermitId: false,
     },
   ],
@@ -68,7 +51,7 @@ export const PERMIT_TRANSITIONS: Record<DataPermitStatus, PermitTransition[]> = 
       generatesNewPermitId: false,
     },
   ],
-  // D6.4 §9.2: a permit that has been extended MUST NOT be extended a second time
+  // D6.4 §9.3: a permit that has been extended MUST NOT be extended a second time
   RENEWED: [
     {
       to: 'REVOKED',
