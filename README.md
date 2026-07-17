@@ -57,8 +57,8 @@ integration (only name/requirements are recorded as text today).
 ## Workflow states
 
 Both application types (data access application and data request) go through the same
-`ApplicationStatus` state machine (TEHDAS2 D6.4 §7.6/7.7); a positive decision then spins off a
-`DataPermit` with its own lifecycle (D6.4 §9.2).
+`ApplicationStatus` state machine (TEHDAS2 D6.4 §7.6); a positive decision then spins off a
+`DataPermit` with its own lifecycle (D6.4 §9.3).
 
 ```mermaid
 flowchart TD
@@ -68,7 +68,7 @@ flowchart TD
     AWAITING["Awaiting additional info<br/>Deadline suspended"]
     PROCESSING["Processing<br/>Substantive assessment"]
     DECISION["Decision issued<br/>Terminal state"]
-    PERMIT["Permit granted<br/>Own lifecycle (D6.4 §9.2)"]
+    PERMIT["Permit granted<br/>Own lifecycle (D6.4 §9.3)"]
     WITHDRAWN["Withdrawn<br/>From any active state"]
 
     DRAFT -->|"submit — clock starts"| SUBMITTED
@@ -128,7 +128,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## References
 
-- [TEHDAS2 D6.4 — Technical Specifications for DAAMS](https://tehdas.eu/wp-content/uploads/2025/09/technical-specifications-for-data-access-application-management-system-daams-for-health-data-access-bodies-hdabs.pdf)
+- [TEHDAS2 D6.4 — Technical Specifications for DAAMS](https://tehdas.eu/wp-content/uploads/2026/06/d6.4-data-access-application-management-system-daams-technical-specification-for-health-data-access-bodies.pdf)
 - [TEHDAS2 D6.3 — Guideline for HDABs on procedures and formats](https://tehdas.eu/wp-content/uploads/2025/09/draft-guideline-for-health-data-access-bodies-on-the-procedures-and-formats-for-data-access.pdf)
 - [TEHDAS2 D6.2 — Guideline for data users](https://tehdas.eu/wp-content/uploads/2025/10/d6.2-guideline-for-data-users-on-good-application-and-access-practice.pdf)
 - EHDS Regulation (EU) 2025/327, Chapter IV (Articles 51–80) — see the functionality table above for specific articles

@@ -62,9 +62,9 @@ specifications. Always use the **final** Regulation numbering, not the draft-pro
   <https://tehdas.eu/wp-content/uploads/2025/10/d6.2-guideline-for-data-users-on-good-application-and-access-practice.pdf>
 - **D6.3 — Guideline for HDABs on the procedures and formats for data access** —
   <https://tehdas.eu/wp-content/uploads/2025/09/draft-guideline-for-health-data-access-bodies-on-the-procedures-and-formats-for-data-access.pdf>
-- **D6.4 — Technical Specifications for a DAAMS for HDABs** (the core specification this app
-  implements) —
-  <https://tehdas.eu/wp-content/uploads/2025/09/technical-specifications-for-data-access-application-management-system-daams-for-health-data-access-bodies-hdabs.pdf>
+- **D6.4 — Data Access Application Management System (DAAMS): Technical specification for HDABs** (the core specification this app
+  implements; v0.5, 24 March 2026) —
+  <https://tehdas.eu/wp-content/uploads/2026/06/d6.4-data-access-application-management-system-daams-technical-specification-for-health-data-access-bodies.pdf>
 - **D7.1 — Guideline on how to use data in a secure processing environment** (relevant to the
   SPE-provisioning feature) —
   <https://tehdas.eu/wp-content/uploads/2025/07/d7.1-guideline-on-how-to-use-data-in-a-secure-processing-environment.pdf>

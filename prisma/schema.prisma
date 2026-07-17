@@ -12,7 +12,7 @@ enum ApplicationType {
   DATA_REQUEST
 }
 
-// TEHDAS2 D6.4 Section 7.6 / 7.7 — identical for both application types
+// TEHDAS2 D6.4 Section 7.6 — identical for both application types
 enum ApplicationStatus {
   DRAFT
   SUBMITTED
@@ -29,7 +29,7 @@ enum DecisionOutcome {
   NEGATIVE
 }
 
-// TEHDAS2 D6.4 Section 9.1 — optional step between positive decision and permit issuance
+// TEHDAS2 D6.4 Section 9.2 — optional step between positive decision and permit issuance
 enum PermitAcceptanceStatus {
   PENDING // Conditions sent to applicant, awaiting confirmation
   ACCEPTED // Applicant confirmed — proceed to issue permit
@@ -44,7 +44,7 @@ enum FeeEstimateStatus {
   REJECTED // Applicant did not accept — application may be withdrawn/scoped down
 }
 
-// TEHDAS2 D6.4 Section 9.2
+// TEHDAS2 D6.4 Section 9.3
 enum DataPermitStatus {
   GRANTED
   AMENDED
@@ -180,7 +180,7 @@ model Application {
   decisionAt      DateTime?
   decisionSummary String?          @db.Text
 
-  // Optional permit-pending-acceptance step (D6.4 §9.1, SHOULD)
+  // Optional permit-pending-acceptance step (D6.4 §9.2, SHOULD)
   permitAcceptanceStatus PermitAcceptanceStatus?
   permitConditionsSentAt DateTime?
   permitAcceptedAt       DateTime?
@@ -377,7 +377,7 @@ model FeeEstimate {
   invoice Invoice?
 }
 
-// TEHDAS2 D6.4 Section 9.2 — permit lifecycle, separate from application
+// TEHDAS2 D6.4 Section 9.3 — permit lifecycle, separate from application
 model DataPermit {
   id            String           @id @default(cuid())
   permitNumber  String           @unique // e.g. DP-NL-2025-0001
@@ -388,7 +388,7 @@ model DataPermit {
   validFrom  DateTime
   validUntil DateTime
 
-  // Populated when AMENDED or RENEWED — new permit ID issued (D6.4 §9.2)
+  // Populated when AMENDED or RENEWED — new permit ID issued (D6.4 §9.3)
   previousPermitId String?
 
   revocationReason String?   @db.Text
@@ -413,7 +413,7 @@ model DataPermit {
   speProvisioning   SpeProvisioningOrder?
 }
 
-// EHDS Art. 73 / TEHDAS2 D6.4 §9 — provisioning of the secure processing
+// EHDS Art. 73 / TEHDAS2 D6.4 §13 — provisioning of the secure processing
 // environment (SPE) that authorized persons process the granted dataset in.
 // Only applicable to DATA_ACCESS_APPLICATION permits (data requests return
 // aggregated output and don't involve an SPE).

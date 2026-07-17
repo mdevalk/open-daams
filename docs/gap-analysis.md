@@ -37,7 +37,7 @@ It falls short of the Regulation in two predictable places:
 | Ethical review tracking | D6.3 §6.1 | `EthicalReviewStatus` + fields | Present (tracking) |
 | Cost estimate → applicant acceptance | EHDS Art. 62(5); D6.3 §6.5 | `FeeEstimate` | **Strong** |
 | Decision + permit issuance, 10-section permit doc | EHDS Art. 68; D6.3 Annex 9 | `DataPermit` + `generate-permit-pdf.ts` (real PDF) | **Strong** |
-| Permit lifecycle (amend / renew-once / revoke / expire) | EHDS Art. 68(12), 63(1); D6.4 §9.2 | `DataPermitStatus` + `DataPermitLog` | **Strong** |
+| Permit lifecycle (amend / renew-once / revoke / expire) | EHDS Art. 68(12), 63(1); D6.4 §9.3 | `DataPermitStatus` + `DataPermitLog` | **Strong** |
 | Invoicing (provisional + final) | EHDS Art. 62; D6.3 Ch. 8 | `Invoice` | **Strong** |
 | Authorized persons in the SPE | EHDS Art. 73; Annex 9 §6.8 | `AuthorizedPerson` | Present (list only) |
 | Appeals (bezwaar/beroep) | EHDS Art. 63 / national law | `Appeal` | Present |

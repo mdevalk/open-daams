@@ -37,7 +37,7 @@ bouwen; het vervult een andere rol:
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-**Belangrijk (D6.4 §13):** DAAMS communiceert NOOIT rechtstreeks met het
+**Belangrijk (D6.4 §14):** DAAMS communiceert NOOIT rechtstreeks met het
 HealthData@EU Central Platform. Alle grensoverschrijdende aanvragen lopen via
 de Nationale Contactpersoon (NCP).
 
@@ -85,7 +85,7 @@ PROCESSING
   │
   ├─▶ [DECISION_MAKER] DECISION_ISSUED (POSITIEF)
   │       │
-  │       └─▶ DataPermit aanmaken (D6.4 §9.2)
+  │       └─▶ DataPermit aanmaken (D6.4 §9.3)
   │               │
   │               ├─▶ GRANTED → AMENDED (nieuw permit-ID)
   │               ├─▶ GRANTED → RENEWED (nieuw permit-ID; kan niet nogmaals)

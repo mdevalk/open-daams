@@ -36,7 +36,7 @@
     "legalArticles": "Articles 67–69",
     "standards": "References",
     "standardsList": [
-      { "ref": "TEHDAS2 D6.4", "title": "Technical Specifications for DAAMS", "url": "https://tehdas.eu/wp-content/uploads/2025/09/technical-specifications-for-data-access-application-management-system-daams-for-health-data-access-bodies-hdabs.pdf" },
+      { "ref": "TEHDAS2 D6.4", "title": "Technical Specifications for DAAMS", "url": "https://tehdas.eu/wp-content/uploads/2026/06/d6.4-data-access-application-management-system-daams-technical-specification-for-health-data-access-bodies.pdf" },
       { "ref": "TEHDAS2 D6.3", "title": "Guideline for HDABs on procedures and formats", "url": "https://tehdas.eu/wp-content/uploads/2025/09/draft-guideline-for-health-data-access-bodies-on-the-procedures-and-formats-for-data-access.pdf" },
       { "ref": "TEHDAS2 D6.2", "title": "Guideline for data users", "url": "https://tehdas.eu/wp-content/uploads/2025/10/d6.2-guideline-for-data-users-on-good-application-and-access-practice.pdf" }
     ],
