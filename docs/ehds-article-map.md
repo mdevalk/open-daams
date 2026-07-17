@@ -58,12 +58,12 @@ safeguards (IPR, trusted-data-holder procedure, cross-border registries) are abs
 | 51 | Minimum categories of electronic health data for secondary use | data-holder / supply side |
 | 55 | Health data access bodies | institutional (establishment of the HDAB) |
 | 59 | Reporting by health data access bodies | institutional reporting |
-| 77 | Dataset description and dataset catalogue | separate data-discovery component |
+| 77 | Dataset description and dataset catalogue | separate WP6 deliverable (catalogue / HealthDCAT-AP) |
 | 78 | Data quality and utility label | metadata/quality, separate component |
 | 79 | EU dataset catalogue | EU infrastructure, separate |
 | 80 | Minimum specifications for datasets of high impact | dataset specification, separate |
 
-Note: the dataset catalogue (Art. 77–80) is the biggest *functional* gap for the wider
-"discover → apply" journey (see [`gap-analysis.md`](./gap-analysis.md)), but as a system it is
-distinct from the DAAMS itself. Art. 52 and 61 are borderline — they are permit content rather
+Note: the dataset catalogue (Art. 77–80) is **out of DAAMS scope** — a separate work-package-6
+deliverable (dataset description / catalogue, HealthDCAT-AP), not part of the DAAMS (D6.4). What
+*is* in DAAMS scope is only consuming the catalogue for dataset selection (D6.4 §6.2). Art. 52 and 61 are borderline — they are permit content rather
 than DAAMS process — and could be moved into the in-scope table if preferred.
