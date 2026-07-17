@@ -66,7 +66,7 @@ explicit about for a compliance-themed demo.
 
 | Prescribed function | Ref | Status |
 |---|---|---|
-| **Dataset metadata catalogue** — *out of DAAMS scope* | Art. 77–80 | The catalogue is a **separate work-package-6 deliverable** (dataset description / HealthDCAT-AP), not the DAAMS (D6.4). The DAAMS-side item is only *consuming* it for dataset selection (D6.4 §6.2); today that is a hardcoded checklist. |
+| **Dataset metadata catalogue** — *out of DAAMS scope* | Art. 77–80 | The catalogue is a **separate work-package-6 deliverable** (dataset description / HealthDCAT-AP), not the DAAMS (D6.4). Dataset **selection** against it (D6.4 §6.2) is also out of scope — done in the central platform / applicant front-end; open-daams receives applications with datasets already chosen (a hardcoded checklist stands in today). |
 | **Data quality & utility labelling** of datasets | D6.1 framework | **Absent** |
 | **Trusted data holder** procedure | Art. 72 | **Absent** |
 | **Mutual recognition** of another HDAB's permit | Art. 68(5) | **Absent** |
@@ -119,10 +119,10 @@ For a demo meant to illustrate the DAAMS concept, the highest-value additions ar
 
 1. **Real authentication** — replace the trusted-client-`userId` model in `src/lib/authz.ts`
    (flag 1) so the RBAC and audit trail become meaningful.
-2. **Dataset-catalogue integration (D6.4 §6.2)** — wire dataset selection to a dataset catalogue
-   (read-only descriptions, "shopping cart"). Note: the **catalogue itself is out of DAAMS scope**
-   — it is separate work-package-6 work (dataset description / HealthDCAT-AP), not the DAAMS (D6.4);
-   only the DAAMS-side consumption is in scope.
+
+The dataset catalogue **and** dataset selection against it (Art. 77–80 / D6.4 §6.2) are **out of
+open-daams scope** — the catalogue is separate work-package-6 work and selection happens in the
+central platform / applicant front-end.
 
 The simulated integrations (SPE, extraction, NCP) are reasonable to leave as shells, since no
 real counterparties exist to integrate with in a demo context.

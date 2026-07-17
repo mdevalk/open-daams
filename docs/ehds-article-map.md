@@ -64,6 +64,7 @@ safeguards (IPR, trusted-data-holder procedure, cross-border registries) are abs
 | 80 | Minimum specifications for datasets of high impact | dataset specification, separate |
 
 Note: the dataset catalogue (Art. 77–80) is **out of DAAMS scope** — a separate work-package-6
-deliverable (dataset description / catalogue, HealthDCAT-AP), not part of the DAAMS (D6.4). What
-*is* in DAAMS scope is only consuming the catalogue for dataset selection (D6.4 §6.2). Art. 52 and 61 are borderline — they are permit content rather
+deliverable (dataset description / catalogue, HealthDCAT-AP), not part of the DAAMS (D6.4). Dataset
+selection against it (D6.4 §6.2) is also out of scope — done in the central platform / applicant
+front-end, upstream of the back-office DAAMS. Art. 52 and 61 are borderline — they are permit content rather
 than DAAMS process — and could be moved into the in-scope table if preferred.
