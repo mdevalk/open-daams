@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 import { useEffect, useState } from 'react';
 import { NcpQueueEntry } from '@/lib/ncp-mock';
 import { readErrorMessage } from '@/lib/utils';
@@ -8,6 +10,7 @@ type ImportResult = { ok: true; ref: string; id: string } | { ok: false; error: 
 
 export function NcpFetchForm({ locale }: { locale?: string } = {}) {
   const applicationHref = (id: string) => (locale ? `/${locale}/applications/${id}` : `/applications/${id}`);
+  const terr = useTranslations('errors');
   const [entries, setEntries] = useState<NcpQueueEntry[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -20,7 +23,7 @@ export function NcpFetchForm({ locale }: { locale?: string } = {}) {
     try {
       const res = await fetch('/api/import/ncp-queue');
       if (!res.ok) {
-        setLoadError(await readErrorMessage(res, 'Failed to reach the HealthData@EU NCP'));
+        setLoadError(await readErrorMessage(res, terr('requestFailed')));
         return;
       }
       const data = await res.json();

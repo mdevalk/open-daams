@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 import { useState } from 'react';
 import { Application, User } from '@prisma/client';
 import { getAvailableTransitions, Transition } from '@/lib/workflow';
@@ -10,6 +12,7 @@ type Props = { application: Application; currentUser: User };
 
 export function TransitionPanel({ application, currentUser }: Props) {
   const router = useRouter();
+  const terr = useTranslations('errors');
   const [selected, setSelected] = useState<Transition | null>(null);
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(false);
@@ -33,12 +36,12 @@ export function TransitionPanel({ application, currentUser }: Props) {
           decisionOutcome: selected.requiresDecisionOutcome ?? null,
         }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, 'Transition mislukt'));
+      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
       setSelected(null);
       setComment('');
       router.refresh();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Onbekende fout');
+      setError(e instanceof Error ? e.message : terr('unexpected'));
     } finally {
       setLoading(false);
     }

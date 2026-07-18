@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 import { useState } from 'react';
 import { Appeal } from '@prisma/client';
 import { useRouter } from 'next/navigation';
@@ -38,6 +40,7 @@ const NEXT_STATUSES: Record<string, string[]> = {
 
 export function AppealsPanel({ applicationId, appeals, canManage, currentUserId }: Props) {
   const router = useRouter();
+  const terr = useTranslations('errors');
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,14 +58,14 @@ export function AppealsPanel({ applicationId, appeals, canManage, currentUserId 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ submittedBy, grounds, authority, actingUserId: currentUserId }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, 'Registreren mislukt'));
+      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
       setSubmittedBy('');
       setGrounds('');
       setAuthority('');
       setShowForm(false);
       router.refresh();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Onbekende fout');
+      setError(e instanceof Error ? e.message : terr('unexpected'));
     } finally {
       setLoading(false);
     }
@@ -77,10 +80,10 @@ export function AppealsPanel({ applicationId, appeals, canManage, currentUserId 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status, actingUserId: currentUserId }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, 'Bijwerken mislukt'));
+      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
       router.refresh();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Onbekende fout');
+      setError(e instanceof Error ? e.message : terr('unexpected'));
     } finally {
       setLoading(false);
     }

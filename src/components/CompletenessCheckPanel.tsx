@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { readErrorMessage } from '@/lib/utils';
@@ -39,6 +41,7 @@ const RESULT_STYLES: Record<string, string> = {
 
 export function CompletenessCheckPanel({ applicationId, currentUserId, canManage, existing }: Props) {
   const router = useRouter();
+  const terr = useTranslations('errors');
   const [items, setItems] = useState<CompletenessItem[]>(existing?.items ?? DEFAULT_ITEMS);
   const [result, setResult] = useState(existing?.result ?? 'PENDING');
   const [loading, setLoading] = useState(false);
@@ -59,11 +62,11 @@ export function CompletenessCheckPanel({ applicationId, currentUserId, canManage
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ items, result: nextResult, checkedById: currentUserId }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, 'Opslaan mislukt'));
+      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
       setResult(nextResult);
       router.refresh();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Onbekende fout');
+      setError(e instanceof Error ? e.message : terr('unexpected'));
     } finally {
       setLoading(false);
     }

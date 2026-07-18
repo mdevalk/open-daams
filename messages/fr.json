@@ -378,5 +378,9 @@
     "revokeDesc": "Révoquer l'autorisation avec une justification documentée (D6.4 §9.3).",
     "expire": "Marquer comme expirée",
     "expireDesc": "L'autorisation a dépassé sa date de validité (D6.4 §9.3)."
+  },
+  "errors": {
+    "unexpected": "Une erreur inattendue s'est produite.",
+    "requestFailed": "La requête a échoué. Veuillez réessayer."
   }
 }

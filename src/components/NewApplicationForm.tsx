@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 import { useState } from 'react';
 import { User } from '@prisma/client';
 import { useRouter } from 'next/navigation';
@@ -41,6 +43,7 @@ const labelCls = 'block text-sm font-medium text-gray-700 mb-1';
 
 export function NewApplicationForm({ applicants }: { applicants: User[] }) {
   const router = useRouter();
+  const terr = useTranslations('errors');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [datasets, setDatasets] = useState<string[]>([]);
@@ -151,7 +154,7 @@ export function NewApplicationForm({ applicants }: { applicants: User[] }) {
       const data = await res.json();
       router.push(`/applications/${data.id}`);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Unexpected error');
+      setError(e instanceof Error ? e.message : terr('unexpected'));
       setSaving(false);
     }
   }

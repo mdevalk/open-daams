@@ -40,6 +40,7 @@ export function SpeProvisioningPanel({
   const t = useTranslations('speProvisioning');
   const ts = useTranslations('speStatus');
   const tx = useTranslations('speTransitions');
+  const terr = useTranslations('errors');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [envRef, setEnvRef] = useState('');
@@ -55,10 +56,10 @@ export function SpeProvisioningPanel({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: currentUserId }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, 'Failed to request SPE provisioning'));
+      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
       router.refresh();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Unknown error');
+      setError(e instanceof Error ? e.message : terr('unexpected'));
     } finally {
       setLoading(false);
     }
@@ -78,13 +79,13 @@ export function SpeProvisioningPanel({
           comment: comment.trim() || undefined,
         }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, 'Failed to update SPE provisioning'));
+      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
       setEnvRef('');
       setComment('');
       setPendingTo(null);
       router.refresh();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Unknown error');
+      setError(e instanceof Error ? e.message : terr('unexpected'));
     } finally {
       setLoading(false);
     }

@@ -48,6 +48,7 @@ export function InvoicePanel({
 }) {
   const router = useRouter();
   const t = useTranslations('invoices');
+  const terr = useTranslations('errors');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,10 +61,10 @@ export function InvoicePanel({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: currentUserId }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, 'Failed to issue invoice'));
+      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
       router.refresh();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Unknown error');
+      setError(e instanceof Error ? e.message : terr('unexpected'));
     } finally {
       setLoading(false);
     }
@@ -78,10 +79,10 @@ export function InvoicePanel({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: currentUserId, action }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, 'Failed to update invoice'));
+      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
       router.refresh();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Unknown error');
+      setError(e instanceof Error ? e.message : terr('unexpected'));
     } finally {
       setLoading(false);
     }

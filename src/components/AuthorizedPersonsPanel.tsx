@@ -16,6 +16,7 @@ type Props = {
 export function AuthorizedPersonsPanel({ permitId, persons, canManage, currentUserId }: Props) {
   const router = useRouter();
   const t = useTranslations('authorizedPersons');
+  const terr = useTranslations('errors');
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,14 +34,14 @@ export function AuthorizedPersonsPanel({ permitId, persons, canManage, currentUs
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, affiliation, email, actingUserId: currentUserId }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, 'Failed to add'));
+      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
       setName('');
       setAffiliation('');
       setEmail('');
       setShowForm(false);
       router.refresh();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Unexpected error');
+      setError(e instanceof Error ? e.message : terr('unexpected'));
     } finally {
       setLoading(false);
     }
@@ -55,10 +56,10 @@ export function AuthorizedPersonsPanel({ permitId, persons, canManage, currentUs
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ actingUserId: currentUserId }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, 'Failed to remove'));
+      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
       router.refresh();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Unexpected error');
+      setError(e instanceof Error ? e.message : terr('unexpected'));
     } finally {
       setLoading(false);
     }

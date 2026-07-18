@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 import { useState } from 'react';
 import { DataExtractionRequest } from '@prisma/client';
 import { useRouter } from 'next/navigation';
@@ -35,6 +37,7 @@ const NEXT_STATUSES: Record<string, string[]> = {
 
 export function ExtractionRequestsPanel({ applicationId, currentUserId, requests, canManage }: Props) {
   const router = useRouter();
+  const terr = useTranslations('errors');
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,13 +54,13 @@ export function ExtractionRequestsPanel({ applicationId, currentUserId, requests
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ dataHolderName, datasetDescription, requestedById: currentUserId }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, 'Aanvraag mislukt'));
+      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
       setDataHolderName('');
       setDatasetDescription('');
       setShowForm(false);
       router.refresh();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Onbekende fout');
+      setError(e instanceof Error ? e.message : terr('unexpected'));
     } finally {
       setLoading(false);
     }
@@ -72,10 +75,10 @@ export function ExtractionRequestsPanel({ applicationId, currentUserId, requests
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, 'Bijwerken mislukt'));
+      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
       router.refresh();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Onbekende fout');
+      setError(e instanceof Error ? e.message : terr('unexpected'));
     } finally {
       setLoading(false);
     }

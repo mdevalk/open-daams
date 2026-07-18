@@ -378,5 +378,9 @@
     "revokeDesc": "Trek de vergunning in met een onderbouwde motivering (D6.4 §9.3).",
     "expire": "Markeren als verlopen",
     "expireDesc": "De vergunning heeft de geldigheidsdatum overschreden (D6.4 §9.3)."
+  },
+  "errors": {
+    "unexpected": "Er is een onverwachte fout opgetreden.",
+    "requestFailed": "Het verzoek is mislukt. Probeer het opnieuw."
   }
 }

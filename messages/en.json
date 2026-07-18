@@ -378,5 +378,9 @@
     "revokeDesc": "Revoke the permit with documented justification (D6.4 §9.3).",
     "expire": "Mark as expired",
     "expireDesc": "Permit has passed its validity date (D6.4 §9.3)."
+  },
+  "errors": {
+    "unexpected": "An unexpected error occurred.",
+    "requestFailed": "The request failed. Please try again."
   }
 }

@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 import { useState } from 'react';
 import { Application, FeeEstimate, Invoice, User } from '@prisma/client';
 import { useRouter } from 'next/navigation';
@@ -43,6 +45,7 @@ function fmtAmount(v: unknown, currency: string): string {
 
 export function FeeEstimatePanel({ application, currentUser }: Props) {
   const router = useRouter();
+  const terr = useTranslations('errors');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -73,10 +76,10 @@ export function FeeEstimatePanel({ application, currentUser }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: currentUser.id }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, 'Uitgeven voorlopige factuur mislukt'));
+      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
       router.refresh();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Onbekende fout');
+      setError(e instanceof Error ? e.message : terr('unexpected'));
     } finally {
       setLoading(false);
     }
@@ -91,10 +94,10 @@ export function FeeEstimatePanel({ application, currentUser }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: currentUser.id, action }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, 'Bijwerken factuur mislukt'));
+      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
       router.refresh();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Onbekende fout');
+      setError(e instanceof Error ? e.message : terr('unexpected'));
     } finally {
       setLoading(false);
     }
@@ -109,11 +112,11 @@ export function FeeEstimatePanel({ application, currentUser }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ administrativeFee, dataPreparationFee, dataHolderFee, notes, actingUserId: currentUser.id }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, 'Versturen kostenraming mislukt'));
+      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
       setEditing(false);
       router.refresh();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Onbekende fout');
+      setError(e instanceof Error ? e.message : terr('unexpected'));
     } finally {
       setLoading(false);
     }
@@ -128,10 +131,10 @@ export function FeeEstimatePanel({ application, currentUser }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status, actingUserId: currentUser.id }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, 'Bijwerken mislukt'));
+      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
       router.refresh();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Onbekende fout');
+      setError(e instanceof Error ? e.message : terr('unexpected'));
     } finally {
       setLoading(false);
     }

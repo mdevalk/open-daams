@@ -45,6 +45,7 @@ export function PermitChangeRequestPanel({
   const t = useTranslations('permitChanges');
   const tt = useTranslations('changeType');
   const tstat = useTranslations('changeStatus');
+  const terr = useTranslations('errors');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -67,12 +68,12 @@ export function PermitChangeRequestPanel({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type: newType, justification, requestedById: currentUserId }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, 'Failed to submit request'));
+      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
       setNewType('');
       setJustification('');
       router.refresh();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Unexpected error');
+      setError(e instanceof Error ? e.message : terr('unexpected'));
     } finally {
       setLoading(false);
     }
@@ -93,7 +94,7 @@ export function PermitChangeRequestPanel({
             decision === 'APPROVED' && request.type === 'RENEWAL' ? newValidUntil : undefined,
         }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, 'Failed to decide request'));
+      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
       const data = (await res.json().catch(() => null)) as { currentPermitId?: string } | null;
       setDecideFor(null);
       setDecisionComment('');
@@ -105,7 +106,7 @@ export function PermitChangeRequestPanel({
         router.refresh();
       }
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Unexpected error');
+      setError(e instanceof Error ? e.message : terr('unexpected'));
     } finally {
       setLoading(false);
     }

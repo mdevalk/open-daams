@@ -18,6 +18,7 @@ export function PermitPanel({ application, currentUser }: Props) {
   const tp = useTranslations('permitPanel');
   const tps = useTranslations('permitStatus');
   const ttr = useTranslations('permitTransitions');
+  const terr = useTranslations('errors');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -68,10 +69,10 @@ export function PermitPanel({ application, currentUser }: Props) {
           paymentTerms,
         }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, 'Failed to issue permit'));
+      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
       router.refresh();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Unexpected error');
+      setError(e instanceof Error ? e.message : terr('unexpected'));
     } finally {
       setLoading(false);
     }
@@ -91,13 +92,13 @@ export function PermitPanel({ application, currentUser }: Props) {
           comment: toStatus === 'REVOKED' ? revokeReason : comment,
         }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, 'Failed to update permit'));
+      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
       setSelectedTransition(null);
       setComment('');
       setRevokeReason('');
       router.refresh();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Unexpected error');
+      setError(e instanceof Error ? e.message : terr('unexpected'));
     } finally {
       setLoading(false);
     }
