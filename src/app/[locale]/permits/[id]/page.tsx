@@ -3,7 +3,6 @@ import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { prisma } from '@/lib/db';
 import { PermitCard } from '@/components/PermitCard';
-import { PermitPanel } from '@/components/PermitPanel';
 import { AuthorizedPersonsPanel } from '@/components/AuthorizedPersonsPanel';
 import { InvoicePanel } from '@/components/InvoicePanel';
 import { SpeProvisioningPanel } from '@/components/SpeProvisioningPanel';
@@ -134,11 +133,6 @@ export default async function PermitDetailPage({
     users[0];
 
   if (!currentUser) notFound();
-
-  const fakeApplication = {
-    ...permit.application,
-    dataPermit: permit,
-  };
 
   const app = permit.application;
   const isDataRequest = app?.type === 'DATA_REQUEST';
@@ -328,7 +322,6 @@ export default async function PermitDetailPage({
               </ol>
             </div>
           )}
-          <PermitPanel application={fakeApplication} currentUser={currentUser} />
           <PermitChangeRequestPanel
             permitId={permit.id}
             permitStatus={permit.status}
