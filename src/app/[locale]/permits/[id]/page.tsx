@@ -8,7 +8,7 @@ import { AuthorizedPersonsPanel } from '@/components/AuthorizedPersonsPanel';
 import { InvoicePanel } from '@/components/InvoicePanel';
 import { SpeProvisioningPanel } from '@/components/SpeProvisioningPanel';
 import { PermitChangeRequestPanel } from '@/components/PermitChangeRequestPanel';
-import { PERMIT_STATUS_LABELS } from '@/lib/permit';
+import { PERMIT_STATUS_LABELS, PERMIT_STATUS_COLORS, formatPermitId } from '@/lib/permit';
 import { formatDate, formatDateTime, serializePrisma } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
@@ -36,10 +36,7 @@ export default async function PermitDetailPage({
             applicant: { select: { name: true, organisation: true, email: true } },
           },
         },
-        logs: {
-          include: { user: { select: { name: true, role: true } } },
-          orderBy: { createdAt: 'asc' },
-        },
+        previousPermit: { select: { id: true, permitNumber: true, version: true } },
         authorizedPersons: { orderBy: { addedAt: 'asc' } },
         changeRequests: {
           include: {
@@ -67,6 +64,23 @@ export default async function PermitDetailPage({
 
   if (!rawPermit) notFound();
 
+  // The full version chain for this application (D6.4 §9.3) and the logs
+  // aggregated across every version, so a version's page shows the complete
+  // permit history (issue → amend → renew …), not just its own events.
+  const [versions, chainLogs] = await Promise.all([
+    prisma.dataPermit.findMany({
+      where: { applicationId: rawPermit.applicationId },
+      select: { id: true, permitNumber: true, version: true, status: true, isCurrent: true },
+      orderBy: { version: 'asc' },
+    }),
+    prisma.dataPermitLog.findMany({
+      where: { permit: { applicationId: rawPermit.applicationId } },
+      include: { user: { select: { name: true, role: true } } },
+      orderBy: { createdAt: 'asc' },
+    }),
+  ]);
+  const currentVersion = versions.find((v) => v.isCurrent) ?? null;
+
   // DataPermit carries Prisma Decimal fee fields, which the RSC boundary
   // can't serialise when passed to the client panels below.
   const permit = serializePrisma(rawPermit);
@@ -88,12 +102,23 @@ export default async function PermitDetailPage({
       <div className="text-sm text-gray-500">
         <a href={`/${locale}/permits`} className="hover:text-gray-900">{t('breadcrumb')}</a>
         <span className="mx-2">/</span>
-        <span className="text-gray-900 font-mono">{permit.permitNumber}</span>
+        <span className="text-gray-900 font-mono">{formatPermitId(permit.permitNumber, permit.version)}</span>
       </div>
+
+      {!permit.isCurrent && (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Dit is een verouderde versie (v{permit.version}) van deze vergunning.{' '}
+          {currentVersion && (
+            <a href={`/${locale}/permits/${currentVersion.id}`} className="font-medium underline">
+              Ga naar de huidige versie (v{currentVersion.version})
+            </a>
+          )}
+        </div>
+      )}
 
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-gray-900 font-mono">{permit.permitNumber}</h1>
+          <h1 className="text-xl font-bold text-gray-900 font-mono">{formatPermitId(permit.permitNumber, permit.version)}</h1>
           <p className="text-sm text-gray-500 mt-1">
             {permit.application?.referenceNumber} — {permit.application?.title}
           </p>
@@ -126,6 +151,26 @@ export default async function PermitDetailPage({
             <PermitCard permit={permit} />
           </section>
 
+          {versions.length > 1 && (
+            <section className="rounded-xl border border-gray-200 bg-white p-5">
+              <h2 className="font-semibold text-gray-900 mb-4">Versies (D6.4 §9.3)</h2>
+              <ol className="space-y-2">
+                {versions.map((v) => (
+                  <li key={v.id} className="flex items-center gap-3 text-sm">
+                    <span className="font-mono font-medium w-32">{formatPermitId(v.permitNumber, v.version)}</span>
+                    <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold ${PERMIT_STATUS_COLORS[v.status]}`}>
+                      {PERMIT_STATUS_LABELS[v.status]}
+                    </span>
+                    {v.isCurrent && <span className="text-xs font-medium text-emerald-700">huidig</span>}
+                    {v.id !== permit.id && (
+                      <a href={`/${locale}/permits/${v.id}`} className="text-xs text-[#01689b] hover:underline ml-auto">bekijk</a>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
+
           {permit.application?.applicant && (
             <section className="rounded-xl border border-gray-200 bg-white p-5">
               <h2 className="font-semibold text-gray-900 mb-4">{t('applicantTitle')}</h2>
@@ -143,15 +188,15 @@ export default async function PermitDetailPage({
 
           <section className="rounded-xl border border-gray-200 bg-white p-5">
             <h2 className="font-semibold text-gray-900 mb-4">{t('historyTitle')}</h2>
-            {permit.logs.length === 0 ? (
+            {chainLogs.length === 0 ? (
               <p className="text-sm text-gray-500">{t('noHistory')}</p>
             ) : (
               <ol className="space-y-3">
-                {permit.logs.map((log, i) => (
+                {chainLogs.map((log, i) => (
                   <li key={log.id} className="flex gap-3 text-sm">
                     <div className="flex flex-col items-center">
                       <span className="w-6 h-6 rounded-full bg-[#154273] text-white text-xs flex items-center justify-center font-bold flex-shrink-0">{i + 1}</span>
-                      {i < permit.logs.length - 1 && <div className="w-px flex-1 bg-gray-200 my-1" />}
+                      {i < chainLogs.length - 1 && <div className="w-px flex-1 bg-gray-200 my-1" />}
                     </div>
                     <div className="pb-3">
                       <p className="font-medium text-gray-900">{log.action}</p>
@@ -172,8 +217,8 @@ export default async function PermitDetailPage({
             permitId={permit.id}
             permitStatus={permit.status}
             requests={permit.changeRequests as unknown as ComponentProps<typeof PermitChangeRequestPanel>['requests']}
-            canRequest={['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(currentUser.role)}
-            canDecide={['DECISION_MAKER', 'ADMIN'].includes(currentUser.role)}
+            canRequest={permit.isCurrent && ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(currentUser.role)}
+            canDecide={permit.isCurrent && ['DECISION_MAKER', 'ADMIN'].includes(currentUser.role)}
             currentUserId={currentUser.id}
           />
           <AuthorizedPersonsPanel

@@ -1,5 +1,6 @@
 import { PDFDocument, rgb, StandardFonts, PDFFont, PDFPage } from 'pdf-lib';
 import { APP_NAME } from './branding';
+import { formatPermitId } from './permit';
 
 // Layout follows TEHDAS2 D6.3 "Guideline for Health Data Access Bodies on the
 // procedures and formats for data access", Annex 9 - Data permit template
@@ -65,11 +66,13 @@ const STATUS_NL: Record<string, string> = {
 
 export type PermitPdfData = {
   permitNumber: string;
+  version: number;
   status: string;
   issuedAt: Date | null;
   validFrom: Date | null;
   validUntil: Date | null;
   previousPermitId?: string | null;
+  previousPermit?: { permitNumber: string; version: number } | null;
   revocationReason?: string | null;
   revocationAt?: Date | null;
   currency?: string | null;
@@ -260,14 +263,15 @@ const PURPOSE_LABELS: Record<string, string> = {
 export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Array> {
   const doc = new Doc();
   await doc.init();
-  doc.pdfDoc.setTitle(`Vergunning ${permit.permitNumber}`);
+  const permitId = formatPermitId(permit.permitNumber, permit.version);
+  doc.pdfDoc.setTitle(`Vergunning ${permitId}`);
   doc.pdfDoc.setAuthor(APP_NAME);
   doc.pdfDoc.setSubject('EHDS Dataverwerkingsvergunning');
   doc.pdfDoc.setCreationDate(new Date());
 
   const app = permit.application;
   const isRevoked = permit.status === 'REVOKED';
-  const isAmendment = !!permit.previousPermitId;
+  const isAmendment = !!permit.previousPermit;
   const isDataRequest = app?.type === 'DATA_REQUEST';
   const statusLabel = STATUS_NL[permit.status] ?? permit.status;
 
@@ -276,7 +280,7 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
   // Running header, per Annex 9 top block
   doc.rect(0, 0, PW, 62, C.darkBlue);
   doc.text('BESLUIT', M, 12, doc.bold, 15, C.white);
-  doc.text(`Dossier- / vergunningsnummer: ${permit.permitNumber}`, M, 32, doc.regular, 8.5, rgb(0.85, 0.9, 0.95));
+  doc.text(`Dossier- / vergunningsnummer: ${permitId}`, M, 32, doc.regular, 8.5, rgb(0.85, 0.9, 0.95));
   doc.text('Health Data Access Body Nederland (HDAB-NL) | Nederland', M, 44, doc.regular, 8.5, rgb(0.85, 0.9, 0.95));
   doc.y = 78;
 
@@ -324,10 +328,10 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
   // 3. Reference
   doc.heading('3', 'REFERENTIE');
   doc.field('Projecttitel', app?.title ?? '—');
-  doc.field('Vergunningsnummer / dossiernummer', permit.permitNumber);
+  doc.field('Vergunningsnummer / dossiernummer', permitId);
   doc.field('Aanvraagreferentie', app?.referenceNumber ?? '—');
-  if (isAmendment) {
-    doc.field('Eerdere vergunning', permit.previousPermitId ?? '—');
+  if (permit.previousPermit) {
+    doc.field('Eerdere vergunning', formatPermitId(permit.previousPermit.permitNumber, permit.previousPermit.version));
   }
   doc.spacer(4);
 

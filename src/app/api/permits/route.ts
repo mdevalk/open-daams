@@ -4,13 +4,13 @@ import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
 
 /**
- * Derives the next sequential permit number for the given year from the
+ * Derives the next sequential base permit number for the given year from the
  * highest existing number matching that year's prefix, rather than
  * prisma.dataPermit.count() — count() drifts from the true max sequence
- * whenever permits from other years exist, rows were deleted, or a
- * renewal/amendment (see lib/permit.ts nextPermitNumber) already bumped a
- * number past what count() reflects, which caused unique constraint
- * violations on permitNumber.
+ * whenever permits from other years exist, rows were deleted, or (now) a
+ * permit has multiple versions sharing one base number, which caused unique
+ * constraint violations on permitNumber. The base number is stable across an
+ * application's permit versions; versioning is tracked by the `version` field.
  */
 async function generatePermitNumber(year: number): Promise<string> {
   const prefix = `DP-NL-${year}-`;
@@ -43,14 +43,14 @@ export async function POST(req: NextRequest) {
 
     const application = await prisma.application.findUnique({
       where: { id: body.applicationId },
-      include: { dataPermit: true },
+      include: { dataPermits: { select: { id: true } } },
     });
 
     if (!application)
       return NextResponse.json({ error: 'Application not found' }, { status: 404 });
     if (application.decisionOutcome !== 'POSITIVE')
       return NextResponse.json({ error: 'Permit can only be issued for a positive decision' }, { status: 422 });
-    if (application.dataPermit)
+    if (application.dataPermits.length > 0)
       return NextResponse.json({ error: 'A permit has already been issued for this application' }, { status: 409 });
 
     const year = new Date().getFullYear();

@@ -30,22 +30,46 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'items must be an array' }, { status: 422 });
     }
 
-    const check = await prisma.completenessCheck.upsert({
-      where: { applicationId: id },
-      create: {
-        applicationId: id,
-        items: body.items,
-        result: body.result ?? 'PENDING',
-        checkedById: body.checkedById ?? null,
-        checkedAt: body.result && body.result !== 'PENDING' ? new Date() : null,
-      },
-      update: {
-        items: body.items,
-        result: body.result ?? 'PENDING',
-        checkedById: body.checkedById ?? null,
-        checkedAt: body.result && body.result !== 'PENDING' ? new Date() : null,
-      },
-    });
+    const result = body.result ?? 'PENDING';
+    const isDecision = result === 'COMPLETE' || result === 'INCOMPLETE';
+    const now = new Date();
+
+    const checkData = {
+      items: body.items,
+      result,
+      checkedById: auth.user.id,
+      checkedAt: isDecision ? now : null,
+    };
+
+    // A completeness decision (Volledig/Onvolledig) is the pre-screening decision:
+    // record it immutably in the application history with actor + check selection,
+    // since the CompletenessCheck row itself is overwritten on each save.
+    const passed = (body.items as CompletenessItem[]).filter((i) => i.passed).map((i) => i.label);
+    const notPassed = (body.items as CompletenessItem[]).filter((i) => !i.passed).map((i) => i.label);
+    const auditComment =
+      `Volledigheidscontrole (${passed.length}/${body.items.length} afgevinkt).` +
+      (notPassed.length ? ` Niet afgevinkt: ${notPassed.join('; ')}.` : '');
+
+    const [check] = await prisma.$transaction([
+      prisma.completenessCheck.upsert({
+        where: { applicationId: id },
+        create: { applicationId: id, ...checkData },
+        update: checkData,
+      }),
+      ...(isDecision
+        ? [
+            prisma.auditLog.create({
+              data: {
+                applicationId: id,
+                userId: auth.user.id,
+                toStatus: application.status,
+                action: result === 'COMPLETE' ? 'Volledigheidscontrole: volledig' : 'Volledigheidscontrole: onvolledig',
+                comment: auditComment,
+              },
+            }),
+          ]
+        : []),
+    ]);
 
     return NextResponse.json(check, { status: 201 });
   } catch (e) {

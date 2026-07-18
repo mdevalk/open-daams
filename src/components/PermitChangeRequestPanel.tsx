@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { DataPermitStatus, PermitChangeType, PermitChangeStatus } from '@prisma/client';
 import {
   CHANGE_TYPE_LABELS,
@@ -45,6 +45,7 @@ export function PermitChangeRequestPanel({
   currentUserId,
 }: Props) {
   const router = useRouter();
+  const pathname = usePathname();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -94,10 +95,16 @@ export function PermitChangeRequestPanel({
         }),
       });
       if (!res.ok) throw new Error(await readErrorMessage(res, 'Failed to decide request'));
+      const data = (await res.json().catch(() => null)) as { currentPermitId?: string } | null;
       setDecideFor(null);
       setDecisionComment('');
       setNewValidUntil('');
-      router.refresh();
+      // Approval issues a new permit version — navigate to it; rejection stays put.
+      if (data?.currentPermitId && data.currentPermitId !== permitId) {
+        router.push(pathname.replace(/[^/]+$/, data.currentPermitId));
+      } else {
+        router.refresh();
+      }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Unexpected error');
     } finally {

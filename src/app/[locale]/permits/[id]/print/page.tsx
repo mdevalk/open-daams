@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { PrintTrigger } from '@/components/PrintTrigger';
-import { PERMIT_STATUS_LABELS } from '@/lib/permit';
+import { PERMIT_STATUS_LABELS, formatPermitId } from '@/lib/permit';
 import { APP_NAME } from '@/lib/branding';
 
 export const dynamic = 'force-dynamic';
@@ -43,7 +43,7 @@ export default async function PermitPrintPage({
     <html lang="nl">
       <head>
         <meta charSet="utf-8" />
-        <title>Vergunning {permit.permitNumber} — {APP_NAME}</title>
+        <title>Vergunning {formatPermitId(permit.permitNumber, permit.version)} — {APP_NAME}</title>
         <style>{`
           * { box-sizing: border-box; margin: 0; padding: 0; }
           body { font-family: Arial, Helvetica, sans-serif; font-size: 11pt; color: #000; background: #fff; }
@@ -107,7 +107,7 @@ export default async function PermitPrintPage({
 
           <div className="permit-box">
             <div className="label">Vergunningsnummer</div>
-            <div className="number">{permit.permitNumber}</div>
+            <div className="number">{formatPermitId(permit.permitNumber, permit.version)}</div>
             <div className={`status-badge${permit.status === 'REVOKED' ? ' revoked' : ''}`}>
               {PERMIT_STATUS_LABELS[permit.status]}
             </div>

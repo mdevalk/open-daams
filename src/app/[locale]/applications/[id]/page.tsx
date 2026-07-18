@@ -15,6 +15,7 @@ import { ExtractionRequestsPanel } from '@/components/ExtractionRequestsPanel';
 import { UserSwitcher } from '@/components/UserSwitcher';
 import type { CompletenessItem } from '@/app/api/applications/[id]/completeness-check/route';
 import { formatDate, formatDateTime, purposeLabel, serializePrisma } from '@/lib/utils';
+import { formatPermitId } from '@/lib/permit';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,7 +37,7 @@ export default async function ApplicationDetailPage({
       include: {
         applicant: true,
         caseHandler: true,
-        dataPermit: true,
+        dataPermits: { where: { isCurrent: true } },
         feeEstimate: { include: { invoice: true } },
         auditLogs: {
           include: { user: { select: { id: true, name: true, role: true } } },
@@ -60,6 +61,8 @@ export default async function ApplicationDetailPage({
   // FeeEstimate/DataPermit carry Prisma Decimal fields, which the RSC
   // boundary can't serialise when passed to the client panels below.
   const application = serializePrisma(rawApplication);
+  // One current permit version per application (D6.4 §9.3 version chain).
+  const currentPermit = application.dataPermits[0] ?? null;
 
   const currentUser =
     (queryUserId ? users.find(u => u.id === queryUserId) : null) ??
@@ -182,12 +185,12 @@ export default async function ApplicationDetailPage({
                   </dd>
                 </div>
               )}
-              {application.dataPermit && (
+              {currentPermit && (
                 <div>
                   <dt className="text-gray-500">{t('permitNumber')}</dt>
                   <dd className="font-medium font-mono">
-                    <a href={`/${locale}/permits/${application.dataPermit.id}`} className="text-[#01689b] hover:underline">
-                      {application.dataPermit.permitNumber}
+                    <a href={`/${locale}/permits/${currentPermit.id}`} className="text-[#01689b] hover:underline">
+                      {formatPermitId(currentPermit.permitNumber, currentPermit.version)}
                     </a>
                   </dd>
                 </div>
@@ -250,7 +253,7 @@ export default async function ApplicationDetailPage({
           <UserSwitcher users={users} currentUserId={currentUser.id} />
           <TransitionPanel application={application} currentUser={currentUser} />
           <FeeEstimatePanel application={application} currentUser={currentUser} />
-          <PermitPanel application={application} currentUser={currentUser} />
+          <PermitPanel application={{ ...application, dataPermit: currentPermit }} currentUser={currentUser} />
           {application.decisionOutcome === 'POSITIVE' && (
             <ExtractionRequestsPanel
               applicationId={application.id}

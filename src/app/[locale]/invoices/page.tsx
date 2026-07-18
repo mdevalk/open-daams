@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import { prisma } from '@/lib/db';
 import { InvoiceStatus } from '@prisma/client';
 import { formatDate } from '@/lib/utils';
+import { formatPermitId } from '@/lib/permit';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,6 +40,7 @@ export default async function InvoicesPage({
         select: {
           id: true,
           permitNumber: true,
+          version: true,
           application: { select: { referenceNumber: true, title: true, applicant: { select: { name: true, organisation: true } } } },
         },
       },
@@ -123,7 +125,7 @@ export default async function InvoicesPage({
             const overdueRow = isOverdue(invoice);
             const applicant = invoice.permit?.application?.applicant ?? invoice.application?.applicant;
             const reference = invoice.permit
-              ? `${invoice.permit.permitNumber} — ${invoice.permit.application?.referenceNumber} — ${invoice.permit.application?.title}`
+              ? `${formatPermitId(invoice.permit.permitNumber, invoice.permit.version)} — ${invoice.permit.application?.referenceNumber} — ${invoice.permit.application?.title}`
               : `${invoice.application?.referenceNumber} — ${invoice.application?.title}`;
             const href = invoice.permit
               ? `/${locale}/permits/${invoice.permit.id}`

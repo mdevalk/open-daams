@@ -323,7 +323,7 @@ model Application {
   auditLogs          AuditLog[]
   notes              Note[]
   documents          Document[]
-  dataPermit         DataPermit?
+  dataPermits        DataPermit[]
   feeEstimate        FeeEstimate?
   appeals            Appeal[]
   completenessCheck  CompletenessCheck?
@@ -422,16 +422,25 @@ model FeeEstimate {
 // TEHDAS2 D6.4 Section 9.3 — permit lifecycle, separate from application
 model DataPermit {
   id            String           @id @default(cuid())
-  permitNumber  String           @unique // e.g. DP-NL-2025-0001
-  applicationId String           @unique
+  // Base permit id, STABLE across versions (e.g. DP-NL-2025-0001); the full
+  // permit id is permitNumber + version (D6.4 R9.3.8, shown as "…-v2").
+  permitNumber  String
+  version       Int              @default(1)
+  // Exactly one version per application is the current/active one.
+  isCurrent     Boolean          @default(true)
+  applicationId String
   application   Application      @relation(fields: [applicationId], references: [id])
   status        DataPermitStatus @default(GRANTED)
 
   validFrom  DateTime
   validUntil DateTime
 
-  // Populated when AMENDED or RENEWED — new permit ID issued (D6.4 §9.3)
-  previousPermitId String?
+  // Version chain (D6.4 §9.3): an amendment/renewal/revocation appeal issues a
+  // NEW version row that supersedes its predecessor, rather than mutating this
+  // row in place. Linear chain — a permit has at most one predecessor/successor.
+  previousPermitId String?     @unique
+  previousPermit   DataPermit? @relation("PermitVersions", fields: [previousPermitId], references: [id])
+  nextPermit       DataPermit? @relation("PermitVersions")
 
   revocationReason String?   @db.Text
   revocationAt     DateTime?
@@ -454,6 +463,8 @@ model DataPermit {
   invoices          Invoice[]
   speProvisioning   SpeProvisioningOrder?
   changeRequests    PermitChangeRequest[]
+
+  @@unique([permitNumber, version])
 }
 
 // EHDS Art. 73 / TEHDAS2 D6.4 §13 — provisioning of the secure processing

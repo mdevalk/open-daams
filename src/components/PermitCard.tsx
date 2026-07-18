@@ -1,9 +1,12 @@
 import { DataPermit, Application } from '@prisma/client';
-import { PERMIT_STATUS_LABELS, PERMIT_STATUS_COLORS } from '@/lib/permit';
+import { PERMIT_STATUS_LABELS, PERMIT_STATUS_COLORS, formatPermitId } from '@/lib/permit';
 import { formatDate } from '@/lib/utils';
 
 type Props = {
-  permit: DataPermit & { application?: Pick<Application, 'referenceNumber' | 'title' | 'type'> };
+  permit: DataPermit & {
+    application?: Pick<Application, 'referenceNumber' | 'title' | 'type'>;
+    previousPermit?: Pick<DataPermit, 'id' | 'permitNumber' | 'version'> | null;
+  };
   compact?: boolean;
 };
 
@@ -37,7 +40,7 @@ export function PermitCard({ permit, compact }: Props) {
           <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold ${statusColor}`}>
             {statusLabel}
           </span>
-          <span className="font-mono text-sm font-bold text-gray-800">{permit.permitNumber}</span>
+          <span className="font-mono text-sm font-bold text-gray-800">{formatPermitId(permit.permitNumber, permit.version)}</span>
         </div>
         <div className="text-xs text-gray-500">
           Uitgegeven {formatDate(permit.issuedAt)}
@@ -60,10 +63,18 @@ export function PermitCard({ permit, compact }: Props) {
             <p className="font-medium font-mono">{permit.application.referenceNumber}</p>
           </div>
         )}
-        {permit.previousPermitId && (
+        {!compact && (
+          <div>
+            <p className="text-xs text-gray-500">Versie</p>
+            <p className="font-medium">v{permit.version}</p>
+          </div>
+        )}
+        {permit.previousPermit && (
           <div className="col-span-2 sm:col-span-3">
             <p className="text-xs text-gray-500">Opvolger van</p>
-            <p className="font-medium font-mono text-xs">{permit.previousPermitId}</p>
+            <p className="font-medium font-mono text-xs">
+              {formatPermitId(permit.previousPermit.permitNumber, permit.previousPermit.version)}
+            </p>
           </div>
         )}
         {permit.status === 'REVOKED' && permit.revocationReason && (

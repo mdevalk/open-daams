@@ -5,7 +5,6 @@ export type PermitTransition = {
   label: string;
   requiredRole: UserRole[];
   description: string;
-  generatesNewPermitId: boolean;
 };
 
 /**
@@ -25,14 +24,12 @@ export const PERMIT_TRANSITIONS: Record<DataPermitStatus, PermitTransition[]> = 
       label: 'Revoke permit',
       requiredRole: ['DECISION_MAKER', 'ADMIN'],
       description: 'Revoke the permit with documented justification (D6.4 §9.3).',
-      generatesNewPermitId: false,
     },
     {
       to: 'EXPIRED',
       label: 'Mark as expired',
       requiredRole: ['CASE_HANDLER', 'ADMIN'],
       description: 'Permit has passed its validity date (D6.4 §9.3).',
-      generatesNewPermitId: false,
     },
   ],
   AMENDED: [
@@ -41,14 +38,12 @@ export const PERMIT_TRANSITIONS: Record<DataPermitStatus, PermitTransition[]> = 
       label: 'Revoke permit',
       requiredRole: ['DECISION_MAKER', 'ADMIN'],
       description: 'Revoke the amended permit with documented justification.',
-      generatesNewPermitId: false,
     },
     {
       to: 'EXPIRED',
       label: 'Mark as expired',
       requiredRole: ['CASE_HANDLER', 'ADMIN'],
       description: 'Permit has passed its validity date.',
-      generatesNewPermitId: false,
     },
   ],
   // D6.4 §9.3: a permit that has been extended MUST NOT be extended a second time
@@ -58,14 +53,12 @@ export const PERMIT_TRANSITIONS: Record<DataPermitStatus, PermitTransition[]> = 
       label: 'Revoke permit',
       requiredRole: ['DECISION_MAKER', 'ADMIN'],
       description: 'Revoke the renewed permit with documented justification.',
-      generatesNewPermitId: false,
     },
     {
       to: 'EXPIRED',
       label: 'Mark as expired',
       requiredRole: ['CASE_HANDLER', 'ADMIN'],
       description: 'Permit has passed its validity date.',
-      generatesNewPermitId: false,
     },
   ],
   // Terminal states
@@ -89,10 +82,9 @@ export const PERMIT_STATUS_COLORS: Record<DataPermitStatus, string> = {
   EXPIRED:  'bg-gray-100 text-gray-500',
 };
 
-export function nextPermitNumber(existing: string): string {
-  // e.g. DP-NL-2025-0001 → DP-NL-2025-0002
-  const parts = existing.split('-');
-  const seq = parseInt(parts[parts.length - 1], 10);
-  parts[parts.length - 1] = String(seq + 1).padStart(4, '0');
-  return parts.join('-');
+// The full, human-readable permit id combines the stable base number with the
+// version (D6.4 R9.3.8), e.g. "DP-NL-2025-0001-v2". Version 1 shows the bare
+// number for readability.
+export function formatPermitId(permitNumber: string, version: number): string {
+  return version > 1 ? `${permitNumber}-v${version}` : permitNumber;
 }

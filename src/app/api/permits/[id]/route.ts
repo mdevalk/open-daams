@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { PERMIT_TRANSITIONS, nextPermitNumber } from '@/lib/permit';
+import { PERMIT_TRANSITIONS } from '@/lib/permit';
 import { DataPermitStatus } from '@prisma/client';
 
 /**
@@ -46,23 +46,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const toStatus = body.toStatus as DataPermitStatus;
     const now = new Date();
 
-    // D6.4 §9.2: AMENDED and RENEWED generate a new permit ID
-    const newPermitNumber = transition.generatesNewPermitId
-      ? nextPermitNumber(permit.permitNumber)
-      : permit.permitNumber;
-
-    const updates: Record<string, unknown> = {
-      status: toStatus,
-      permitNumber: newPermitNumber,
-      previousPermitId: transition.generatesNewPermitId ? permit.id : permit.previousPermitId,
-    };
+    // Direct transitions here are only REVOKE / EXPIRE — terminal actions on the
+    // current version that do NOT create a new version (amendments, renewals and
+    // revocation appeals go through /change-requests, which issues a new version).
+    const updates: Record<string, unknown> = { status: toStatus };
 
     if (toStatus === 'REVOKED') {
       updates.revocationReason = body.comment ?? null;
       updates.revocationAt = now;
-    }
-    if (toStatus === 'RENEWED' && body.validUntil) {
-      updates.validUntil = new Date(body.validUntil);
     }
 
     const [updated] = await prisma.$transaction([

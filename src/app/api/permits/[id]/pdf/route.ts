@@ -42,6 +42,7 @@ export async function GET(
         },
       },
       authorizedPersons: { orderBy: { addedAt: 'asc' } },
+      previousPermit: { select: { permitNumber: true, version: true } },
     },
   });
 
@@ -50,7 +51,7 @@ export async function GET(
   }
 
   const pdfBytes = await generatePermitPdf(permit);
-  const filename = `vergunning-${permit.permitNumber.replace(/\//g, '-')}.pdf`;
+  const filename = `vergunning-${permit.permitNumber.replace(/\//g, '-')}-v${permit.version}.pdf`;
 
   return new NextResponse(Buffer.from(pdfBytes), {
     status: 200,

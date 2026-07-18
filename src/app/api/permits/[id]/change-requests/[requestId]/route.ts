@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
 import { DECIDE_ROLES, APPROVAL_EFFECT } from '@/lib/permit-change';
-import { nextPermitNumber } from '@/lib/permit';
 
 /**
  * PATCH /api/permits/[id]/change-requests/[requestId]
- * Approve or reject a change request. Approving drives the DataPermit status change
- * and issues a new permit version (D6.4 R9.3.6); rejecting leaves the permit unchanged.
+ * Approve or reject a change request. Approving issues a NEW permit version that
+ * supersedes its predecessor (D6.4 §9.3 / R9.3.6): the old row is marked
+ * isCurrent=false and a new row is created with version+1, linked via
+ * previousPermitId. Rejecting leaves the permit unchanged.
  * body: { decision: 'APPROVED' | 'REJECTED', userId, comment?, newValidUntil? }
  */
 export async function PATCH(
@@ -28,13 +29,18 @@ export async function PATCH(
 
     const request = await prisma.permitChangeRequest.findUnique({
       where: { id: requestId },
-      include: { permit: true },
+      include: { permit: { include: { authorizedPersons: true, speProvisioning: true } } },
     });
     if (!request || request.permitId !== id) {
       return NextResponse.json({ error: 'Change request not found' }, { status: 404 });
     }
     if (request.status !== 'REQUESTED') {
       return NextResponse.json({ error: 'This request has already been decided' }, { status: 422 });
+    }
+
+    const permit = request.permit;
+    if (!permit.isCurrent) {
+      return NextResponse.json({ error: 'This permit version has been superseded' }, { status: 422 });
     }
 
     const now = new Date();
@@ -47,29 +53,63 @@ export async function PATCH(
       return NextResponse.json(updated);
     }
 
-    // APPROVED — drive the permit status change, issue a new version, log it.
+    // APPROVED — supersede the current version with a new one (D6.4 §9.3).
     const effect = APPROVAL_EFFECT[request.type];
-    const permit = request.permit;
     const newValidUntil =
       request.type === 'RENEWAL' && body.newValidUntil ? new Date(body.newValidUntil) : undefined;
     if (request.type === 'RENEWAL' && !newValidUntil) {
       return NextResponse.json({ error: 'A new validUntil date is required to approve a renewal' }, { status: 400 });
     }
 
-    const permitUpdates: Record<string, unknown> = {
-      status: effect.to,
-      permitNumber: effect.newVersion ? nextPermitNumber(permit.permitNumber) : permit.permitNumber,
-      previousPermitId: effect.newVersion ? permit.id : permit.previousPermitId,
-    };
-    if (newValidUntil) permitUpdates.validUntil = newValidUntil;
-    if (request.type === 'REVOCATION_APPEAL') {
-      // reinstated — clear the revocation markers
-      permitUpdates.revocationReason = null;
-      permitUpdates.revocationAt = null;
-    }
+    const newPermitId = await prisma.$transaction(async (tx) => {
+      // 1. Retire the current version.
+      await tx.dataPermit.update({ where: { id: permit.id }, data: { isCurrent: false } });
 
-    const [updatedRequest] = await prisma.$transaction([
-      prisma.permitChangeRequest.update({
+      // 2. Create the new version, copying permit content forward. Revocation
+      //    markers are intentionally not carried over (a reinstated permit is clean).
+      const newPermit = await tx.dataPermit.create({
+        data: {
+          permitNumber: permit.permitNumber, // stable base id
+          version: permit.version + 1,
+          isCurrent: true,
+          applicationId: permit.applicationId,
+          status: effect.to,
+          previousPermitId: permit.id,
+          validFrom: permit.validFrom,
+          validUntil: newValidUntil ?? permit.validUntil,
+          currency: permit.currency,
+          permitProcessingFee: permit.permitProcessingFee,
+          dataPreparationFee: permit.dataPreparationFee,
+          speSetupFee: permit.speSetupFee,
+          speUsageFee: permit.speUsageFee,
+          additionalServicesFee: permit.additionalServicesFee,
+          dataHolderFee: permit.dataHolderFee,
+          paymentTerms: permit.paymentTerms,
+        },
+      });
+
+      // 3. Carry the authorised-persons snapshot forward to the new version.
+      if (permit.authorizedPersons.length > 0) {
+        await tx.authorizedPerson.createMany({
+          data: permit.authorizedPersons.map((p) => ({
+            permitId: newPermit.id,
+            name: p.name,
+            affiliation: p.affiliation,
+            email: p.email,
+          })),
+        });
+      }
+
+      // 4. Re-point the SPE provisioning order (one environment spans the lifecycle).
+      if (permit.speProvisioning) {
+        await tx.speProvisioningOrder.update({
+          where: { permitId: permit.id },
+          data: { permitId: newPermit.id },
+        });
+      }
+
+      // 5. Approve the request (stays on the version it was raised against).
+      await tx.permitChangeRequest.update({
         where: { id: requestId },
         data: {
           status: 'APPROVED',
@@ -78,20 +118,24 @@ export async function PATCH(
           decisionComment: body.comment ?? null,
           newValidUntil: newValidUntil ?? null,
         },
-      }),
-      prisma.dataPermit.update({ where: { id }, data: permitUpdates }),
-      prisma.dataPermitLog.create({
+      });
+
+      // 6. Log the transition on the new version.
+      await tx.dataPermitLog.create({
         data: {
-          permitId: id,
+          permitId: newPermit.id,
           userId: auth.user.id,
           fromStatus: permit.status,
           toStatus: effect.to,
           action: `${request.type} approved`,
           comment: body.comment ?? null,
         },
-      }),
-    ]);
-    return NextResponse.json(updatedRequest);
+      });
+
+      return newPermit.id;
+    });
+
+    return NextResponse.json({ ok: true, currentPermitId: newPermitId });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Failed to decide change request';
     return NextResponse.json({ error: message }, { status: 500 });

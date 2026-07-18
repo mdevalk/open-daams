@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { prisma } from '@/lib/db';
-import { PERMIT_STATUS_LABELS, PERMIT_STATUS_COLORS } from '@/lib/permit';
+import { PERMIT_STATUS_LABELS, PERMIT_STATUS_COLORS, formatPermitId } from '@/lib/permit';
 import { DataPermitStatus } from '@prisma/client';
 import { formatDate } from '@/lib/utils';
 
@@ -18,7 +18,9 @@ export default async function PermitsPage({
   const t = await getTranslations({ locale, namespace: 'permits' });
 
   const permits = await prisma.dataPermit.findMany({
-    where: status ? { status: status as DataPermitStatus } : undefined,
+    // Only the current version of each application's permit chain (D6.4 §9.3);
+    // superseded versions stay in the DB for audit but not in the list.
+    where: { isCurrent: true, ...(status ? { status: status as DataPermitStatus } : {}) },
     include: {
       application: {
         select: {
@@ -34,6 +36,7 @@ export default async function PermitsPage({
 
   const counts = await prisma.dataPermit.groupBy({
     by: ['status'],
+    where: { isCurrent: true },
     _count: true,
   });
 
@@ -92,7 +95,7 @@ export default async function PermitsPage({
             >
               <div className="flex items-start justify-between gap-4 mb-3">
                 <div>
-                  <span className="font-mono text-sm font-bold text-gray-900">{permit.permitNumber}</span>
+                  <span className="font-mono text-sm font-bold text-gray-900">{formatPermitId(permit.permitNumber, permit.version)}</span>
                   {permit.application && (
                     <p className="text-xs text-gray-500 mt-0.5">
                       {permit.application.referenceNumber} — {permit.application.title}
