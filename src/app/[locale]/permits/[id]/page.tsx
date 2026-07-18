@@ -9,9 +9,35 @@ import { InvoicePanel } from '@/components/InvoicePanel';
 import { SpeProvisioningPanel } from '@/components/SpeProvisioningPanel';
 import { PermitChangeRequestPanel } from '@/components/PermitChangeRequestPanel';
 import { PERMIT_STATUS_LABELS, PERMIT_STATUS_COLORS, formatPermitId } from '@/lib/permit';
-import { formatDate, formatDateTime, serializePrisma } from '@/lib/utils';
+import { formatDate, formatDateTime, purposeLabel, serializePrisma } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
+
+const ETHICAL_STATUS_NL: Record<string, string> = {
+  PENDING: 'In afwachting',
+  APPROVED: 'Goedgekeurd',
+  REJECTED: 'Afgewezen',
+  NOT_REQUIRED: 'Niet vereist',
+};
+
+// A dl row that renders nothing when the value is empty (mirrors the PDF, which
+// only prints fields that carry data).
+function Field({ label, value, wide }: { label: string; value: React.ReactNode; wide?: boolean }) {
+  if (value === null || value === undefined || value === '') return null;
+  return (
+    <div className={wide ? 'col-span-2' : undefined}>
+      <dt className="text-gray-500">{label}</dt>
+      <dd className="font-medium whitespace-pre-wrap break-words">{value}</dd>
+    </div>
+  );
+}
+
+// Retention deadline: data deleted ≤ 6 months after the permit expires (Art. 68(12)).
+function addMonths(date: Date, months: number): Date {
+  const d = new Date(date);
+  d.setMonth(d.getMonth() + months);
+  return d;
+}
 
 export default async function PermitDetailPage({
   params,
@@ -33,6 +59,28 @@ export default async function PermitDetailPage({
             type: true,
             status: true,
             decisionOutcome: true,
+            decisionSummary: true,
+            projectDescription: true,
+            purposeCategory: true,
+            legalBasis: true,
+            requestedDatasets: true,
+            requestedVariables: true,
+            studyPopulation: true,
+            inclusionCriteria: true,
+            exclusionCriteria: true,
+            dataStartDate: true,
+            dataEndDate: true,
+            dataProcessingCountry: true,
+            isCrossBorder: true,
+            usesOptOutException: true,
+            optOutExceptionJustification: true,
+            speName: true,
+            speTechnicalRequirements: true,
+            ethicalReviewRequired: true,
+            ethicalReviewStatus: true,
+            ethicalReviewBody: true,
+            ethicalReviewReference: true,
+            ethicalReviewDate: true,
             applicant: { select: { name: true, organisation: true, email: true } },
           },
         },
@@ -97,6 +145,12 @@ export default async function PermitDetailPage({
     dataPermit: permit,
   };
 
+  const app = permit.application;
+  const isDataRequest = app?.type === 'DATA_REQUEST';
+  const retentionDeadline = permit.validUntil ? addMonths(new Date(permit.validUntil), 6) : null;
+  const showEthical =
+    app?.ethicalReviewRequired && app.ethicalReviewStatus && app.ethicalReviewStatus !== 'NOT_REQUIRED';
+
   return (
     <div className="space-y-6">
       <div className="text-sm text-gray-500">
@@ -151,6 +205,72 @@ export default async function PermitDetailPage({
             <PermitCard permit={permit} locale={locale} />
           </section>
 
+          {app?.applicant && (
+            <section className="rounded-xl border border-gray-200 bg-white p-5">
+              <h2 className="font-semibold text-gray-900 mb-4">{t('applicantTitle')} (§2)</h2>
+              <dl className="grid grid-cols-2 gap-4 text-sm">
+                <Field label={t('name')} value={app.applicant.name} />
+                <Field label={t('organisation')} value={app.applicant.organisation} />
+                <Field label={t('email')} value={app.applicant.email} />
+                <Field
+                  label={t('applicationType')}
+                  value={isDataRequest ? 'Dataverzoek (Art. 69)' : 'Data-toegangsaanvraag (Art. 67)'}
+                />
+              </dl>
+            </section>
+          )}
+
+          <section className="rounded-xl border border-gray-200 bg-white p-5">
+            <h2 className="font-semibold text-gray-900 mb-4">Onderwerp (§4)</h2>
+            <dl className="grid grid-cols-2 gap-4 text-sm">
+              <Field label="Projecttitel" value={app?.title} wide />
+              <Field label="Projectomschrijving" value={app?.projectDescription} wide />
+            </dl>
+          </section>
+
+          <section className="rounded-xl border border-gray-200 bg-white p-5">
+            <h2 className="font-semibold text-gray-900 mb-4">Reikwijdte & doel (§6.2–6.4)</h2>
+            <dl className="grid grid-cols-2 gap-4 text-sm">
+              <Field label="Doel van gebruik" value={app?.purposeCategory ? purposeLabel(app.purposeCategory) : null} wide />
+              <Field label="Rechtsgrondslag" value={app?.legalBasis} wide />
+              <Field label="Datasets" value={app?.requestedDatasets?.length ? app.requestedDatasets.join(', ') : null} wide />
+              <Field label="Gevraagde variabelen" value={app?.requestedVariables} wide />
+              <Field label="Studiepopulatie" value={app?.studyPopulation} wide />
+              <Field label="Inclusiecriteria" value={app?.inclusionCriteria} />
+              <Field label="Exclusiecriteria" value={app?.exclusionCriteria} />
+              <Field label="Land van gegevensverwerking" value={app?.dataProcessingCountry} />
+              {showEthical && (
+                <>
+                  <Field label="Ethische toetsing" value={ETHICAL_STATUS_NL[app?.ethicalReviewStatus ?? ''] ?? app?.ethicalReviewStatus} />
+                  <Field label="Toetsingscommissie" value={app?.ethicalReviewBody} />
+                  <Field label="Referentie ethische toetsing" value={app?.ethicalReviewReference} />
+                  <Field label="Datum ethische toetsing" value={app?.ethicalReviewDate ? formatDate(app.ethicalReviewDate) : null} />
+                </>
+              )}
+            </dl>
+          </section>
+
+          <section className="rounded-xl border border-gray-200 bg-white p-5">
+            <h2 className="font-semibold text-gray-900 mb-4">Besluit & voorwaarden (§5, §6.6)</h2>
+            <dl className="grid grid-cols-2 gap-4 text-sm">
+              <Field label="Besluit / motivering" value={app?.decisionSummary} wide />
+              <Field label="Toegangsperiode (SPE)" value={`${formatDate(permit.validFrom)} — ${formatDate(permit.validUntil)}`} />
+              <Field label="Bewaartermijn (Art. 68(12))" value={retentionDeadline ? `Verwijdering uiterlijk ${formatDate(retentionDeadline)}` : null} />
+              <Field
+                label="Periode brongegevens"
+                value={app?.dataStartDate || app?.dataEndDate ? `${formatDate(app?.dataStartDate ?? null)} — ${formatDate(app?.dataEndDate ?? null)}` : null}
+              />
+              <Field label="Grensoverschrijdend (Art. 76)" value={app?.isCrossBorder ? `Ja — ${app.dataProcessingCountry ?? '—'}` : null} />
+              {!isDataRequest && <Field label="Toegewezen SPE" value={app?.speName} />}
+              {!isDataRequest && <Field label="Technische kenmerken SPE" value={app?.speTechnicalRequirements} wide />}
+              <Field label="Opt-out uitzondering (Art. 71(4))" value={app?.usesOptOutException ? 'Van toepassing' : null} />
+              <Field label="Onderbouwing opt-out" value={app?.usesOptOutException ? app.optOutExceptionJustification : null} wide />
+            </dl>
+            <p className="text-xs text-gray-400 italic mt-3">
+              Handelsgeheimen / intellectuele-eigendomsrechten (Art. 52): nog niet als gegevensveld geregistreerd.
+            </p>
+          </section>
+
           {versions.length > 1 && (
             <section className="rounded-xl border border-gray-200 bg-white p-5">
               <h2 className="font-semibold text-gray-900 mb-4">Versies (D6.4 §9.3)</h2>
@@ -172,21 +292,6 @@ export default async function PermitDetailPage({
                   </li>
                 ))}
               </ol>
-            </section>
-          )}
-
-          {permit.application?.applicant && (
-            <section className="rounded-xl border border-gray-200 bg-white p-5">
-              <h2 className="font-semibold text-gray-900 mb-4">{t('applicantTitle')}</h2>
-              <dl className="grid grid-cols-2 gap-4 text-sm">
-                <div><dt className="text-gray-500">{t('name')}</dt><dd className="font-medium">{permit.application.applicant.name}</dd></div>
-                <div><dt className="text-gray-500">{t('organisation')}</dt><dd className="font-medium">{permit.application.applicant.organisation}</dd></div>
-                <div><dt className="text-gray-500">{t('email')}</dt><dd className="font-medium">{permit.application.applicant.email}</dd></div>
-                <div>
-                  <dt className="text-gray-500">{t('applicationType')}</dt>
-                  <dd className="font-medium">{permit.application.type === 'DATA_ACCESS_APPLICATION' ? 'Data-toegangsaanvraag (Art. 67)' : 'Dataverzoek (Art. 69)'}</dd>
-                </div>
-              </dl>
             </section>
           )}
 
