@@ -17,53 +17,28 @@ export type PermitTransition = {
  * active (GRANTED|AMENDED|RENEWED) → REVOKED   (enforcement)
  * active (GRANTED|AMENDED|RENEWED) → EXPIRED   (validity date passed)
  */
+// label/description are i18n keys in the `permitTransitions` namespace.
+const REVOKE: PermitTransition = {
+  to: 'REVOKED',
+  label: 'revoke',
+  requiredRole: ['DECISION_MAKER', 'ADMIN'],
+  description: 'revokeDesc',
+};
+const EXPIRE: PermitTransition = {
+  to: 'EXPIRED',
+  label: 'expire',
+  requiredRole: ['CASE_HANDLER', 'ADMIN'],
+  description: 'expireDesc',
+};
+
 export const PERMIT_TRANSITIONS: Record<DataPermitStatus, PermitTransition[]> = {
-  GRANTED: [
-    {
-      to: 'REVOKED',
-      label: 'Revoke permit',
-      requiredRole: ['DECISION_MAKER', 'ADMIN'],
-      description: 'Revoke the permit with documented justification (D6.4 §9.3).',
-    },
-    {
-      to: 'EXPIRED',
-      label: 'Mark as expired',
-      requiredRole: ['CASE_HANDLER', 'ADMIN'],
-      description: 'Permit has passed its validity date (D6.4 §9.3).',
-    },
-  ],
-  AMENDED: [
-    {
-      to: 'REVOKED',
-      label: 'Revoke permit',
-      requiredRole: ['DECISION_MAKER', 'ADMIN'],
-      description: 'Revoke the amended permit with documented justification.',
-    },
-    {
-      to: 'EXPIRED',
-      label: 'Mark as expired',
-      requiredRole: ['CASE_HANDLER', 'ADMIN'],
-      description: 'Permit has passed its validity date.',
-    },
-  ],
+  GRANTED: [REVOKE, EXPIRE],
+  AMENDED: [REVOKE, EXPIRE],
   // D6.4 §9.3: a permit that has been extended MUST NOT be extended a second time
-  RENEWED: [
-    {
-      to: 'REVOKED',
-      label: 'Revoke permit',
-      requiredRole: ['DECISION_MAKER', 'ADMIN'],
-      description: 'Revoke the renewed permit with documented justification.',
-    },
-    {
-      to: 'EXPIRED',
-      label: 'Mark as expired',
-      requiredRole: ['CASE_HANDLER', 'ADMIN'],
-      description: 'Permit has passed its validity date.',
-    },
-  ],
+  RENEWED: [REVOKE, EXPIRE],
   // Terminal states
-  REVOKED:  [],
-  EXPIRED:  [],
+  REVOKED: [],
+  EXPIRED: [],
 };
 
 export const PERMIT_STATUS_LABELS: Record<DataPermitStatus, string> = {

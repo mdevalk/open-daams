@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { prisma } from '@/lib/db';
-import { PERMIT_STATUS_LABELS, PERMIT_STATUS_COLORS, formatPermitId } from '@/lib/permit';
+import { PERMIT_STATUS_COLORS, formatPermitId } from '@/lib/permit';
 import { DataPermitStatus } from '@prisma/client';
 import { formatDate } from '@/lib/utils';
 
@@ -16,6 +16,7 @@ export default async function PermitsPage({
   const { locale } = await params;
   const { status } = await searchParams;
   const t = await getTranslations({ locale, namespace: 'permits' });
+  const tps = await getTranslations({ locale, namespace: 'permitStatus' });
 
   const permits = await prisma.dataPermit.findMany({
     // Only the current version of each application's permit chain (D6.4 §9.3);
@@ -74,7 +75,7 @@ export default async function PermitsPage({
             }`}
           >
             <p className="text-2xl font-bold text-gray-900">{countMap[s] ?? 0}</p>
-            <p className="text-xs text-gray-600 mt-1">{PERMIT_STATUS_LABELS[s]}</p>
+            <p className="text-xs text-gray-600 mt-1">{tps(s)}</p>
           </a>
         ))}
       </div>
@@ -105,7 +106,7 @@ export default async function PermitsPage({
                 <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold ${
                   PERMIT_STATUS_COLORS[permit.status]
                 }`}>
-                  {PERMIT_STATUS_LABELS[permit.status]}
+                  {tps(permit.status)}
                 </span>
               </div>
               <div className="grid grid-cols-3 gap-4 text-sm">

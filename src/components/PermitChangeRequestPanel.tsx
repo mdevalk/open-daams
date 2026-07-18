@@ -2,13 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { DataPermitStatus, PermitChangeType, PermitChangeStatus } from '@prisma/client';
-import {
-  CHANGE_TYPE_LABELS,
-  CHANGE_STATUS_LABELS,
-  CHANGE_STATUS_COLORS,
-  requestableTypes,
-} from '@/lib/permit-change';
+import { CHANGE_STATUS_COLORS, requestableTypes } from '@/lib/permit-change';
 import { formatDate, readErrorMessage } from '@/lib/utils';
 
 type ChangeRequest = {
@@ -46,6 +42,9 @@ export function PermitChangeRequestPanel({
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
+  const t = useTranslations('permitChanges');
+  const tt = useTranslations('changeType');
+  const tstat = useTranslations('changeStatus');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -114,27 +113,27 @@ export function PermitChangeRequestPanel({
 
   return (
     <div className="rounded border border-gray-200 bg-white p-4 space-y-3">
-      <h3 className="text-sm font-semibold text-gray-900">Change requests (D6.4 §9.3/§9.4)</h3>
+      <h3 className="text-sm font-semibold text-gray-900">{t('title')}</h3>
 
       {requests.length === 0 && (
-        <p className="text-xs text-gray-500">No amendment, renewal or appeal requests yet.</p>
+        <p className="text-xs text-gray-500">{t('empty')}</p>
       )}
 
       {requests.map((r) => (
         <div key={r.id} className="rounded border border-gray-200 p-3 text-sm">
           <div className="flex items-center justify-between">
-            <span className="font-medium">{CHANGE_TYPE_LABELS[r.type]}</span>
+            <span className="font-medium">{tt(r.type)}</span>
             <span className={`text-xs font-medium px-2 py-0.5 rounded ${CHANGE_STATUS_COLORS[r.status]}`}>
-              {CHANGE_STATUS_LABELS[r.status]}
+              {tstat(r.status)}
             </span>
           </div>
           <p className="text-xs text-gray-600 mt-1 italic">{r.justification}</p>
           <p className="text-xs text-gray-400 mt-1">
-            Requested by {r.requestedBy.name} · {formatDate(r.requestedAt)}
+            {t('requestedBy')} {r.requestedBy.name} · {formatDate(r.requestedAt)}
           </p>
           {r.status !== 'REQUESTED' && (
             <p className="text-xs text-gray-400">
-              {CHANGE_STATUS_LABELS[r.status]} by {r.decidedBy?.name ?? '—'} · {formatDate(r.decidedAt)}
+              {tstat(r.status)} · {r.decidedBy?.name ?? '—'} · {formatDate(r.decidedAt)}
               {r.decisionComment ? ` — ${r.decisionComment}` : ''}
             </p>
           )}
@@ -145,7 +144,7 @@ export function PermitChangeRequestPanel({
                 <div className="space-y-2">
                   {r.type === 'RENEWAL' && (
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">New expiry date</label>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">{t('newExpiry')}</label>
                       <input type="date" value={newValidUntil} onChange={(e) => setNewValidUntil(e.target.value)} className={inputCls} />
                     </div>
                   )}
@@ -153,7 +152,7 @@ export function PermitChangeRequestPanel({
                     rows={2}
                     value={decisionComment}
                     onChange={(e) => setDecisionComment(e.target.value)}
-                    placeholder="Decision note (optional)"
+                    placeholder={t('decisionNotePlaceholder')}
                     className={inputCls}
                   />
                   <div className="flex gap-2">
@@ -162,21 +161,21 @@ export function PermitChangeRequestPanel({
                       onClick={() => decide(r, 'APPROVED')}
                       className="flex-1 rounded px-3 py-1.5 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50"
                     >
-                      Approve
+                      {t('approve')}
                     </button>
                     <button
                       disabled={loading}
                       onClick={() => decide(r, 'REJECTED')}
                       className="flex-1 rounded px-3 py-1.5 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50"
                     >
-                      Reject
+                      {t('reject')}
                     </button>
                     <button
                       disabled={loading}
                       onClick={() => setDecideFor(null)}
                       className="rounded px-3 py-1.5 text-sm border border-gray-300 hover:bg-gray-50"
                     >
-                      Cancel
+                      {t('cancel')}
                     </button>
                   </div>
                 </div>
@@ -189,7 +188,7 @@ export function PermitChangeRequestPanel({
                   }}
                   className="text-xs text-[#01689b] hover:underline"
                 >
-                  Decide →
+                  {t('decide')}
                 </button>
               )}
             </div>
@@ -201,18 +200,18 @@ export function PermitChangeRequestPanel({
 
       {canRequest && available.length > 0 && (
         <div className="border-t border-gray-200 pt-3 space-y-2">
-          <p className="text-xs font-semibold text-gray-900">Document a new request</p>
+          <p className="text-xs font-semibold text-gray-900">{t('documentNew')}</p>
           <select value={newType} onChange={(e) => setNewType(e.target.value as PermitChangeType)} className={inputCls}>
-            <option value="">Select type…</option>
-            {available.map((t) => (
-              <option key={t} value={t}>{CHANGE_TYPE_LABELS[t]}</option>
+            <option value="">{t('selectType')}</option>
+            {available.map((ct) => (
+              <option key={ct} value={ct}>{tt(ct)}</option>
             ))}
           </select>
           <textarea
             rows={2}
             value={justification}
             onChange={(e) => setJustification(e.target.value)}
-            placeholder="Justification provided by the data user"
+            placeholder={t('justificationPlaceholder')}
             className={inputCls}
           />
           <button
@@ -220,7 +219,7 @@ export function PermitChangeRequestPanel({
             onClick={submitRequest}
             className="w-full rounded px-3 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors"
           >
-            {loading ? 'Saving…' : 'Submit request'}
+            {loading ? t('saving') : t('submit')}
           </button>
         </div>
       )}

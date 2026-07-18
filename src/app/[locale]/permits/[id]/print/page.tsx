@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { PrintTrigger } from '@/components/PrintTrigger';
-import { PERMIT_STATUS_LABELS, formatPermitId } from '@/lib/permit';
+import { getTranslations } from 'next-intl/server';
+import { formatPermitId } from '@/lib/permit';
 import { APP_NAME } from '@/lib/branding';
 
 export const dynamic = 'force-dynamic';
@@ -16,7 +17,8 @@ export default async function PermitPrintPage({
 }: {
   params: Promise<{ id: string; locale: string }>;
 }) {
-  const { id } = await params;
+  const { id, locale } = await params;
+  const tps = await getTranslations({ locale, namespace: 'permitStatus' });
 
   const permit = await prisma.dataPermit.findUnique({
     where: { id },
@@ -109,7 +111,7 @@ export default async function PermitPrintPage({
             <div className="label">Vergunningsnummer</div>
             <div className="number">{formatPermitId(permit.permitNumber, permit.version)}</div>
             <div className={`status-badge${permit.status === 'REVOKED' ? ' revoked' : ''}`}>
-              {PERMIT_STATUS_LABELS[permit.status]}
+              {tps(permit.status)}
             </div>
           </div>
 

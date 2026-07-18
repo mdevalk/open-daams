@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import { Application, DataPermit, FeeEstimate, User } from '@prisma/client';
-import { PERMIT_TRANSITIONS, PERMIT_STATUS_LABELS, PERMIT_STATUS_COLORS } from '@/lib/permit';
+import { useTranslations } from 'next-intl';
+import { PERMIT_TRANSITIONS } from '@/lib/permit';
 import { PermitCard } from './PermitCard';
 import { useRouter } from 'next/navigation';
-import { formatDate, readErrorMessage } from '@/lib/utils';
+import { readErrorMessage } from '@/lib/utils';
 
 type Props = {
   application: Pick<Application, 'id' | 'status' | 'decisionOutcome'> & { dataPermit: DataPermit | null; feeEstimate?: FeeEstimate | null };
@@ -14,6 +15,9 @@ type Props = {
 
 export function PermitPanel({ application, currentUser }: Props) {
   const router = useRouter();
+  const tp = useTranslations('permitPanel');
+  const tps = useTranslations('permitStatus');
+  const ttr = useTranslations('permitTransitions');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -64,10 +68,10 @@ export function PermitPanel({ application, currentUser }: Props) {
           paymentTerms,
         }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, 'Uitgifte mislukt'));
+      if (!res.ok) throw new Error(await readErrorMessage(res, 'Failed to issue permit'));
       router.refresh();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Onbekende fout');
+      setError(e instanceof Error ? e.message : 'Unexpected error');
     } finally {
       setLoading(false);
     }
@@ -87,13 +91,13 @@ export function PermitPanel({ application, currentUser }: Props) {
           comment: toStatus === 'REVOKED' ? revokeReason : comment,
         }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, 'Actie mislukt'));
+      if (!res.ok) throw new Error(await readErrorMessage(res, 'Failed to update permit'));
       setSelectedTransition(null);
       setComment('');
       setRevokeReason('');
       router.refresh();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Onbekende fout');
+      setError(e instanceof Error ? e.message : 'Unexpected error');
     } finally {
       setLoading(false);
     }
@@ -104,14 +108,12 @@ export function PermitPanel({ application, currentUser }: Props) {
     const canIssue = ['DECISION_MAKER', 'ADMIN'].includes(currentUser.role);
     return (
       <div className="rounded border border-emerald-200 bg-emerald-50 p-5">
-        <h2 className="font-semibold text-emerald-900 mb-1">Vergunning uitschrijven</h2>
-        <p className="text-xs text-emerald-700 mb-4">
-          Positief besluit genomen. Schrijf een EHDS-dataverwerkingsvergunning uit (D6.4 §9).
-        </p>
+        <h2 className="font-semibold text-emerald-900 mb-1">{tp('issueTitle')}</h2>
+        <p className="text-xs text-emerald-700 mb-4">{tp('issueSubtitle')}</p>
         {canIssue ? (
           <div className="space-y-3">
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Geldig vanaf</label>
+              <label className="block text-xs font-medium text-gray-700 mb-1">{tp('validFrom')}</label>
               <input
                 type="date"
                 value={validFrom}
@@ -120,7 +122,7 @@ export function PermitPanel({ application, currentUser }: Props) {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Geldig tot</label>
+              <label className="block text-xs font-medium text-gray-700 mb-1">{tp('validUntil')}</label>
               <input
                 type="date"
                 value={validUntil}
@@ -130,43 +132,43 @@ export function PermitPanel({ application, currentUser }: Props) {
             </div>
 
             <div className="border-t border-emerald-200 pt-3 space-y-2">
-              <p className="text-xs font-semibold text-emerald-900">Kosten (Annex 9 §7)</p>
+              <p className="text-xs font-semibold text-emerald-900">{tp('feesTitle')}</p>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-xs text-gray-700 mb-1">Behandelkosten</label>
+                  <label className="block text-xs text-gray-700 mb-1">{tp('feeProcessing')}</label>
                   <input type="number" step="0.01" value={permitProcessingFee} onChange={e => setPermitProcessingFee(e.target.value)}
                     className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-700 mb-1">Gegevensvoorbereiding</label>
+                  <label className="block text-xs text-gray-700 mb-1">{tp('feePreparation')}</label>
                   <input type="number" step="0.01" value={dataPreparationFee} onChange={e => setDataPreparationFee(e.target.value)}
                     className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-700 mb-1">SPE opstartkosten</label>
+                  <label className="block text-xs text-gray-700 mb-1">{tp('feeSpeSetup')}</label>
                   <input type="number" step="0.01" value={speSetupFee} onChange={e => setSpeSetupFee(e.target.value)}
                     className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-700 mb-1">SPE gebruikskosten</label>
+                  <label className="block text-xs text-gray-700 mb-1">{tp('feeSpeUsage')}</label>
                   <input type="number" step="0.01" value={speUsageFee} onChange={e => setSpeUsageFee(e.target.value)}
                     className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-700 mb-1">Aanvullende diensten</label>
+                  <label className="block text-xs text-gray-700 mb-1">{tp('feeAdditional')}</label>
                   <input type="number" step="0.01" value={additionalServicesFee} onChange={e => setAdditionalServicesFee(e.target.value)}
                     className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-700 mb-1">Kosten gegevenshouder(s)</label>
+                  <label className="block text-xs text-gray-700 mb-1">{tp('feeDataHolder')}</label>
                   <input type="number" step="0.01" value={dataHolderFee} onChange={e => setDataHolderFee(e.target.value)}
                     className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
                 </div>
               </div>
               <div>
-                <label className="block text-xs text-gray-700 mb-1">Betalingsvoorwaarden</label>
+                <label className="block text-xs text-gray-700 mb-1">{tp('paymentTerms')}</label>
                 <textarea rows={2} value={paymentTerms} onChange={e => setPaymentTerms(e.target.value)}
-                  placeholder="Betalingstermijn, factuurproces, kortingen..."
+                  placeholder={tp('paymentTermsPlaceholder')}
                   className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
               </div>
             </div>
@@ -177,11 +179,11 @@ export function PermitPanel({ application, currentUser }: Props) {
               onClick={issuePermit}
               className="w-full rounded px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 transition-colors"
             >
-              {loading ? 'Bezig...' : 'Vergunning uitschrijven'}
+              {loading ? tp('loading') : tp('issueButton')}
             </button>
           </div>
         ) : (
-          <p className="text-xs text-gray-500">Alleen DECISION_MAKER of ADMIN kan een vergunning uitschrijven.</p>
+          <p className="text-xs text-gray-500">{tp('noPermission')}</p>
         )}
       </div>
     );
@@ -189,19 +191,19 @@ export function PermitPanel({ application, currentUser }: Props) {
 
   // --- Permit exists: show card + lifecycle actions ---
   const availableTransitions = (PERMIT_TRANSITIONS[permit.status] ?? []).filter(
-    t => t.requiredRole.includes(currentUser.role as 'DECISION_MAKER' | 'ADMIN' | 'CASE_HANDLER')
+    tr => tr.requiredRole.includes(currentUser.role as 'DECISION_MAKER' | 'ADMIN' | 'CASE_HANDLER')
   );
 
   return (
     <div className="space-y-4">
       <div className="rounded border border-gray-200 bg-white p-4">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-semibold text-gray-900">Vergunning</h2>
+          <h2 className="font-semibold text-gray-900">{tp('title')}</h2>
           <a
             href={`/permits/${permit.id}`}
             className="text-xs text-[#01689b] hover:underline"
           >
-            Bekijk details →
+            {tp('viewDetails')}
           </a>
         </div>
         <PermitCard permit={permit} compact />
@@ -209,11 +211,11 @@ export function PermitPanel({ application, currentUser }: Props) {
 
       {availableTransitions.length > 0 && (
         <div className="rounded border border-gray-200 bg-white p-4">
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">Vergunningsacties</h3>
+          <h3 className="text-sm font-semibold text-gray-900 mb-3">{tp('actionsTitle')}</h3>
           <div className="space-y-2">
-            {availableTransitions.map(t => {
-              const isSelected = selectedTransition === t.to;
-              const isDestructive = t.to === 'REVOKED';
+            {availableTransitions.map(tr => {
+              const isSelected = selectedTransition === tr.to;
+              const isDestructive = tr.to === 'REVOKED';
               const baseStyle = isDestructive
                 ? 'border-red-200 bg-red-50 text-red-800'
                 : 'border-gray-200 bg-gray-50 text-gray-800';
@@ -223,14 +225,14 @@ export function PermitPanel({ application, currentUser }: Props) {
 
               return (
                 <button
-                  key={t.to}
-                  onClick={() => setSelectedTransition(isSelected ? null : t.to)}
+                  key={tr.to}
+                  onClick={() => setSelectedTransition(isSelected ? null : tr.to)}
                   className={`w-full text-left rounded border px-3 py-2 text-sm transition-colors ${
                     isSelected ? selectedStyle : baseStyle
                   }`}
                 >
-                  <p className="font-medium">{t.label}</p>
-                  <p className="text-xs opacity-70 mt-0.5">{t.description}</p>
+                  <p className="font-medium">{ttr(tr.label)}</p>
+                  <p className="text-xs opacity-70 mt-0.5">{ttr(tr.description)}</p>
                 </button>
               );
             })}
@@ -240,7 +242,7 @@ export function PermitPanel({ application, currentUser }: Props) {
             <div className="mt-3 space-y-2">
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                  {selectedTransition === 'REVOKED' ? 'Reden intrekking (verplicht)' : 'Toelichting'}
+                  {selectedTransition === 'REVOKED' ? tp('revocationReason') : tp('comment')}
                 </label>
                 <textarea
                   rows={2}
@@ -250,7 +252,7 @@ export function PermitPanel({ application, currentUser }: Props) {
                       ? setRevokeReason(e.target.value)
                       : setComment(e.target.value)
                   }
-                  placeholder={selectedTransition === 'REVOKED' ? 'Motiveer de intrekking...' : 'Optionele toelichting...'}
+                  placeholder={selectedTransition === 'REVOKED' ? tp('revocationPlaceholder') : tp('commentPlaceholder')}
                   className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
                 />
               </div>
@@ -267,10 +269,7 @@ export function PermitPanel({ application, currentUser }: Props) {
                     : 'bg-[#154273] hover:bg-[#01689b]'
                 }`}
               >
-                {loading ? 'Bezig...' : `Bevestig: ${
-                  PERMIT_STATUS_LABELS[selectedTransition as keyof typeof PERMIT_STATUS_LABELS] ??
-                  selectedTransition
-                }`}
+                {loading ? tp('loading') : `${tp('confirm')}: ${tps(selectedTransition)}`}
               </button>
             </div>
           )}

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { readErrorMessage, formatDate } from '@/lib/utils';
 
 type InvoiceLineItem = { description: string; amount: string };
@@ -46,6 +47,7 @@ export function InvoicePanel({
   hasFeesRecorded: boolean;
 }) {
   const router = useRouter();
+  const t = useTranslations('invoices');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -88,15 +90,15 @@ export function InvoicePanel({
   return (
     <div className="rounded border border-gray-200 bg-white p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="font-semibold text-gray-900 text-sm">Invoices (EHDS Art. 62)</h2>
+        <h2 className="font-semibold text-gray-900 text-sm">{t('panelTitle')}</h2>
         {canIssue && (
           <button
             disabled={loading || !hasFeesRecorded}
             onClick={issueInvoice}
-            title={hasFeesRecorded ? undefined : 'No fee amounts recorded on this permit yet'}
+            title={hasFeesRecorded ? undefined : t('issueDisabled')}
             className="text-xs text-[#01689b] hover:underline disabled:opacity-40 disabled:no-underline"
           >
-            + Issue invoice
+            {t('issue')}
           </button>
         )}
       </div>
@@ -104,7 +106,7 @@ export function InvoicePanel({
       {error && <p className="text-xs text-red-600">{error}</p>}
 
       {invoices.length === 0 ? (
-        <p className="text-xs text-gray-500">No invoices issued yet for this permit.</p>
+        <p className="text-xs text-gray-500">{t('empty')}</p>
       ) : (
         <ul className="space-y-3">
           {invoices.map((invoice) => {
@@ -118,7 +120,7 @@ export function InvoicePanel({
                       overdue ? 'bg-amber-100 text-amber-700' : STATUS_STYLES[invoice.status]
                     }`}
                   >
-                    {overdue ? 'OVERDUE' : invoice.status}
+                    {overdue ? t('overdue') : t(`status${invoice.status}`)}
                   </span>
                 </div>
 
@@ -131,15 +133,15 @@ export function InvoicePanel({
                   ))}
                 </ul>
                 <div className="flex justify-between text-sm font-semibold border-t border-gray-100 pt-1">
-                  <span>Total</span>
+                  <span>{t('total')}</span>
                   <span>{invoice.totalAmount} {invoice.currency}</span>
                 </div>
 
                 <p className="text-xs text-gray-400">
-                  Issued {formatDate(invoice.issuedAt)} · Due {formatDate(invoice.dueAt)}
-                  {invoice.paidAt && <> · Paid {formatDate(invoice.paidAt)}</>}
+                  {t('issuedOn')} {formatDate(invoice.issuedAt)} · {t('dueOn')} {formatDate(invoice.dueAt)}
+                  {invoice.paidAt && <> · {t('paidOn')} {formatDate(invoice.paidAt)}</>}
                 </p>
-                <p className="text-xs text-gray-400">Issued by {invoice.createdBy.name} ({invoice.createdBy.role})</p>
+                <p className="text-xs text-gray-400">{t('issuedBy')} {invoice.createdBy.name} ({invoice.createdBy.role})</p>
 
                 {canManage && invoice.status === 'ISSUED' && (
                   <div className="flex gap-3 pt-1">
@@ -148,14 +150,14 @@ export function InvoicePanel({
                       onClick={() => updateInvoice(invoice.id, 'mark_paid')}
                       className="text-xs text-emerald-700 hover:underline"
                     >
-                      Mark as paid
+                      {t('markPaid')}
                     </button>
                     <button
                       disabled={loading}
                       onClick={() => updateInvoice(invoice.id, 'cancel')}
                       className="text-xs text-red-600 hover:underline"
                     >
-                      Cancel
+                      {t('cancelInvoice')}
                     </button>
                   </div>
                 )}

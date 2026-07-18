@@ -8,7 +8,7 @@ import { AuthorizedPersonsPanel } from '@/components/AuthorizedPersonsPanel';
 import { InvoicePanel } from '@/components/InvoicePanel';
 import { SpeProvisioningPanel } from '@/components/SpeProvisioningPanel';
 import { PermitChangeRequestPanel } from '@/components/PermitChangeRequestPanel';
-import { PERMIT_STATUS_LABELS, PERMIT_STATUS_COLORS, formatPermitId } from '@/lib/permit';
+import { PERMIT_STATUS_COLORS, formatPermitId } from '@/lib/permit';
 import { formatDate, formatDateTime, purposeLabel, serializePrisma } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
@@ -40,6 +40,7 @@ export default async function PermitDetailPage({
   const { id, locale } = await params;
   const t = await getTranslations({ locale, namespace: 'permits' });
   const te = await getTranslations({ locale, namespace: 'ethicalReview' });
+  const tps = await getTranslations({ locale, namespace: 'permitStatus' });
 
   const [rawPermit, users] = await Promise.all([
     prisma.dataPermit.findUnique({
@@ -263,30 +264,6 @@ export default async function PermitDetailPage({
             <p className="text-xs text-gray-400 italic mt-3">{t('iprNote')}</p>
           </section>
 
-          {versions.length > 1 && (
-            <section className="rounded-xl border border-gray-200 bg-white p-5">
-              <h2 className="font-semibold text-gray-900 mb-4">{t('versionsTitle')} (D6.4 §9.3)</h2>
-              <ol className="space-y-2">
-                {versions.map((v) => (
-                  <li key={v.id} className="flex items-center gap-3 text-sm">
-                    {v.id === permit.id ? (
-                      <span className="font-mono font-medium w-32">{formatPermitId(v.permitNumber, v.version)}</span>
-                    ) : (
-                      <a href={`/${locale}/permits/${v.id}`} className="font-mono font-medium w-32 text-[#01689b] hover:underline">
-                        {formatPermitId(v.permitNumber, v.version)}
-                      </a>
-                    )}
-                    <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold ${PERMIT_STATUS_COLORS[v.status]}`}>
-                      {PERMIT_STATUS_LABELS[v.status]}
-                    </span>
-                    {v.isCurrent && <span className="text-xs font-medium text-emerald-700">{t('current')}</span>}
-                    {v.id === permit.id && <span className="text-xs text-gray-400 ml-auto">{t('viewingThisVersion')}</span>}
-                  </li>
-                ))}
-              </ol>
-            </section>
-          )}
-
           <section className="rounded-xl border border-gray-200 bg-white p-5">
             <h2 className="font-semibold text-gray-900 mb-4">{t('historyTitle')}</h2>
             {chainLogs.length === 0 ? (
@@ -301,7 +278,7 @@ export default async function PermitDetailPage({
                     </div>
                     <div className="pb-3">
                       <p className="font-medium text-gray-900">{log.action}</p>
-                      {log.fromStatus && <p className="text-xs text-gray-500">{PERMIT_STATUS_LABELS[log.fromStatus]} → {PERMIT_STATUS_LABELS[log.toStatus]}</p>}
+                      {log.fromStatus && <p className="text-xs text-gray-500">{tps(log.fromStatus)} → {tps(log.toStatus)}</p>}
                       {log.comment && <p className="text-xs text-gray-600 mt-1 italic">{log.comment}</p>}
                       <p className="text-xs text-gray-400 mt-1">{log.user.name} · {log.user.role} · {formatDateTime(log.createdAt)}</p>
                     </div>
@@ -313,6 +290,44 @@ export default async function PermitDetailPage({
         </div>
 
         <div className="space-y-4">
+          {versions.length > 1 && (
+            <div className="rounded border border-gray-200 bg-white p-4 space-y-2">
+              <h3 className="text-sm font-semibold text-gray-900">{t('versionsTitle')} (D6.4 §9.3)</h3>
+              <ol className="space-y-1.5">
+                {versions.map((v) => {
+                  const isViewed = v.id === permit.id;
+                  const inner = (
+                    <>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-mono text-xs font-semibold">{formatPermitId(v.permitNumber, v.version)}</span>
+                        {v.isCurrent && <span className="text-[10px] font-medium text-emerald-700">{t('current')}</span>}
+                      </div>
+                      <span className={`mt-0.5 inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold ${PERMIT_STATUS_COLORS[v.status]}`}>
+                        {tps(v.status)}
+                      </span>
+                    </>
+                  );
+                  return (
+                    <li key={v.id}>
+                      {isViewed ? (
+                        <div className="rounded border border-[#154273] bg-[#eef4fb] px-2 py-1.5">
+                          {inner}
+                          <p className="text-[10px] text-gray-500 mt-0.5">{t('viewingThisVersion')}</p>
+                        </div>
+                      ) : (
+                        <a
+                          href={`/${locale}/permits/${v.id}`}
+                          className="block rounded border border-gray-200 hover:border-[#01689b] px-2 py-1.5 transition-colors"
+                        >
+                          {inner}
+                        </a>
+                      )}
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          )}
           <PermitPanel application={fakeApplication} currentUser={currentUser} />
           <PermitChangeRequestPanel
             permitId={permit.id}

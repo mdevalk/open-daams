@@ -36,9 +36,21 @@
     "legalArticles": "Articles 67–69",
     "standards": "Références",
     "standardsList": [
-      { "ref": "TEHDAS2 D6.4", "title": "Spécifications techniques du DAAMS", "url": "https://tehdas.eu/wp-content/uploads/2026/06/d6.4-data-access-application-management-system-daams-technical-specification-for-health-data-access-bodies.pdf" },
-      { "ref": "TEHDAS2 D6.3", "title": "Lignes directrices pour les HDAB sur les procédures et formats", "url": "https://tehdas.eu/wp-content/uploads/2025/09/draft-guideline-for-health-data-access-bodies-on-the-procedures-and-formats-for-data-access.pdf" },
-      { "ref": "TEHDAS2 D6.2", "title": "Lignes directrices pour les utilisateurs de données", "url": "https://tehdas.eu/wp-content/uploads/2025/10/d6.2-guideline-for-data-users-on-good-application-and-access-practice.pdf" }
+      {
+        "ref": "TEHDAS2 D6.4",
+        "title": "Spécifications techniques du DAAMS",
+        "url": "https://tehdas.eu/wp-content/uploads/2026/06/d6.4-data-access-application-management-system-daams-technical-specification-for-health-data-access-bodies.pdf"
+      },
+      {
+        "ref": "TEHDAS2 D6.3",
+        "title": "Lignes directrices pour les HDAB sur les procédures et formats",
+        "url": "https://tehdas.eu/wp-content/uploads/2025/09/draft-guideline-for-health-data-access-bodies-on-the-procedures-and-formats-for-data-access.pdf"
+      },
+      {
+        "ref": "TEHDAS2 D6.2",
+        "title": "Lignes directrices pour les utilisateurs de données",
+        "url": "https://tehdas.eu/wp-content/uploads/2025/10/d6.2-guideline-for-data-users-on-good-application-and-access-practice.pdf"
+      }
     ],
     "openSource": "Ce projet est un logiciel libre communautaire (licence MIT), construit selon le {nlDesignSystem} avec les composants {rijkshuisstijl}.",
     "nlDesignSystem": "NL Design System",
@@ -168,7 +180,11 @@
     "optOut": "Exception de retrait (art. 71(4))",
     "optOutApplicable": "Applicable",
     "optOutJustification": "Justification du retrait",
-    "iprNote": "Secrets d'affaires / droits de propriété intellectuelle (art. 52) : pas encore enregistrés comme champ de données."
+    "iprNote": "Secrets d'affaires / droits de propriété intellectuelle (art. 52) : pas encore enregistrés comme champ de données.",
+    "version": "Version",
+    "successorOf": "Successeur de",
+    "applicationNumber": "Numéro de demande",
+    "revocationReason": "Motif de révocation"
   },
   "permitPanel": {
     "issueTitle": "Délivrer une autorisation",
@@ -185,7 +201,17 @@
     "comment": "Commentaire",
     "revocationPlaceholder": "Motivez la révocation...",
     "commentPlaceholder": "Commentaire facultatif...",
-    "confirm": "Confirmer"
+    "confirm": "Confirmer",
+    "title": "Autorisation",
+    "feesTitle": "Frais (Annexe 9 §7)",
+    "feeProcessing": "Frais de traitement",
+    "feePreparation": "Préparation des données",
+    "feeSpeSetup": "Mise en place SPE",
+    "feeSpeUsage": "Utilisation SPE",
+    "feeAdditional": "Services supplémentaires",
+    "feeDataHolder": "Frais détenteur(s) de données",
+    "paymentTerms": "Conditions de paiement",
+    "paymentTermsPlaceholder": "Délai de paiement, processus de facturation, remises..."
   },
   "userSwitcher": {
     "label": "Agissant en tant que"
@@ -239,7 +265,16 @@
     "dueDate": "Date d'échéance",
     "issuedBy": "Émise par",
     "noResults": "Aucune facture trouvée",
-    "noResultsSub": "Les factures sont émises à partir de la décomposition des coûts d'une autorisation accordée (EHDS Art. 62)."
+    "noResultsSub": "Les factures sont émises à partir de la décomposition des coûts d'une autorisation accordée (EHDS Art. 62).",
+    "panelTitle": "Factures (EHDS art. 62)",
+    "issue": "+ Émettre une facture",
+    "issueDisabled": "Aucun montant de frais enregistré sur cette autorisation",
+    "empty": "Aucune facture émise pour cette autorisation.",
+    "markPaid": "Marquer comme payée",
+    "cancelInvoice": "Annuler",
+    "issuedOn": "Émise",
+    "dueOn": "Échéance",
+    "paidOn": "Payée"
   },
   "ethicalReview": {
     "title": "Évaluation éthique (D6.3 §6.1)",
@@ -264,5 +299,84 @@
   "common": {
     "none": "—",
     "beta": "beta"
+  },
+  "permitChanges": {
+    "title": "Demandes de modification (D6.4 §9.3/§9.4)",
+    "empty": "Aucune demande de modification, de renouvellement ou de recours.",
+    "requestedBy": "Demandé par",
+    "newExpiry": "Nouvelle date d'expiration",
+    "decisionNotePlaceholder": "Note de décision (facultative)",
+    "approve": "Approuver",
+    "reject": "Rejeter",
+    "cancel": "Annuler",
+    "decide": "Décider →",
+    "documentNew": "Documenter une nouvelle demande",
+    "selectType": "Sélectionner le type…",
+    "justificationPlaceholder": "Justification fournie par l'utilisateur des données",
+    "submit": "Soumettre la demande",
+    "saving": "Enregistrement…"
+  },
+  "changeType": {
+    "AMENDMENT": "Modification",
+    "RENEWAL": "Renouvellement",
+    "REVOCATION_APPEAL": "Recours contre la révocation"
+  },
+  "changeStatus": {
+    "REQUESTED": "Demandé",
+    "APPROVED": "Approuvé",
+    "REJECTED": "Rejeté"
+  },
+  "authorizedPersons": {
+    "title": "Personnes autorisées (Annexe 9 §6.8)",
+    "add": "+ Ajouter",
+    "empty": "Aucune personne autorisée à traiter dans le SPE.",
+    "remove": "Supprimer",
+    "name": "Nom",
+    "affiliation": "Affiliation",
+    "email": "E-mail",
+    "addButton": "Ajouter",
+    "cancel": "Annuler",
+    "saving": "En cours…"
+  },
+  "speProvisioning": {
+    "title": "Environnement de traitement sécurisé (art. 73)",
+    "request": "+ Demander le provisionnement du SPE",
+    "noOrder": "Aucun ordre de provisionnement du SPE.",
+    "environment": "Environnement",
+    "requested": "Demandé",
+    "active": "Actif",
+    "decommissioned": "Désaffecté",
+    "envRefPlaceholder": "Référence / URL de l'environnement",
+    "commentPlaceholder": "Commentaire (facultatif)",
+    "confirm": "Confirmer",
+    "working": "En cours…",
+    "history": "Historique"
+  },
+  "speStatus": {
+    "REQUESTED": "Demandé",
+    "PROVISIONING": "Provisionnement",
+    "ACTIVE": "Actif",
+    "DECOMMISSIONING": "Désaffectation",
+    "DECOMMISSIONED": "Désaffecté"
+  },
+  "speTransitions": {
+    "startProvisioning": "Démarrer le provisionnement",
+    "startProvisioningDesc": "Transmettre à l'opérateur du SPE pour configurer l'environnement.",
+    "cancelRequest": "Annuler la demande",
+    "cancelRequestDesc": "Annuler la demande de provisionnement avant le début des travaux.",
+    "markActive": "Marquer l'environnement actif",
+    "markActiveDesc": "Le SPE est configuré et prêt à l’emploi pour les personnes autorisées.",
+    "cancelProvisioning": "Annuler le provisionnement",
+    "cancelProvisioningDesc": "Annuler le provisionnement avant l'activation de l'environnement.",
+    "requestDecommission": "Demander la désaffectation",
+    "requestDecommissionDesc": "Généralement déclenché par la révocation, l'expiration ou l'achèvement du projet.",
+    "confirmDecommissioned": "Confirmer la désaffectation",
+    "confirmDecommissionedDesc": "L'opérateur du SPE a confirmé la suppression de l'environnement et de ses données."
+  },
+  "permitTransitions": {
+    "revoke": "Révoquer l'autorisation",
+    "revokeDesc": "Révoquer l'autorisation avec une justification documentée (D6.4 §9.3).",
+    "expire": "Marquer comme expirée",
+    "expireDesc": "L'autorisation a dépassé sa date de validité (D6.4 §9.3)."
   }
 }

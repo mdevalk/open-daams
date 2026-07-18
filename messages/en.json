@@ -36,9 +36,21 @@
     "legalArticles": "Articles 67–69",
     "standards": "References",
     "standardsList": [
-      { "ref": "TEHDAS2 D6.4", "title": "Technical Specifications for DAAMS", "url": "https://tehdas.eu/wp-content/uploads/2026/06/d6.4-data-access-application-management-system-daams-technical-specification-for-health-data-access-bodies.pdf" },
-      { "ref": "TEHDAS2 D6.3", "title": "Guideline for HDABs on procedures and formats", "url": "https://tehdas.eu/wp-content/uploads/2025/09/draft-guideline-for-health-data-access-bodies-on-the-procedures-and-formats-for-data-access.pdf" },
-      { "ref": "TEHDAS2 D6.2", "title": "Guideline for data users", "url": "https://tehdas.eu/wp-content/uploads/2025/10/d6.2-guideline-for-data-users-on-good-application-and-access-practice.pdf" }
+      {
+        "ref": "TEHDAS2 D6.4",
+        "title": "Technical Specifications for DAAMS",
+        "url": "https://tehdas.eu/wp-content/uploads/2026/06/d6.4-data-access-application-management-system-daams-technical-specification-for-health-data-access-bodies.pdf"
+      },
+      {
+        "ref": "TEHDAS2 D6.3",
+        "title": "Guideline for HDABs on procedures and formats",
+        "url": "https://tehdas.eu/wp-content/uploads/2025/09/draft-guideline-for-health-data-access-bodies-on-the-procedures-and-formats-for-data-access.pdf"
+      },
+      {
+        "ref": "TEHDAS2 D6.2",
+        "title": "Guideline for data users",
+        "url": "https://tehdas.eu/wp-content/uploads/2025/10/d6.2-guideline-for-data-users-on-good-application-and-access-practice.pdf"
+      }
     ],
     "openSource": "This is an open-source community project (MIT licence), built using the {nlDesignSystem} with {rijkshuisstijl} components.",
     "nlDesignSystem": "NL Design System",
@@ -168,7 +180,11 @@
     "optOut": "Opt-out exception (Art. 71(4))",
     "optOutApplicable": "Applicable",
     "optOutJustification": "Opt-out justification",
-    "iprNote": "Trade secrets / intellectual property rights (Art. 52): not yet recorded as a data field."
+    "iprNote": "Trade secrets / intellectual property rights (Art. 52): not yet recorded as a data field.",
+    "version": "Version",
+    "successorOf": "Successor of",
+    "applicationNumber": "Application number",
+    "revocationReason": "Revocation reason"
   },
   "permitPanel": {
     "issueTitle": "Issue permit",
@@ -185,7 +201,17 @@
     "comment": "Comment",
     "revocationPlaceholder": "Provide a reason for revocation...",
     "commentPlaceholder": "Optional comment...",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "title": "Permit",
+    "feesTitle": "Fees (Annex 9 §7)",
+    "feeProcessing": "Processing fee",
+    "feePreparation": "Data preparation",
+    "feeSpeSetup": "SPE setup",
+    "feeSpeUsage": "SPE usage",
+    "feeAdditional": "Additional services",
+    "feeDataHolder": "Data holder fee(s)",
+    "paymentTerms": "Payment terms",
+    "paymentTermsPlaceholder": "Payment term, invoicing process, discounts..."
   },
   "userSwitcher": {
     "label": "Acting as"
@@ -239,7 +265,16 @@
     "dueDate": "Due date",
     "issuedBy": "Issued by",
     "noResults": "No invoices found",
-    "noResultsSub": "Invoices are issued from a granted permit's fee breakdown (EHDS Art. 62)."
+    "noResultsSub": "Invoices are issued from a granted permit's fee breakdown (EHDS Art. 62).",
+    "panelTitle": "Invoices (EHDS Art. 62)",
+    "issue": "+ Issue invoice",
+    "issueDisabled": "No fee amounts recorded on this permit yet",
+    "empty": "No invoices issued yet for this permit.",
+    "markPaid": "Mark as paid",
+    "cancelInvoice": "Cancel",
+    "issuedOn": "Issued",
+    "dueOn": "Due",
+    "paidOn": "Paid"
   },
   "ethicalReview": {
     "title": "Ethical review (D6.3 §6.1)",
@@ -264,5 +299,84 @@
   "common": {
     "none": "—",
     "beta": "beta"
+  },
+  "permitChanges": {
+    "title": "Change requests (D6.4 §9.3/§9.4)",
+    "empty": "No amendment, renewal or appeal requests yet.",
+    "requestedBy": "Requested by",
+    "newExpiry": "New expiry date",
+    "decisionNotePlaceholder": "Decision note (optional)",
+    "approve": "Approve",
+    "reject": "Reject",
+    "cancel": "Cancel",
+    "decide": "Decide →",
+    "documentNew": "Document a new request",
+    "selectType": "Select type…",
+    "justificationPlaceholder": "Justification provided by the data user",
+    "submit": "Submit request",
+    "saving": "Saving…"
+  },
+  "changeType": {
+    "AMENDMENT": "Amendment",
+    "RENEWAL": "Renewal",
+    "REVOCATION_APPEAL": "Revocation appeal"
+  },
+  "changeStatus": {
+    "REQUESTED": "Requested",
+    "APPROVED": "Approved",
+    "REJECTED": "Rejected"
+  },
+  "authorizedPersons": {
+    "title": "Authorised persons (Annex 9 §6.8)",
+    "add": "+ Add",
+    "empty": "No persons authorised to process in the SPE yet.",
+    "remove": "Remove",
+    "name": "Name",
+    "affiliation": "Affiliation",
+    "email": "Email",
+    "addButton": "Add",
+    "cancel": "Cancel",
+    "saving": "Working…"
+  },
+  "speProvisioning": {
+    "title": "Secure processing environment (Art. 73)",
+    "request": "+ Request SPE provisioning",
+    "noOrder": "No SPE provisioning order yet.",
+    "environment": "Environment",
+    "requested": "Requested",
+    "active": "Active",
+    "decommissioned": "Decommissioned",
+    "envRefPlaceholder": "Environment reference / URL",
+    "commentPlaceholder": "Comment (optional)",
+    "confirm": "Confirm",
+    "working": "Working…",
+    "history": "History"
+  },
+  "speStatus": {
+    "REQUESTED": "Requested",
+    "PROVISIONING": "Provisioning",
+    "ACTIVE": "Active",
+    "DECOMMISSIONING": "Decommissioning",
+    "DECOMMISSIONED": "Decommissioned"
+  },
+  "speTransitions": {
+    "startProvisioning": "Start provisioning",
+    "startProvisioningDesc": "Hand off to the SPE operator to set up the environment.",
+    "cancelRequest": "Cancel request",
+    "cancelRequestDesc": "Cancel the provisioning request before work has started.",
+    "markActive": "Mark environment active",
+    "markActiveDesc": "The SPE is set up and ready for authorised persons to use.",
+    "cancelProvisioning": "Cancel provisioning",
+    "cancelProvisioningDesc": "Cancel provisioning before the environment went active.",
+    "requestDecommission": "Request decommissioning",
+    "requestDecommissionDesc": "Typically triggered by permit revocation, expiry, or project completion.",
+    "confirmDecommissioned": "Confirm decommissioned",
+    "confirmDecommissionedDesc": "The SPE operator has confirmed the environment and its data have been removed."
+  },
+  "permitTransitions": {
+    "revoke": "Revoke permit",
+    "revokeDesc": "Revoke the permit with documented justification (D6.4 §9.3).",
+    "expire": "Mark as expired",
+    "expireDesc": "Permit has passed its validity date (D6.4 §9.3)."
   }
 }

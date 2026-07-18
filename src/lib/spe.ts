@@ -2,6 +2,7 @@ import { SpeProvisioningStatus, UserRole } from '@prisma/client';
 
 export type SpeTransition = {
   to: SpeProvisioningStatus;
+  // i18n keys in the `speTransitions` namespace (label + label+'Desc' description)
   label: string;
   requiredRole: UserRole[];
   description: string;
@@ -15,46 +16,46 @@ export const SPE_TRANSITIONS: Record<SpeProvisioningStatus, SpeTransition[]> = {
   REQUESTED: [
     {
       to: 'PROVISIONING',
-      label: 'Start provisioning',
+      label: 'startProvisioning',
       requiredRole: ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'],
-      description: 'Hand off to the SPE operator to set up the environment.',
+      description: 'startProvisioningDesc',
     },
     {
       to: 'DECOMMISSIONED',
-      label: 'Cancel request',
+      label: 'cancelRequest',
       requiredRole: ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'],
-      description: 'Cancel the provisioning request before work has started.',
+      description: 'cancelRequestDesc',
     },
   ],
   PROVISIONING: [
     {
       to: 'ACTIVE',
-      label: 'Mark environment active',
+      label: 'markActive',
       requiredRole: ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'],
-      description: 'The SPE is set up and ready for authorized persons to use.',
+      description: 'markActiveDesc',
       requiresEnvironmentReference: true,
     },
     {
       to: 'DECOMMISSIONED',
-      label: 'Cancel provisioning',
+      label: 'cancelProvisioning',
       requiredRole: ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'],
-      description: 'Cancel provisioning before the environment went active.',
+      description: 'cancelProvisioningDesc',
     },
   ],
   ACTIVE: [
     {
       to: 'DECOMMISSIONING',
-      label: 'Request decommissioning',
+      label: 'requestDecommission',
       requiredRole: ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'],
-      description: 'Typically triggered by permit revocation, expiry, or project completion.',
+      description: 'requestDecommissionDesc',
     },
   ],
   DECOMMISSIONING: [
     {
       to: 'DECOMMISSIONED',
-      label: 'Confirm decommissioned',
+      label: 'confirmDecommissioned',
       requiredRole: ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'],
-      description: 'The SPE operator has confirmed the environment and its data have been removed.',
+      description: 'confirmDecommissionedDesc',
     },
   ],
   DECOMMISSIONED: [],

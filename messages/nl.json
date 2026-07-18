@@ -36,9 +36,21 @@
     "legalArticles": "Artikelen 67–69",
     "standards": "Referenties",
     "standardsList": [
-      { "ref": "TEHDAS2 D6.4", "title": "Technische specificaties voor DAAMS", "url": "https://tehdas.eu/wp-content/uploads/2026/06/d6.4-data-access-application-management-system-daams-technical-specification-for-health-data-access-bodies.pdf" },
-      { "ref": "TEHDAS2 D6.3", "title": "Richtsnoer voor HDAB's over procedures en formaten", "url": "https://tehdas.eu/wp-content/uploads/2025/09/draft-guideline-for-health-data-access-bodies-on-the-procedures-and-formats-for-data-access.pdf" },
-      { "ref": "TEHDAS2 D6.2", "title": "Richtsnoer voor datagebruikers", "url": "https://tehdas.eu/wp-content/uploads/2025/10/d6.2-guideline-for-data-users-on-good-application-and-access-practice.pdf" }
+      {
+        "ref": "TEHDAS2 D6.4",
+        "title": "Technische specificaties voor DAAMS",
+        "url": "https://tehdas.eu/wp-content/uploads/2026/06/d6.4-data-access-application-management-system-daams-technical-specification-for-health-data-access-bodies.pdf"
+      },
+      {
+        "ref": "TEHDAS2 D6.3",
+        "title": "Richtsnoer voor HDAB's over procedures en formaten",
+        "url": "https://tehdas.eu/wp-content/uploads/2025/09/draft-guideline-for-health-data-access-bodies-on-the-procedures-and-formats-for-data-access.pdf"
+      },
+      {
+        "ref": "TEHDAS2 D6.2",
+        "title": "Richtsnoer voor datagebruikers",
+        "url": "https://tehdas.eu/wp-content/uploads/2025/10/d6.2-guideline-for-data-users-on-good-application-and-access-practice.pdf"
+      }
     ],
     "openSource": "Dit is een open-source communityproject (MIT-licentie), gebouwd volgens het {nlDesignSystem} met {rijkshuisstijl}-componenten.",
     "nlDesignSystem": "NL Design System",
@@ -168,7 +180,11 @@
     "optOut": "Opt-out uitzondering (Art. 71(4))",
     "optOutApplicable": "Van toepassing",
     "optOutJustification": "Onderbouwing opt-out",
-    "iprNote": "Handelsgeheimen / intellectuele-eigendomsrechten (Art. 52): nog niet als gegevensveld geregistreerd."
+    "iprNote": "Handelsgeheimen / intellectuele-eigendomsrechten (Art. 52): nog niet als gegevensveld geregistreerd.",
+    "version": "Versie",
+    "successorOf": "Opvolger van",
+    "applicationNumber": "Aanvraagnummer",
+    "revocationReason": "Reden intrekking"
   },
   "permitPanel": {
     "issueTitle": "Vergunning uitschrijven",
@@ -185,7 +201,17 @@
     "comment": "Toelichting",
     "revocationPlaceholder": "Motiveer de intrekking...",
     "commentPlaceholder": "Optionele toelichting...",
-    "confirm": "Bevestig"
+    "confirm": "Bevestig",
+    "title": "Vergunning",
+    "feesTitle": "Kosten (Annex 9 §7)",
+    "feeProcessing": "Behandelkosten",
+    "feePreparation": "Gegevensvoorbereiding",
+    "feeSpeSetup": "SPE opstartkosten",
+    "feeSpeUsage": "SPE gebruikskosten",
+    "feeAdditional": "Aanvullende diensten",
+    "feeDataHolder": "Kosten gegevenshouder(s)",
+    "paymentTerms": "Betalingsvoorwaarden",
+    "paymentTermsPlaceholder": "Betalingstermijn, factuurproces, kortingen..."
   },
   "userSwitcher": {
     "label": "Actief als"
@@ -239,7 +265,16 @@
     "dueDate": "Vervaldatum",
     "issuedBy": "Uitgegeven door",
     "noResults": "Geen facturen gevonden",
-    "noResultsSub": "Facturen worden uitgegeven op basis van de kostenopbouw van een verleende vergunning (EHDS Art. 62)."
+    "noResultsSub": "Facturen worden uitgegeven op basis van de kostenopbouw van een verleende vergunning (EHDS Art. 62).",
+    "panelTitle": "Facturen (EHDS Art. 62)",
+    "issue": "+ Factuur uitgeven",
+    "issueDisabled": "Nog geen bedragen op deze vergunning vastgelegd",
+    "empty": "Nog geen facturen voor deze vergunning.",
+    "markPaid": "Markeer als betaald",
+    "cancelInvoice": "Annuleren",
+    "issuedOn": "Uitgegeven",
+    "dueOn": "Vervalt",
+    "paidOn": "Betaald"
   },
   "ethicalReview": {
     "title": "Ethische toetsing (D6.3 §6.1)",
@@ -264,5 +299,84 @@
   "common": {
     "none": "—",
     "beta": "beta"
+  },
+  "permitChanges": {
+    "title": "Wijzigingsverzoeken (D6.4 §9.3/§9.4)",
+    "empty": "Nog geen wijzigings-, verlengings- of bezwaarverzoeken.",
+    "requestedBy": "Aangevraagd door",
+    "newExpiry": "Nieuwe vervaldatum",
+    "decisionNotePlaceholder": "Beslisnotitie (optioneel)",
+    "approve": "Goedkeuren",
+    "reject": "Afwijzen",
+    "cancel": "Annuleren",
+    "decide": "Beslissen →",
+    "documentNew": "Documenteer een nieuw verzoek",
+    "selectType": "Selecteer type…",
+    "justificationPlaceholder": "Onderbouwing door de gegevensgebruiker",
+    "submit": "Verzoek indienen",
+    "saving": "Bezig..."
+  },
+  "changeType": {
+    "AMENDMENT": "Wijziging",
+    "RENEWAL": "Verlenging",
+    "REVOCATION_APPEAL": "Bezwaar tegen intrekking"
+  },
+  "changeStatus": {
+    "REQUESTED": "Aangevraagd",
+    "APPROVED": "Goedgekeurd",
+    "REJECTED": "Afgewezen"
+  },
+  "authorizedPersons": {
+    "title": "Gemachtigde personen (Annex 9 §6.8)",
+    "add": "+ Toevoegen",
+    "empty": "Nog geen personen gemachtigd tot verwerking in de SPE.",
+    "remove": "Verwijderen",
+    "name": "Naam",
+    "affiliation": "Affiliatie",
+    "email": "E-mail",
+    "addButton": "Toevoegen",
+    "cancel": "Annuleren",
+    "saving": "Bezig..."
+  },
+  "speProvisioning": {
+    "title": "Beveiligde verwerkingsomgeving (Art. 73)",
+    "request": "+ SPE-provisioning aanvragen",
+    "noOrder": "Nog geen SPE-provisioningopdracht.",
+    "environment": "Omgeving",
+    "requested": "Aangevraagd",
+    "active": "Actief",
+    "decommissioned": "Ontmanteld",
+    "envRefPlaceholder": "Omgevingsreferentie / URL",
+    "commentPlaceholder": "Opmerking (optioneel)",
+    "confirm": "Bevestigen",
+    "working": "Bezig...",
+    "history": "Historie"
+  },
+  "speStatus": {
+    "REQUESTED": "Aangevraagd",
+    "PROVISIONING": "Wordt ingericht",
+    "ACTIVE": "Actief",
+    "DECOMMISSIONING": "Wordt ontmanteld",
+    "DECOMMISSIONED": "Ontmanteld"
+  },
+  "speTransitions": {
+    "startProvisioning": "Provisioning starten",
+    "startProvisioningDesc": "Overdragen aan de SPE-beheerder om de omgeving in te richten.",
+    "cancelRequest": "Aanvraag annuleren",
+    "cancelRequestDesc": "Annuleer de provisioningaanvraag voordat het werk is begonnen.",
+    "markActive": "Omgeving activeren",
+    "markActiveDesc": "De SPE is ingericht en klaar voor gebruik door gemachtigde personen.",
+    "cancelProvisioning": "Provisioning annuleren",
+    "cancelProvisioningDesc": "Annuleer provisioning voordat de omgeving actief werd.",
+    "requestDecommission": "Ontmanteling aanvragen",
+    "requestDecommissionDesc": "Meestal door intrekking, verval of afronding van het project.",
+    "confirmDecommissioned": "Ontmanteling bevestigen",
+    "confirmDecommissionedDesc": "De SPE-beheerder heeft bevestigd dat de omgeving en gegevens zijn verwijderd."
+  },
+  "permitTransitions": {
+    "revoke": "Vergunning intrekken",
+    "revokeDesc": "Trek de vergunning in met een onderbouwde motivering (D6.4 §9.3).",
+    "expire": "Markeren als verlopen",
+    "expireDesc": "De vergunning heeft de geldigheidsdatum overschreden (D6.4 §9.3)."
   }
 }
