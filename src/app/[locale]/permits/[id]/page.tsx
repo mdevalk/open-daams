@@ -13,13 +13,6 @@ import { formatDate, formatDateTime, purposeLabel, serializePrisma } from '@/lib
 
 export const dynamic = 'force-dynamic';
 
-const ETHICAL_STATUS_NL: Record<string, string> = {
-  PENDING: 'In afwachting',
-  APPROVED: 'Goedgekeurd',
-  REJECTED: 'Afgewezen',
-  NOT_REQUIRED: 'Niet vereist',
-};
-
 // A dl row that renders nothing when the value is empty (mirrors the PDF, which
 // only prints fields that carry data).
 function Field({ label, value, wide }: { label: string; value: React.ReactNode; wide?: boolean }) {
@@ -46,6 +39,7 @@ export default async function PermitDetailPage({
 }) {
   const { id, locale } = await params;
   const t = await getTranslations({ locale, namespace: 'permits' });
+  const te = await getTranslations({ locale, namespace: 'ethicalReview' });
 
   const [rawPermit, users] = await Promise.all([
     prisma.dataPermit.findUnique({
@@ -161,10 +155,10 @@ export default async function PermitDetailPage({
 
       {!permit.isCurrent && (
         <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          Dit is een verouderde versie (v{permit.version}) van deze vergunning.{' '}
+          {t('supersededNotice', { version: permit.version })}{' '}
           {currentVersion && (
             <a href={`/${locale}/permits/${currentVersion.id}`} className="font-medium underline">
-              Ga naar de huidige versie (v{currentVersion.version})
+              {t('goToCurrent', { version: currentVersion.version })}
             </a>
           )}
         </div>
@@ -221,59 +215,57 @@ export default async function PermitDetailPage({
           )}
 
           <section className="rounded-xl border border-gray-200 bg-white p-5">
-            <h2 className="font-semibold text-gray-900 mb-4">Onderwerp (§4)</h2>
+            <h2 className="font-semibold text-gray-900 mb-4">{t('subjectTitle')} (§4)</h2>
             <dl className="grid grid-cols-2 gap-4 text-sm">
-              <Field label="Projecttitel" value={app?.title} wide />
-              <Field label="Projectomschrijving" value={app?.projectDescription} wide />
+              <Field label={t('projectTitle')} value={app?.title} wide />
+              <Field label={t('projectDescription')} value={app?.projectDescription} wide />
             </dl>
           </section>
 
           <section className="rounded-xl border border-gray-200 bg-white p-5">
-            <h2 className="font-semibold text-gray-900 mb-4">Reikwijdte & doel (§6.2–6.4)</h2>
+            <h2 className="font-semibold text-gray-900 mb-4">{t('scopeTitle')} (§6.2–6.4)</h2>
             <dl className="grid grid-cols-2 gap-4 text-sm">
-              <Field label="Doel van gebruik" value={app?.purposeCategory ? purposeLabel(app.purposeCategory) : null} wide />
-              <Field label="Rechtsgrondslag" value={app?.legalBasis} wide />
-              <Field label="Datasets" value={app?.requestedDatasets?.length ? app.requestedDatasets.join(', ') : null} wide />
-              <Field label="Gevraagde variabelen" value={app?.requestedVariables} wide />
-              <Field label="Studiepopulatie" value={app?.studyPopulation} wide />
-              <Field label="Inclusiecriteria" value={app?.inclusionCriteria} />
-              <Field label="Exclusiecriteria" value={app?.exclusionCriteria} />
-              <Field label="Land van gegevensverwerking" value={app?.dataProcessingCountry} />
+              <Field label={t('purpose')} value={app?.purposeCategory ? purposeLabel(app.purposeCategory) : null} wide />
+              <Field label={t('legalBasis')} value={app?.legalBasis} wide />
+              <Field label={t('datasets')} value={app?.requestedDatasets?.length ? app.requestedDatasets.join(', ') : null} wide />
+              <Field label={t('variables')} value={app?.requestedVariables} wide />
+              <Field label={t('studyPopulation')} value={app?.studyPopulation} wide />
+              <Field label={t('inclusionCriteria')} value={app?.inclusionCriteria} />
+              <Field label={t('exclusionCriteria')} value={app?.exclusionCriteria} />
+              <Field label={t('processingCountry')} value={app?.dataProcessingCountry} />
               {showEthical && (
                 <>
-                  <Field label="Ethische toetsing" value={ETHICAL_STATUS_NL[app?.ethicalReviewStatus ?? ''] ?? app?.ethicalReviewStatus} />
-                  <Field label="Toetsingscommissie" value={app?.ethicalReviewBody} />
-                  <Field label="Referentie ethische toetsing" value={app?.ethicalReviewReference} />
-                  <Field label="Datum ethische toetsing" value={app?.ethicalReviewDate ? formatDate(app.ethicalReviewDate) : null} />
+                  <Field label={t('ethicalReview')} value={te(`status${app?.ethicalReviewStatus}`)} />
+                  <Field label={te('committee')} value={app?.ethicalReviewBody} />
+                  <Field label={te('reference')} value={app?.ethicalReviewReference} />
+                  <Field label={te('date')} value={app?.ethicalReviewDate ? formatDate(app.ethicalReviewDate) : null} />
                 </>
               )}
             </dl>
           </section>
 
           <section className="rounded-xl border border-gray-200 bg-white p-5">
-            <h2 className="font-semibold text-gray-900 mb-4">Besluit & voorwaarden (§5, §6.6)</h2>
+            <h2 className="font-semibold text-gray-900 mb-4">{t('decisionTitle')} (§5, §6.6)</h2>
             <dl className="grid grid-cols-2 gap-4 text-sm">
-              <Field label="Besluit / motivering" value={app?.decisionSummary} wide />
-              <Field label="Toegangsperiode (SPE)" value={`${formatDate(permit.validFrom)} — ${formatDate(permit.validUntil)}`} />
-              <Field label="Bewaartermijn (Art. 68(12))" value={retentionDeadline ? `Verwijdering uiterlijk ${formatDate(retentionDeadline)}` : null} />
+              <Field label={t('decisionSummary')} value={app?.decisionSummary} wide />
+              <Field label={t('accessPeriod')} value={`${formatDate(permit.validFrom)} — ${formatDate(permit.validUntil)}`} />
+              <Field label={t('retention')} value={retentionDeadline ? t('retentionValue', { date: formatDate(retentionDeadline) }) : null} />
               <Field
-                label="Periode brongegevens"
+                label={t('sourceDataPeriod')}
                 value={app?.dataStartDate || app?.dataEndDate ? `${formatDate(app?.dataStartDate ?? null)} — ${formatDate(app?.dataEndDate ?? null)}` : null}
               />
-              <Field label="Grensoverschrijdend (Art. 76)" value={app?.isCrossBorder ? `Ja — ${app.dataProcessingCountry ?? '—'}` : null} />
-              {!isDataRequest && <Field label="Toegewezen SPE" value={app?.speName} />}
-              {!isDataRequest && <Field label="Technische kenmerken SPE" value={app?.speTechnicalRequirements} wide />}
-              <Field label="Opt-out uitzondering (Art. 71(4))" value={app?.usesOptOutException ? 'Van toepassing' : null} />
-              <Field label="Onderbouwing opt-out" value={app?.usesOptOutException ? app.optOutExceptionJustification : null} wide />
+              <Field label={t('crossBorder')} value={app?.isCrossBorder ? t('crossBorderYes', { country: app.dataProcessingCountry ?? '—' }) : null} />
+              {!isDataRequest && <Field label={t('speName')} value={app?.speName} />}
+              {!isDataRequest && <Field label={t('speTechnical')} value={app?.speTechnicalRequirements} wide />}
+              <Field label={t('optOut')} value={app?.usesOptOutException ? t('optOutApplicable') : null} />
+              <Field label={t('optOutJustification')} value={app?.usesOptOutException ? app.optOutExceptionJustification : null} wide />
             </dl>
-            <p className="text-xs text-gray-400 italic mt-3">
-              Handelsgeheimen / intellectuele-eigendomsrechten (Art. 52): nog niet als gegevensveld geregistreerd.
-            </p>
+            <p className="text-xs text-gray-400 italic mt-3">{t('iprNote')}</p>
           </section>
 
           {versions.length > 1 && (
             <section className="rounded-xl border border-gray-200 bg-white p-5">
-              <h2 className="font-semibold text-gray-900 mb-4">Versies (D6.4 §9.3)</h2>
+              <h2 className="font-semibold text-gray-900 mb-4">{t('versionsTitle')} (D6.4 §9.3)</h2>
               <ol className="space-y-2">
                 {versions.map((v) => (
                   <li key={v.id} className="flex items-center gap-3 text-sm">
@@ -287,8 +279,8 @@ export default async function PermitDetailPage({
                     <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold ${PERMIT_STATUS_COLORS[v.status]}`}>
                       {PERMIT_STATUS_LABELS[v.status]}
                     </span>
-                    {v.isCurrent && <span className="text-xs font-medium text-emerald-700">huidig</span>}
-                    {v.id === permit.id && <span className="text-xs text-gray-400 ml-auto">u bekijkt deze versie</span>}
+                    {v.isCurrent && <span className="text-xs font-medium text-emerald-700">{t('current')}</span>}
+                    {v.id === permit.id && <span className="text-xs text-gray-400 ml-auto">{t('viewingThisVersion')}</span>}
                   </li>
                 ))}
               </ol>
