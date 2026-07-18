@@ -8,6 +8,8 @@ type Props = {
     previousPermit?: Pick<DataPermit, 'id' | 'permitNumber' | 'version'> | null;
   };
   compact?: boolean;
+  // When set, the predecessor reference links to that permit.
+  locale?: string;
 };
 
 const STATUS_BORDER: Record<string, string> = {
@@ -26,7 +28,7 @@ const STATUS_HEADER: Record<string, string> = {
   EXPIRED: 'bg-gray-50 border-gray-200',
 };
 
-export function PermitCard({ permit, compact }: Props) {
+export function PermitCard({ permit, compact, locale }: Props) {
   const statusLabel = PERMIT_STATUS_LABELS[permit.status];
   const statusColor = PERMIT_STATUS_COLORS[permit.status];
   const borderColor = STATUS_BORDER[permit.status] ?? 'border-gray-200';
@@ -73,7 +75,13 @@ export function PermitCard({ permit, compact }: Props) {
           <div className="col-span-2 sm:col-span-3">
             <p className="text-xs text-gray-500">Opvolger van</p>
             <p className="font-medium font-mono text-xs">
-              {formatPermitId(permit.previousPermit.permitNumber, permit.previousPermit.version)}
+              {locale ? (
+                <a href={`/${locale}/permits/${permit.previousPermit.id}`} className="text-[#01689b] hover:underline">
+                  {formatPermitId(permit.previousPermit.permitNumber, permit.previousPermit.version)}
+                </a>
+              ) : (
+                formatPermitId(permit.previousPermit.permitNumber, permit.previousPermit.version)
+              )}
             </p>
           </div>
         )}
