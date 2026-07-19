@@ -257,30 +257,6 @@ export default async function PermitDetailPage({
             </dl>
             <p className="text-xs text-gray-400 italic mt-3">{t('iprNote')}</p>
           </section>
-
-          <section className="rounded-xl border border-gray-200 bg-white p-5">
-            <h2 className="font-semibold text-gray-900 mb-4">{t('historyTitle')}</h2>
-            {chainLogs.length === 0 ? (
-              <p className="text-sm text-gray-500">{t('noHistory')}</p>
-            ) : (
-              <ol className="space-y-3">
-                {chainLogs.map((log, i) => (
-                  <li key={log.id} className="flex gap-3 text-sm">
-                    <div className="flex flex-col items-center">
-                      <span className="w-6 h-6 rounded-full bg-[#154273] text-white text-xs flex items-center justify-center font-bold flex-shrink-0">{i + 1}</span>
-                      {i < chainLogs.length - 1 && <div className="w-px flex-1 bg-gray-200 my-1" />}
-                    </div>
-                    <div className="pb-3">
-                      <p className="font-medium text-gray-900">{log.action}</p>
-                      {log.fromStatus && <p className="text-xs text-gray-500">{tps(log.fromStatus)} → {tps(log.toStatus)}</p>}
-                      {log.comment && <p className="text-xs text-gray-600 mt-1 italic">{log.comment}</p>}
-                      <p className="text-xs text-gray-400 mt-1">{log.user.name} · {log.user.role} · {formatDateTime(log.createdAt)}</p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            )}
-          </section>
         </div>
 
         <div className="space-y-4">
@@ -359,6 +335,30 @@ export default async function PermitDetailPage({
               currentUserId={currentUser.id}
             />
           )}
+
+          <section className="rounded-xl border border-gray-200 bg-white p-5">
+            <h2 className="font-semibold text-gray-900 mb-4">{t('historyTitle')}</h2>
+            {chainLogs.length === 0 ? (
+              <p className="text-sm text-gray-500">{t('noHistory')}</p>
+            ) : (
+              <ol className="space-y-3">
+                {chainLogs.map((log, i) => (
+                  <li key={log.id} className="flex gap-3 text-sm">
+                    <div className="flex flex-col items-center">
+                      <span className="w-6 h-6 rounded-full bg-[#154273] text-white text-xs flex items-center justify-center font-bold flex-shrink-0">{i + 1}</span>
+                      {i < chainLogs.length - 1 && <div className="w-px flex-1 bg-gray-200 my-1" />}
+                    </div>
+                    <div className="pb-3">
+                      <p className="font-medium text-gray-900">{log.action}</p>
+                      {log.fromStatus && <p className="text-xs text-gray-500">{tps(log.fromStatus)} → {tps(log.toStatus)}</p>}
+                      {log.comment && <p className="text-xs text-gray-600 mt-1 italic">{log.comment}</p>}
+                      <p className="text-xs text-gray-400 mt-1">{log.user.name} · {log.user.role} · {formatDateTime(log.createdAt)}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </section>
         </div>
       </div>
     </div>
