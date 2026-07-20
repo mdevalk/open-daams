@@ -71,3 +71,42 @@ specifications. Always use the **final** Regulation numbering, not the draft-pro
 - **Draft Guideline on fees related to the EHDS Regulation** (TEHDAS2 4.1.1; relevant to the
   fee-estimate and invoicing features, Art. 62) —
   <https://tehdas.eu/wp-content/uploads/2025/09/draft-guideline-on-fees-related-to-the-ehds-regulation.pdf>
+
+## Working conventions
+
+- **Git:** "commit" means commit **and** push to `main` in the same step (no separate
+  confirmation, no feature branch/PR unless asked). Stage files explicitly — never
+  `git add -A`/`git add -u` right after an `npm install`, as it sweeps `package-lock.json`
+  churn into the commit and breaks `git pull`.
+- **Schema changes** require the developer to run `npm run db:push` locally (applies the
+  Prisma schema and regenerates the client), then restart `npm run dev`.
+- **After `npm install`**, run `npx prisma generate` (the postinstall is often blocked), or
+  the `@prisma/client` import will be stale/missing.
+- The **PostgreSQL database runs locally** (see `docker-compose.yml`); the app is seeded with
+  `npm run db:seed`. There is **no real authentication** — RBAC trusts a client-supplied
+  `userId` (documented gap, do not silently "fix").
+- Verify non-trivial changes with `npx tsc --noEmit` (baseline is 0 errors).
+
+## Project state (handoff)
+
+Design/gap detail lives in `docs/`: `d6.4-gap-analysis.md` (D6.4 v0.5 vs implementation),
+`d6.4-status-model.md` (status tables), `ehds-article-map.md` (article → status),
+`gap-analysis.md` (EHDS/framework view), `architecture.md`.
+
+**Scope:** open-daams is the **back-office DAAMS**. Out of scope: the applicant front-office
+(D6.4 §6), the dataset catalogue (Art. 77–80) and dataset selection against it (§6.2) — those
+are the central platform / WP6.
+
+**Permit model (recent work):** the permit is an **append-only version chain** — an approved
+amendment / renewal / revocation-appeal creates a *new* `DataPermit` row (`version` + 1,
+`isCurrent`, `previousPermit` self-relation) rather than mutating in place. Two-axis lifecycle:
+`DataPermitStatus` (the permit's own status) vs `PermitChangeRequest` (the workflow). Full
+permit id renders as `DP-NL-2025-0001-v2` via `formatPermitId`.
+
+**i18n:** the tool chrome is localised (nl/en/fr) via next-intl message namespaces; permit
+*content* and the issued PDF stay in the issuing HDAB's language by design.
+
+**Known open items:** server-side API error strings are still hardcoded EN/NL (client fallbacks
+are i18n'd via the `errors` namespace); IPR / trade secrets (Art. 52) is noted but not yet a
+data field; SPE, data-holder extraction, and HealthData@EU/NCP are simulated shells, not real
+integrations.
