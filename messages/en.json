@@ -184,7 +184,13 @@
     "version": "Version",
     "successorOf": "Successor of",
     "applicationNumber": "Application number",
-    "revocationReason": "Revocation reason"
+    "revocationReason": "Revocation reason",
+    "digitalPermitTitle": "Digital permit",
+    "signatureAlgorithm": "Algorithm",
+    "signatureKeyId": "Key ID",
+    "signedAt": "Signed at",
+    "signature": "Signature",
+    "downloadDigitalPermit": "Download digital permit (JSON)"
   },
   "permitPanel": {
     "issueTitle": "Issue permit",

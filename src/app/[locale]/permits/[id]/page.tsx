@@ -336,6 +336,28 @@ export default async function PermitDetailPage({
             />
           )}
 
+          {permit.signature && (
+            <section className="rounded-xl border border-gray-200 bg-white p-5">
+              <h2 className="font-semibold text-gray-900 mb-4">{t('digitalPermitTitle')}</h2>
+              <dl className="grid grid-cols-1 gap-3 text-sm mb-4">
+                <Field label={t('signatureAlgorithm')} value="Ed25519" />
+                <Field label={t('signatureKeyId')} value={permit.signingKeyId} />
+                <Field label={t('signedAt')} value={permit.signedAt ? formatDateTime(permit.signedAt) : null} />
+                <Field
+                  label={t('signature')}
+                  value={<span className="font-mono text-xs break-all">{permit.signature.slice(0, 32)}...</span>}
+                />
+              </dl>
+              <a
+                href={`/api/permits/${permit.id}/json`}
+                download
+                className="inline-flex items-center gap-1.5 rounded border border-[#154273] px-3 py-1.5 text-sm font-medium text-[#154273] hover:bg-[#e8f4fb] transition-colors"
+              >
+                {t('downloadDigitalPermit')}
+              </a>
+            </section>
+          )}
+
           <section className="rounded-xl border border-gray-200 bg-white p-5">
             <h2 className="font-semibold text-gray-900 mb-4">{t('historyTitle')}</h2>
             {chainLogs.length === 0 ? (

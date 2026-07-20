@@ -458,6 +458,15 @@ model DataPermit {
   issuedAt  DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Digital signature (Ed25519) over this version's canonical, fixed fields —
+  // permitNumber, version, applicationId, issuedAt, validFrom, validUntil.
+  // Deliberately excludes status/revocation: those mutate in place on this
+  // same row (REVOKE/EXPIRE), so signing them would invalidate the signature
+  // the moment a permit is legitimately revoked or expires. See lib/permit-signing.ts.
+  signature    String?   @db.Text
+  signedAt     DateTime?
+  signingKeyId String?
+
   logs              DataPermitLog[]
   authorizedPersons AuthorizedPerson[]
   invoices          Invoice[]

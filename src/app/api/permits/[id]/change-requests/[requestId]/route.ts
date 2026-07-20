@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
 import { DECIDE_ROLES, APPROVAL_EFFECT } from '@/lib/permit-change';
+import { signPermit } from '@/lib/permit-signing';
 
 /**
  * PATCH /api/permits/[id]/change-requests/[requestId]
@@ -61,6 +62,17 @@ export async function PATCH(
       return NextResponse.json({ error: 'A new validUntil date is required to approve a renewal' }, { status: 400 });
     }
 
+    const newVersion = permit.version + 1;
+    const newValidUntilResolved = newValidUntil ?? permit.validUntil;
+    const { signature, signedAt, signingKeyId } = await signPermit({
+      permitNumber: permit.permitNumber,
+      version: newVersion,
+      applicationId: permit.applicationId,
+      issuedAt: now,
+      validFrom: permit.validFrom,
+      validUntil: newValidUntilResolved,
+    });
+
     const newPermitId = await prisma.$transaction(async (tx) => {
       // 1. Retire the current version.
       await tx.dataPermit.update({ where: { id: permit.id }, data: { isCurrent: false } });
@@ -70,13 +82,17 @@ export async function PATCH(
       const newPermit = await tx.dataPermit.create({
         data: {
           permitNumber: permit.permitNumber, // stable base id
-          version: permit.version + 1,
+          version: newVersion,
           isCurrent: true,
           applicationId: permit.applicationId,
           status: effect.to,
           previousPermitId: permit.id,
+          issuedAt: now,
           validFrom: permit.validFrom,
-          validUntil: newValidUntil ?? permit.validUntil,
+          validUntil: newValidUntilResolved,
+          signature,
+          signedAt,
+          signingKeyId,
           currency: permit.currency,
           permitProcessingFee: permit.permitProcessingFee,
           dataPreparationFee: permit.dataPreparationFee,

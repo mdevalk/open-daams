@@ -1,6 +1,8 @@
 import { PDFDocument, rgb, StandardFonts, PDFFont, PDFPage } from 'pdf-lib';
+import { DataPermitStatus } from '@prisma/client';
 import { APP_NAME } from './branding';
 import { formatPermitId } from './permit';
+import { buildDigitalPermitDocument } from './permit-signing';
 
 // Layout follows TEHDAS2 D6.3 "Guideline for Health Data Access Bodies on the
 // procedures and formats for data access", Annex 9 - Data permit template
@@ -67,7 +69,8 @@ const STATUS_NL: Record<string, string> = {
 export type PermitPdfData = {
   permitNumber: string;
   version: number;
-  status: string;
+  status: DataPermitStatus;
+  applicationId: string;
   issuedAt: Date | null;
   validFrom: Date | null;
   validUntil: Date | null;
@@ -75,6 +78,9 @@ export type PermitPdfData = {
   previousPermit?: { permitNumber: string; version: number } | null;
   revocationReason?: string | null;
   revocationAt?: Date | null;
+  signature?: string | null;
+  signedAt?: Date | null;
+  signingKeyId?: string | null;
   currency?: string | null;
   permitProcessingFee?: unknown;
   dataPreparationFee?: unknown;
@@ -581,6 +587,50 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
   doc.bullet('Bijlage 1 — Gedetailleerde beschrijving van de verstrekte gegevens');
   doc.bullet('Bijlage 2 — Lijst van personen gemachtigd tot gegevensverwerking');
   doc.bullet('Bijlage 3 — Algemene voorwaarden HDAB-NL');
+  doc.spacer(4);
+
+  // 11. Digital signature — the PDF is a rendering of the digital permit; the
+  // signed JSON source document (D6.4 R9.1.3) is attached below.
+  if (
+    permit.signature && permit.signingKeyId && permit.signedAt &&
+    permit.issuedAt && permit.validFrom && permit.validUntil
+  ) {
+    doc.heading('11', 'DIGITALE ONDERTEKENING');
+    doc.field('Algoritme', 'Ed25519');
+    doc.field('Sleutel-ID', permit.signingKeyId);
+    doc.field('Ondertekend op', fmt(permit.signedAt));
+    doc.field('Handtekening', `${permit.signature.slice(0, 24)}...`);
+    doc.paragraph(
+      'De volledige digitale vergunning (het ondertekende brondocument) is bijgevoegd als bijlage ' +
+      'bij dit PDF-bestand en onafhankelijk te verifieren tegen de publieke sleutel op ' +
+      '/.well-known/jwks.json.',
+      { size: 8, color: C.gray },
+    );
+
+    const digitalPermit = buildDigitalPermitDocument({
+      permitNumber: permit.permitNumber,
+      version: permit.version,
+      applicationId: permit.applicationId,
+      issuedAt: permit.issuedAt,
+      validFrom: permit.validFrom,
+      validUntil: permit.validUntil,
+      status: permit.status,
+      revocationReason: permit.revocationReason ?? null,
+      revocationAt: permit.revocationAt ?? null,
+      signature: permit.signature,
+      signingKeyId: permit.signingKeyId,
+    });
+    await doc.pdfDoc.attach(
+      new TextEncoder().encode(JSON.stringify(digitalPermit, null, 2)),
+      `${formatPermitId(permit.permitNumber, permit.version)}.json`,
+      {
+        mimeType: 'application/json',
+        description: 'Digitale vergunning (ondertekend brondocument)',
+        creationDate: permit.signedAt,
+        modificationDate: permit.signedAt,
+      },
+    );
+  }
 
   doc.footer();
 

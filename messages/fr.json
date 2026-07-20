@@ -184,7 +184,13 @@
     "version": "Version",
     "successorOf": "Successeur de",
     "applicationNumber": "Numéro de demande",
-    "revocationReason": "Motif de révocation"
+    "revocationReason": "Motif de révocation",
+    "digitalPermitTitle": "Permis numérique",
+    "signatureAlgorithm": "Algorithme",
+    "signatureKeyId": "ID de clé",
+    "signedAt": "Signé le",
+    "signature": "Signature",
+    "downloadDigitalPermit": "Télécharger le permis numérique (JSON)"
   },
   "permitPanel": {
     "issueTitle": "Délivrer une autorisation",

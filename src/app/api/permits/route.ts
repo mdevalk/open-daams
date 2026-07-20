@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
+import { signPermit } from '@/lib/permit-signing';
 
 /**
  * Derives the next sequential base permit number for the given year from the
@@ -54,19 +55,34 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'A permit has already been issued for this application' }, { status: 409 });
 
     const year = new Date().getFullYear();
+    const issuedAt = new Date();
+    const validFrom = new Date(body.validFrom);
+    const validUntil = new Date(body.validUntil);
 
     let permit;
     const MAX_ATTEMPTS = 5;
     for (let attempt = 1; ; attempt++) {
       const permitNumber = await generatePermitNumber(year);
+      const { signature, signedAt, signingKeyId } = await signPermit({
+        permitNumber,
+        version: 1,
+        applicationId: body.applicationId,
+        issuedAt,
+        validFrom,
+        validUntil,
+      });
       try {
         permit = await prisma.dataPermit.create({
           data: {
             permitNumber,
             applicationId: body.applicationId,
             status: 'GRANTED',
-            validFrom: new Date(body.validFrom),
-            validUntil: new Date(body.validUntil),
+            issuedAt,
+            validFrom,
+            validUntil,
+            signature,
+            signedAt,
+            signingKeyId,
             permitProcessingFee: toDecimalOrNull(body.permitProcessingFee),
             dataPreparationFee: toDecimalOrNull(body.dataPreparationFee),
             speSetupFee: toDecimalOrNull(body.speSetupFee),

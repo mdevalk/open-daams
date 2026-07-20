@@ -184,7 +184,13 @@
     "version": "Versie",
     "successorOf": "Opvolger van",
     "applicationNumber": "Aanvraagnummer",
-    "revocationReason": "Reden intrekking"
+    "revocationReason": "Reden intrekking",
+    "digitalPermitTitle": "Digitale vergunning",
+    "signatureAlgorithm": "Algoritme",
+    "signatureKeyId": "Sleutel-ID",
+    "signedAt": "Ondertekend op",
+    "signature": "Handtekening",
+    "downloadDigitalPermit": "Digitale vergunning downloaden (JSON)"
   },
   "permitPanel": {
     "issueTitle": "Vergunning uitschrijven",
