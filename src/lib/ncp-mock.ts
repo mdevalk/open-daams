@@ -14,6 +14,20 @@ import { HdeuPayload } from './hdeu';
 
 export type NcpQueueEntry = HdeuPayload & { ncpTransactionId: string };
 
+/**
+ * Simulated outbound leg: transmitting a decision card for an HD@EU-sourced
+ * application (D6.4 R9.2.1) via the NCP. There's no real NCP to send to, so
+ * this just logs the transmission — the caller is responsible for recording
+ * the "sent" timestamp on the application. Symmetrical to getMockNcpQueue()
+ * below, which fakes the inbound leg for the same reason.
+ */
+export function sendDecisionCardToNcp(application: { id: string; hdeuApplicationId: string | null }): void {
+  console.log(
+    `[NCP mock] Decision card transmitted for application ${application.id} ` +
+    `(HD@EU ref: ${application.hdeuApplicationId ?? 'unknown'})`,
+  );
+}
+
 export function getMockNcpQueue(): NcpQueueEntry[] {
   return [
     {

@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
 import { signPermit } from '@/lib/permit-signing';
+import { regenerateStoredPermitPdf } from '@/lib/permit-pdf-store';
 
 /**
  * Derives the next sequential base permit number for the given year from the
@@ -111,6 +112,8 @@ export async function POST(req: NextRequest) {
         action: 'Permit issued',
       },
     });
+
+    await regenerateStoredPermitPdf(permit.id, prisma);
 
     return NextResponse.json(permit, { status: 201 });
   } catch (e) {

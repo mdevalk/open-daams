@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
+import { regenerateStoredPermitPdf } from '@/lib/permit-pdf-store';
 
 /**
  * POST /api/permits/[id]/authorized-persons
@@ -31,6 +32,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         email: body.email,
       },
     });
+
+    // §6.8 of the permit document lists authorised persons — regenerate.
+    await regenerateStoredPermitPdf(id, prisma);
 
     return NextResponse.json(person, { status: 201 });
   } catch (e) {

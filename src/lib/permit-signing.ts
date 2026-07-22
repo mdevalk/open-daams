@@ -3,7 +3,7 @@ import { sha512 } from '@noble/hashes/sha512';
 import { concatBytes } from '@noble/hashes/utils';
 import { readFileSync } from 'fs';
 import path from 'path';
-import { DataPermitStatus } from '@prisma/client';
+import { DataPermitStatus, DecisionOutcome } from '@prisma/client';
 import { formatPermitId } from './permit';
 
 // Required by @noble/ed25519 v2's sync sign/verify (no Web Crypto dependency).
@@ -114,6 +114,14 @@ export async function verifyPermitSignature(permit: VerifiablePermit): Promise<b
   return ed.verify(sigBytes, encoded, publicKeyBytes);
 }
 
+// TODO: implement key rotation. Today there's a single active key: the
+// generation script refuses to overwrite one without --force, and JWKS only
+// ever publishes the current key. After a rotation, permits signed with a
+// retired key become unverifiable (verifyPermitSignature already rejects a
+// signingKeyId that isn't the current kid — see the comment there). A real
+// rotation mechanism needs JWKS to publish multiple keys (current + retired,
+// keyed by kid) so historical signatures stay verifiable.
+
 /** Public-only JWK for the `.well-known/jwks.json` endpoint — never includes `d`. */
 export function getPublicJwk() {
   const { x, kid } = loadPrivateKeyJwk();
@@ -125,6 +133,40 @@ export function getPublicJwk() {
     alg: 'EdDSA',
     x,
   };
+}
+
+export type SignableDecisionCard = {
+  decisionId: string;
+  applicationId: string;
+  decisionOutcome: DecisionOutcome;
+  decisionAt: Date;
+};
+
+/**
+ * The signed subset of a negative decision card (D6.4 R9.2.3 — the negative
+ * decision-card PDF must be signed). Positive decision cards stay unsigned
+ * by design (R9.2.2 — a pre-permit for review, not a final document), so
+ * there's no equivalent function for the positive path.
+ */
+export function canonicalDecisionCardPayload(card: SignableDecisionCard, issuerKid: string) {
+  return {
+    decisionId: card.decisionId,
+    applicationId: card.applicationId,
+    decisionOutcome: card.decisionOutcome,
+    decisionAt: card.decisionAt.toISOString(),
+    issuerKid,
+  };
+}
+
+export async function signDecisionCard(
+  card: SignableDecisionCard,
+): Promise<{ signature: string; signedAt: Date; signingKeyId: string }> {
+  const { d, kid } = loadPrivateKeyJwk();
+  const privateKeyBytes = fromBase64Url(d);
+  const payload = canonicalDecisionCardPayload(card, kid);
+  const encoded = new TextEncoder().encode(stableStringify(payload));
+  const sigBytes = ed.sign(encoded, privateKeyBytes);
+  return { signature: toBase64Url(sigBytes), signedAt: new Date(), signingKeyId: kid };
 }
 
 export type DigitalPermitDocument = ReturnType<typeof canonicalPermitPayload> & {

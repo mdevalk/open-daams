@@ -9,7 +9,7 @@ import { buildDigitalPermitDocument } from './permit-signing';
 // (17 September 2025, accepted by TEHDAS2 Project Steering Group 11 Sep 2025).
 // Section numbers/headings below (1-10, 6.1-6.8) mirror the Annex 9 structure.
 
-const C = {
+export const C = {
   darkBlue: rgb(0.082, 0.259, 0.451),
   lightBlue: rgb(0.004, 0.412, 0.608),
   white: rgb(1, 1, 1),
@@ -53,7 +53,7 @@ function fmtMoney(v: unknown, currency: string): string | null {
   return new Intl.NumberFormat('nl-NL', { style: 'currency', currency }).format(n);
 }
 
-function fmt(d: Date | null | undefined): string {
+export function fmt(d: Date | null | undefined): string {
   if (!d) return '—';
   return new Date(d).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
@@ -123,7 +123,7 @@ const M = 40;   // margin
 const CW = PW - M * 2;
 const BOTTOM = PH - 50;
 
-class Doc {
+export class Doc {
   pdfDoc!: PDFDocument;
   regular!: PDFFont;
   bold!: PDFFont;

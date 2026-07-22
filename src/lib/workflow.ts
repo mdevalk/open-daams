@@ -189,6 +189,12 @@ export function calculateAdditionalInfoDeadline(requestedAt: Date): Date {
   return d;
 }
 
+export function calculatePermitAcceptanceDeadline(sentAt: Date): Date {
+  const d = new Date(sentAt);
+  d.setDate(d.getDate() + 28); // D6.4 R9.2.6 — same 28-day window as HealthData@EU
+  return d;
+}
+
 export function deadlineStatus(deadline: Date | null | undefined): 'ok' | 'warning' | 'overdue' | null {
   if (!deadline) return null;
   const days = (new Date(deadline).getTime() - Date.now()) / 86_400_000;

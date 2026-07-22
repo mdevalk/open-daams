@@ -222,10 +222,28 @@ model Application {
   decisionAt      DateTime?
   decisionSummary String?          @db.Text
 
-  // Optional permit-pending-acceptance step (D6.4 §9.2, SHOULD)
-  permitAcceptanceStatus PermitAcceptanceStatus?
-  permitConditionsSentAt DateTime?
-  permitAcceptedAt       DateTime?
+  // Decision card / pending acceptance (D6.4 §9.2, SHOULD). The decision
+  // card itself — decisionId, decisionCardPdf and (for negative decisions)
+  // its signature — is generated when DECISION_ISSUED is set; see
+  // lib/permit-signing.ts and lib/generate-decision-pdf.ts.
+  decisionId String? @unique // e.g. DEC-NL-2026-0001, distinct from the application/permit ID
+
+  // Positive path: pre-permit review before real permit issuance.
+  permitAcceptanceStatus   PermitAcceptanceStatus?
+  permitConditionsSentAt   DateTime?
+  permitAcceptanceDeadline DateTime? // permitConditionsSentAt + 28 days (R9.2.6)
+  permitAcceptedAt         DateTime?
+
+  // Negative path: signed decision document + accept/appeal.
+  negativeDecisionSentAt         DateTime?
+  negativeDecisionAcknowledgedAt DateTime?
+
+  // The decision-card document itself (unsigned pre-permit PDF for a
+  // positive decision, signed decision PDF for a negative one).
+  decisionCardPdf          Bytes?
+  decisionCardSignature    String?   @db.Text // negative decisions only — positive stays unsigned (R9.2.2)
+  decisionCardSignedAt     DateTime?
+  decisionCardSigningKeyId String?
 
   // HD@EU cross-border fields
   hdeuApplicationId  String?
@@ -466,6 +484,12 @@ model DataPermit {
   signature    String?   @db.Text
   signedAt     DateTime?
   signingKeyId String?
+
+  // The rendered, persisted PDF — the official legal document. Regenerated
+  // and overwritten on every mutation that affects its content: issuance,
+  // authorized-person add/remove, revoke/expire, and each new version issued
+  // on amendment/renewal/revocation-appeal approval. See lib/permit-pdf-store.ts.
+  pdf Bytes?
 
   logs              DataPermitLog[]
   authorizedPersons AuthorizedPerson[]

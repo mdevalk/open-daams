@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
 import { DECIDE_ROLES, APPROVAL_EFFECT } from '@/lib/permit-change';
 import { signPermit } from '@/lib/permit-signing';
+import { regenerateStoredPermitPdf } from '@/lib/permit-pdf-store';
 
 /**
  * PATCH /api/permits/[id]/change-requests/[requestId]
@@ -147,6 +148,10 @@ export async function PATCH(
           comment: body.comment ?? null,
         },
       });
+
+      // 7. Render and store the new version's PDF — the official legal
+      // document — now that its authorised persons (step 3) are in place.
+      await regenerateStoredPermitPdf(newPermit.id, tx);
 
       return newPermit.id;
     });

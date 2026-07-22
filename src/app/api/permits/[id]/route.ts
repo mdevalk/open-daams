@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { PERMIT_TRANSITIONS } from '@/lib/permit';
 import { DataPermitStatus } from '@prisma/client';
+import { regenerateStoredPermitPdf } from '@/lib/permit-pdf-store';
 
 /**
  * GET /api/permits/[id]  — fetch permit with logs
@@ -69,6 +70,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         },
       }),
     ]);
+
+    // The permit document shows status/revocation — regenerate.
+    await regenerateStoredPermitPdf(id, prisma);
 
     return NextResponse.json(updated);
   } catch (e) {

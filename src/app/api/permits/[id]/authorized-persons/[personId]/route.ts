@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
+import { regenerateStoredPermitPdf } from '@/lib/permit-pdf-store';
 
 /**
  * DELETE /api/permits/[id]/authorized-persons/[personId]
@@ -24,6 +25,9 @@ export async function DELETE(
     }
 
     await prisma.authorizedPerson.delete({ where: { id: personId } });
+
+    // §6.8 of the permit document lists authorised persons — regenerate.
+    await regenerateStoredPermitPdf(id, prisma);
 
     return NextResponse.json({ ok: true });
   } catch (e) {
