@@ -64,11 +64,10 @@ export default async function InvoicesPage({
 
   return (
     <div className="space-y-6">
-      <div className="text-sm text-gray-500">
-        <span className="text-gray-900">{t('breadcrumb')}</span>
+      <div className="border-b border-gray-200 pb-4">
+        <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
+        <p className="text-sm text-gray-500 mt-1">{t('subtitle')}</p>
       </div>
-
-      <h1 className="text-xl font-bold text-gray-900">{t('title')}</h1>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <a
@@ -127,9 +126,7 @@ export default async function InvoicesPage({
             const reference = invoice.permit
               ? `${formatPermitId(invoice.permit.permitNumber, invoice.permit.version)} — ${invoice.permit.application?.referenceNumber} — ${invoice.permit.application?.title}`
               : `${invoice.application?.referenceNumber} — ${invoice.application?.title}`;
-            const href = invoice.permit
-              ? `/${locale}/permits/${invoice.permit.id}`
-              : `/${locale}/applications/${invoice.application?.id}`;
+            const href = `/${locale}/invoices/${invoice.id}`;
             return (
               <a
                 key={invoice.id}

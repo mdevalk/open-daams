@@ -70,9 +70,22 @@
     "kpiActive": "Actief / in behandeling",
     "kpiOverdue": "Verlopen deadlines",
     "kpiCompleted": "Afgerond",
-    "byStatus": "Aanvragen per status",
     "recentActivity": "Recentelijk bijgewerkt",
-    "allApplications": "Alle aanvragen →"
+    "allApplications": "Alle aanvragen →",
+    "attentionTitle": "Vraagt aandacht",
+    "attentionOverdue": "Verlopen",
+    "attentionDueSoon": "Binnenkort verlopen",
+    "attentionAwaitingDecision": "Wacht op beslissing",
+    "decisionDeadlineLabel": "Beslisdeadline",
+    "additionalInfoDeadlineLabel": "Deadline aanvullende informatie",
+    "permitExpiresLabel": "Vergunning verloopt",
+    "permitExpiredLabel": "Vergunning verlopen — status nog niet bijgewerkt",
+    "invoiceDueLabel": "Factuur vervalt",
+    "awaitingPreScreeningLabel": "Wacht op voorscreening",
+    "changeRequestPendingLabel": "aangevraagd",
+    "daysOverdue": "{count}d verlopen",
+    "daysRemaining": "{count}d resterend",
+    "attentionEmpty": "Niets hier — alles in orde"
   },
   "applications": {
     "title": "Aanvragen",
@@ -132,6 +145,7 @@
   },
   "permits": {
     "title": "Vergunningen",
+    "subtitle": "Datavergunning verleend op grond van artikel 68 EHDS",
     "breadcrumb": "Vergunningen",
     "total": "Totaal",
     "noResults": "Geen vergunningen gevonden",
@@ -200,7 +214,6 @@
     "issueButton": "Vergunning uitschrijven",
     "noPermission": "Alleen DECISION_MAKER of ADMIN kan een vergunning uitschrijven.",
     "loading": "Bezig...",
-    "viewDetails": "Bekijk details →",
     "actionsTitle": "Vergunningsacties",
     "newValidUntil": "Nieuwe vervaldatum",
     "revocationReason": "Reden intrekking (verplicht)",
@@ -256,6 +269,7 @@
   },
   "invoices": {
     "title": "Facturen",
+    "subtitle": "Vergoedingen voor secundair gebruik op grond van artikel 62 EHDS",
     "breadcrumb": "Facturen",
     "total": "Totaal",
     "overdue": "Achterstallig",
@@ -280,7 +294,12 @@
     "cancelInvoice": "Annuleren",
     "issuedOn": "Uitgegeven",
     "dueOn": "Vervalt",
-    "paidOn": "Betaald"
+    "paidOn": "Betaald",
+    "detailsTitle": "Factuurgegevens",
+    "lineItemsTitle": "Regels",
+    "notes": "Notities",
+    "viewApplication": "Bekijk aanvraag →",
+    "permitTitle": "Vergunning"
   },
   "ethicalReview": {
     "title": "Ethische toetsing (D6.3 §6.1)",

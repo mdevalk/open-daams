@@ -2,7 +2,6 @@ import { ComponentProps } from 'react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { prisma } from '@/lib/db';
-import { PermitCard } from '@/components/PermitCard';
 import { AuthorizedPersonsPanel } from '@/components/AuthorizedPersonsPanel';
 import { InvoicePanel } from '@/components/InvoicePanel';
 import { SpeProvisioningPanel } from '@/components/SpeProvisioningPanel';
@@ -162,7 +161,13 @@ export default async function PermitDetailPage({
 
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-gray-900 font-mono">{formatPermitId(permit.permitNumber, permit.version)}</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-bold text-gray-900 font-mono">{formatPermitId(permit.permitNumber, permit.version)}</h1>
+            <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold ${PERMIT_STATUS_COLORS[permit.status]}`}>
+              {tps(permit.status)}
+            </span>
+          </div>
+          <p className="text-sm text-gray-500 mt-1">{t('subtitle')}</p>
           <p className="text-sm text-gray-500 mt-1">
             {permit.application?.referenceNumber} — {permit.application?.title}
           </p>
@@ -181,7 +186,30 @@ export default async function PermitDetailPage({
         <div className="lg:col-span-2 space-y-6">
           <section className="rounded-xl border border-gray-200 bg-white p-5">
             <h2 className="font-semibold text-gray-900 mb-4">{t('detailsTitle')}</h2>
-            <PermitCard permit={permit} locale={locale} />
+            <dl className="grid grid-cols-2 gap-4 text-sm">
+              <Field label={t('validFrom')} value={formatDate(permit.validFrom)} />
+              <Field label={t('validUntil')} value={formatDate(permit.validUntil)} />
+              <Field label={t('version')} value={`v${permit.version}`} />
+              <Field label={t('issuedAt')} value={formatDate(permit.issuedAt)} />
+              {permit.previousPermit && (
+                <Field
+                  label={t('successorOf')}
+                  wide
+                  value={
+                    <a href={`/${locale}/permits/${permit.previousPermit.id}`} className="text-[#01689b] hover:underline font-mono text-xs">
+                      {formatPermitId(permit.previousPermit.permitNumber, permit.previousPermit.version)}
+                    </a>
+                  }
+                />
+              )}
+              {permit.status === 'REVOKED' && permit.revocationReason && (
+                <Field
+                  label={t('revocationReason')}
+                  wide
+                  value={<span className="text-red-700">{permit.revocationReason}</span>}
+                />
+              )}
+            </dl>
           </section>
 
           {app?.applicant && (

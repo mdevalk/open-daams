@@ -49,11 +49,10 @@ export default async function PermitsPage({
 
   return (
     <div className="space-y-6">
-      <div className="text-sm text-gray-500">
-        <span className="text-gray-900">{t('breadcrumb')}</span>
+      <div className="border-b border-gray-200 pb-4">
+        <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
+        <p className="text-sm text-gray-500 mt-1">{t('subtitle')}</p>
       </div>
-
-      <h1 className="text-xl font-bold text-gray-900">{t('title')}</h1>
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">

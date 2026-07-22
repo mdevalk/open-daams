@@ -200,14 +200,10 @@ export function PermitPanel({ application, currentUser }: Props) {
       <div className="rounded border border-gray-200 bg-white p-4">
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-semibold text-gray-900">{tp('title')}</h2>
-          <a
-            href={`/permits/${permit.id}`}
-            className="text-xs text-[#01689b] hover:underline"
-          >
-            {tp('viewDetails')}
-          </a>
         </div>
-        <PermitCard permit={permit} compact />
+        <a href={`/permits/${permit.id}`} className="block hover:opacity-80 transition-opacity">
+          <PermitCard permit={permit} compact />
+        </a>
       </div>
 
       {availableTransitions.length > 0 && (

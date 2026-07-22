@@ -70,9 +70,22 @@
     "kpiActive": "Active / in progress",
     "kpiOverdue": "Overdue deadlines",
     "kpiCompleted": "Completed",
-    "byStatus": "Applications by status",
     "recentActivity": "Recently updated",
-    "allApplications": "All applications →"
+    "allApplications": "All applications →",
+    "attentionTitle": "Needs attention",
+    "attentionOverdue": "Overdue",
+    "attentionDueSoon": "Due soon",
+    "attentionAwaitingDecision": "Awaiting decision",
+    "decisionDeadlineLabel": "Decision deadline",
+    "additionalInfoDeadlineLabel": "Additional info deadline",
+    "permitExpiresLabel": "Permit expires",
+    "permitExpiredLabel": "Permit expired — status not yet updated",
+    "invoiceDueLabel": "Invoice due",
+    "awaitingPreScreeningLabel": "Awaiting pre-screening",
+    "changeRequestPendingLabel": "requested",
+    "daysOverdue": "{count}d overdue",
+    "daysRemaining": "{count}d remaining",
+    "attentionEmpty": "Nothing here — all clear"
   },
   "applications": {
     "title": "Applications",
@@ -132,6 +145,7 @@
   },
   "permits": {
     "title": "Permits",
+    "subtitle": "Data permit granted under Article 68 EHDS",
     "breadcrumb": "Permits",
     "total": "Total",
     "noResults": "No permits found",
@@ -200,7 +214,6 @@
     "issueButton": "Issue permit",
     "noPermission": "Only DECISION_MAKER or ADMIN can issue a permit.",
     "loading": "Processing...",
-    "viewDetails": "View details →",
     "actionsTitle": "Permit actions",
     "newValidUntil": "New expiry date",
     "revocationReason": "Revocation reason (required)",
@@ -256,6 +269,7 @@
   },
   "invoices": {
     "title": "Invoices",
+    "subtitle": "Fees for secondary use under Article 62 EHDS",
     "breadcrumb": "Invoices",
     "total": "Total",
     "overdue": "Overdue",
@@ -280,7 +294,12 @@
     "cancelInvoice": "Cancel",
     "issuedOn": "Issued",
     "dueOn": "Due",
-    "paidOn": "Paid"
+    "paidOn": "Paid",
+    "detailsTitle": "Invoice details",
+    "lineItemsTitle": "Line items",
+    "notes": "Notes",
+    "viewApplication": "View application →",
+    "permitTitle": "Permit"
   },
   "ethicalReview": {
     "title": "Ethical review (D6.3 §6.1)",

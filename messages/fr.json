@@ -70,9 +70,22 @@
     "kpiActive": "Actif / en cours",
     "kpiOverdue": "Délais dépassés",
     "kpiCompleted": "Clôturées",
-    "byStatus": "Demandes par statut",
     "recentActivity": "Récemment mis à jour",
-    "allApplications": "Toutes les demandes →"
+    "allApplications": "Toutes les demandes →",
+    "attentionTitle": "Nécessite une attention",
+    "attentionOverdue": "En retard",
+    "attentionDueSoon": "Échéance proche",
+    "attentionAwaitingDecision": "En attente de décision",
+    "decisionDeadlineLabel": "Délai de décision",
+    "additionalInfoDeadlineLabel": "Délai d'informations complémentaires",
+    "permitExpiresLabel": "Autorisation expire",
+    "permitExpiredLabel": "Autorisation expirée — statut non encore mis à jour",
+    "invoiceDueLabel": "Facture échéance",
+    "awaitingPreScreeningLabel": "En attente de présélection",
+    "changeRequestPendingLabel": "demandée",
+    "daysOverdue": "{count}j de retard",
+    "daysRemaining": "{count}j restants",
+    "attentionEmpty": "Rien à signaler — tout est en ordre"
   },
   "applications": {
     "title": "Demandes",
@@ -132,6 +145,7 @@
   },
   "permits": {
     "title": "Autorisations",
+    "subtitle": "Permis de données accordé en vertu de l'article 68 EHDS",
     "breadcrumb": "Autorisations",
     "total": "Total",
     "noResults": "Aucune autorisation trouvée",
@@ -200,7 +214,6 @@
     "issueButton": "Délivrer l'autorisation",
     "noPermission": "Seul un DECISION_MAKER ou ADMIN peut délivrer une autorisation.",
     "loading": "En cours...",
-    "viewDetails": "Voir les détails →",
     "actionsTitle": "Actions sur l'autorisation",
     "newValidUntil": "Nouvelle date d'expiration",
     "revocationReason": "Motif de révocation (obligatoire)",
@@ -256,6 +269,7 @@
   },
   "invoices": {
     "title": "Factures",
+    "subtitle": "Frais pour l'utilisation secondaire en vertu de l'article 62 EHDS",
     "breadcrumb": "Factures",
     "total": "Total",
     "overdue": "En retard",
@@ -280,7 +294,12 @@
     "cancelInvoice": "Annuler",
     "issuedOn": "Émise",
     "dueOn": "Échéance",
-    "paidOn": "Payée"
+    "paidOn": "Payée",
+    "detailsTitle": "Détails de la facture",
+    "lineItemsTitle": "Lignes",
+    "notes": "Notes",
+    "viewApplication": "Voir la demande →",
+    "permitTitle": "Autorisation"
   },
   "ethicalReview": {
     "title": "Évaluation éthique (D6.3 §6.1)",
