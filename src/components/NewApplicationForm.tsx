@@ -166,7 +166,7 @@ export function NewApplicationForm({ applicants }: { applicants: User[] }) {
         <h2 className="font-semibold text-gray-900 mb-4">Application type</h2>
         <div className="grid grid-cols-2 gap-3">
           {[
-            { value: 'DATA_ACCESS_APPLICATION', label: 'Data Permit Application', desc: 'Full access to personal data in a Secure Processing Environment (Art. 67 EHDS)' },
+            { value: 'DATA_ACCESS_APPLICATION', label: 'Data Access Application', desc: 'Full access to personal data in a Secure Processing Environment (Art. 67 EHDS)' },
             { value: 'DATA_REQUEST', label: 'Data Request', desc: 'Anonymised / aggregated statistical results only (Art. 69 EHDS)' },
           ].map((opt) => (
             <label key={opt.value} className="flex items-start gap-3 rounded-lg border border-gray-200 p-3 cursor-pointer has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
