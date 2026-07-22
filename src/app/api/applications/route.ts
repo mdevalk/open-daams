@@ -48,7 +48,6 @@ export async function POST(req: NextRequest) {
         title: body.title,
         projectDescription: body.projectDescription ?? '',
         purposeCategory: body.purposeCategory ?? '',
-        requestedDatasets: body.requestedDatasets ?? [],
         requestedVariables: body.requestedVariables ?? '',
         studyPopulation: body.studyPopulation ?? '',
         inclusionCriteria: body.inclusionCriteria ?? '',
@@ -102,6 +101,21 @@ export async function POST(req: NextRequest) {
         tabulationPlan: !isDataAccessApplication ? (body.tabulationPlan || null) : null,
       },
     });
+
+    const dataHolderGroups = Array.isArray(body.requestedDatasets) ? body.requestedDatasets : [];
+    if (dataHolderGroups.length > 0) {
+      await prisma.requestedDataset.createMany({
+        data: dataHolderGroups.flatMap(
+          (g: { dataHolderName: string; datasets: { name: string; url?: string | null }[] }) =>
+            g.datasets.map((d) => ({
+              applicationId: application.id,
+              dataHolderName: g.dataHolderName,
+              name: d.name,
+              url: d.url || null,
+            })),
+        ),
+      });
+    }
 
     await prisma.auditLog.create({
       data: {

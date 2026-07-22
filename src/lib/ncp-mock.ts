@@ -45,7 +45,18 @@ export function getMockNcpQueue(): NcpQueueEntry[] {
         'Cross-national cohort study comparing long-term complications and treatment pathways for type-2 diabetes patients in Finland and the Netherlands, leveraging routine primary care and hospital data from both countries.',
       purposeCategory: 'SCIENTIFIC_RESEARCH',
       legalBasis: 'EHDS Art. 53(1) – scientific research',
-      requestedDatasets: ['GP_ELECTRONIC_RECORDS', 'HOSPITAL_DISCHARGE_RECORDS', 'MEDICATION_DISPENSING'],
+      requestedDatasets: [
+        {
+          dataHolderName: 'RIVM',
+          datasets: [
+            { name: 'Landelijke Basisregistratie Ziekenhuiszorg (LBZ) — ontslagdiagnoses', url: null },
+          ],
+        },
+        {
+          dataHolderName: 'GP Information Network (LINH)',
+          datasets: [{ name: 'Medicatievoorschriften huisartsenpraktijken (ATC A10)', url: null }],
+        },
+      ],
       requestedVariables:
         'Age, sex, diabetes diagnosis date (ICD-10 E11), HbA1c, BMI, medication (ATC A10), hospitalisations, complications (ICD-10 E110-E149)',
       studyPopulation: 'Adults aged 18+ with a diagnosis of type-2 diabetes registered in Dutch general practices',
@@ -72,7 +83,15 @@ export function getMockNcpQueue(): NcpQueueEntry[] {
         'Request for aggregated, non-identifiable statistical output on cardiovascular comorbidity prevalence among oncology patients treated in Dutch academic hospitals, for a multi-country EHDS feasibility comparison.',
       purposeCategory: 'PUBLIC_HEALTH',
       legalBasis: 'EHDS Art. 53(1) – public health',
-      requestedDatasets: ['HOSPITAL_DISCHARGE_RECORDS', 'DISEASE_REGISTRIES'],
+      requestedDatasets: [
+        {
+          dataHolderName: 'Dutch Hospital Data (DHD)',
+          datasets: [
+            { name: 'Landelijke Basisregistratie Ziekenhuiszorg (LBZ) — ontslagdiagnoses', url: null },
+            { name: 'Nederlandse Kankerregistratie (NKR)', url: null },
+          ],
+        },
+      ],
       requestedVariables: 'Aggregated counts by cancer type, cardiovascular comorbidity code (ICD-10 I00-I99), age band, sex',
       studyPopulation: 'Oncology patients treated in Dutch academic hospitals 2020-2025',
       inclusionCriteria: 'Confirmed oncology diagnosis, treatment episode 2020-2025',

@@ -85,7 +85,6 @@ export async function POST(req: NextRequest) {
         projectDescription: p.projectDescription,
         purposeCategory: p.purposeCategory,
         legalBasis: p.legalBasis,
-        requestedDatasets: p.requestedDatasets,
         requestedVariables: p.requestedVariables,
         studyPopulation: p.studyPopulation,
         inclusionCriteria: p.inclusionCriteria,
@@ -100,6 +99,19 @@ export async function POST(req: NextRequest) {
         decisionDeadline: calculateDecisionDeadline(now),
       },
     });
+
+    if (p.requestedDatasets.length > 0) {
+      await prisma.requestedDataset.createMany({
+        data: p.requestedDatasets.flatMap((g) =>
+          g.datasets.map((d) => ({
+            applicationId: application.id,
+            dataHolderName: g.dataHolderName,
+            name: d.name,
+            url: d.url || null,
+          })),
+        ),
+      });
+    }
 
     await prisma.auditLog.create({
       data: {

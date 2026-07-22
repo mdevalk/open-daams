@@ -15,17 +15,6 @@ const PURPOSE_OPTIONS = [
   { value: 'CARE_IMPROVEMENT', label: 'Care improvement' },
 ];
 
-const DATASET_OPTIONS = [
-  'GP_ELECTRONIC_RECORDS',
-  'HOSPITAL_DISCHARGE_RECORDS',
-  'MEDICATION_DISPENSING',
-  'NATIONAL_IMMUNISATION_REGISTER',
-  'MENTAL_HEALTH_CLAIMS',
-  'CANCER_REGISTRY',
-  'VITAL_STATISTICS',
-  'POPULATION_REGISTRY',
-];
-
 // TEHDAS2 D6.3 Annex 5 §8 — GDPR Art. 6(1) lawful processing grounds
 const LAWFULNESS_OPTIONS = [
   { value: 'CONSENT', label: 'Consent of the data subject' },
@@ -46,7 +35,9 @@ export function NewApplicationForm({ applicants }: { applicants: User[] }) {
   const terr = useTranslations('errors');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [datasets, setDatasets] = useState<string[]>([]);
+  const [dataHolderGroups, setDataHolderGroups] = useState<
+    { id: string; dataHolderName: string; datasets: { id: string; name: string; url: string }[] }[]
+  >([{ id: crypto.randomUUID(), dataHolderName: '', datasets: [{ id: crypto.randomUUID(), name: '', url: '' }] }]);
   const [type, setType] = useState<AppType | ''>('');
 
   const [cohortFormationMethod, setCohortFormationMethod] = useState('');
@@ -64,8 +55,38 @@ export function NewApplicationForm({ applicants }: { applicants: User[] }) {
   const [usesOptOutException, setUsesOptOutException] = useState(false);
   const [decisionTrack, setDecisionTrack] = useState('STANDARD');
 
-  function toggleDataset(ds: string) {
-    setDatasets((prev) => prev.includes(ds) ? prev.filter((d) => d !== ds) : [...prev, ds]);
+  function addDataHolderGroup() {
+    setDataHolderGroups((prev) => [
+      ...prev,
+      { id: crypto.randomUUID(), dataHolderName: '', datasets: [{ id: crypto.randomUUID(), name: '', url: '' }] },
+    ]);
+  }
+  function removeDataHolderGroup(id: string) {
+    setDataHolderGroups((prev) => prev.filter((g) => g.id !== id));
+  }
+  function updateDataHolderName(id: string, name: string) {
+    setDataHolderGroups((prev) => prev.map((g) => (g.id === id ? { ...g, dataHolderName: name } : g)));
+  }
+  function addDatasetToGroup(groupId: string) {
+    setDataHolderGroups((prev) =>
+      prev.map((g) =>
+        g.id === groupId ? { ...g, datasets: [...g.datasets, { id: crypto.randomUUID(), name: '', url: '' }] } : g,
+      ),
+    );
+  }
+  function removeDatasetFromGroup(groupId: string, datasetId: string) {
+    setDataHolderGroups((prev) =>
+      prev.map((g) => (g.id === groupId ? { ...g, datasets: g.datasets.filter((d) => d.id !== datasetId) } : g)),
+    );
+  }
+  function updateDatasetField(groupId: string, datasetId: string, field: 'name' | 'url', value: string) {
+    setDataHolderGroups((prev) =>
+      prev.map((g) =>
+        g.id === groupId
+          ? { ...g, datasets: g.datasets.map((d) => (d.id === datasetId ? { ...d, [field]: value } : d)) }
+          : g,
+      ),
+    );
   }
 
   function toggleLawfulness(code: string) {
@@ -84,7 +105,15 @@ export function NewApplicationForm({ applicants }: { applicants: User[] }) {
       title: form.get('title'),
       projectDescription: form.get('projectDescription'),
       purposeCategory: form.get('purposeCategory'),
-      requestedDatasets: datasets,
+      requestedDatasets: dataHolderGroups
+        .filter((g) => g.dataHolderName.trim())
+        .map((g) => ({
+          dataHolderName: g.dataHolderName.trim(),
+          datasets: g.datasets
+            .filter((d) => d.name.trim())
+            .map((d) => ({ name: d.name.trim(), url: d.url.trim() || null })),
+        }))
+        .filter((g) => g.datasets.length > 0),
       requestedVariables: form.get('requestedVariables'),
       studyPopulation: form.get('studyPopulation'),
       inclusionCriteria: form.get('inclusionCriteria'),
@@ -242,14 +271,69 @@ export function NewApplicationForm({ applicants }: { applicants: User[] }) {
       <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-4">
         <h2 className="font-semibold text-gray-900">Data scope</h2>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Requested datasets</label>
-          <div className="grid grid-cols-2 gap-2">
-            {DATASET_OPTIONS.map((ds) => (
-              <label key={ds} className="flex items-center gap-2 text-sm cursor-pointer">
-                <input type="checkbox" checked={datasets.includes(ds)} onChange={() => toggleDataset(ds)} className="rounded" />
-                <span className="text-gray-700">{ds.replace(/_/g, ' ')}</span>
-              </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Requested datasets, by data holder</label>
+          <div className="space-y-3">
+            {dataHolderGroups.map((group) => (
+              <div key={group.id} className="rounded-lg border border-gray-200 p-3 space-y-2">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={group.dataHolderName}
+                    onChange={(e) => updateDataHolderName(group.id, e.target.value)}
+                    placeholder="Data holder name"
+                    className={`${inputCls} flex-1`}
+                  />
+                  {dataHolderGroups.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeDataHolderGroup(group.id)}
+                      className="text-xs text-red-600 hover:underline"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+                <div className="space-y-2 pl-2 border-l-2 border-gray-100">
+                  {group.datasets.map((dataset) => (
+                    <div key={dataset.id} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={dataset.name}
+                        onChange={(e) => updateDatasetField(group.id, dataset.id, 'name', e.target.value)}
+                        placeholder="Dataset name"
+                        className={`${inputCls} flex-1`}
+                      />
+                      <input
+                        type="url"
+                        value={dataset.url}
+                        onChange={(e) => updateDatasetField(group.id, dataset.id, 'url', e.target.value)}
+                        placeholder="Catalogue URL (optional)"
+                        className={`${inputCls} flex-1`}
+                      />
+                      {group.datasets.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeDatasetFromGroup(group.id, dataset.id)}
+                          className="text-xs text-red-600 hover:underline flex-shrink-0"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => addDatasetToGroup(group.id)}
+                    className="text-xs text-blue-600 hover:underline font-medium"
+                  >
+                    + Add dataset
+                  </button>
+                </div>
+              </div>
             ))}
+            <button type="button" onClick={addDataHolderGroup} className="text-sm text-blue-600 hover:underline font-medium">
+              + Add data holder
+            </button>
           </div>
         </div>
         <div>

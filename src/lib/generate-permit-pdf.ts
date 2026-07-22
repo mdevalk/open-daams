@@ -2,7 +2,7 @@ import { PDFDocument, rgb, StandardFonts, PDFFont, PDFPage } from 'pdf-lib';
 import { DataPermitStatus } from '@prisma/client';
 import { APP_NAME } from './branding';
 import { formatPermitId } from './permit';
-import { buildDigitalPermitDocument } from './permit-signing';
+import { buildDigitalPermitDocument, groupDatasetsByHolder } from './permit-signing';
 
 // Layout follows TEHDAS2 D6.3 "Guideline for Health Data Access Bodies on the
 // procedures and formats for data access", Annex 9 - Data permit template
@@ -33,15 +33,20 @@ export const C = {
 const WINANSI_REPLACEMENTS: Record<string, string> = {
   '≥': '>=', '≤': '<=', '≠': '!=',
   '‘': "'", '’': "'", '“': '"', '”': '"',
-  '–': '-', '—': '-', '…': '...',
+  '–': '-', '—': '-', '…': '...', '•': '-',
   ' ': ' ',
 };
 
+// Built from WINANSI_REPLACEMENTS' own keys so every mapped character is
+// actually matched — a hand-duplicated character class silently drops
+// replacements added to the map but not the regex (as happened with '•').
+const WINANSI_REPLACEMENT_PATTERN = new RegExp(
+  `[${Object.keys(WINANSI_REPLACEMENTS).map((ch) => `\\u{${ch.codePointAt(0)!.toString(16)}}`).join('')}]`,
+  'gu',
+);
+
 function sanitizeText(str: string): string {
-  const replaced = str.replace(
-    /[≥≤≠‘’“”–—… ]/g,
-    (ch) => WINANSI_REPLACEMENTS[ch] ?? ch,
-  );
+  const replaced = str.replace(WINANSI_REPLACEMENT_PATTERN, (ch) => WINANSI_REPLACEMENTS[ch] ?? ch);
   // eslint-disable-next-line no-control-regex
   return replaced.replace(/[^\x00-\xFF]/g, '?');
 }
@@ -90,6 +95,7 @@ export type PermitPdfData = {
   dataHolderFee?: unknown;
   paymentTerms?: string | null;
   authorizedPersons?: Array<{ name: string; affiliation: string; email: string }> | null;
+  grantedDatasets?: Array<{ dataHolderName: string; name: string; url: string | null }> | null;
   application: {
     referenceNumber: string;
     title: string;
@@ -98,7 +104,6 @@ export type PermitPdfData = {
     decisionSummary?: string | null;
     projectDescription?: string | null;
     purposeCategory?: string | null;
-    requestedDatasets?: string[] | null;
     requestedVariables?: string | null;
     studyPopulation?: string | null;
     inclusionCriteria?: string | null;
@@ -450,8 +455,11 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
   doc.spacer(6);
 
   doc.subheading('6.4  Gegevens die op grond van de vergunning worden verstrekt');
-  if (app?.requestedDatasets?.length) {
-    doc.field('Datasets', app.requestedDatasets.join(', '));
+  for (const group of groupDatasetsByHolder(permit.grantedDatasets ?? [])) {
+    doc.paragraph(group.dataHolderName, { size: 8.5, color: C.darkBlue, font: doc.bold });
+    for (const dataset of group.datasets) {
+      doc.bullet(dataset.url ? `${dataset.name} — ${dataset.url}` : dataset.name);
+    }
   }
   if (app?.requestedVariables) {
     doc.field('Gevraagde variabelen', app.requestedVariables);
@@ -614,6 +622,7 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
       issuedAt: permit.issuedAt,
       validFrom: permit.validFrom,
       validUntil: permit.validUntil,
+      grantedDatasets: groupDatasetsByHolder(permit.grantedDatasets ?? []),
       status: permit.status,
       revocationReason: permit.revocationReason ?? null,
       revocationAt: permit.revocationAt ?? null,

@@ -28,7 +28,11 @@ export type HdeuPayload = {
   projectDescription: string;
   purposeCategory: string;
   legalBasis: string;
-  requestedDatasets: string[];
+  // Grouped by data holder — a national extension of the envelope (the base
+  // TEHDAS2 D6.4 interoperability schema doesn't define per-holder
+  // granularity at the application stage); Member States may extend the
+  // envelope with such fields per the module comment above.
+  requestedDatasets: { dataHolderName: string; datasets: { name: string; url?: string | null }[] }[];
   requestedVariables: string;
   studyPopulation: string;
   inclusionCriteria: string;
@@ -88,6 +92,17 @@ export function parseHdeuPayload(raw: unknown): ParseResult {
 
   if (!Array.isArray(obj.requestedDatasets)) {
     errors.push('requestedDatasets must be an array');
+  } else if (
+    obj.requestedDatasets.some((g) => {
+      if (typeof g !== 'object' || g === null) return true;
+      const group = g as Record<string, unknown>;
+      if (typeof group.dataHolderName !== 'string' || !Array.isArray(group.datasets)) return true;
+      return group.datasets.some(
+        (d) => typeof d !== 'object' || d === null || typeof (d as Record<string, unknown>).name !== 'string',
+      );
+    })
+  ) {
+    errors.push('requestedDatasets must be an array of { dataHolderName, datasets: [{ name, url? }] }');
   }
 
   if (errors.length > 0) return { ok: false, errors };

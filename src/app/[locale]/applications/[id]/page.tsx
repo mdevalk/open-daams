@@ -16,6 +16,7 @@ import { UserSwitcher } from '@/components/UserSwitcher';
 import type { CompletenessItem } from '@/app/api/applications/[id]/completeness-check/route';
 import { formatDate, formatDateTime, purposeLabel, serializePrisma } from '@/lib/utils';
 import { formatPermitId } from '@/lib/permit';
+import { groupDatasetsByHolder } from '@/lib/permit-signing';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,6 +52,7 @@ export default async function ApplicationDetailPage({
         appeals: { orderBy: { submittedAt: 'desc' } },
         completenessCheck: true,
         extractionRequests: { orderBy: { requestedAt: 'desc' } },
+        requestedDatasets: { orderBy: { createdAt: 'asc' } },
       },
     }),
     prisma.user.findMany({ orderBy: { name: 'asc' } }),
@@ -200,9 +202,24 @@ export default async function ApplicationDetailPage({
 
           <section className="rounded-xl border border-gray-200 bg-white p-5">
             <h2 className="font-semibold text-gray-900 mb-3">{t('datasetsTitle')}</h2>
-            <div className="flex flex-wrap gap-2">
-              {application.requestedDatasets.map((ds) => (
-                <span key={ds} className="rounded-full bg-blue-50 text-blue-700 text-xs px-3 py-1 font-medium">{ds}</span>
+            <div className="space-y-3">
+              {groupDatasetsByHolder(application.requestedDatasets).map((group) => (
+                <div key={group.dataHolderName}>
+                  <p className="text-gray-500 text-xs uppercase tracking-wide mb-1">{group.dataHolderName}</p>
+                  <ul className="list-disc list-inside text-sm space-y-0.5">
+                    {group.datasets.map((dataset) => (
+                      <li key={dataset.name}>
+                        {dataset.url ? (
+                          <a href={dataset.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                            {dataset.name}
+                          </a>
+                        ) : (
+                          dataset.name
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ))}
             </div>
             <div className="mt-4 space-y-3 text-sm">

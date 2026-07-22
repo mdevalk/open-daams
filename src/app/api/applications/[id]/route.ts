@@ -35,7 +35,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       ...(body.title !== undefined ? { title: body.title } : {}),
       ...(body.projectDescription !== undefined ? { projectDescription: body.projectDescription } : {}),
       ...(body.purposeCategory !== undefined ? { purposeCategory: body.purposeCategory } : {}),
-      ...(body.requestedDatasets !== undefined ? { requestedDatasets: body.requestedDatasets } : {}),
       ...(body.requestedVariables !== undefined ? { requestedVariables: body.requestedVariables } : {}),
       ...(body.studyPopulation !== undefined ? { studyPopulation: body.studyPopulation } : {}),
       ...(body.inclusionCriteria !== undefined ? { inclusionCriteria: body.inclusionCriteria } : {}),
@@ -56,6 +55,24 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       ...(body.permitValidUntil !== undefined ? { permitValidUntil: new Date(body.permitValidUntil) } : {}),
     },
   });
+
+  if (body.requestedDatasets !== undefined) {
+    const dataHolderGroups = Array.isArray(body.requestedDatasets) ? body.requestedDatasets : [];
+    await prisma.$transaction([
+      prisma.requestedDataset.deleteMany({ where: { applicationId: id } }),
+      prisma.requestedDataset.createMany({
+        data: dataHolderGroups.flatMap(
+          (g: { dataHolderName: string; datasets: { name: string; url?: string | null }[] }) =>
+            g.datasets.map((d) => ({
+              applicationId: id,
+              dataHolderName: g.dataHolderName,
+              name: d.name,
+              url: d.url || null,
+            })),
+        ),
+      }),
+    ]);
+  }
 
   return NextResponse.json(application);
 }

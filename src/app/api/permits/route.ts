@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
-import { signPermit } from '@/lib/permit-signing';
+import { signPermit, groupDatasetsByHolder } from '@/lib/permit-signing';
 import { regenerateStoredPermitPdf } from '@/lib/permit-pdf-store';
 
 /**
@@ -45,7 +45,10 @@ export async function POST(req: NextRequest) {
 
     const application = await prisma.application.findUnique({
       where: { id: body.applicationId },
-      include: { dataPermits: { select: { id: true } } },
+      include: {
+        dataPermits: { select: { id: true } },
+        requestedDatasets: { orderBy: { createdAt: 'asc' } },
+      },
     });
 
     if (!application)
@@ -59,6 +62,7 @@ export async function POST(req: NextRequest) {
     const issuedAt = new Date();
     const validFrom = new Date(body.validFrom);
     const validUntil = new Date(body.validUntil);
+    const grantedDatasets = groupDatasetsByHolder(application.requestedDatasets);
 
     let permit;
     const MAX_ATTEMPTS = 5;
@@ -71,6 +75,7 @@ export async function POST(req: NextRequest) {
         issuedAt,
         validFrom,
         validUntil,
+        grantedDatasets,
       });
       try {
         permit = await prisma.dataPermit.create({
@@ -102,6 +107,17 @@ export async function POST(req: NextRequest) {
         if (isUniqueClash && attempt < MAX_ATTEMPTS) continue;
         throw e;
       }
+    }
+
+    if (application.requestedDatasets.length > 0) {
+      await prisma.grantedDataset.createMany({
+        data: application.requestedDatasets.map((rd) => ({
+          permitId: permit.id,
+          dataHolderName: rd.dataHolderName,
+          name: rd.name,
+          url: rd.url,
+        })),
+      });
     }
 
     await prisma.dataPermitLog.create({

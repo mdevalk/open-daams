@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
 import { DECIDE_ROLES, APPROVAL_EFFECT } from '@/lib/permit-change';
-import { signPermit } from '@/lib/permit-signing';
+import { signPermit, groupDatasetsByHolder } from '@/lib/permit-signing';
 import { regenerateStoredPermitPdf } from '@/lib/permit-pdf-store';
 
 /**
@@ -31,7 +31,7 @@ export async function PATCH(
 
     const request = await prisma.permitChangeRequest.findUnique({
       where: { id: requestId },
-      include: { permit: { include: { authorizedPersons: true, speProvisioning: true } } },
+      include: { permit: { include: { authorizedPersons: true, speProvisioning: true, grantedDatasets: true } } },
     });
     if (!request || request.permitId !== id) {
       return NextResponse.json({ error: 'Change request not found' }, { status: 404 });
@@ -72,6 +72,7 @@ export async function PATCH(
       issuedAt: now,
       validFrom: permit.validFrom,
       validUntil: newValidUntilResolved,
+      grantedDatasets: groupDatasetsByHolder(permit.grantedDatasets),
     });
 
     const newPermitId = await prisma.$transaction(async (tx) => {
@@ -113,6 +114,18 @@ export async function PATCH(
             name: p.name,
             affiliation: p.affiliation,
             email: p.email,
+          })),
+        });
+      }
+
+      // 3b. Carry the granted-datasets snapshot forward to the new version.
+      if (permit.grantedDatasets.length > 0) {
+        await tx.grantedDataset.createMany({
+          data: permit.grantedDatasets.map((gd) => ({
+            permitId: newPermit.id,
+            dataHolderName: gd.dataHolderName,
+            name: gd.name,
+            url: gd.url,
           })),
         });
       }

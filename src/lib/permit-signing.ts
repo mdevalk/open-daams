@@ -55,6 +55,23 @@ function stableStringify(value: unknown): string {
   return JSON.stringify(value);
 }
 
+export type DatasetEntry = { name: string; url: string | null };
+export type GrantedDatasetGroup = { dataHolderName: string; datasets: DatasetEntry[] };
+
+/** Groups flat (dataHolderName, name, url) rows — as stored in RequestedDataset/GrantedDataset — by holder. */
+export function groupDatasetsByHolder(
+  rows: { dataHolderName: string; name: string; url: string | null }[],
+): GrantedDatasetGroup[] {
+  const byHolder = new Map<string, DatasetEntry[]>();
+  for (const row of rows) {
+    const entry = { name: row.name, url: row.url };
+    const existing = byHolder.get(row.dataHolderName);
+    if (existing) existing.push(entry);
+    else byHolder.set(row.dataHolderName, [entry]);
+  }
+  return Array.from(byHolder.entries()).map(([dataHolderName, datasets]) => ({ dataHolderName, datasets }));
+}
+
 export type SignablePermit = {
   permitNumber: string;
   version: number;
@@ -62,6 +79,7 @@ export type SignablePermit = {
   issuedAt: Date;
   validFrom: Date;
   validUntil: Date;
+  grantedDatasets: GrantedDatasetGroup[];
 };
 
 /**
@@ -70,8 +88,15 @@ export type SignablePermit = {
  * on the same row via REVOKE/EXPIRE — signing them would invalidate the
  * signature the moment a permit is legitimately revoked) and
  * `authorizedPersons` (managed via separate endpoints, not fixed at
- * issuance). Mirrors the same exclusion principle used by the reference
- * hdab-nl-permit-generator/validator pair.
+ * issuance). `grantedDatasets` IS included — unlike those, it's fixed for
+ * the life of a permit version (copied from the application's
+ * RequestedDataset rows at issuance, carried forward unchanged on later
+ * versions — see GrantedDataset in schema.prisma), and it's the substantive
+ * answer to "what does this permit actually grant access to, from which
+ * data holder," which the signature should attest to. Mirrors the same
+ * exclusion/inclusion principle used by the reference
+ * hdab-nl-permit-generator/validator pair (whose canonical payload signs
+ * `datasets` alongside identity fields).
  *
  * `issuerKid` is passed explicitly rather than always read from the
  * currently-loaded key file — after a key rotation (`generate-signing-key
@@ -86,6 +111,7 @@ export function canonicalPermitPayload(permit: SignablePermit, issuerKid: string
     issuedAt: permit.issuedAt.toISOString(),
     validFrom: permit.validFrom.toISOString(),
     validUntil: permit.validUntil.toISOString(),
+    grantedDatasets: permit.grantedDatasets,
     issuerKid,
   };
 }
@@ -192,6 +218,7 @@ export function buildDigitalPermitDocument(permit: {
   issuedAt: Date;
   validFrom: Date;
   validUntil: Date;
+  grantedDatasets: GrantedDatasetGroup[];
   status: DataPermitStatus;
   revocationReason: string | null;
   revocationAt: Date | null;

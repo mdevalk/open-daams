@@ -39,7 +39,19 @@ async function main() {
       title: 'Cardiovascular risk factors in Dutch primary care 2015-2024',
       projectDescription: 'Retrospective cohort study analysing long-term trends in cardiovascular risk factor prevalence using routine primary care data.',
       purposeCategory: 'SCIENTIFIC_RESEARCH',
-      requestedDatasets: ['GP_ELECTRONIC_RECORDS', 'MEDICATION_DISPENSING'],
+      requestedDatasets: {
+        createMany: {
+          data: [
+            { dataHolderName: 'GP Information Network (LINH)', name: 'Huisartsenregistratie cardiovasculair risicomanagement' },
+            { dataHolderName: 'GP Information Network (LINH)', name: 'Medicatievoorschriften huisartsenpraktijken (ATC A10)' },
+            {
+              dataHolderName: 'CBS',
+              name: "Overleden inwoners van Nederland naar doodsoorzaak (uitgebreide lijst van 'drie-teken categorieën'), leeftijd en geslacht",
+              url: 'https://acceptance.data.health.europa.eu/healthdata-central-platform/datasets/24b6a9b2-4519-4f94-8c0f-c4c85f295806?locale=nl',
+            },
+          ],
+        },
+      },
       requestedVariables: 'Age, sex, BMI, blood pressure, HbA1c, lipid panel, medication records (ATC codes C01-C10)',
       studyPopulation: 'Adults aged 18-80 registered in Dutch general practices',
       inclusionCriteria: 'Age 18-80, registered ≥1 year, at least one cardiovascular risk factor recorded',
@@ -70,7 +82,11 @@ async function main() {
       title: 'COVID-19 vaccination coverage by municipality 2021-2023',
       projectDescription: 'Aggregated statistical analysis of COVID-19 vaccination uptake stratified by municipality, age group, and socioeconomic status.',
       purposeCategory: 'PUBLIC_HEALTH',
-      requestedDatasets: ['NATIONAL_IMMUNISATION_REGISTER'],
+      requestedDatasets: {
+        createMany: {
+          data: [{ dataHolderName: 'RIVM', name: 'Praeventis — landelijke vaccinatieregistratie' }],
+        },
+      },
       requestedVariables: 'Vaccination date, vaccine type, municipality code, age group, CBS socioeconomic quintile',
       studyPopulation: 'Dutch population aged 12+ who were eligible for COVID-19 vaccination',
       inclusionCriteria: 'Age ≥12 at time of vaccination eligibility',
@@ -100,7 +116,14 @@ async function main() {
       title: 'Mental health service utilisation in adolescents post-COVID',
       projectDescription: 'Analysis of mental health service use among 12-25 year olds in the period 2019-2024.',
       purposeCategory: 'SCIENTIFIC_RESEARCH',
-      requestedDatasets: ['MENTAL_HEALTH_CLAIMS', 'GP_ELECTRONIC_RECORDS'],
+      requestedDatasets: {
+        createMany: {
+          data: [
+            { dataHolderName: 'Vektis', name: 'Declaraties geestelijke gezondheidszorg (GGZ)' },
+            { dataHolderName: 'GP Information Network (LINH)', name: 'Huisartsenregistratie verwijzingen GGZ' },
+          ],
+        },
+      },
       requestedVariables: 'Age, sex, diagnosis codes (ICD-10 F codes), referral pathway, treatment episodes',
       studyPopulation: 'Adolescents and young adults aged 12-25',
       inclusionCriteria: 'Age 12-25, at least one contact with mental health services',

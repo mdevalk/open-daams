@@ -261,7 +261,6 @@ model Application {
   title                 String
   projectDescription    String    @db.Text
   purposeCategory       String
-  requestedDatasets     String[]
   requestedVariables    String    @db.Text
   studyPopulation       String    @db.Text
   inclusionCriteria     String    @db.Text
@@ -347,6 +346,7 @@ model Application {
   completenessCheck  CompletenessCheck?
   extractionRequests DataExtractionRequest[]
   invoices           Invoice[]
+  requestedDatasets  RequestedDataset[]
 }
 
 // TEHDAS2 D6.3 Ch. 5 / Annex 7-8 — structured completeness check preceding
@@ -366,6 +366,20 @@ model CompletenessCheck {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// A dataset requested from a specific data holder, as declared on the
+// application. Can change while the application is still being processed
+// (e.g. after a request for more information) — see GrantedDataset for the
+// fixed, per-permit-version equivalent that's copied from this at issuance.
+model RequestedDataset {
+  id             String      @id @default(cuid())
+  applicationId  String
+  application    Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  dataHolderName String
+  name           String
+  url            String?
+  createdAt      DateTime    @default(now())
 }
 
 // TEHDAS2 D6.3 §7.1 / EHDS Art. 60, 68(7) — request to a health data holder
@@ -496,6 +510,7 @@ model DataPermit {
   invoices          Invoice[]
   speProvisioning   SpeProvisioningOrder?
   changeRequests    PermitChangeRequest[]
+  grantedDatasets   GrantedDataset[]
 
   @@unique([permitNumber, version])
 }
@@ -601,6 +616,22 @@ model AuthorizedPerson {
   affiliation String
   email       String
   addedAt     DateTime   @default(now())
+}
+
+// A dataset granted from a specific data holder, fixed for the life of this
+// permit version — copied from the application's RequestedDataset rows at
+// issuance, and carried forward unchanged to each new version on
+// amendment/renewal/revocation-appeal approval (same stability model as
+// AuthorizedPerson above). This is what gets signed into the digital permit
+// — see lib/permit-signing.ts.
+model GrantedDataset {
+  id             String     @id @default(cuid())
+  permitId       String
+  permit         DataPermit @relation(fields: [permitId], references: [id], onDelete: Cascade)
+  dataHolderName String
+  name           String
+  url            String?
+  createdAt      DateTime   @default(now())
 }
 
 // Immutable audit log for the permit lifecycle

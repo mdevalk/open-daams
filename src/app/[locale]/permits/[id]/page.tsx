@@ -8,6 +8,7 @@ import { InvoicePanel } from '@/components/InvoicePanel';
 import { SpeProvisioningPanel } from '@/components/SpeProvisioningPanel';
 import { PermitChangeRequestPanel } from '@/components/PermitChangeRequestPanel';
 import { PERMIT_STATUS_COLORS, formatPermitId } from '@/lib/permit';
+import { groupDatasetsByHolder } from '@/lib/permit-signing';
 import { formatDate, formatDateTime, purposeLabel, serializePrisma } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
@@ -57,7 +58,6 @@ export default async function PermitDetailPage({
             projectDescription: true,
             purposeCategory: true,
             legalBasis: true,
-            requestedDatasets: true,
             requestedVariables: true,
             studyPopulation: true,
             inclusionCriteria: true,
@@ -80,6 +80,7 @@ export default async function PermitDetailPage({
         },
         previousPermit: { select: { id: true, permitNumber: true, version: true } },
         authorizedPersons: { orderBy: { addedAt: 'asc' } },
+        grantedDatasets: { orderBy: { createdAt: 'asc' } },
         changeRequests: {
           include: {
             requestedBy: { select: { name: true } },
@@ -211,7 +212,34 @@ export default async function PermitDetailPage({
             <dl className="grid grid-cols-2 gap-4 text-sm">
               <Field label={t('purpose')} value={app?.purposeCategory ? purposeLabel(app.purposeCategory) : null} wide />
               <Field label={t('legalBasis')} value={app?.legalBasis} wide />
-              <Field label={t('datasets')} value={app?.requestedDatasets?.length ? app.requestedDatasets.join(', ') : null} wide />
+              <Field
+                label={t('datasets')}
+                value={
+                  permit.grantedDatasets.length > 0 ? (
+                    <div className="space-y-2">
+                      {groupDatasetsByHolder(permit.grantedDatasets).map((group) => (
+                        <div key={group.dataHolderName}>
+                          <span className="font-semibold">{group.dataHolderName}</span>
+                          <ul className="list-disc list-inside">
+                            {group.datasets.map((dataset) => (
+                              <li key={dataset.name}>
+                                {dataset.url ? (
+                                  <a href={dataset.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                    {dataset.name}
+                                  </a>
+                                ) : (
+                                  dataset.name
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null
+                }
+                wide
+              />
               <Field label={t('variables')} value={app?.requestedVariables} wide />
               <Field label={t('studyPopulation')} value={app?.studyPopulation} wide />
               <Field label={t('inclusionCriteria')} value={app?.inclusionCriteria} />

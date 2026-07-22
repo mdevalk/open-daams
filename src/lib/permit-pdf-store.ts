@@ -16,7 +16,6 @@ const PDF_INCLUDE = {
       decisionSummary: true,
       projectDescription: true,
       purposeCategory: true,
-      requestedDatasets: true,
       requestedVariables: true,
       studyPopulation: true,
       inclusionCriteria: true,
@@ -35,6 +34,7 @@ const PDF_INCLUDE = {
     },
   },
   authorizedPersons: { orderBy: { addedAt: 'asc' as const } },
+  grantedDatasets: { orderBy: { createdAt: 'asc' as const } },
   previousPermit: { select: { permitNumber: true, version: true } },
 } satisfies Prisma.DataPermitInclude;
 
