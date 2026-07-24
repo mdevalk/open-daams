@@ -57,7 +57,7 @@ explicit about for a compliance-themed demo.
 
 | Function | Ref | Reality in code |
 |---|---|---|
-| **Secure Processing Environment** | Art. 73 | `SpeProvisioningOrder` tracks `REQUESTED → ACTIVE → DECOMMISSIONED` status only. No actual environment, no in-SPE access logging, no "data cannot leave" enforcement — which is the substance of Art. 73. |
+| **Secure Processing Environment** | Art. 73 | `SpeProvisioningOrder` tracks the environment's `REQUESTED → ACTIVE → DECOMMISSIONED` lifecycle and hands over permit info (id, version, authorised persons, validity) to it. Operating the environment itself — real access, in-SPE user-activity logging, "data cannot leave" enforcement — is the SPE component's own responsibility, not the DAAMS's; it's out of scope here rather than a DAAMS shortfall. |
 | **Data extraction from health data holders** | Art. 60, 68(7) | `DataExtractionRequest` tracks `REQUESTED → DELIVERED`. No real data-holder connection or data movement. |
 | **HealthData@EU cross-border** | Art. 75 | A fixed mock NCP queue; no real National Contact Point node. |
 | **Anonymisation / pseudonymisation** | Art. 64 | Exists only as a fee line item (`dataPreparationFee`); no actual data transformation. |
@@ -74,7 +74,6 @@ explicit about for a compliance-themed demo.
 | **Results-publication tracking** (data user must publish findings) | Art. 61(4) | **Absent** |
 | **Periodic HDAB activity report** | Art. 59 | **Absent** |
 | **IPR / trade-secret contractual safeguards** | Art. 52 | **Absent** |
-| **In-SPE user-activity logging** | Art. 73(e) | **Absent** |
 | **Applicant identity / qualification verification** | Art. 67 | Form captures it; no verification step |
 
 ## Cross-cutting / correctness flags
