@@ -80,6 +80,7 @@ export default async function DashboardPage({
     appsOverduePermitAcceptance,
     permitsExpired,
     permitsExpiringSoon,
+    pendingAmendmentActivations,
     changeRequestsPending,
     invoicesOverdue,
     invoicesDueSoon,
@@ -124,6 +125,14 @@ export default async function DashboardPage({
       where: { isCurrent: true, validUntil: { gte: now, lt: in14Days }, status: { notIn: ['EXPIRED', 'REVOKED'] } },
       select: {
         id: true, permitNumber: true, version: true, validUntil: true,
+        application: { select: { referenceNumber: true } },
+      },
+    }),
+    prisma.dataPermit.findMany({
+      where: { effectiveAt: { lte: now }, activatedAt: null },
+      select: {
+        id: true, permitNumber: true, version: true, effectiveAt: true,
+        previousPermit: { select: { id: true } },
         application: { select: { referenceNumber: true } },
       },
     }),
@@ -179,6 +188,13 @@ export default async function DashboardPage({
       href: `/${locale}/permits/${p.id}`,
       title: `${formatPermitId(p.permitNumber, p.version)} — ${p.application.referenceNumber}`,
       subtitle: t('permitExpiredLabel'),
+    })),
+    ...pendingAmendmentActivations.map((p): Item => ({
+      id: `permit-activate-${p.id}`,
+      // The activate action lives on the predecessor's (still-current) page.
+      href: `/${locale}/permits/${p.previousPermit?.id ?? p.id}`,
+      title: `${formatPermitId(p.permitNumber, p.version)} — ${p.application.referenceNumber}`,
+      subtitle: `${t('permitActivationDueLabel')}: ${formatDate(p.effectiveAt)} (${dayLabel(p.effectiveAt)})`,
     })),
     ...invoicesOverdue.map((inv): Item => ({
       id: `invoice-${inv.id}`,

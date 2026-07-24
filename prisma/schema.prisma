@@ -474,6 +474,14 @@ model DataPermit {
   previousPermit   DataPermit? @relation("PermitVersions", fields: [previousPermitId], references: [id])
   nextPermit       DataPermit? @relation("PermitVersions")
 
+  // D6.4 R9.3.9: an amendment MAY have a delayed effective date (transition
+  // period to reconfigure the SPE) instead of applying immediately. Both null
+  // for the immediate path (the default, and always the case for renewals and
+  // revocation appeals) — effectiveAt alone can't distinguish "not yet
+  // activated" from "activated, later superseded," hence activatedAt too.
+  effectiveAt DateTime?
+  activatedAt DateTime?
+
   revocationReason String?   @db.Text
   revocationAt     DateTime?
 

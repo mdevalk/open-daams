@@ -112,7 +112,10 @@ export default async function PermitDetailPage({
   const [versions, chainLogs] = await Promise.all([
     prisma.dataPermit.findMany({
       where: { applicationId: rawPermit.applicationId },
-      select: { id: true, permitNumber: true, version: true, status: true, isCurrent: true },
+      select: {
+        id: true, permitNumber: true, version: true, status: true, isCurrent: true,
+        effectiveAt: true, activatedAt: true,
+      },
       orderBy: { version: 'asc' },
     }),
     prisma.dataPermitLog.findMany({
@@ -122,6 +125,19 @@ export default async function PermitDetailPage({
     }),
   ]);
   const currentVersion = versions.find((v) => v.isCurrent) ?? null;
+  // R9.3.9: the next version, if it was approved with a deferred effective
+  // date and hasn't been activated yet — only ever set for the current
+  // permit's own successor, since a new amendment can only be requested
+  // while the permit is current.
+  const pendingVersionRaw = versions.find((v) => v.version === rawPermit.version + 1 && v.effectiveAt && !v.activatedAt) ?? null;
+  const pendingVersion = pendingVersionRaw?.effectiveAt
+    ? {
+        id: pendingVersionRaw.id,
+        permitNumber: pendingVersionRaw.permitNumber,
+        version: pendingVersionRaw.version,
+        effectiveAt: pendingVersionRaw.effectiveAt,
+      }
+    : null;
 
   // DataPermit carries Prisma Decimal fee fields, which the RSC boundary
   // can't serialise when passed to the client panels below.
@@ -148,7 +164,13 @@ export default async function PermitDetailPage({
         <span className="text-gray-900 font-mono">{formatPermitId(permit.permitNumber, permit.version)}</span>
       </div>
 
-      {!permit.isCurrent && (
+      {permit.effectiveAt && !permit.activatedAt && (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          {t('pendingVersionNotice', { date: formatDate(permit.effectiveAt) })}
+        </div>
+      )}
+
+      {!permit.isCurrent && !(permit.effectiveAt && !permit.activatedAt) && (
         <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           {t('supersededNotice', { version: permit.version })}{' '}
           {currentVersion && (
@@ -350,6 +372,7 @@ export default async function PermitDetailPage({
             canRequest={permit.isCurrent && ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(currentUser.role)}
             canDecide={permit.isCurrent && ['DECISION_MAKER', 'ADMIN'].includes(currentUser.role)}
             currentUserId={currentUser.id}
+            pendingVersion={pendingVersion}
           />
           <AuthorizedPersonsPanel
             permitId={permit.id}

@@ -11,7 +11,13 @@ import { regenerateStoredPermitPdf } from '@/lib/permit-pdf-store';
  * supersedes its predecessor (D6.4 §9.3 / R9.3.6): the old row is marked
  * isCurrent=false and a new row is created with version+1, linked via
  * previousPermitId. Rejecting leaves the permit unchanged.
- * body: { decision: 'APPROVED' | 'REJECTED', userId, comment?, newValidUntil? }
+ *
+ * R9.3.9: an AMENDMENT approved with a strictly-future `effectiveDate` takes a
+ * deferred path instead — the new version is created but stays isCurrent=false
+ * (with effectiveAt set) and the old version keeps operating until a staff
+ * member activates it via POST /api/permits/[id]/activate once the date is
+ * due. Renewals and revocation appeals always stay immediate, per spec.
+ * body: { decision: 'APPROVED' | 'REJECTED', userId, comment?, newValidUntil?, effectiveDate? }
  */
 export async function PATCH(
   req: NextRequest,
@@ -63,6 +69,12 @@ export async function PATCH(
       return NextResponse.json({ error: 'A new validUntil date is required to approve a renewal' }, { status: 400 });
     }
 
+    // R9.3.9: only AMENDMENT supports a delayed effective date; a blank or
+    // today-or-past date takes the immediate path, same as before.
+    const requestedEffectiveDate =
+      request.type === 'AMENDMENT' && body.effectiveDate ? new Date(body.effectiveDate) : null;
+    const deferred = requestedEffectiveDate !== null && requestedEffectiveDate.getTime() > now.getTime();
+
     const newVersion = permit.version + 1;
     const newValidUntilResolved = newValidUntil ?? permit.validUntil;
     const { signature, signedAt, signingKeyId } = await signPermit({
@@ -76,8 +88,11 @@ export async function PATCH(
     });
 
     const newPermitId = await prisma.$transaction(async (tx) => {
-      // 1. Retire the current version.
-      await tx.dataPermit.update({ where: { id: permit.id }, data: { isCurrent: false } });
+      // 1. Retire the current version — skipped when deferred: the old
+      //    version keeps operating until activation.
+      if (!deferred) {
+        await tx.dataPermit.update({ where: { id: permit.id }, data: { isCurrent: false } });
+      }
 
       // 2. Create the new version, copying permit content forward. Revocation
       //    markers are intentionally not carried over (a reinstated permit is clean).
@@ -85,7 +100,8 @@ export async function PATCH(
         data: {
           permitNumber: permit.permitNumber, // stable base id
           version: newVersion,
-          isCurrent: true,
+          isCurrent: !deferred,
+          effectiveAt: deferred ? requestedEffectiveDate : null,
           applicationId: permit.applicationId,
           status: effect.to,
           previousPermitId: permit.id,
@@ -130,8 +146,11 @@ export async function PATCH(
         });
       }
 
-      // 4. Re-point the SPE provisioning order (one environment spans the lifecycle).
-      if (permit.speProvisioning) {
+      // 4. Re-point the SPE provisioning order (one environment spans the
+      //    lifecycle) — skipped when deferred: reconfiguring the SPE is the
+      //    whole point of the transition period, so it stays on the old
+      //    version until activation.
+      if (!deferred && permit.speProvisioning) {
         await tx.speProvisioningOrder.update({
           where: { permitId: permit.id },
           data: { permitId: newPermit.id },
@@ -157,7 +176,9 @@ export async function PATCH(
           userId: auth.user.id,
           fromStatus: permit.status,
           toStatus: effect.to,
-          action: `${request.type} approved`,
+          action: deferred
+            ? `${request.type} approved — pending activation`
+            : `${request.type} approved`,
           comment: body.comment ?? null,
         },
       });
@@ -169,7 +190,7 @@ export async function PATCH(
       return newPermit.id;
     });
 
-    return NextResponse.json({ ok: true, currentPermitId: newPermitId });
+    return NextResponse.json({ ok: true, newPermitId, pending: deferred });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Failed to decide change request';
     return NextResponse.json({ error: message }, { status: 500 });

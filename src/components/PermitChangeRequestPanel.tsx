@@ -20,6 +20,13 @@ type ChangeRequest = {
   decidedBy: { name: string } | null;
 };
 
+type PendingVersion = {
+  id: string;
+  permitNumber: string;
+  version: number;
+  effectiveAt: string | Date;
+};
+
 type Props = {
   permitId: string;
   permitStatus: DataPermitStatus;
@@ -27,6 +34,7 @@ type Props = {
   canRequest: boolean;
   canDecide: boolean;
   currentUserId: string;
+  pendingVersion?: PendingVersion | null;
 };
 
 const inputCls =
@@ -39,6 +47,7 @@ export function PermitChangeRequestPanel({
   canRequest,
   canDecide,
   currentUserId,
+  pendingVersion,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -49,6 +58,25 @@ export function PermitChangeRequestPanel({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  async function activate() {
+    if (!pendingVersion) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/permits/${pendingVersion.id}/activate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentUserId }),
+      });
+      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
+      router.push(pathname.replace(/[^/]+$/, pendingVersion.id));
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : terr('unexpected'));
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const available = requestableTypes(permitStatus);
   const [newType, setNewType] = useState<PermitChangeType | ''>('');
   const [justification, setJustification] = useState('');
@@ -57,6 +85,7 @@ export function PermitChangeRequestPanel({
   const [decideFor, setDecideFor] = useState<string | null>(null);
   const [decisionComment, setDecisionComment] = useState('');
   const [newValidUntil, setNewValidUntil] = useState('');
+  const [effectiveDate, setEffectiveDate] = useState('');
 
   async function submitRequest() {
     if (!newType) return;
@@ -92,16 +121,21 @@ export function PermitChangeRequestPanel({
           comment: decisionComment || null,
           newValidUntil:
             decision === 'APPROVED' && request.type === 'RENEWAL' ? newValidUntil : undefined,
+          effectiveDate:
+            decision === 'APPROVED' && request.type === 'AMENDMENT' ? effectiveDate || undefined : undefined,
         }),
       });
       if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
-      const data = (await res.json().catch(() => null)) as { currentPermitId?: string } | null;
+      const data = (await res.json().catch(() => null)) as { newPermitId?: string; pending?: boolean } | null;
       setDecideFor(null);
       setDecisionComment('');
       setNewValidUntil('');
-      // Approval issues a new permit version — navigate to it; rejection stays put.
-      if (data?.currentPermitId && data.currentPermitId !== permitId) {
-        router.push(pathname.replace(/[^/]+$/, data.currentPermitId));
+      setEffectiveDate('');
+      // Immediate approval issues a new CURRENT permit version — navigate to
+      // it. A deferred (pending-activation) approval stays on this page,
+      // since the old version is still the operative one.
+      if (data?.newPermitId && data.newPermitId !== permitId && !data.pending) {
+        router.push(pathname.replace(/[^/]+$/, data.newPermitId));
       } else {
         router.refresh();
       }
@@ -115,6 +149,27 @@ export function PermitChangeRequestPanel({
   return (
     <div className="rounded border border-gray-200 bg-white p-4 space-y-3">
       <h3 className="text-sm font-semibold text-gray-900">{t('title')}</h3>
+
+      {pendingVersion && (
+        <div className="rounded border border-amber-300 bg-amber-50 p-3 text-sm">
+          <p className="font-medium text-amber-900">
+            {t('pendingActivation', { version: pendingVersion.version })}
+          </p>
+          <p className="text-xs text-amber-800 mt-0.5">
+            {t('pendingActivationDate', { date: formatDate(pendingVersion.effectiveAt) })}
+          </p>
+          {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
+          {canDecide && (
+            <button
+              disabled={loading || new Date(pendingVersion.effectiveAt).getTime() > Date.now()}
+              onClick={activate}
+              className="mt-2 rounded px-3 py-1.5 text-xs font-semibold text-white bg-amber-700 hover:bg-amber-800 disabled:opacity-50"
+            >
+              {loading ? t('activating') : t('activateNow')}
+            </button>
+          )}
+        </div>
+      )}
 
       {requests.length === 0 && (
         <p className="text-xs text-gray-500">{t('empty')}</p>
@@ -147,6 +202,13 @@ export function PermitChangeRequestPanel({
                     <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1">{t('newExpiry')}</label>
                       <input type="date" value={newValidUntil} onChange={(e) => setNewValidUntil(e.target.value)} className={inputCls} />
+                    </div>
+                  )}
+                  {r.type === 'AMENDMENT' && (
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">{t('effectiveDate')}</label>
+                      <input type="date" value={effectiveDate} onChange={(e) => setEffectiveDate(e.target.value)} className={inputCls} />
+                      <p className="text-xs text-gray-400 mt-1">{t('effectiveDateHint')}</p>
                     </div>
                   )}
                   <textarea
@@ -186,6 +248,7 @@ export function PermitChangeRequestPanel({
                     setDecideFor(r.id);
                     setDecisionComment('');
                     setNewValidUntil('');
+                    setEffectiveDate('');
                   }}
                   className="text-xs text-[#01689b] hover:underline"
                 >
