@@ -27,7 +27,7 @@ function main() {
   const privateKeyBytes = ed.utils.randomPrivateKey();
   const publicKeyBytes = ed.getPublicKey(privateKeyBytes);
   const year = new Date().getFullYear();
-  const kid = `open-daams-nl-signing-key-${year}-v1`;
+  const kid = `hdab-nl-signing-key-${year}-v1`;
 
   const jwk = {
     key_ops: ['sign'],
