@@ -17,6 +17,11 @@ purely institutional articles — are listed separately as out of DAAMS scope.
 > bug-free. This is an unofficial community project; nothing here is compliance advice, and the
 > authoritative text is the consolidated Official Journal version on EUR-Lex.
 
+> **Companion doc.** This is a flat per-article index. For the narrative verdict + depth ratings
+> + priorities version of the same plain-EHDS scope, see
+> [`ehds-gap-analysis.md`](./ehds-gap-analysis.md); for the TEHDAS2 D6.4-requirement view, see
+> [`d6.4-gap-analysis.md`](./d6.4-gap-analysis.md).
+
 ## Legend
 
 - ✅ **Implemented** — functional in the app

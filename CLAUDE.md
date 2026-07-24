@@ -89,9 +89,9 @@ specifications. Always use the **final** Regulation numbering, not the draft-pro
 
 ## Project state (handoff)
 
-Design/gap detail lives in `docs/`: `d6.4-gap-analysis.md` (D6.4 v0.5 vs implementation),
+Design/gap detail lives in `docs/`: `d6.4-gap-analysis.md` (TEHDAS2 D6.4 v0.5 vs implementation),
 `d6.4-status-model.md` (status tables), `ehds-article-map.md` (article → status),
-`gap-analysis.md` (EHDS/framework view), `architecture.md`.
+`ehds-gap-analysis.md` (plain EHDS Regulation-only gap analysis), `architecture.md`.
 
 **Scope:** open-daams is the **back-office DAAMS**. Out of scope: the applicant front-office
 (D6.4 §6), the dataset catalogue (Art. 77–80) and dataset selection against it (§6.2) — those

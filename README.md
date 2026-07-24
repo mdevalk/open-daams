@@ -116,11 +116,14 @@ npm install
 # 3. Copy env file and configure
 cp .env.example .env
 
-# 4. Push schema and seed demo data
+# 4. Generate a permit-signing key (Ed25519, used to sign issued data permits)
+npm run generate-signing-key
+
+# 5. Push schema and seed demo data
 npm run db:push
 npm run db:seed
 
-# 5. Start dev server
+# 6. Start dev server
 npm run dev
 ```
 
