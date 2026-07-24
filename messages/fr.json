@@ -78,6 +78,7 @@
     "attentionAwaitingDecision": "En attente de décision",
     "decisionDeadlineLabel": "Délai de décision",
     "additionalInfoDeadlineLabel": "Délai d'informations complémentaires",
+    "permitAcceptanceDeadlineLabel": "Délai de réponse pré-autorisation",
     "permitExpiresLabel": "Autorisation expire",
     "permitExpiredLabel": "Autorisation expirée — statut non encore mis à jour",
     "invoiceDueLabel": "Facture échéance",
@@ -115,6 +116,7 @@
     "edit": "Modifier",
     "decisionDeadline": "Délai de décision (Art. 68)",
     "additionalInfoDeadline": "Délai d'informations complémentaires",
+    "permitAcceptanceDeadline": "Délai d'acceptation de la pré-autorisation",
     "detailsTitle": "Détails de la demande",
     "applicant": "Demandeur",
     "caseHandler": "Gestionnaire de dossier",
@@ -150,6 +152,10 @@
     "total": "Total",
     "noResults": "Aucune autorisation trouvée",
     "noResultsSub": "Les autorisations sont créées après une décision positive sur une demande.",
+    "needsStatusUpdate": "Mise à jour du statut requise",
+    "expiringSoon": "Expire bientôt",
+    "activeGroup": "Actives",
+    "closedGroup": "Clôturées",
     "applicant": "Demandeur",
     "validFrom": "Valable du",
     "validUntil": "Valable jusqu'au",
@@ -205,6 +211,22 @@
     "signedAt": "Signé le",
     "signature": "Signature",
     "downloadDigitalPermit": "Télécharger le permis numérique (JSON)"
+  },
+  "decisionCardPanel": {
+    "title": "Acceptation de la pré-autorisation",
+    "negativeTitle": "Décision négative",
+    "sentAt": "Envoyé le {date}",
+    "acceptedAt": "Accepté le {date}",
+    "viewPdf": "Voir le document de décision (PDF)",
+    "deadlineOverdueNotice": "Le délai de réponse de 28 jours est dépassé.",
+    "accept": "Accepter",
+    "decline": "Refuser",
+    "markNoResponse": "Marquer comme sans réponse — retirer la demande",
+    "status": {
+      "PENDING": "En attente de réponse du demandeur",
+      "ACCEPTED": "Accepté",
+      "DECLINED": "Refusé — retiré"
+    }
   },
   "permitPanel": {
     "issueTitle": "Délivrer une autorisation",

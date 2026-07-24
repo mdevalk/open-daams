@@ -1,51 +1,72 @@
 import { getTranslations } from 'next-intl/server';
 import { prisma } from '@/lib/db';
 import { PERMIT_STATUS_COLORS, formatPermitId } from '@/lib/permit';
-import { DataPermitStatus } from '@prisma/client';
+import { DataPermitStatus, Prisma } from '@prisma/client';
 import { formatDate } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
+
+const ACTIVE_STATUSES: DataPermitStatus[] = ['GRANTED', 'AMENDED', 'RENEWED'];
+const CLOSED_STATUSES: DataPermitStatus[] = ['REVOKED', 'EXPIRED'];
 
 export default async function PermitsPage({
   params,
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; filter?: string }>;
 }) {
   const { locale } = await params;
-  const { status } = await searchParams;
+  const { status, filter } = await searchParams;
   const t = await getTranslations({ locale, namespace: 'permits' });
   const tps = await getTranslations({ locale, namespace: 'permitStatus' });
 
-  const permits = await prisma.dataPermit.findMany({
-    // Only the current version of each application's permit chain (D6.4 §9.3);
-    // superseded versions stay in the DB for audit but not in the list.
-    where: { isCurrent: true, ...(status ? { status: status as DataPermitStatus } : {}) },
-    include: {
-      application: {
-        select: {
-          referenceNumber: true,
-          title: true,
-          type: true,
-          applicant: { select: { name: true, organisation: true } },
+  const now = new Date();
+  const in14Days = new Date(now.getTime() + 14 * 86_400_000);
+  // Practically expired but not yet formally transitioned to EXPIRED — the
+  // same signal the dashboard's "Needs attention" overdue tier already
+  // computes for permits (src/app/[locale]/page.tsx).
+  const needsUpdateWhere = { validUntil: { lt: now }, status: { notIn: CLOSED_STATUSES } };
+  const expiringSoonWhere = { validUntil: { gte: now, lt: in14Days }, status: { notIn: CLOSED_STATUSES } };
+
+  const where: Prisma.DataPermitWhereInput =
+    filter === 'needsUpdate'
+      ? { isCurrent: true, ...needsUpdateWhere }
+      : filter === 'expiringSoon'
+        ? { isCurrent: true, ...expiringSoonWhere }
+        : status
+          ? { isCurrent: true, status: status as DataPermitStatus }
+          : { isCurrent: true };
+
+  const [permits, counts, needsUpdateCount, expiringSoonCount] = await Promise.all([
+    prisma.dataPermit.findMany({
+      // Only the current version of each application's permit chain (D6.4 §9.3);
+      // superseded versions stay in the DB for audit but not in the list.
+      where,
+      include: {
+        application: {
+          select: {
+            referenceNumber: true,
+            title: true,
+            type: true,
+            applicant: { select: { name: true, organisation: true } },
+          },
         },
       },
-    },
-    orderBy: { issuedAt: 'desc' },
-  });
-
-  const counts = await prisma.dataPermit.groupBy({
-    by: ['status'],
-    where: { isCurrent: true },
-    _count: true,
-  });
+      orderBy: { issuedAt: 'desc' },
+    }),
+    prisma.dataPermit.groupBy({
+      by: ['status'],
+      where: { isCurrent: true },
+      _count: true,
+    }),
+    prisma.dataPermit.count({ where: { isCurrent: true, ...needsUpdateWhere } }),
+    prisma.dataPermit.count({ where: { isCurrent: true, ...expiringSoonWhere } }),
+  ]);
 
   const countMap: Record<string, number> = {};
   counts.forEach(c => { countMap[c.status] = c._count; });
   const total = Object.values(countMap).reduce((a, b) => a + b, 0);
-
-  const statuses: DataPermitStatus[] = ['GRANTED', 'AMENDED', 'RENEWED', 'REVOKED', 'EXPIRED'];
 
   return (
     <div className="space-y-6">
@@ -54,29 +75,73 @@ export default async function PermitsPage({
         <p className="text-sm text-gray-500 mt-1">{t('subtitle')}</p>
       </div>
 
-      {/* KPI cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      {/* Work-planning quick filters */}
+      <div className="grid grid-cols-3 gap-3">
         <a
           href={`/${locale}/permits`}
           className={`rounded-lg border p-4 text-center transition-colors ${
-            !status ? 'border-[#154273] bg-[#e8f4fb]' : 'border-gray-200 bg-white hover:bg-gray-50'
+            !status && !filter ? 'border-[#154273] bg-[#e8f4fb]' : 'border-gray-200 bg-white hover:bg-gray-50'
           }`}
         >
           <p className="text-2xl font-bold text-[#154273]">{total}</p>
           <p className="text-xs text-gray-600 mt-1">{t('total')}</p>
         </a>
-        {statuses.map(s => (
-          <a
-            key={s}
-            href={`/${locale}/permits?status=${s}`}
-            className={`rounded-lg border p-4 text-center transition-colors ${
-              status === s ? 'border-[#154273] bg-[#e8f4fb]' : 'border-gray-200 bg-white hover:bg-gray-50'
-            }`}
-          >
-            <p className="text-2xl font-bold text-gray-900">{countMap[s] ?? 0}</p>
-            <p className="text-xs text-gray-600 mt-1">{tps(s)}</p>
-          </a>
-        ))}
+        <a
+          href={`/${locale}/permits?filter=needsUpdate`}
+          className={`rounded-lg border p-4 text-center transition-colors ${
+            filter === 'needsUpdate' ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-white hover:bg-gray-50'
+          }`}
+        >
+          <p className="text-2xl font-bold text-red-700">{needsUpdateCount}</p>
+          <p className="text-xs text-gray-600 mt-1">{t('needsStatusUpdate')}</p>
+        </a>
+        <a
+          href={`/${locale}/permits?filter=expiringSoon`}
+          className={`rounded-lg border p-4 text-center transition-colors ${
+            filter === 'expiringSoon' ? 'border-amber-400 bg-amber-50' : 'border-gray-200 bg-white hover:bg-gray-50'
+          }`}
+        >
+          <p className="text-2xl font-bold text-amber-700">{expiringSoonCount}</p>
+          <p className="text-xs text-gray-600 mt-1">{t('expiringSoon')}</p>
+        </a>
+      </div>
+
+      {/* Status breakdown, grouped by whether it still needs oversight */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <p className="text-xs font-medium text-gray-500 mb-2">{t('activeGroup')}</p>
+          <div className="grid grid-cols-3 gap-3">
+            {ACTIVE_STATUSES.map(s => (
+              <a
+                key={s}
+                href={`/${locale}/permits?status=${s}`}
+                className={`rounded-lg border p-3 text-center transition-colors ${
+                  status === s ? 'border-[#154273] bg-[#e8f4fb]' : 'border-gray-200 bg-white hover:bg-gray-50'
+                }`}
+              >
+                <p className="text-xl font-bold text-gray-900">{countMap[s] ?? 0}</p>
+                <p className="text-xs text-gray-600 mt-1">{tps(s)}</p>
+              </a>
+            ))}
+          </div>
+        </div>
+        <div>
+          <p className="text-xs font-medium text-gray-500 mb-2">{t('closedGroup')}</p>
+          <div className="grid grid-cols-2 gap-3">
+            {CLOSED_STATUSES.map(s => (
+              <a
+                key={s}
+                href={`/${locale}/permits?status=${s}`}
+                className={`rounded-lg border p-3 text-center transition-colors ${
+                  status === s ? 'border-[#154273] bg-[#e8f4fb]' : 'border-gray-200 bg-white hover:bg-gray-50'
+                }`}
+              >
+                <p className="text-xl font-bold text-gray-900">{countMap[s] ?? 0}</p>
+                <p className="text-xs text-gray-600 mt-1">{tps(s)}</p>
+              </a>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* List */}

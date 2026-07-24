@@ -78,6 +78,7 @@
     "attentionAwaitingDecision": "Wacht op beslissing",
     "decisionDeadlineLabel": "Beslisdeadline",
     "additionalInfoDeadlineLabel": "Deadline aanvullende informatie",
+    "permitAcceptanceDeadlineLabel": "Reactietermijn pre-vergunning",
     "permitExpiresLabel": "Vergunning verloopt",
     "permitExpiredLabel": "Vergunning verlopen — status nog niet bijgewerkt",
     "invoiceDueLabel": "Factuur vervalt",
@@ -115,6 +116,7 @@
     "edit": "Bewerken",
     "decisionDeadline": "Beslissingstermijn (Art. 68)",
     "additionalInfoDeadline": "Termijn aanvullende informatie",
+    "permitAcceptanceDeadline": "Reactietermijn pre-vergunning",
     "detailsTitle": "Aanvraaggegevens",
     "applicant": "Aanvrager",
     "caseHandler": "Behandelaar",
@@ -150,6 +152,10 @@
     "total": "Totaal",
     "noResults": "Geen vergunningen gevonden",
     "noResultsSub": "Vergunningen worden aangemaakt na een positief besluit op een aanvraag.",
+    "needsStatusUpdate": "Status bijwerken",
+    "expiringSoon": "Verloopt binnenkort",
+    "activeGroup": "Actief",
+    "closedGroup": "Afgesloten",
     "applicant": "Aanvrager",
     "validFrom": "Geldig van",
     "validUntil": "Geldig tot",
@@ -205,6 +211,22 @@
     "signedAt": "Ondertekend op",
     "signature": "Handtekening",
     "downloadDigitalPermit": "Digitale vergunning downloaden (JSON)"
+  },
+  "decisionCardPanel": {
+    "title": "Acceptatie pre-vergunning",
+    "negativeTitle": "Negatief besluit",
+    "sentAt": "Verzonden op {date}",
+    "acceptedAt": "Geaccepteerd op {date}",
+    "viewPdf": "Besluitdocument bekijken (PDF)",
+    "deadlineOverdueNotice": "De reactietermijn van 28 dagen is verstreken.",
+    "accept": "Accepteren",
+    "decline": "Weigeren",
+    "markNoResponse": "Markeer als niet gereageerd — aanvraag intrekken",
+    "status": {
+      "PENDING": "Wacht op reactie aanvrager",
+      "ACCEPTED": "Geaccepteerd",
+      "DECLINED": "Geweigerd — ingetrokken"
+    }
   },
   "permitPanel": {
     "issueTitle": "Vergunning uitschrijven",

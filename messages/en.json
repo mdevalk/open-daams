@@ -78,6 +78,7 @@
     "attentionAwaitingDecision": "Awaiting decision",
     "decisionDeadlineLabel": "Decision deadline",
     "additionalInfoDeadlineLabel": "Additional info deadline",
+    "permitAcceptanceDeadlineLabel": "Pre-permit response deadline",
     "permitExpiresLabel": "Permit expires",
     "permitExpiredLabel": "Permit expired — status not yet updated",
     "invoiceDueLabel": "Invoice due",
@@ -115,6 +116,7 @@
     "edit": "Edit",
     "decisionDeadline": "Decision deadline (Art. 68)",
     "additionalInfoDeadline": "Additional information deadline",
+    "permitAcceptanceDeadline": "Pre-permit acceptance deadline",
     "detailsTitle": "Application details",
     "applicant": "Applicant",
     "caseHandler": "Case handler",
@@ -150,6 +152,10 @@
     "total": "Total",
     "noResults": "No permits found",
     "noResultsSub": "Permits are created after a positive decision on an application.",
+    "needsStatusUpdate": "Needs status update",
+    "expiringSoon": "Expiring soon",
+    "activeGroup": "Active",
+    "closedGroup": "Closed",
     "applicant": "Applicant",
     "validFrom": "Valid from",
     "validUntil": "Valid until",
@@ -205,6 +211,22 @@
     "signedAt": "Signed at",
     "signature": "Signature",
     "downloadDigitalPermit": "Download digital permit (JSON)"
+  },
+  "decisionCardPanel": {
+    "title": "Pre-permit acceptance",
+    "negativeTitle": "Negative decision",
+    "sentAt": "Sent on {date}",
+    "acceptedAt": "Accepted on {date}",
+    "viewPdf": "View decision document (PDF)",
+    "deadlineOverdueNotice": "The 28-day response deadline has passed.",
+    "accept": "Accept",
+    "decline": "Decline",
+    "markNoResponse": "Mark as no response — withdraw application",
+    "status": {
+      "PENDING": "Awaiting applicant response",
+      "ACCEPTED": "Accepted",
+      "DECLINED": "Declined — withdrawn"
+    }
   },
   "permitPanel": {
     "issueTitle": "Issue permit",

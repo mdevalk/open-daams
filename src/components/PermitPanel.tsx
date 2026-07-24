@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import { readErrorMessage } from '@/lib/utils';
 
 type Props = {
-  application: Pick<Application, 'id' | 'status' | 'decisionOutcome'> & { dataPermit: DataPermit | null; feeEstimate?: FeeEstimate | null };
+  application: Pick<Application, 'id' | 'status' | 'decisionOutcome' | 'permitAcceptanceStatus'> & { dataPermit: DataPermit | null; feeEstimate?: FeeEstimate | null };
   currentUser: User;
 };
 
@@ -47,6 +47,15 @@ export function PermitPanel({ application, currentUser }: Props) {
   }
 
   const permit = application.dataPermit;
+
+  // D6.4 §9.2: before a permit exists, wait for the applicant to accept the
+  // pre-permit conditions — DecisionCardPanel owns the pending/declined
+  // messaging for that state. Once a permit exists, keep managing its
+  // lifecycle regardless (permitAcceptanceStatus stays 'ACCEPTED' forever
+  // after issuance anyway).
+  if (!permit && application.permitAcceptanceStatus !== 'ACCEPTED') {
+    return null;
+  }
 
   async function issuePermit() {
     setLoading(true);

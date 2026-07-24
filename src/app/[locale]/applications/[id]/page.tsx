@@ -7,6 +7,7 @@ import { WorkflowTimeline } from '@/components/WorkflowTimeline';
 import { TransitionPanel } from '@/components/TransitionPanel';
 import { NotesList } from '@/components/NotesList';
 import { PermitPanel } from '@/components/PermitPanel';
+import { DecisionCardPanel } from '@/components/DecisionCardPanel';
 import { FeeEstimatePanel } from '@/components/FeeEstimatePanel';
 import { EthicalReviewPanel } from '@/components/EthicalReviewPanel';
 import { AppealsPanel } from '@/components/AppealsPanel';
@@ -109,6 +110,9 @@ export default async function ApplicationDetailPage({
         )}
         {application.status === 'AWAITING_ADDITIONAL_INFORMATION' && (
           <DeadlineBanner label={t('additionalInfoDeadline')} deadline={application.additionalInfoDeadline} />
+        )}
+        {application.status === 'DECISION_ISSUED' && application.permitAcceptanceStatus === 'PENDING' && (
+          <DeadlineBanner label={t('permitAcceptanceDeadline')} deadline={application.permitAcceptanceDeadline} />
         )}
       </div>
 
@@ -270,6 +274,7 @@ export default async function ApplicationDetailPage({
           <UserSwitcher users={users} currentUserId={currentUser.id} />
           <TransitionPanel application={application} currentUser={currentUser} />
           <FeeEstimatePanel application={application} currentUser={currentUser} />
+          <DecisionCardPanel application={application} currentUser={currentUser} />
           <PermitPanel application={{ ...application, dataPermit: currentPermit }} currentUser={currentUser} />
           {application.decisionOutcome === 'POSITIVE' && (
             <ExtractionRequestsPanel

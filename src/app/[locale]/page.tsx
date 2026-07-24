@@ -77,6 +77,7 @@ export default async function DashboardPage({
     appsOverdueInfo,
     appsDueSoonDecision,
     appsAwaitingPreScreening,
+    appsOverduePermitAcceptance,
     permitsExpired,
     permitsExpiringSoon,
     changeRequestsPending,
@@ -107,6 +108,10 @@ export default async function DashboardPage({
     prisma.application.findMany({
       where: { status: 'SUBMITTED' },
       select: { id: true, referenceNumber: true, title: true, submittedAt: true },
+    }),
+    prisma.application.findMany({
+      where: { permitAcceptanceStatus: 'PENDING', permitAcceptanceDeadline: { lt: now } },
+      select: { id: true, referenceNumber: true, title: true, permitAcceptanceDeadline: true },
     }),
     prisma.dataPermit.findMany({
       where: { isCurrent: true, validUntil: { lt: now }, status: { notIn: ['EXPIRED', 'REVOKED'] } },
@@ -162,6 +167,12 @@ export default async function DashboardPage({
       href: `/${locale}/applications/${a.id}`,
       title: `${a.referenceNumber} — ${a.title}`,
       subtitle: `${t('additionalInfoDeadlineLabel')}: ${formatDate(a.additionalInfoDeadline)} (${dayLabel(a.additionalInfoDeadline)})`,
+    })),
+    ...appsOverduePermitAcceptance.map((a): Item => ({
+      id: `app-permit-accept-${a.id}`,
+      href: `/${locale}/applications/${a.id}`,
+      title: `${a.referenceNumber} — ${a.title}`,
+      subtitle: `${t('permitAcceptanceDeadlineLabel')}: ${formatDate(a.permitAcceptanceDeadline)} (${dayLabel(a.permitAcceptanceDeadline)})`,
     })),
     ...permitsExpired.map((p): Item => ({
       id: `permit-exp-${p.id}`,
