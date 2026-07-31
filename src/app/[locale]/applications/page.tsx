@@ -16,6 +16,7 @@ export default async function ApplicationsPage({
   const sp = await searchParams;
   const t = await getTranslations({ locale, namespace: 'applications' });
   const tStatus = await getTranslations({ locale, namespace: 'status' });
+  const tNav = await getTranslations({ locale, namespace: 'nav' });
 
   const status = sp.status as ApplicationStatus | undefined;
   const type = sp.type as ApplicationType | undefined;
@@ -43,7 +44,15 @@ export default async function ApplicationsPage({
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
+        <a
+          href={`/${locale}/applications/new`}
+          className="hdab-btn-primary px-4 py-1.5 rounded text-sm font-semibold bg-[#154273] text-white hover:bg-[#01689b] transition-colors"
+        >
+          {tNav('newApplication')}
+        </a>
+      </div>
 
       <form method="GET" className="flex flex-wrap gap-3 items-end">
         <div>

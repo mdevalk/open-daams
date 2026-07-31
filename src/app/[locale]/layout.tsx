@@ -51,11 +51,9 @@ export default async function LocaleLayout({
                 <div className="flex items-center gap-1">
                   <nav aria-label="Hoofdnavigatie" className="flex items-center gap-1">
                     {[
-                      { href: `/${locale}`, label: t('dashboard') },
                       { href: `/${locale}/applications`, label: t('applications') },
                       { href: `/${locale}/permits`, label: t('permits') },
                       { href: `/${locale}/invoices`, label: t('invoices') },
-                      { href: `/${locale}/public`, label: t('public') },
                       { href: `/${locale}/reference-data`, label: t('referenceData') },
                     ].map((item) => (
                       <a
@@ -66,12 +64,19 @@ export default async function LocaleLayout({
                         {item.label}
                       </a>
                     ))}
-                    <a
-                      href={`/${locale}/applications/new`}
-                      className="hdab-btn-primary ml-2 px-4 py-1.5 rounded text-sm font-semibold bg-white hover:bg-white/90 transition-colors"
-                    >
-                      {t('newApplication')}
-                    </a>
+                  </nav>
+                  <nav aria-label="Overige navigatie" className="flex items-center gap-1 ml-3 pl-3 border-l border-white/20">
+                    {[
+                      { href: `/${locale}/public`, label: t('public') },
+                    ].map((item) => (
+                      <a
+                        key={item.href}
+                        href={item.href}
+                        className="px-3 py-1.5 rounded text-sm hover:bg-white/10 transition-colors"
+                      >
+                        {item.label}
+                      </a>
+                    ))}
                   </nav>
                   <div className="flex items-center gap-1 ml-3 pl-3 border-l border-white/20">
                     {locales.map(l => (
