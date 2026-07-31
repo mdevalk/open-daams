@@ -6,6 +6,7 @@
     "invoices": "Invoices",
     "import": "HD@EU import",
     "public": "Public register",
+    "referenceData": "Reference data",
     "newApplication": "New application",
     "skipToContent": "Skip to main content",
     "testEnvironment": "Test environment"
@@ -398,6 +399,7 @@
     "request": "+ Request SPE provisioning",
     "noOrder": "No SPE provisioning order yet.",
     "environment": "Environment",
+    "operatorLabel": "Operator",
     "requested": "Requested",
     "active": "Active",
     "decommissioned": "Decommissioned",
@@ -433,6 +435,59 @@
     "revokeDesc": "Revoke the permit with documented justification (D6.4 §9.3).",
     "expire": "Mark as expired",
     "expireDesc": "Permit has passed its validity date (D6.4 §9.3)."
+  },
+  "referenceData": {
+    "title": "Reference data",
+    "subtitle": "Masterdata registries for data holders, SPE operators/providers, and data users, referenced across applications and permits.",
+    "tabDataHolders": "Data holders",
+    "tabSpeOperators": "SPE operators",
+    "tabSpeProviders": "SPE providers",
+    "tabDataUsers": "Data users"
+  },
+  "dataHolders": {
+    "name": "Name",
+    "contactEmail": "Contact email",
+    "contactPhone": "Contact phone",
+    "addNew": "Add data holder",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "empty": "No data holders registered yet."
+  },
+  "speOperators": {
+    "name": "Name",
+    "contactEmail": "Contact email",
+    "contactPhone": "Contact phone",
+    "addNew": "Add SPE operator",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "empty": "No SPE operators registered yet.",
+    "providerLabel": "Provider"
+  },
+  "speProviders": {
+    "name": "Name",
+    "contactEmail": "Contact email",
+    "contactPhone": "Contact phone",
+    "addNew": "Add SPE provider",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "empty": "No SPE providers registered yet."
+  },
+  "dataUsers": {
+    "name": "Name",
+    "contactEmail": "Contact email",
+    "contactPhone": "Contact phone",
+    "addNew": "Add data user",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "empty": "No data users registered yet."
   },
   "errors": {
     "unexpected": "An unexpected error occurred.",

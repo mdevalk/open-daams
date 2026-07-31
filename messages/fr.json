@@ -6,6 +6,7 @@
     "invoices": "Factures",
     "import": "Import HD@EU",
     "public": "Registre public",
+    "referenceData": "Données de référence",
     "newApplication": "Nouvelle demande",
     "skipToContent": "Aller au contenu principal",
     "testEnvironment": "Environnement de test"
@@ -398,6 +399,7 @@
     "request": "+ Demander le provisionnement du SPE",
     "noOrder": "Aucun ordre de provisionnement du SPE.",
     "environment": "Environnement",
+    "operatorLabel": "Opérateur",
     "requested": "Demandé",
     "active": "Actif",
     "decommissioned": "Désaffecté",
@@ -433,6 +435,59 @@
     "revokeDesc": "Révoquer l'autorisation avec une justification documentée (D6.4 §9.3).",
     "expire": "Marquer comme expirée",
     "expireDesc": "L'autorisation a dépassé sa date de validité (D6.4 §9.3)."
+  },
+  "referenceData": {
+    "title": "Données de référence",
+    "subtitle": "Registres de référence pour les détenteurs de données, les opérateurs/fournisseurs SPE et les utilisateurs de données, utilisés dans les demandes et autorisations.",
+    "tabDataHolders": "Détenteurs de données",
+    "tabSpeOperators": "Opérateurs SPE",
+    "tabSpeProviders": "Fournisseurs SPE",
+    "tabDataUsers": "Utilisateurs de données"
+  },
+  "dataHolders": {
+    "name": "Nom",
+    "contactEmail": "E-mail de contact",
+    "contactPhone": "Téléphone de contact",
+    "addNew": "Ajouter un détenteur de données",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "empty": "Aucun détenteur de données enregistré pour le moment."
+  },
+  "speOperators": {
+    "name": "Nom",
+    "contactEmail": "E-mail de contact",
+    "contactPhone": "Téléphone de contact",
+    "addNew": "Ajouter un opérateur SPE",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "empty": "Aucun opérateur SPE enregistré pour le moment.",
+    "providerLabel": "Fournisseur"
+  },
+  "speProviders": {
+    "name": "Nom",
+    "contactEmail": "E-mail de contact",
+    "contactPhone": "Téléphone de contact",
+    "addNew": "Ajouter un fournisseur SPE",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "empty": "Aucun fournisseur SPE enregistré pour le moment."
+  },
+  "dataUsers": {
+    "name": "Nom",
+    "contactEmail": "E-mail de contact",
+    "contactPhone": "Téléphone de contact",
+    "addNew": "Ajouter un utilisateur de données",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "empty": "Aucun utilisateur de données enregistré pour le moment."
   },
   "errors": {
     "unexpected": "Une erreur inattendue s'est produite.",

@@ -12,6 +12,8 @@ type Order = {
   id: string;
   status: SpeProvisioningStatus;
   environmentReference: string | null;
+  speOperatorId: string | null;
+  speOperator: { name: string } | null;
   requestedAt: string;
   provisionedAt: string | null;
   decommissionedAt: string | null;
@@ -28,11 +30,13 @@ type Order = {
 export function SpeProvisioningPanel({
   permitId,
   order,
+  speOperators,
   canManage,
   currentUserId,
 }: {
   permitId: string;
   order: Order | null;
+  speOperators: { id: string; name: string }[];
   canManage: boolean;
   currentUserId: string;
 }) {
@@ -45,6 +49,7 @@ export function SpeProvisioningPanel({
   const [error, setError] = useState<string | null>(null);
   const [envRef, setEnvRef] = useState('');
   const [comment, setComment] = useState('');
+  const [operatorId, setOperatorId] = useState(order?.speOperatorId ?? '');
   const [pendingTo, setPendingTo] = useState<SpeProvisioningStatus | null>(null);
 
   async function requestProvisioning() {
@@ -76,6 +81,7 @@ export function SpeProvisioningPanel({
           userId: currentUserId,
           toStatus,
           environmentReference: envRef.trim() || undefined,
+          speOperatorId: operatorId || undefined,
           comment: comment.trim() || undefined,
         }),
       });
@@ -119,6 +125,9 @@ export function SpeProvisioningPanel({
           {order.environmentReference && (
             <div className="flex justify-between"><span className="text-gray-500">{t('environment')}</span><span className="font-mono text-xs">{order.environmentReference}</span></div>
           )}
+          {order.speOperator && (
+            <div className="flex justify-between"><span className="text-gray-500">{t('operatorLabel')}</span><span className="text-xs">{order.speOperator.name}</span></div>
+          )}
           <p className="text-xs text-gray-400">
             {t('requested')} {formatDateTime(order.requestedAt)}
             {order.provisionedAt && <> · {t('active')} {formatDateTime(order.provisionedAt)}</>}
@@ -154,6 +163,16 @@ export function SpeProvisioningPanel({
                       className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
                     />
                   )}
+                  <select
+                    value={operatorId}
+                    onChange={(e) => setOperatorId(e.target.value)}
+                    className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
+                  >
+                    <option value="">{t('operatorLabel')}...</option>
+                    {speOperators.map((op) => (
+                      <option key={op.id} value={op.id}>{op.name}</option>
+                    ))}
+                  </select>
                   <textarea
                     rows={2}
                     value={comment}

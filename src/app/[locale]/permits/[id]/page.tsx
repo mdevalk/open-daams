@@ -6,6 +6,7 @@ import { AuthorizedPersonsPanel } from '@/components/AuthorizedPersonsPanel';
 import { InvoicePanel } from '@/components/InvoicePanel';
 import { SpeProvisioningPanel } from '@/components/SpeProvisioningPanel';
 import { PermitChangeRequestPanel } from '@/components/PermitChangeRequestPanel';
+import { PermitLifecyclePanel } from '@/components/PermitLifecyclePanel';
 import { PERMIT_STATUS_COLORS, formatPermitId } from '@/lib/permit';
 import { groupDatasetsByHolder } from '@/lib/permit-signing';
 import { formatDate, formatDateTime, purposeLabel, serializePrisma } from '@/lib/utils';
@@ -41,7 +42,7 @@ export default async function PermitDetailPage({
   const te = await getTranslations({ locale, namespace: 'ethicalReview' });
   const tps = await getTranslations({ locale, namespace: 'permitStatus' });
 
-  const [rawPermit, users] = await Promise.all([
+  const [rawPermit, users, speOperators] = await Promise.all([
     prisma.dataPermit.findUnique({
       where: { id },
       include: {
@@ -74,7 +75,7 @@ export default async function PermitDetailPage({
             ethicalReviewBody: true,
             ethicalReviewReference: true,
             ethicalReviewDate: true,
-            applicant: { select: { name: true, organisation: true, email: true } },
+            applicant: { select: { name: true, email: true, dataUser: { select: { name: true } } } },
           },
         },
         previousPermit: { select: { id: true, permitNumber: true, version: true } },
@@ -93,6 +94,7 @@ export default async function PermitDetailPage({
         },
         speProvisioning: {
           include: {
+            speOperator: { select: { name: true } },
             logs: {
               include: { user: { select: { name: true, role: true } } },
               orderBy: { createdAt: 'asc' },
@@ -102,6 +104,7 @@ export default async function PermitDetailPage({
       },
     }),
     prisma.user.findMany({ orderBy: { name: 'asc' } }),
+    prisma.speOperator.findMany({ orderBy: { name: 'asc' } }),
   ]);
 
   if (!rawPermit) notFound();
@@ -239,7 +242,7 @@ export default async function PermitDetailPage({
               <h2 className="font-semibold text-gray-900 mb-4">{t('applicantTitle')} (§2)</h2>
               <dl className="grid grid-cols-2 gap-4 text-sm">
                 <Field label={t('name')} value={app.applicant.name} />
-                <Field label={t('organisation')} value={app.applicant.organisation} />
+                <Field label={t('organisation')} value={app.applicant.dataUser?.name} />
                 <Field label={t('email')} value={app.applicant.email} />
                 <Field
                   label={t('applicationType')}
@@ -365,6 +368,14 @@ export default async function PermitDetailPage({
               </ol>
             </div>
           )}
+          {permit.isCurrent && (
+            <PermitLifecyclePanel
+              permitId={permit.id}
+              permitStatus={permit.status}
+              currentUserId={currentUser.id}
+              currentUserRole={currentUser.role}
+            />
+          )}
           <PermitChangeRequestPanel
             permitId={permit.id}
             permitStatus={permit.status}
@@ -399,6 +410,7 @@ export default async function PermitDetailPage({
             <SpeProvisioningPanel
               permitId={permit.id}
               order={permit.speProvisioning as unknown as ComponentProps<typeof SpeProvisioningPanel>['order']}
+              speOperators={speOperators}
               canManage={['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(currentUser.role)}
               currentUserId={currentUser.id}
             />

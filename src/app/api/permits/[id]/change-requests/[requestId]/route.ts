@@ -140,6 +140,7 @@ export async function PATCH(
           data: permit.grantedDatasets.map((gd) => ({
             permitId: newPermit.id,
             dataHolderName: gd.dataHolderName,
+            dataHolderId: gd.dataHolderId,
             name: gd.name,
             url: gd.url,
           })),

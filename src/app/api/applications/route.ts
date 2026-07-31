@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
       } : {}),
     },
     include: {
-      applicant: { select: { id: true, name: true, organisation: true } },
+      applicant: { select: { id: true, name: true, dataUser: { select: { name: true } } } },
       caseHandler: { select: { id: true, name: true } },
     },
     orderBy: { updatedAt: 'desc' },
@@ -102,17 +102,22 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const dataHolderGroups = Array.isArray(body.requestedDatasets) ? body.requestedDatasets : [];
+    const dataHolderGroups: { dataHolderId: string; datasets: { name: string; url?: string | null }[] }[] =
+      Array.isArray(body.requestedDatasets) ? body.requestedDatasets : [];
     if (dataHolderGroups.length > 0) {
+      const dataHolders = await prisma.dataHolder.findMany({
+        where: { id: { in: dataHolderGroups.map((g) => g.dataHolderId) } },
+      });
+      const nameById = new Map(dataHolders.map((dh) => [dh.id, dh.name]));
       await prisma.requestedDataset.createMany({
-        data: dataHolderGroups.flatMap(
-          (g: { dataHolderName: string; datasets: { name: string; url?: string | null }[] }) =>
-            g.datasets.map((d) => ({
-              applicationId: application.id,
-              dataHolderName: g.dataHolderName,
-              name: d.name,
-              url: d.url || null,
-            })),
+        data: dataHolderGroups.flatMap((g) =>
+          g.datasets.map((d) => ({
+            applicationId: application.id,
+            dataHolderId: g.dataHolderId,
+            dataHolderName: nameById.get(g.dataHolderId) ?? 'Unknown',
+            name: d.name,
+            url: d.url || null,
+          })),
         ),
       });
     }

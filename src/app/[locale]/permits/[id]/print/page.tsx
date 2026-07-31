@@ -31,7 +31,7 @@ export default async function PermitPrintPage({
           legalBasis: true,
           dataProcessingCountry: true,
           purposeCategory: true,
-          applicant: { select: { name: true, organisation: true, email: true } },
+          applicant: { select: { name: true, email: true, dataUser: { select: { name: true } } } },
         },
       },
     },
@@ -135,7 +135,7 @@ export default async function PermitPrintPage({
               <div className="section">
                 <div className="section-title">Aanvrager</div>
                 <div className="field"><span className="lbl">Naam</span><span className="val">{app.applicant.name}</span></div>
-                <div className="field"><span className="lbl">Organisatie</span><span className="val">{app.applicant.organisation}</span></div>
+                <div className="field"><span className="lbl">Organisatie</span><span className="val">{app.applicant.dataUser?.name ?? '—'}</span></div>
                 <div className="field"><span className="lbl">E-mail</span><span className="val">{app.applicant.email}</span></div>
               </div>
 

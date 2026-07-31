@@ -87,7 +87,7 @@ export default async function DashboardPage({
   ] = await Promise.all([
     prisma.application.findMany({
       include: {
-        applicant: { select: { name: true, organisation: true } },
+        applicant: { select: { name: true, dataUser: { select: { name: true } } } },
         caseHandler: { select: { name: true } },
       },
       orderBy: { updatedAt: 'desc' },

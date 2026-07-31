@@ -47,7 +47,10 @@ export async function POST(req: NextRequest) {
       where: { id: body.applicationId },
       include: {
         dataPermits: { select: { id: true } },
-        requestedDatasets: { orderBy: { createdAt: 'asc' } },
+        requestedDatasets: {
+          include: { dataHolder: { select: { name: true } } },
+          orderBy: { createdAt: 'asc' },
+        },
       },
     });
 
@@ -62,7 +65,16 @@ export async function POST(req: NextRequest) {
     const issuedAt = new Date();
     const validFrom = new Date(body.validFrom);
     const validUntil = new Date(body.validUntil);
-    const grantedDatasets = groupDatasetsByHolder(application.requestedDatasets);
+    // Reshape to the flat {dataHolderName,name,url} shape groupDatasetsByHolder
+    // expects — keeps signPermit()'s input byte-for-byte identical regardless
+    // of the dataHolder relation added alongside the frozen dataHolderName.
+    const grantedDatasets = groupDatasetsByHolder(
+      application.requestedDatasets.map((rd) => ({
+        dataHolderName: rd.dataHolder?.name ?? 'Unknown',
+        name: rd.name,
+        url: rd.url,
+      })),
+    );
 
     let permit;
     const MAX_ATTEMPTS = 5;
@@ -113,7 +125,9 @@ export async function POST(req: NextRequest) {
       await prisma.grantedDataset.createMany({
         data: application.requestedDatasets.map((rd) => ({
           permitId: permit.id,
-          dataHolderName: rd.dataHolderName,
+          // Frozen at issuance — never re-derived from the registry later.
+          dataHolderName: rd.dataHolder?.name ?? 'Unknown',
+          dataHolderId: rd.dataHolderId,
           name: rd.name,
           url: rd.url,
         })),

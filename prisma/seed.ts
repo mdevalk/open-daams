@@ -4,25 +4,55 @@ import { addMonths, subDays, subWeeks } from 'date-fns';
 const prisma = new PrismaClient();
 
 async function main() {
+  const dataUserNames = ['UMC Utrecht', 'RIVM', 'HDAB-NL'];
+  const dataUserIdByName: Record<string, string> = {};
+  for (const name of dataUserNames) {
+    const dataUser = await prisma.dataUser.upsert({ where: { name }, update: {}, create: { name } });
+    dataUserIdByName[name] = dataUser.id;
+  }
+
+  const dataHolderNames = ['GP Information Network (LINH)', 'CBS', 'RIVM', 'Vektis'];
+  const dataHolderIdByName: Record<string, string> = {};
+  for (const name of dataHolderNames) {
+    const dataHolder = await prisma.dataHolder.upsert({ where: { name }, update: {}, create: { name } });
+    dataHolderIdByName[name] = dataHolder.id;
+  }
+
+  const speProvider = await prisma.speProvider.upsert({
+    where: { name: 'SURF Research Cloud' },
+    update: {},
+    create: { name: 'SURF Research Cloud' },
+  });
+  await prisma.speOperator.upsert({
+    where: { name: 'HDAB-NL SPE Operations' },
+    update: {},
+    create: { name: 'HDAB-NL SPE Operations', speProviderId: speProvider.id },
+  });
+
   const applicant1 = await prisma.user.upsert({
     where: { email: 'researcher@umcu.nl' },
     update: {},
-    create: { name: 'Dr. A. de Vries', email: 'researcher@umcu.nl', role: UserRole.APPLICANT, organisation: 'UMC Utrecht' },
+    create: { name: 'Dr. A. de Vries', email: 'researcher@umcu.nl', role: UserRole.APPLICANT, dataUserId: dataUserIdByName['UMC Utrecht'] },
   });
   const applicant2 = await prisma.user.upsert({
     where: { email: 'analyst@rivm.nl' },
     update: {},
-    create: { name: 'M. Jansen', email: 'analyst@rivm.nl', role: UserRole.APPLICANT, organisation: 'RIVM' },
+    create: { name: 'M. Jansen', email: 'analyst@rivm.nl', role: UserRole.APPLICANT, dataUserId: dataUserIdByName['RIVM'] },
   });
   const handler = await prisma.user.upsert({
     where: { email: 'casehandler@hdab.nl' },
     update: {},
-    create: { name: 'S. Bakker', email: 'casehandler@hdab.nl', role: UserRole.CASE_HANDLER, organisation: 'HDAB-NL' },
+    create: { name: 'S. Bakker', email: 'casehandler@hdab.nl', role: UserRole.CASE_HANDLER, dataUserId: dataUserIdByName['HDAB-NL'] },
   });
   const decisionMaker = await prisma.user.upsert({
     where: { email: 'director@hdab.nl' },
     update: {},
-    create: { name: 'P. van den Berg', email: 'director@hdab.nl', role: UserRole.DECISION_MAKER, organisation: 'HDAB-NL' },
+    create: { name: 'P. van den Berg', email: 'director@hdab.nl', role: UserRole.DECISION_MAKER, dataUserId: dataUserIdByName['HDAB-NL'] },
+  });
+  await prisma.user.upsert({
+    where: { email: 'admin@hdab.nl' },
+    update: {},
+    create: { name: 'R. de Groot', email: 'admin@hdab.nl', role: UserRole.ADMIN, dataUserId: dataUserIdByName['HDAB-NL'] },
   });
 
   // App 1: in PROCESSING
@@ -42,10 +72,10 @@ async function main() {
       requestedDatasets: {
         createMany: {
           data: [
-            { dataHolderName: 'GP Information Network (LINH)', name: 'Huisartsenregistratie cardiovasculair risicomanagement' },
-            { dataHolderName: 'GP Information Network (LINH)', name: 'Medicatievoorschriften huisartsenpraktijken (ATC A10)' },
+            { dataHolderId: dataHolderIdByName['GP Information Network (LINH)'], name: 'Huisartsenregistratie cardiovasculair risicomanagement' },
+            { dataHolderId: dataHolderIdByName['GP Information Network (LINH)'], name: 'Medicatievoorschriften huisartsenpraktijken (ATC A10)' },
             {
-              dataHolderName: 'CBS',
+              dataHolderId: dataHolderIdByName['CBS'],
               name: "Overleden inwoners van Nederland naar doodsoorzaak (uitgebreide lijst van 'drie-teken categorieën'), leeftijd en geslacht",
               url: 'https://acceptance.data.health.europa.eu/healthdata-central-platform/datasets/24b6a9b2-4519-4f94-8c0f-c4c85f295806?locale=nl',
             },
@@ -84,7 +114,7 @@ async function main() {
       purposeCategory: 'PUBLIC_HEALTH',
       requestedDatasets: {
         createMany: {
-          data: [{ dataHolderName: 'RIVM', name: 'Praeventis — landelijke vaccinatieregistratie' }],
+          data: [{ dataHolderId: dataHolderIdByName['RIVM'], name: 'Praeventis — landelijke vaccinatieregistratie' }],
         },
       },
       requestedVariables: 'Vaccination date, vaccine type, municipality code, age group, CBS socioeconomic quintile',
@@ -119,8 +149,8 @@ async function main() {
       requestedDatasets: {
         createMany: {
           data: [
-            { dataHolderName: 'Vektis', name: 'Declaraties geestelijke gezondheidszorg (GGZ)' },
-            { dataHolderName: 'GP Information Network (LINH)', name: 'Huisartsenregistratie verwijzingen GGZ' },
+            { dataHolderId: dataHolderIdByName['Vektis'], name: 'Declaraties geestelijke gezondheidszorg (GGZ)' },
+            { dataHolderId: dataHolderIdByName['GP Information Network (LINH)'], name: 'Huisartsenregistratie verwijzingen GGZ' },
           ],
         },
       },

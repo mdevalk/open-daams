@@ -56,6 +56,7 @@ export default async function LocaleLayout({
                       { href: `/${locale}/permits`, label: t('permits') },
                       { href: `/${locale}/invoices`, label: t('invoices') },
                       { href: `/${locale}/public`, label: t('public') },
+                      { href: `/${locale}/reference-data`, label: t('referenceData') },
                     ].map((item) => (
                       <a
                         key={item.href}

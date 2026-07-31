@@ -6,7 +6,7 @@ import { requireRole } from '@/lib/authz';
  * POST /api/applications/[id]/extraction-requests
  * Register a request to a health data holder to extract the data covered by
  * an issued permit (EHDS Art. 60, 68(7), TEHDAS2 D6.3 §7.1).
- * body: { dataHolderName, datasetDescription, requestedById }
+ * body: { dataHolderId, datasetDescription, requestedById }
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -19,17 +19,20 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const application = await prisma.application.findUnique({ where: { id } });
     if (!application) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-    if (!body.dataHolderName || !body.datasetDescription || !body.requestedById) {
+    if (!body.dataHolderId || !body.datasetDescription || !body.requestedById) {
       return NextResponse.json(
-        { error: 'dataHolderName, datasetDescription and requestedById are required' },
+        { error: 'dataHolderId, datasetDescription and requestedById are required' },
         { status: 422 },
       );
     }
 
+    const dataHolder = await prisma.dataHolder.findUnique({ where: { id: body.dataHolderId } });
+    if (!dataHolder) return NextResponse.json({ error: 'Data holder not found' }, { status: 404 });
+
     const request = await prisma.dataExtractionRequest.create({
       data: {
         applicationId: id,
-        dataHolderName: body.dataHolderName,
+        dataHolderId: dataHolder.id,
         datasetDescription: body.datasetDescription,
         requestedById: body.requestedById,
       },

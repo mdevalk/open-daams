@@ -2,7 +2,7 @@ import { prisma } from '@/lib/db';
 import { UserRole } from '@prisma/client';
 
 export type AuthzResult =
-  | { ok: true; user: { id: string; role: UserRole; name: string; email: string; organisation: string } }
+  | { ok: true; user: { id: string; role: UserRole; name: string; email: string } }
   | { ok: false; status: 401 | 403; error: string };
 
 /**

@@ -8,14 +8,18 @@ import { NcpFetchForm } from './NcpFetchForm';
 
 type Tab = 'manual' | 'hdeu' | 'ncp';
 
+type Applicant = User & { dataUser: { name: string } | null };
+
 export function NewApplicationTabs({
   applicants,
+  dataHolders,
   locale,
   manualLabel,
   hdeuLabel,
   ncpLabel,
 }: {
-  applicants: User[];
+  applicants: Applicant[];
+  dataHolders: { id: string; name: string }[];
   locale: string;
   manualLabel: string;
   hdeuLabel: string;
@@ -50,7 +54,7 @@ export function NewApplicationTabs({
       </div>
 
       {tab === 'manual' ? (
-        <NewApplicationForm applicants={applicants} />
+        <NewApplicationForm applicants={applicants} dataHolders={dataHolders} />
       ) : tab === 'hdeu' ? (
         <HdeuImportForm locale={locale} />
       ) : (

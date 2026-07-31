@@ -30,14 +30,22 @@ type AppType = 'DATA_ACCESS_APPLICATION' | 'DATA_REQUEST';
 const inputCls = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
 const labelCls = 'block text-sm font-medium text-gray-700 mb-1';
 
-export function NewApplicationForm({ applicants }: { applicants: User[] }) {
+type Applicant = User & { dataUser: { name: string } | null };
+
+export function NewApplicationForm({
+  applicants,
+  dataHolders,
+}: {
+  applicants: Applicant[];
+  dataHolders: { id: string; name: string }[];
+}) {
   const router = useRouter();
   const terr = useTranslations('errors');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dataHolderGroups, setDataHolderGroups] = useState<
-    { id: string; dataHolderName: string; datasets: { id: string; name: string; url: string }[] }[]
-  >([{ id: crypto.randomUUID(), dataHolderName: '', datasets: [{ id: crypto.randomUUID(), name: '', url: '' }] }]);
+    { id: string; dataHolderId: string; datasets: { id: string; name: string; url: string }[] }[]
+  >([{ id: crypto.randomUUID(), dataHolderId: '', datasets: [{ id: crypto.randomUUID(), name: '', url: '' }] }]);
   const [type, setType] = useState<AppType | ''>('');
 
   const [cohortFormationMethod, setCohortFormationMethod] = useState('');
@@ -58,14 +66,14 @@ export function NewApplicationForm({ applicants }: { applicants: User[] }) {
   function addDataHolderGroup() {
     setDataHolderGroups((prev) => [
       ...prev,
-      { id: crypto.randomUUID(), dataHolderName: '', datasets: [{ id: crypto.randomUUID(), name: '', url: '' }] },
+      { id: crypto.randomUUID(), dataHolderId: '', datasets: [{ id: crypto.randomUUID(), name: '', url: '' }] },
     ]);
   }
   function removeDataHolderGroup(id: string) {
     setDataHolderGroups((prev) => prev.filter((g) => g.id !== id));
   }
-  function updateDataHolderName(id: string, name: string) {
-    setDataHolderGroups((prev) => prev.map((g) => (g.id === id ? { ...g, dataHolderName: name } : g)));
+  function updateDataHolderId(id: string, dataHolderId: string) {
+    setDataHolderGroups((prev) => prev.map((g) => (g.id === id ? { ...g, dataHolderId } : g)));
   }
   function addDatasetToGroup(groupId: string) {
     setDataHolderGroups((prev) =>
@@ -106,9 +114,9 @@ export function NewApplicationForm({ applicants }: { applicants: User[] }) {
       projectDescription: form.get('projectDescription'),
       purposeCategory: form.get('purposeCategory'),
       requestedDatasets: dataHolderGroups
-        .filter((g) => g.dataHolderName.trim())
+        .filter((g) => g.dataHolderId)
         .map((g) => ({
-          dataHolderName: g.dataHolderName.trim(),
+          dataHolderId: g.dataHolderId,
           datasets: g.datasets
             .filter((d) => d.name.trim())
             .map((d) => ({ name: d.name.trim(), url: d.url.trim() || null })),
@@ -225,7 +233,7 @@ export function NewApplicationForm({ applicants }: { applicants: User[] }) {
           <select name="applicantId" required className={inputCls}>
             <option value="">Select applicant...</option>
             {applicants.map((u) => (
-              <option key={u.id} value={u.id}>{u.name} — {u.organisation}</option>
+              <option key={u.id} value={u.id}>{u.name} — {u.dataUser?.name ?? '—'}</option>
             ))}
           </select>
         </div>
@@ -276,13 +284,16 @@ export function NewApplicationForm({ applicants }: { applicants: User[] }) {
             {dataHolderGroups.map((group) => (
               <div key={group.id} className="rounded-lg border border-gray-200 p-3 space-y-2">
                 <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={group.dataHolderName}
-                    onChange={(e) => updateDataHolderName(group.id, e.target.value)}
-                    placeholder="Data holder name"
+                  <select
+                    value={group.dataHolderId}
+                    onChange={(e) => updateDataHolderId(group.id, e.target.value)}
                     className={`${inputCls} flex-1`}
-                  />
+                  >
+                    <option value="">Select data holder...</option>
+                    {dataHolders.map((dh) => (
+                      <option key={dh.id} value={dh.id}>{dh.name}</option>
+                    ))}
+                  </select>
                   {dataHolderGroups.length > 1 && (
                     <button
                       type="button"

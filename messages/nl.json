@@ -6,6 +6,7 @@
     "invoices": "Facturen",
     "import": "HD@EU import",
     "public": "Openbaar register",
+    "referenceData": "Referentiegegevens",
     "newApplication": "Nieuwe aanvraag",
     "skipToContent": "Ga naar hoofdinhoud",
     "testEnvironment": "Testomgeving"
@@ -398,6 +399,7 @@
     "request": "+ SPE-provisioning aanvragen",
     "noOrder": "Nog geen SPE-provisioningopdracht.",
     "environment": "Omgeving",
+    "operatorLabel": "Operator",
     "requested": "Aangevraagd",
     "active": "Actief",
     "decommissioned": "Ontmanteld",
@@ -433,6 +435,59 @@
     "revokeDesc": "Trek de vergunning in met een onderbouwde motivering (D6.4 §9.3).",
     "expire": "Markeren als verlopen",
     "expireDesc": "De vergunning heeft de geldigheidsdatum overschreden (D6.4 §9.3)."
+  },
+  "referenceData": {
+    "title": "Referentiegegevens",
+    "subtitle": "Basisregistraties voor gegevenshouders, SPE-operators/-providers en datagebruikers, gebruikt in aanvragen en vergunningen.",
+    "tabDataHolders": "Gegevenshouders",
+    "tabSpeOperators": "SPE-operators",
+    "tabSpeProviders": "SPE-providers",
+    "tabDataUsers": "Datagebruikers"
+  },
+  "dataHolders": {
+    "name": "Naam",
+    "contactEmail": "Contact e-mail",
+    "contactPhone": "Contact telefoon",
+    "addNew": "Gegevenshouder toevoegen",
+    "edit": "Bewerken",
+    "delete": "Verwijderen",
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "empty": "Nog geen gegevenshouders geregistreerd."
+  },
+  "speOperators": {
+    "name": "Naam",
+    "contactEmail": "Contact e-mail",
+    "contactPhone": "Contact telefoon",
+    "addNew": "SPE-operator toevoegen",
+    "edit": "Bewerken",
+    "delete": "Verwijderen",
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "empty": "Nog geen SPE-operators geregistreerd.",
+    "providerLabel": "Provider"
+  },
+  "speProviders": {
+    "name": "Naam",
+    "contactEmail": "Contact e-mail",
+    "contactPhone": "Contact telefoon",
+    "addNew": "SPE-provider toevoegen",
+    "edit": "Bewerken",
+    "delete": "Verwijderen",
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "empty": "Nog geen SPE-providers geregistreerd."
+  },
+  "dataUsers": {
+    "name": "Naam",
+    "contactEmail": "Contact e-mail",
+    "contactPhone": "Contact telefoon",
+    "addNew": "Datagebruiker toevoegen",
+    "edit": "Bewerken",
+    "delete": "Verwijderen",
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "empty": "Nog geen datagebruikers geregistreerd."
   },
   "errors": {
     "unexpected": "Er is een onverwachte fout opgetreden.",

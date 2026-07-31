@@ -10,7 +10,8 @@ import { formatDate, readErrorMessage } from '@/lib/utils';
 type Props = {
   applicationId: string;
   currentUserId: string;
-  requests: DataExtractionRequest[];
+  requests: (DataExtractionRequest & { dataHolder: { name: string } | null })[];
+  dataHolders: { id: string; name: string }[];
   canManage: boolean;
 };
 
@@ -35,14 +36,14 @@ const NEXT_STATUSES: Record<string, string[]> = {
   DECLINED: [],
 };
 
-export function ExtractionRequestsPanel({ applicationId, currentUserId, requests, canManage }: Props) {
+export function ExtractionRequestsPanel({ applicationId, currentUserId, requests, dataHolders, canManage }: Props) {
   const router = useRouter();
   const terr = useTranslations('errors');
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [dataHolderName, setDataHolderName] = useState('');
+  const [dataHolderId, setDataHolderId] = useState('');
   const [datasetDescription, setDatasetDescription] = useState('');
 
   async function submitRequest() {
@@ -52,10 +53,10 @@ export function ExtractionRequestsPanel({ applicationId, currentUserId, requests
       const res = await fetch(`/api/applications/${applicationId}/extraction-requests`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dataHolderName, datasetDescription, requestedById: currentUserId }),
+        body: JSON.stringify({ dataHolderId, datasetDescription, requestedById: currentUserId }),
       });
       if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
-      setDataHolderName('');
+      setDataHolderId('');
       setDatasetDescription('');
       setShowForm(false);
       router.refresh();
@@ -105,7 +106,7 @@ export function ExtractionRequestsPanel({ applicationId, currentUserId, requests
         {requests.map((r) => (
           <div key={r.id} className="border border-gray-100 rounded p-3 text-sm space-y-1">
             <div className="flex items-center justify-between">
-              <span className="font-medium">{r.dataHolderName}</span>
+              <span className="font-medium">{r.dataHolder?.name ?? '—'}</span>
               <span className={`text-xs font-medium px-2 py-0.5 rounded ${STATUS_STYLES[r.status]}`}>
                 {STATUS_LABELS[r.status]}
               </span>
@@ -136,8 +137,13 @@ export function ExtractionRequestsPanel({ applicationId, currentUserId, requests
         <div className="space-y-2 border-t border-gray-100 pt-3">
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">Gegevenshouder</label>
-            <input type="text" value={dataHolderName} onChange={e => setDataHolderName(e.target.value)}
-              className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
+            <select value={dataHolderId} onChange={e => setDataHolderId(e.target.value)}
+              className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]">
+              <option value="">Selecteer gegevenshouder...</option>
+              {dataHolders.map((dh) => (
+                <option key={dh.id} value={dh.id}>{dh.name}</option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">Beschrijving van de gevraagde extractie</label>
@@ -145,7 +151,7 @@ export function ExtractionRequestsPanel({ applicationId, currentUserId, requests
               className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
           </div>
           <div className="flex gap-2">
-            <button disabled={loading || !dataHolderName.trim() || !datasetDescription.trim()} onClick={submitRequest}
+            <button disabled={loading || !dataHolderId || !datasetDescription.trim()} onClick={submitRequest}
               className="flex-1 rounded px-3 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors">
               {loading ? 'Bezig...' : 'Registreren'}
             </button>

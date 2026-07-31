@@ -33,11 +33,11 @@ export default async function ApplicationDetailPage({
 
   const t = await getTranslations({ locale, namespace: 'applicationDetail' });
 
-  const [rawApplication, users] = await Promise.all([
+  const [rawApplication, users, dataHolders] = await Promise.all([
     prisma.application.findUnique({
       where: { id },
       include: {
-        applicant: true,
+        applicant: { include: { dataUser: { select: { name: true } } } },
         caseHandler: true,
         dataPermits: { where: { isCurrent: true } },
         feeEstimate: { include: { invoice: true } },
@@ -52,11 +52,18 @@ export default async function ApplicationDetailPage({
         documents: { orderBy: { uploadedAt: 'desc' } },
         appeals: { orderBy: { submittedAt: 'desc' } },
         completenessCheck: true,
-        extractionRequests: { orderBy: { requestedAt: 'desc' } },
-        requestedDatasets: { orderBy: { createdAt: 'asc' } },
+        extractionRequests: {
+          include: { dataHolder: { select: { name: true } } },
+          orderBy: { requestedAt: 'desc' },
+        },
+        requestedDatasets: {
+          include: { dataHolder: { select: { name: true } } },
+          orderBy: { createdAt: 'asc' },
+        },
       },
     }),
     prisma.user.findMany({ orderBy: { name: 'asc' } }),
+    prisma.dataHolder.findMany({ orderBy: { name: 'asc' } }),
   ]);
 
   if (!rawApplication) notFound();
@@ -141,7 +148,7 @@ export default async function ApplicationDetailPage({
               <div>
                 <dt className="text-gray-500">{t('applicant')}</dt>
                 <dd className="font-medium">{application.applicant.name}</dd>
-                <dd className="text-gray-500">{application.applicant.organisation}</dd>
+                <dd className="text-gray-500">{application.applicant.dataUser?.name ?? '—'}</dd>
               </div>
               <div>
                 <dt className="text-gray-500">{t('caseHandler')}</dt>
@@ -207,7 +214,13 @@ export default async function ApplicationDetailPage({
           <section className="rounded-xl border border-gray-200 bg-white p-5">
             <h2 className="font-semibold text-gray-900 mb-3">{t('datasetsTitle')}</h2>
             <div className="space-y-3">
-              {groupDatasetsByHolder(application.requestedDatasets).map((group) => (
+              {groupDatasetsByHolder(
+                application.requestedDatasets.map((rd) => ({
+                  dataHolderName: rd.dataHolder?.name ?? 'Unknown',
+                  name: rd.name,
+                  url: rd.url,
+                })),
+              ).map((group) => (
                 <div key={group.dataHolderName}>
                   <p className="text-gray-500 text-xs uppercase tracking-wide mb-1">{group.dataHolderName}</p>
                   <ul className="list-disc list-inside text-sm space-y-0.5">
@@ -281,6 +294,7 @@ export default async function ApplicationDetailPage({
               applicationId={application.id}
               currentUserId={currentUser.id}
               requests={application.extractionRequests}
+              dataHolders={dataHolders}
               canManage={['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(currentUser.role)}
             />
           )}

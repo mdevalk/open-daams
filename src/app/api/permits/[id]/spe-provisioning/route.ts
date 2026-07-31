@@ -57,8 +57,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
 /**
  * PATCH /api/permits/[id]/spe-provisioning
- * Transition the SPE provisioning order.
- * body: { userId, toStatus, environmentReference?, comment? }
+ * Transition the SPE provisioning order. speOperatorId may be set/changed
+ * alongside any transition (e.g. assigning the operator at activation) —
+ * it's independent of the status machine itself.
+ * body: { userId, toStatus, environmentReference?, speOperatorId?, comment? }
  */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -84,6 +86,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const now = new Date();
     const updates: Record<string, unknown> = { status: toStatus };
     if (body.environmentReference) updates.environmentReference = body.environmentReference;
+    if (body.speOperatorId !== undefined) updates.speOperatorId = body.speOperatorId || null;
     if (toStatus === 'ACTIVE') updates.provisionedAt = now;
     if (toStatus === 'DECOMMISSIONED') updates.decommissionedAt = now;
 

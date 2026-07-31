@@ -57,18 +57,23 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   });
 
   if (body.requestedDatasets !== undefined) {
-    const dataHolderGroups = Array.isArray(body.requestedDatasets) ? body.requestedDatasets : [];
+    const dataHolderGroups: { dataHolderId: string; datasets: { name: string; url?: string | null }[] }[] =
+      Array.isArray(body.requestedDatasets) ? body.requestedDatasets : [];
+    const dataHolders = await prisma.dataHolder.findMany({
+      where: { id: { in: dataHolderGroups.map((g) => g.dataHolderId) } },
+    });
+    const nameById = new Map(dataHolders.map((dh) => [dh.id, dh.name]));
     await prisma.$transaction([
       prisma.requestedDataset.deleteMany({ where: { applicationId: id } }),
       prisma.requestedDataset.createMany({
-        data: dataHolderGroups.flatMap(
-          (g: { dataHolderName: string; datasets: { name: string; url?: string | null }[] }) =>
-            g.datasets.map((d) => ({
-              applicationId: id,
-              dataHolderName: g.dataHolderName,
-              name: d.name,
-              url: d.url || null,
-            })),
+        data: dataHolderGroups.flatMap((g) =>
+          g.datasets.map((d) => ({
+            applicationId: id,
+            dataHolderId: g.dataHolderId,
+            dataHolderName: nameById.get(g.dataHolderId) ?? 'Unknown',
+            name: d.name,
+            url: d.url || null,
+          })),
         ),
       }),
     ]);

@@ -41,11 +41,11 @@ export default async function InvoicesPage({
           id: true,
           permitNumber: true,
           version: true,
-          application: { select: { referenceNumber: true, title: true, applicant: { select: { name: true, organisation: true } } } },
+          application: { select: { referenceNumber: true, title: true, applicant: { select: { name: true, dataUser: { select: { name: true } } } } } },
         },
       },
       application: {
-        select: { id: true, referenceNumber: true, title: true, applicant: { select: { name: true, organisation: true } } },
+        select: { id: true, referenceNumber: true, title: true, applicant: { select: { name: true, dataUser: { select: { name: true } } } } },
       },
       createdBy: { select: { name: true, role: true } },
     },
@@ -155,7 +155,7 @@ export default async function InvoicesPage({
                   <div>
                     <p className="text-xs text-gray-500">{t('applicant')}</p>
                     <p className="font-medium">{applicant?.name ?? '—'}</p>
-                    <p className="text-xs text-gray-400">{applicant?.organisation}</p>
+                    <p className="text-xs text-gray-400">{applicant?.dataUser?.name}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">{t('amount')}</p>

@@ -10,10 +10,14 @@ export default async function NewApplicationPage({
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'applications' });
 
-  const users = await prisma.user.findMany({
-    where: { role: 'APPLICANT' },
-    orderBy: { name: 'asc' },
-  });
+  const [users, dataHolders] = await Promise.all([
+    prisma.user.findMany({
+      where: { role: 'APPLICANT' },
+      orderBy: { name: 'asc' },
+      include: { dataUser: { select: { name: true } } },
+    }),
+    prisma.dataHolder.findMany({ orderBy: { name: 'asc' } }),
+  ]);
 
   return (
     <div className="max-w-3xl">
@@ -30,6 +34,7 @@ export default async function NewApplicationPage({
       </div>
       <NewApplicationTabs
         applicants={users}
+        dataHolders={dataHolders}
         locale={locale}
         manualLabel={t('manualEntry')}
         hdeuLabel={t('import')}

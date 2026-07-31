@@ -30,7 +30,7 @@ const PDF_INCLUDE = {
       legalBasis: true,
       dataProcessingCountry: true,
       isCrossBorder: true,
-      applicant: { select: { name: true, organisation: true, email: true } },
+      applicant: { select: { name: true, email: true, dataUser: { select: { name: true } } } },
     },
   },
   authorizedPersons: { orderBy: { addedAt: 'asc' as const } },
@@ -54,6 +54,18 @@ export async function regenerateStoredPermitPdf(permitId: string, client: Client
     where: { id: permitId },
     include: PDF_INCLUDE,
   });
-  const pdfBytes = await generatePermitPdf(permit);
+  // generatePermitPdf expects a plain applicant.organisation string — resolve
+  // it from the dataUser relation here rather than changing that function.
+  const pdfBytes = await generatePermitPdf({
+    ...permit,
+    application: permit.application && {
+      ...permit.application,
+      applicant: {
+        name: permit.application.applicant.name,
+        email: permit.application.applicant.email,
+        organisation: permit.application.applicant.dataUser?.name ?? 'Unknown',
+      },
+    },
+  });
   await client.dataPermit.update({ where: { id: permitId }, data: { pdf: Buffer.from(pdfBytes) } });
 }

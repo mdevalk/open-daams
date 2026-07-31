@@ -35,7 +35,7 @@ export default async function ApplicationsPage({
       } : {}),
     },
     include: {
-      applicant: { select: { name: true, organisation: true } },
+      applicant: { select: { name: true, dataUser: { select: { name: true } } } },
       caseHandler: { select: { name: true } },
     },
     orderBy: { updatedAt: 'desc' },

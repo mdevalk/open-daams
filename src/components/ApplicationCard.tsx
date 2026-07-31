@@ -5,7 +5,7 @@ import { formatDate, daysUntil } from '@/lib/utils';
 
 type Props = {
   application: Application & {
-    applicant: Pick<User, 'name' | 'organisation'>;
+    applicant: Pick<User, 'name'> & { dataUser: { name: string } | null };
     caseHandler: Pick<User, 'name'> | null;
   };
   locale?: string;
@@ -43,7 +43,7 @@ export function ApplicationCard({ application: app, locale = 'nl' }: Props) {
           </div>
           <div className="flex gap-1">
             <dt className="sr-only">Organisatie</dt>
-            <dd>{app.applicant.organisation}</dd>
+            <dd>{app.applicant.dataUser?.name ?? '—'}</dd>
           </div>
           {app.caseHandler && (
             <div className="flex gap-1">

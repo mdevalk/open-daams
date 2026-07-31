@@ -38,14 +38,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Find or create an APPLICANT user record for the cross-border applicant
+    // Find or create an APPLICANT user record for the cross-border applicant.
+    // Their organisation is free text on the incoming payload (another
+    // country's HDAB, outside our registry) — find-or-create a DataUser by
+    // name to resolve it to a masterdata reference.
     let applicant = await prisma.user.findUnique({ where: { email: p.applicantEmail } });
     if (!applicant) {
+      const dataUser = await prisma.dataUser.upsert({
+        where: { name: p.applicantOrganisation },
+        update: {},
+        create: { name: p.applicantOrganisation },
+      });
       applicant = await prisma.user.create({
         data: {
           name: p.applicantName,
           email: p.applicantEmail,
-          organisation: p.applicantOrganisation,
+          dataUserId: dataUser.id,
           role: 'APPLICANT',
         },
       });
@@ -101,11 +109,25 @@ export async function POST(req: NextRequest) {
     });
 
     if (p.requestedDatasets.length > 0) {
+      // Same find-or-create treatment as the applicant's DataUser above —
+      // incoming data holder names are free text from another HDAB, not
+      // guaranteed to already exist in our registry.
+      const dataHolderIdsByName = new Map<string, string>();
+      for (const g of p.requestedDatasets) {
+        if (!dataHolderIdsByName.has(g.dataHolderName)) {
+          const dh = await prisma.dataHolder.upsert({
+            where: { name: g.dataHolderName },
+            update: {},
+            create: { name: g.dataHolderName },
+          });
+          dataHolderIdsByName.set(g.dataHolderName, dh.id);
+        }
+      }
       await prisma.requestedDataset.createMany({
         data: p.requestedDatasets.flatMap((g) =>
           g.datasets.map((d) => ({
             applicationId: application.id,
-            dataHolderName: g.dataHolderName,
+            dataHolderId: dataHolderIdsByName.get(g.dataHolderName)!,
             name: d.name,
             url: d.url || null,
           })),

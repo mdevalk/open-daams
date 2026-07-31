@@ -26,7 +26,7 @@ export default async function PublicRegisterPage({
         title: true,
         purposeCategory: true,
         publishedAt: true,
-        applicant: { select: { organisation: true } },
+        applicant: { select: { dataUser: { select: { name: true } } } },
       },
       orderBy: { publishedAt: 'desc' },
     }),
@@ -39,7 +39,7 @@ export default async function PublicRegisterPage({
         decisionOutcome: true,
         decisionSummary: true,
         decisionPublishedAt: true,
-        applicant: { select: { organisation: true } },
+        applicant: { select: { dataUser: { select: { name: true } } } },
       },
       orderBy: { decisionPublishedAt: 'desc' },
     }),
@@ -73,7 +73,7 @@ export default async function PublicRegisterPage({
                   <tr key={a.id} className="border-b border-gray-100">
                     <td className="py-2 pr-4 font-mono text-xs">{a.referenceNumber}</td>
                     <td className="py-2 pr-4">{a.title}</td>
-                    <td className="py-2 pr-4">{a.applicant.organisation}</td>
+                    <td className="py-2 pr-4">{a.applicant.dataUser?.name ?? '—'}</td>
                     <td className="py-2 pr-4">{purposeLabel(a.purposeCategory)}</td>
                     <td className="py-2 pr-4">{formatDate(a.publishedAt)}</td>
                   </tr>
@@ -106,7 +106,7 @@ export default async function PublicRegisterPage({
                   <tr key={a.id} className="border-b border-gray-100">
                     <td className="py-2 pr-4 font-mono text-xs">{a.referenceNumber}</td>
                     <td className="py-2 pr-4">{a.title}</td>
-                    <td className="py-2 pr-4">{a.applicant.organisation}</td>
+                    <td className="py-2 pr-4">{a.applicant.dataUser?.name ?? '—'}</td>
                     <td className="py-2 pr-4">
                       <span className={`text-xs font-medium px-2 py-0.5 rounded ${
                         a.decisionOutcome === 'POSITIVE' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'

@@ -49,11 +49,11 @@ export default async function InvoiceDetailPage({
       include: {
         permit: {
           include: {
-            application: { select: { referenceNumber: true, title: true, type: true, applicant: { select: { name: true, organisation: true, email: true } } } },
+            application: { select: { referenceNumber: true, title: true, type: true, applicant: { select: { name: true, email: true, dataUser: { select: { name: true } } } } } },
           },
         },
         application: {
-          select: { id: true, referenceNumber: true, title: true, applicant: { select: { name: true, organisation: true, email: true } } },
+          select: { id: true, referenceNumber: true, title: true, applicant: { select: { name: true, email: true, dataUser: { select: { name: true } } } } },
         },
         createdBy: { select: { name: true, role: true } },
       },
@@ -117,7 +117,7 @@ export default async function InvoiceDetailPage({
           <section className="rounded-xl border border-gray-200 bg-white p-5">
             <h2 className="font-semibold text-gray-900 mb-4">{t('detailsTitle')}</h2>
             <dl className="grid grid-cols-2 gap-4">
-              <Field label={t('applicant')} value={applicant ? `${applicant.name} (${applicant.organisation})` : null} />
+              <Field label={t('applicant')} value={applicant ? `${applicant.name} (${applicant.dataUser?.name ?? '—'})` : null} />
               <Field label={t('issuedBy')} value={`${invoice.createdBy.name} (${invoice.createdBy.role})`} />
               <Field label={t('issuedOn')} value={formatDate(invoice.issuedAt)} />
               <Field label={t('dueOn')} value={formatDate(invoice.dueAt)} />

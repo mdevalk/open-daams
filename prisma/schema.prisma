@@ -194,7 +194,9 @@ model User {
   name         String
   email        String   @unique
   role         UserRole
-  organisation String
+  // Masterdata reference (Reference data / DataUser registry).
+  dataUserId   String
+  dataUser     DataUser @relation(fields: [dataUserId], references: [id])
   createdAt    DateTime @default(now())
 
   applications                Application[]           @relation("Applicant")
@@ -376,7 +378,9 @@ model RequestedDataset {
   id             String      @id @default(cuid())
   applicationId  String
   application    Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  dataHolderName String
+  // Masterdata reference (Reference data / DataHolder registry).
+  dataHolderId   String
+  dataHolder     DataHolder @relation(fields: [dataHolderId], references: [id])
   name           String
   url            String?
   createdAt      DateTime    @default(now())
@@ -389,7 +393,9 @@ model DataExtractionRequest {
   applicationId String
   application   Application @relation(fields: [applicationId], references: [id])
 
-  dataHolderName     String
+  // Masterdata reference (Reference data / DataHolder registry).
+  dataHolderId       String
+  dataHolder         DataHolder @relation(fields: [dataHolderId], references: [id])
   datasetDescription String @db.Text
 
   requestedAt   DateTime @default(now())
@@ -544,6 +550,11 @@ model SpeProvisioningOrder {
   // Reference/URL into the actual SPE operator's system, once known
   environmentReference String?
 
+  // Masterdata reference (Reference data / SpeOperator registry) — who the
+  // HDAB deals with operationally for this environment.
+  speOperatorId String?
+  speOperator   SpeOperator? @relation(fields: [speOperatorId], references: [id])
+
   requestedAt      DateTime  @default(now())
   provisionedAt    DateTime?
   decommissionedAt DateTime?
@@ -636,7 +647,14 @@ model GrantedDataset {
   id             String     @id @default(cuid())
   permitId       String
   permit         DataPermit @relation(fields: [permitId], references: [id], onDelete: Cascade)
+  // Frozen at issuance, like name/url below — feeds the Ed25519-signed permit
+  // payload (permit-signing.ts), so this NEVER changes shape or gets dropped.
   dataHolderName String
+  // Informational-only traceability back to the registry, copied from the
+  // source RequestedDataset at issuance. Permanently nullable — never
+  // authoritative for what the signature attests to.
+  dataHolderId   String?
+  dataHolder     DataHolder? @relation(fields: [dataHolderId], references: [id])
   name           String
   url            String?
   createdAt      DateTime   @default(now())
@@ -689,4 +707,63 @@ model Document {
   sizeBytes     Int
   uploadedAt    DateTime    @default(now())
   description   String?
+}
+
+// Reference data / masterdata registries, maintained via /reference-data
+// (ADMIN-only create/edit/delete, visible to everyone). Same minimal shape
+// across all four — name is the natural business key (unique), used for
+// find-or-create matching during backfill and HD@EU import.
+
+model DataHolder {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  contactEmail String?
+  contactPhone String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  requestedDatasets  RequestedDataset[]
+  grantedDatasets    GrantedDataset[]
+  extractionRequests DataExtractionRequest[]
+}
+
+// The party actually providing/hosting the SPE technology. Distinct from
+// SpeOperator (the party that operates a given SPE instance under a permit
+// and holds the contract with a Provider).
+model SpeProvider {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  contactEmail String?
+  contactPhone String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  operators SpeOperator[]
+}
+
+model SpeOperator {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  contactEmail String?
+  contactPhone String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  speProviderId String?
+  speProvider   SpeProvider? @relation(fields: [speProviderId], references: [id])
+
+  provisioningOrders SpeProvisioningOrder[]
+}
+
+// The "data user" per EHDS Art. 61 — the organisation an applicant/case
+// handler/decision maker belongs to.
+model DataUser {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  contactEmail String?
+  contactPhone String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  users User[]
 }

@@ -96,16 +96,27 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         updates.permitAcceptanceStatus = 'PENDING';
       }
 
-      const applicationForPdf = await prisma.application.findUniqueOrThrow({
+      const applicationForPdfRaw = await prisma.application.findUniqueOrThrow({
         where: { id },
         select: {
           referenceNumber: true,
           title: true,
           type: true,
           legalBasis: true,
-          applicant: { select: { name: true, organisation: true, email: true } },
+          applicant: { select: { name: true, email: true, dataUser: { select: { name: true } } } },
         },
       });
+      // generateDecisionPdf expects a plain applicant.organisation string —
+      // resolve it from the dataUser relation here rather than changing that
+      // function.
+      const applicationForPdf = {
+        ...applicationForPdfRaw,
+        applicant: {
+          name: applicationForPdfRaw.applicant.name,
+          email: applicationForPdfRaw.applicant.email,
+          organisation: applicationForPdfRaw.applicant.dataUser?.name ?? 'Unknown',
+        },
+      };
 
       const MAX_ATTEMPTS = 5;
       for (let attempt = 1; ; attempt++) {

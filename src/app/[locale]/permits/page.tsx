@@ -49,7 +49,7 @@ export default async function PermitsPage({
             referenceNumber: true,
             title: true,
             type: true,
-            applicant: { select: { name: true, organisation: true } },
+            applicant: { select: { name: true, dataUser: { select: { name: true } } } },
           },
         },
       },
@@ -177,7 +177,7 @@ export default async function PermitsPage({
                 <div>
                   <p className="text-xs text-gray-500">{t('applicant')}</p>
                   <p className="font-medium">{permit.application?.applicant.name ?? '—'}</p>
-                  <p className="text-xs text-gray-400">{permit.application?.applicant.organisation}</p>
+                  <p className="text-xs text-gray-400">{permit.application?.applicant.dataUser?.name ?? '—'}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">{t('validFrom')}</p>
