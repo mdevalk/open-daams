@@ -4,7 +4,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "sh -c '[ -f ./keys/capgemini-corporate-ca.pem ] && export NODE_EXTRA_CA_CERTS=./keys/capgemini-corporate-ca.pem; next dev \"$@\"' --",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -21,6 +21,7 @@
     "@prisma/client": "^5.22.0",
     "@rijkshuisstijl-community/components-react": "*",
     "@rijkshuisstijl-community/design-tokens": "*",
+    "adm-zip": "^0.6.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "next": "^15.3.3",
@@ -30,6 +31,7 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@types/adm-zip": "^0.5.8",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
