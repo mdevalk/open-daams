@@ -11,7 +11,7 @@ type Props = {
   applicationId: string;
   currentUserId: string;
   canManage: boolean;
-  existing: { items: CompletenessItem[]; result: string } | null;
+  existing: { items: CompletenessItem[]; result: string; remarks?: string | null } | null;
 };
 
 // TEHDAS2 D6.3 §5.4 / Annex 7 — representative subset of the plausibility
@@ -44,6 +44,7 @@ export function CompletenessCheckPanel({ applicationId, currentUserId, canManage
   const terr = useTranslations('errors');
   const [items, setItems] = useState<CompletenessItem[]>(existing?.items ?? DEFAULT_ITEMS);
   const [result, setResult] = useState(existing?.result ?? 'PENDING');
+  const [remarks, setRemarks] = useState(existing?.remarks ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,17 +54,17 @@ export function CompletenessCheckPanel({ applicationId, currentUserId, canManage
     setItems((prev) => prev.map((i) => (i.key === key ? { ...i, passed: !i.passed } : i)));
   }
 
-  async function save(nextResult: string) {
+  async function markComplete() {
     setLoading(true);
     setError(null);
     try {
       const res = await fetch(`/api/applications/${applicationId}/completeness-check`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items, result: nextResult, checkedById: currentUserId }),
+        body: JSON.stringify({ items, result: 'COMPLETE', remarks, checkedById: currentUserId }),
       });
       if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
-      setResult(nextResult);
+      setResult('COMPLETE');
       router.refresh();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : terr('unexpected'));
@@ -96,32 +97,30 @@ export function CompletenessCheckPanel({ applicationId, currentUserId, canManage
         ))}
       </ul>
 
+      <div>
+        <label className="text-xs text-gray-500" htmlFor="completeness-remarks">
+          Opmerkingen (optioneel)
+        </label>
+        <textarea
+          id="completeness-remarks"
+          value={remarks}
+          readOnly={!canManage}
+          onChange={(e) => setRemarks(e.target.value)}
+          rows={2}
+          className="mt-1 w-full rounded border border-gray-300 px-2 py-1.5 text-sm disabled:bg-gray-50"
+        />
+      </div>
+
       {error && <p className="text-xs text-red-600">{error}</p>}
 
       {canManage && (
-        <div className="flex gap-2 pt-1">
-          <button
-            disabled={loading}
-            onClick={() => save('COMPLETE')}
-            className="flex-1 rounded px-3 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 transition-colors"
-          >
-            Markeer als volledig
-          </button>
-          <button
-            disabled={loading}
-            onClick={() => save('INCOMPLETE')}
-            className="flex-1 rounded px-3 py-2 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 transition-colors"
-          >
-            Markeer als onvolledig
-          </button>
-          <button
-            disabled={loading}
-            onClick={() => save('PENDING')}
-            className="rounded px-3 py-2 text-xs border border-gray-300 hover:bg-gray-50"
-          >
-            Opslaan
-          </button>
-        </div>
+        <button
+          disabled={loading}
+          onClick={markComplete}
+          className="w-full rounded px-3 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+        >
+          Markeer als volledig
+        </button>
       )}
       {canManage && !allPassed && result === 'PENDING' && (
         <p className="text-xs text-gray-400">Nog niet alle punten zijn afgevinkt.</p>

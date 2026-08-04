@@ -59,3 +59,33 @@ export function purposeLabel(code: string): string {
   };
   return map[code] ?? code;
 }
+
+export function cohortFormationLabel(code?: string | null): string | undefined {
+  if (!code) return undefined;
+  const map: Record<string, string> = {
+    CRITERIA: 'Formed based on the given criteria',
+    PREVIOUS_COHORT: 'An already-established cohort',
+    COMBINED: 'Combination of criteria and a previously established cohort',
+    WHOLE_POPULATION: 'The whole population of the indicated country/countries',
+  };
+  return map[code] ?? code;
+}
+
+export function extractionMethodLabel(code?: string | null): string | undefined {
+  if (!code) return undefined;
+  const map: Record<string, string> = {
+    RANDOM_SAMPLE: 'Random sample',
+    ALL_QUALIFYING: 'All the people fulfilling the criteria',
+    OTHER_SAMPLE: 'Other sample',
+  };
+  return map[code] ?? code;
+}
+
+export function extractionFrequencyLabel(code?: string | null): string | undefined {
+  if (!code) return undefined;
+  const map: Record<string, string> = {
+    ONCE: 'Once',
+    MULTIPLE_TIMES: 'Multiple times',
+  };
+  return map[code] ?? code;
+}

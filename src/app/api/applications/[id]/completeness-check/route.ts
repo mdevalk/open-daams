@@ -13,7 +13,7 @@ export type CompletenessItem = {
  * POST /api/applications/[id]/completeness-check
  * Create or update the structured completeness check (TEHDAS2 D6.3 Ch. 5,
  * Annex 7/8), distinct from the substantive assessment that follows it.
- * body: { items: CompletenessItem[], result: 'PENDING'|'COMPLETE'|'INCOMPLETE', checkedById }
+ * body: { items: CompletenessItem[], result: 'PENDING'|'COMPLETE'|'INCOMPLETE', checkedById, remarks? }
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -37,6 +37,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const checkData = {
       items: body.items,
       result,
+      remarks: body.remarks || null,
       checkedById: auth.user.id,
       checkedAt: isDecision ? now : null,
     };
@@ -48,7 +49,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const notPassed = (body.items as CompletenessItem[]).filter((i) => !i.passed).map((i) => i.label);
     const auditComment =
       `Volledigheidscontrole (${passed.length}/${body.items.length} afgevinkt).` +
-      (notPassed.length ? ` Niet afgevinkt: ${notPassed.join('; ')}.` : '');
+      (notPassed.length ? ` Niet afgevinkt: ${notPassed.join('; ')}.` : '') +
+      (body.remarks ? ` Opmerking: ${body.remarks}` : '');
 
     const [check] = await prisma.$transaction([
       prisma.completenessCheck.upsert({

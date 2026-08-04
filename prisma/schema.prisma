@@ -160,6 +160,14 @@ enum ExtractionInterval {
   OTHER
 }
 
+// TEHDAS2 D6.3 Annex 5 §6.1-6.3 — a StudyCohort row's role within its country
+// scope: the cohort itself, or one of its linked control/relative groups
+enum StudyGroupRole {
+  COHORT
+  CONTROL
+  RELATIVE
+}
+
 // TEHDAS2 D6.3 Annex 5 §8 — when the health data user needs access to start
 // (data access applications only)
 enum DataAccessTiming {
@@ -190,14 +198,14 @@ enum DecisionTrack {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  name         String
-  email        String   @unique
-  role         UserRole
+  id         String   @id @default(cuid())
+  name       String
+  email      String   @unique
+  role       UserRole
   // Masterdata reference (Reference data / DataUser registry).
-  dataUserId   String
-  dataUser     DataUser @relation(fields: [dataUserId], references: [id])
-  createdAt    DateTime @default(now())
+  dataUserId String
+  dataUser   DataUser @relation(fields: [dataUserId], references: [id])
+  createdAt  DateTime @default(now())
 
   applications                Application[]           @relation("Applicant")
   handledCases                Application[]           @relation("CaseHandler")
@@ -259,10 +267,30 @@ model Application {
   caseHandlerId String?
   caseHandler   User?   @relation("CaseHandler", fields: [caseHandlerId], references: [id])
 
+  // TEHDAS2 D6.3 Annex 5/6 §3 — applicant/contact person detail beyond what's
+  // on the User/DataUser masterdata record
+  applyingOnBehalfOfPublicSector Boolean?
+  applyingForMandatedTasks       Boolean?
+  legalOrNaturalPerson           String? // "Legal person" | "Natural person", as transmitted
+  legalPersonAddress             String?
+  legalPersonZipCode             String?
+  legalPersonCity                String?
+  legalPersonCountry             String?
+  contactPersonJobTitle          String?
+  contactPersonAffiliation       String?
+  contactPersonRelationship      String?
+  contactPersonBusinessId        String?
+  contactPersonPhone             String? // formatted "+<countryCode> <number>", as transmitted
+
   // EHDS common data access application form fields
   title                 String
   projectDescription    String    @db.Text
   purposeCategory       String
+  // TEHDAS2 D6.3 Annex 5/6 §2 — full multi-select purpose list (Art. 53(1)(a)-(f));
+  // purposeCategory above keeps the single-value simplification for backward compat
+  purposeCategories     String[]
+  projectLeaderName     String?
+  projectLeaderCountry  String?
   requestedVariables    String    @db.Text
   studyPopulation       String    @db.Text
   inclusionCriteria     String    @db.Text
@@ -274,6 +302,18 @@ model Application {
   legalBasis            String
   dataProcessingCountry String
   isCrossBorder         Boolean   @default(false)
+
+  // TEHDAS2 D6.3 Annex 5/6 §5 — purpose-of-use detail beyond legalBasis/projectDescription
+  whyDataIsNeeded                String?  @db.Text
+  expectedBenefits               String?  @db.Text
+  applicantQualifications        String?  @db.Text
+  personResponsibleName          String?
+  personResponsibleJobTitle      String?
+  personResponsibleAffiliation   String?
+  electronicHealthDataFormat     String? // "Anonymised" | "Pseudonymised", as transmitted
+  pseudonymisedDataJustification String?  @db.Text
+  consentCompliesWithArt6        Boolean?
+  consentAssessedEthicalAspects  Boolean?
 
   // Cohort/dataset extraction (D6.3 Annex 5 §6.1 / Annex 6 §6.1 — shared)
   cohortSizeIsEstimate      Boolean?
@@ -302,19 +342,57 @@ model Application {
   relativesDescription       String?                @db.Text
   otherDataToCombine         Boolean                @default(false)
   otherDataDescription       String?                @db.Text
+
+  // TEHDAS2 D6.3 Annex 5 §7 — "other data to be combined" detail beyond the
+  // otherDataToCombine/otherDataDescription summary above
+  otherDataCountries           String[]
+  otherDataHolders             String[]
+  otherDataDatabases           String[]
+  otherDataDatasets            String[]
+  otherDataCombinationMethod   String?   @db.Text
+  hasPendingPermitApplications Boolean?
+  pendingApplicationDate       DateTime?
+  pendingApplicationIssuer     String?
+  pendingApplicationPermitCode String?
+
   speName                    String?
-  speTechnicalRequirements   String?                @db.Text
+  speTechnicalRequirements   String?           @db.Text
   dataAccessTiming           DataAccessTiming?
   dataAccessLaterDate        DateTime?
-  transfersOutsideEuEea      Boolean                @default(false)
+  environmentProviderName    String? // provider of the named SPE (speName is its name)
+  dataAccessPeriodInfo       String?           @db.Text
+  dataAccessUpdateFrequency  String?
+  inactiveStoragePeriodStart DateTime?
+  inactiveStoragePeriodEnd   DateTime?
+  transfersOutsideEuEea      Boolean           @default(false)
   transferCountries          String[]
-  transferLegalBasis         String?                @db.Text
+  transferLegalBasis         String?           @db.Text
+  // Art. 47/48/49 transfer legal-basis tree (Annex 5 §8) — captured as codes
+  // rather than one column per nested checkbox; the citation structure itself
+  // is boilerplate legal text, not case data DAAMS branches on
+  transferLegalArticle       String? // "47" | "48" | "49", as transmitted
+  transferSafeguards         String[] // selected safeguard mechanism codes
   dataController             String?
+  dataMinimisationCompliance String?           @db.Text
+  // The five fixed data-protection/security attestation checkboxes (Annex 5 §8)
+  protectionStatement1       Boolean?
+  protectionStatement2       Boolean?
+  protectionStatement3       Boolean?
+  protectionStatement4       Boolean?
+  protectionStatement5       Boolean?
+  dataProcessingPersonnel    String[] // names/affiliations/emails of people processing the data
   lawfulnessOfProcessing     String[] // selected GDPR Art. 6(1) grounds, stored as codes
+  lawfulnessLegalBasisOther  String? // free-text "Other, which?" fallback
 
   // Data request only (Annex 6 §6) — the tabulation plan for compiling
   // anonymised aggregated statistics; not applicable to data access applications
   tabulationPlan String? @db.Text
+
+  // TEHDAS2 D6.3 Annex 5/6 §10 — confirmation checkboxes required to submit
+  consentAwareProcessingFee       Boolean?
+  consentAwareChargeFee           Boolean?
+  consentAwareInformationCorrect  Boolean?
+  consentNoAccessToUnderlyingData Boolean? // Annex 6 (DATA_REQUEST) only
 
   // Ethical review (D6.3 §6.1, required where member state law mandates it)
   ethicalReviewRequired  Boolean              @default(false)
@@ -349,6 +427,115 @@ model Application {
   extractionRequests DataExtractionRequest[]
   invoices           Invoice[]
   requestedDatasets  RequestedDataset[]
+  datasetVariables   DatasetVariable[]
+  studyCohorts       StudyCohort[]
+  invoicingDetails   ApplicantInvoicingDetails?
+  attachments        Attachment[]
+}
+
+// TEHDAS2 D6.3 Annex 5 §6.1-6.3 — one row per country x role (cohort, its
+// controls, its relatives). CONTROL/RELATIVE rows link back to their COHORT
+// row via relatesToId. Existing flat cohort-shaped columns on Application
+// stay in use by manual creation; the first COHORT row (per country) is
+// mirrored into them for NCP-sourced applications too.
+model StudyCohort {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  countryId String
+  role      StudyGroupRole @default(COHORT)
+
+  // Section 6 "base" fields (not 6.1/6.2/6.3-specific) — country-scoped, so
+  // kept on the COHORT row, the one guaranteed-present row per country
+  hdabContacts        String? @db.Text
+  howWillDataBeLinked String? @db.Text
+
+  relatesToId   String?
+  relatesTo     StudyCohort?  @relation("StudyCohortRelation", fields: [relatesToId], references: [id])
+  relatedGroups StudyCohort[] @relation("StudyCohortRelation")
+
+  relationshipToSubject String? // RELATIVE only, e.g. "grandparent", "biological parent"
+
+  cohortFormationMethod CohortFormationMethod? // COHORT only
+  formedFromPriorPermit Boolean?
+  priorPermitIssuer     String?
+  priorPermitDate       DateTime?
+  priorPermitValidFrom  DateTime?
+  priorPermitValidTo    DateTime?
+  priorPermitNumber     String?
+
+  size              Int?
+  sizeIsEstimate    Boolean?
+  sizeJustification String?  @db.Text
+
+  sameAsCohortData       Boolean? // CONTROL/RELATIVE: reuse the cohort's holder/variables/period?
+  dataHolderIds          String[]
+  variablesAttachmentRef String? // Attachment.filename
+  timePeriod             String? // free text, as transmitted
+  dataStartDate          DateTime?
+  dataEndDate            DateTime?
+
+  extractionMethod          ExtractionMethod?
+  sampleSize                String?
+  samplingMethodDescription String?           @db.Text
+  inclusionCriteria         String?           @db.Text
+  exclusionCriteria         String?           @db.Text
+  matchingCriteria          String?           @db.Text // CONTROL only
+  controlsPerCohortPerson   String? // CONTROL only
+
+  extractionFrequency     ExtractionFrequency?
+  extractionInterval      ExtractionInterval?
+  extractionIntervalOther String?
+  extractionTimingNotes   String?              @db.Text
+  orderForExtraction      String?              @db.Text
+
+  createdAt DateTime @default(now())
+}
+
+// TEHDAS2 D6.3 Annex 5/6 §4 — the applicant's own billing details, as
+// submitted on the form. Distinct from Invoice/FeeEstimate, which are
+// HDAB-generated billing documents.
+model ApplicantInvoicingDetails {
+  id            String      @id @default(cuid())
+  applicationId String      @unique
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  sameAsContactPerson         Boolean?
+  fullName                    String?
+  email                       String?
+  phone                       String?
+  organisationName            String?
+  address                     String?  @db.Text
+  businessId                  String?
+  vatNumber                   String?
+  invoiceType                 String? // "Paper" | "Electronic", as transmitted
+  invoiceReferenceNumber      String?
+  eInvoiceAddress             String? // EDI or IBAN
+  operatorId                  String?
+  peppolCode                  String?
+  isProjectFinanciallyCovered Boolean?
+  financingAmountRange        String? // the a-f bracket, as transmitted
+
+  createdAt DateTime @default(now())
+}
+
+// Structured reference to a file supplied with the form (research plan,
+// variable list, consent letter, prior permit, etc.). No file bytes stored
+// here — filename resolves on demand via the existing NCP attachment route
+// (Application.hdeuApplicationId + filename), so retrieval still depends on
+// the sending NCP continuing to serve that application.
+model Attachment {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  field       String // which form field this supports, e.g. "section5.summaryOfPlanForUsingTheData"
+  filename    String
+  sizeBytes   Int?
+  description String?
+
+  createdAt DateTime @default(now())
 }
 
 // TEHDAS2 D6.3 Ch. 5 / Annex 7-8 — structured completeness check preceding
@@ -359,8 +546,9 @@ model CompletenessCheck {
   application   Application @relation(fields: [applicationId], references: [id])
 
   // [{ key: string, label: string, passed: boolean, comment?: string }]
-  items  Json
-  result CompletenessResult @default(PENDING)
+  items   Json
+  result  CompletenessResult @default(PENDING)
+  remarks String?            @db.Text
 
   checkedById String?
   checkedBy   User?     @relation(fields: [checkedById], references: [id])
@@ -375,15 +563,38 @@ model CompletenessCheck {
 // (e.g. after a request for more information) — see GrantedDataset for the
 // fixed, per-permit-version equivalent that's copied from this at issuance.
 model RequestedDataset {
-  id             String      @id @default(cuid())
-  applicationId  String
-  application    Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   // Masterdata reference (Reference data / DataHolder registry).
-  dataHolderId   String
-  dataHolder     DataHolder @relation(fields: [dataHolderId], references: [id])
-  name           String
-  url            String?
-  createdAt      DateTime    @default(now())
+  dataHolderId  String
+  dataHolder    DataHolder  @relation(fields: [dataHolderId], references: [id])
+  name          String
+  url           String?
+  createdAt     DateTime    @default(now())
+}
+
+// TEHDAS2 D6.3 Annex 5/6 §1 — the applicant's own selection of variables to
+// be extracted, one row per variable. Distinct from RequestedDataset (the
+// dataset/register selection itself) and from Application.requestedVariables
+// (a flat summary string sourced from the EU Dataset Catalogue's own variable
+// list, `datasets[].variables` — a different, catalogue-side part of the
+// payload). `sourceDatasetId` is the wire-format dataset id this variable
+// belongs to — a traceability reference, not a foreign key into
+// RequestedDataset (which uses DAAMS's own DataHolder-scoped ids).
+model DatasetVariable {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  sourceDatasetId String
+  name            String
+  title           String?
+  description     String? @db.Text
+  datatype        String?
+  propertyUrl     String?
+
+  createdAt DateTime @default(now())
 }
 
 // TEHDAS2 D6.3 §7.1 / EHDS Art. 60, 68(7) — request to a health data holder
@@ -396,7 +607,7 @@ model DataExtractionRequest {
   // Masterdata reference (Reference data / DataHolder registry).
   dataHolderId       String
   dataHolder         DataHolder @relation(fields: [dataHolderId], references: [id])
-  datasetDescription String @db.Text
+  datasetDescription String     @db.Text
 
   requestedAt   DateTime @default(now())
   requestedById String
@@ -644,9 +855,9 @@ model AuthorizedPerson {
 // AuthorizedPerson above). This is what gets signed into the digital permit
 // — see lib/permit-signing.ts.
 model GrantedDataset {
-  id             String     @id @default(cuid())
+  id             String      @id @default(cuid())
   permitId       String
-  permit         DataPermit @relation(fields: [permitId], references: [id], onDelete: Cascade)
+  permit         DataPermit  @relation(fields: [permitId], references: [id], onDelete: Cascade)
   // Frozen at issuance, like name/url below — feeds the Ed25519-signed permit
   // payload (permit-signing.ts), so this NEVER changes shape or gets dropped.
   dataHolderName String
@@ -657,7 +868,7 @@ model GrantedDataset {
   dataHolder     DataHolder? @relation(fields: [dataHolderId], references: [id])
   name           String
   url            String?
-  createdAt      DateTime   @default(now())
+  createdAt      DateTime    @default(now())
 }
 
 // Immutable audit log for the permit lifecycle
