@@ -19,8 +19,21 @@ export type HdeuStudyCohort = {
   relatesToIndex?: number; // index into the studyCohorts array of the COHORT row this extends
   hdabContacts?: string;
   howWillDataBeLinked?: string;
+  personProfileDataDate?: string;
   relationshipToSubject?: string;
   cohortFormationMethod?: 'CRITERIA' | 'PREVIOUS_COHORT' | 'COMBINED' | 'WHOLE_POPULATION';
+  // Release 7 §6 — consent/permit basis (COHORT only)
+  hasTheStudyCohortBeenFormedBasedOnInformationOfStudyParticipants?: boolean;
+  doesTheInformedConsentCoverTheRequestedRegistryExtractions?: boolean;
+  confirmThatDataPermitHasBeenGrantedForTheResearchProject?: boolean;
+  howTheStudyCohortWasObtained?: string;
+  detailsOfHowTheStudyCohortHasBeenFormed?: string;
+  whyNeedDataOfaWholePopulation?: string;
+  regionsSeekForData?: string;
+  informationProviderName?: string;
+  informationProviderEmail?: string;
+  informationProviderPhone?: string;
+  informationProviderSameAsContactPerson?: boolean;
   formedFromPriorPermit?: boolean;
   priorPermitIssuer?: string;
   priorPermitDate?: string;
@@ -30,9 +43,21 @@ export type HdeuStudyCohort = {
   size?: number;
   sizeIsEstimate?: boolean;
   sizeJustification?: string;
+  // Relocated from the top-level HdeuPayload fields of the same name (Release
+  // 7 scopes these per country) — the mapping layer mirrors the first COHORT
+  // entry's values onto those top-level fields too, for backward compat
+  dataSubjectsInformed?: boolean;
+  dataSubjectsInformedDetail?: string;
+  includesControls?: boolean;
+  controlsDescription?: string;
+  includesRelatives?: boolean;
+  relativesDescription?: string;
   sameAsCohortData?: boolean;
   dataHolderIds?: string[];
+  databaseIds?: string[];
+  datasetIds?: string[];
   variablesAttachmentRef?: string;
+  variablesAttachmentId?: string;
   timePeriod?: string;
   dataStartDate?: string;
   dataEndDate?: string;
@@ -43,6 +68,7 @@ export type HdeuStudyCohort = {
   exclusionCriteria?: string;
   matchingCriteria?: string;
   controlsPerCohortPerson?: string;
+  willDataBeExtractedSimultaneously?: boolean;
   extractionFrequency?: 'ONCE' | 'MULTIPLE_TIMES';
   extractionInterval?: 'YEARLY' | 'HALF_YEARLY' | 'QUARTERLY' | 'OTHER';
   extractionIntervalOther?: string;
@@ -66,6 +92,7 @@ export type HdeuInvoicingDetails = {
   peppolCode?: string;
   isProjectFinanciallyCovered?: boolean;
   financingAmountRange?: string;
+  section4ProfileDataDate?: string;
 };
 
 export type HdeuAttachment = {
@@ -73,6 +100,28 @@ export type HdeuAttachment = {
   filename: string;
   sizeBytes?: number;
   description?: string;
+  content?: Buffer; // extracted from the NCP detail archive at import time; rows without it are skipped
+  mimeType?: string;
+};
+
+// Release 7 §7 — otherDataPermits[], matching the RelatedDataPermit model 1:1.
+export type HdeuRelatedDataPermit = {
+  permitIssuer?: string;
+  permitStartDateOfIssue?: string;
+  permitEndDateOfIssue?: string;
+  permitIdentificationInformation?: string;
+};
+
+// Release 7 Data Request §6 — tabulationPlanArray, matching the TabulationPlan
+// model 1:1.
+export type HdeuTabulationPlan = {
+  tabulationRegisteredToBeUsed?: string;
+  tabulationPossibleStudyCohort?: string;
+  tabulationInformationOfRequiredVariables?: string;
+  tabulationFormationVariables?: string;
+  tabulationDesiredDirection?: string;
+  tabulationOrderInWhichTable?: string;
+  tabulationAnyOtherRelevant?: string;
 };
 
 // TEHDAS2 D6.3 Annex 5/6 §1 — the applicant's own selection of variables to
@@ -135,31 +184,56 @@ export type HdeuPayload = {
   purposeCategories?: string[];
   projectLeaderName?: string;
   projectLeaderCountry?: string;
+  theResearchFocusesOnTheFollowingObjectives?: string[];
+  theResearchFocusesOnTheFollowingObjectivesOther?: string;
+  areaOfResearch?: string;
+  areaOfResearchOther?: string;
+  descriptionOfTheDataYouWillUse?: string;
+  theNatureOfTheDataDoesNotLetYouProvideADescription?: boolean;
+  descriptionOfTheProject?: string;
+  summaryOfTheProject?: string;
+  theNatureOfTheProjectDoesNotLetYouProvideASummary?: boolean;
+  theNatureOfTheProjectDoesNotLetYouProvideASummaryReason?: string;
 
   // §3 — Applicant/contact detail
   applyingOnBehalfOfPublicSector?: boolean;
   applyingForMandatedTasks?: boolean;
   legalOrNaturalPerson?: string;
+  legalOrNaturalPersonProfileDataDate?: string;
   legalPersonAddress?: string;
   legalPersonZipCode?: string;
   legalPersonCity?: string;
   legalPersonCountry?: string;
   contactPersonJobTitle?: string;
   contactPersonAffiliation?: string;
+  contactPersonOrganisationName?: string;
   contactPersonRelationship?: string;
   contactPersonBusinessId?: string;
+  contactPersonOperatorID?: string;
   contactPersonPhone?: string;
+  contactPersonProfileDataDate?: string;
 
   // §4 — Invoicing
   invoicingDetails?: HdeuInvoicingDetails;
 
   // §5 — Purpose of data use detail
   whyDataIsNeeded?: string;
+  whatIsTheAimAndTopicOfTheProject?: string;
   expectedBenefits?: string;
   applicantQualifications?: string;
+  linkToTheSupportingLegalBasis?: string;
+  summaryOfPlanForUsingTheDataLanguage?: string;
+  summaryOfResearchPlanLanguage?: string;
+  personResponsibleSameAsContactPerson?: boolean;
   personResponsibleName?: string;
   personResponsibleJobTitle?: string;
   personResponsibleAffiliation?: string;
+  personResponsibleProfileDataDate?: string;
+  personResearchSameAsContactPerson?: boolean;
+  personResearchName?: string;
+  personResearchJobTitle?: string;
+  personResearchAffiliation?: string;
+  personResearchProfileDataDate?: string;
   electronicHealthDataFormat?: string;
   pseudonymisedDataJustification?: string;
   consentCompliesWithArt6?: boolean;
@@ -205,6 +279,7 @@ export type HdeuPayload = {
   pendingApplicationDate?: string;
   pendingApplicationIssuer?: string;
   pendingApplicationPermitCode?: string;
+  relatedDataPermits?: HdeuRelatedDataPermit[];
 
   // §8 — Processing environment, transfers, protection & security
   speName?: string;
@@ -221,8 +296,27 @@ export type HdeuPayload = {
   transferLegalBasis?: string;
   transferLegalArticle?: string;
   transferSafeguards?: string[];
+  whyWillDataBeTransferredOutsideEUArticle47?: boolean;
+  whyWillDataBeTransferredOutsideEUArticle47Options?: string[];
+  whyWillDataBeTransferredOutsideEUArticle47a?: boolean;
+  whyWillDataBeTransferredOutsideEUArticle47b?: boolean;
+  whyWillDataBeTransferredOutsideEUArticle47c?: boolean;
+  whyWillDataBeTransferredOutsideEUArticle48?: boolean;
+  whyWillDataBeTransferredOutsideEUArticle48a?: boolean;
+  whyWillDataBeTransferredOutsideEUArticle48b?: boolean;
+  whyWillDataBeTransferredOutsideEUArticle48bOptions?: string[];
+  whyWillDataBeTransferredOutsideEUArticle48c?: boolean;
+  whyWillDataBeTransferredOutsideEUArticle48cOpt?: string;
+  whyWillDataBeTransferredOutsideEUArticle48d?: boolean;
+  whyWillDataBeTransferredOutsideEUArticle48e?: boolean;
+  whyWillDataBeTransferredOutsideEUArticle49?: boolean;
+  legalBasisForTransferringTheDataOutsideEU?: string;
+  legalBasisForTransferringTheDataOutsideEUOtherOptions?: string[];
+  safeguardsAreProvidedByReferringGDCP?: string[];
+  safeguardsAreProvidedByOtherExceptionalLegalBases?: string;
   dataController?: string;
   dataMinimisationCompliance?: string;
+  complyWithDataMinimisationPrincipleNotEUMember?: string;
   protectionStatement1?: boolean;
   protectionStatement2?: boolean;
   protectionStatement3?: boolean;
@@ -231,8 +325,18 @@ export type HdeuPayload = {
   dataProcessingPersonnel?: string[];
   lawfulnessOfProcessing?: string[];
   lawfulnessLegalBasisOther?: string;
+  lawfulForProcessingPersonalData?: string[];
+  europeanUnionInstitution?: string[];
+  legalBasisForProcessingCombinedData?: string[];
+  otherLegalBasisForProcessingCombinedData?: string;
+  legalBasisForProcessingApplicationData?: string[];
+  otherLegalBasisForProcessingApplicationData?: string;
+  legalBasisForProcessingCombinedApplicationData?: string[];
+  otherLegalBasisForProcessingCombinedApplicationData?: string;
 
-  // §9 — Attachments (research plan, variable lists, consent letters, etc.)
+  // §9 — Additional information + attachments (research plan, variable
+  // lists, consent letters, etc.)
+  additionalInformation?: string;
   attachments?: HdeuAttachment[];
 
   // §10 — Confirmation / consent
@@ -240,6 +344,12 @@ export type HdeuPayload = {
   consentAwareChargeFee?: boolean;
   consentAwareInformationCorrect?: boolean;
   consentNoAccessToUnderlyingData?: boolean;
+  consentAcceptHealthDataBody?: boolean;
+
+  // Data Request only
+  ethicalReviewInput?: string;
+  whatIsTheFrequencyOfUpdates?: string;
+  tabulationPlans?: HdeuTabulationPlan[];
 };
 
 export type ParseResult =
@@ -371,6 +481,14 @@ export async function createApplicationFromHdeuPayload(
 
   const toDate = (d?: string) => (d ? new Date(d) : null);
 
+  // dataSubjectsInformed/includesControls/includesRelatives(+details) moved
+  // to StudyCohort (per-country) — mirror the first COHORT entry when
+  // studyCohorts is present, else fall back to the top-level payload fields
+  // (manual entry / direct JSON import, which don't produce studyCohorts)
+  const firstCohort = p.studyCohorts?.find((c) => c.role === 'COHORT');
+  const mirrorCohort = <K extends keyof HdeuStudyCohort>(key: K, fallback: HdeuPayload[K & keyof HdeuPayload]) =>
+    firstCohort ? firstCohort[key] : fallback;
+
   const application = await prisma.application.create({
     data: {
       referenceNumber,
@@ -392,6 +510,16 @@ export async function createApplicationFromHdeuPayload(
       purposeCategories: p.purposeCategories ?? [],
       projectLeaderName: p.projectLeaderName,
       projectLeaderCountry: p.projectLeaderCountry,
+      theResearchFocusesOnTheFollowingObjectives: p.theResearchFocusesOnTheFollowingObjectives ?? [],
+      theResearchFocusesOnTheFollowingObjectivesOther: p.theResearchFocusesOnTheFollowingObjectivesOther,
+      areaOfResearch: p.areaOfResearch,
+      areaOfResearchOther: p.areaOfResearchOther,
+      descriptionOfTheDataYouWillUse: p.descriptionOfTheDataYouWillUse,
+      theNatureOfTheDataDoesNotLetYouProvideADescription: p.theNatureOfTheDataDoesNotLetYouProvideADescription,
+      descriptionOfTheProject: p.descriptionOfTheProject,
+      summaryOfTheProject: p.summaryOfTheProject,
+      theNatureOfTheProjectDoesNotLetYouProvideASummary: p.theNatureOfTheProjectDoesNotLetYouProvideASummary,
+      theNatureOfTheProjectDoesNotLetYouProvideASummaryReason: p.theNatureOfTheProjectDoesNotLetYouProvideASummaryReason,
       legalBasis: p.legalBasis,
       requestedVariables: p.requestedVariables,
       studyPopulation: p.studyPopulation,
@@ -407,23 +535,38 @@ export async function createApplicationFromHdeuPayload(
       applyingOnBehalfOfPublicSector: p.applyingOnBehalfOfPublicSector,
       applyingForMandatedTasks: p.applyingForMandatedTasks,
       legalOrNaturalPerson: p.legalOrNaturalPerson,
+      legalOrNaturalPersonProfileDataDate: toDate(p.legalOrNaturalPersonProfileDataDate),
       legalPersonAddress: p.legalPersonAddress,
       legalPersonZipCode: p.legalPersonZipCode,
       legalPersonCity: p.legalPersonCity,
       legalPersonCountry: p.legalPersonCountry,
       contactPersonJobTitle: p.contactPersonJobTitle,
       contactPersonAffiliation: p.contactPersonAffiliation,
+      contactPersonOrganisationName: p.contactPersonOrganisationName,
       contactPersonRelationship: p.contactPersonRelationship,
       contactPersonBusinessId: p.contactPersonBusinessId,
+      contactPersonOperatorID: p.contactPersonOperatorID,
       contactPersonPhone: p.contactPersonPhone,
+      contactPersonProfileDataDate: toDate(p.contactPersonProfileDataDate),
 
       // §5
       whyDataIsNeeded: p.whyDataIsNeeded,
+      whatIsTheAimAndTopicOfTheProject: p.whatIsTheAimAndTopicOfTheProject,
       expectedBenefits: p.expectedBenefits,
       applicantQualifications: p.applicantQualifications,
+      linkToTheSupportingLegalBasis: p.linkToTheSupportingLegalBasis,
+      summaryOfPlanForUsingTheDataLanguage: p.summaryOfPlanForUsingTheDataLanguage,
+      summaryOfResearchPlanLanguage: p.summaryOfResearchPlanLanguage,
+      personResponsibleSameAsContactPerson: p.personResponsibleSameAsContactPerson,
       personResponsibleName: p.personResponsibleName,
       personResponsibleJobTitle: p.personResponsibleJobTitle,
       personResponsibleAffiliation: p.personResponsibleAffiliation,
+      personResponsibleProfileDataDate: toDate(p.personResponsibleProfileDataDate),
+      personResearchSameAsContactPerson: p.personResearchSameAsContactPerson,
+      personResearchName: p.personResearchName,
+      personResearchJobTitle: p.personResearchJobTitle,
+      personResearchAffiliation: p.personResearchAffiliation,
+      personResearchProfileDataDate: toDate(p.personResearchProfileDataDate),
       electronicHealthDataFormat: p.electronicHealthDataFormat,
       pseudonymisedDataJustification: p.pseudonymisedDataJustification,
       consentCompliesWithArt6: p.consentCompliesWithArt6,
@@ -441,15 +584,17 @@ export async function createApplicationFromHdeuPayload(
       extractionInterval: p.extractionInterval,
       extractionIntervalOther: p.extractionIntervalOther,
       extractionTimingNotes: p.extractionTimingNotes,
-      dataSubjectsInformed: p.dataSubjectsInformed,
-      dataSubjectsInformedDetail: p.dataSubjectsInformedDetail,
-      includesControls: p.includesControls ?? false,
-      controlsDescription: p.controlsDescription,
-      includesRelatives: p.includesRelatives ?? false,
-      relativesDescription: p.relativesDescription,
+      dataSubjectsInformed: mirrorCohort('dataSubjectsInformed', p.dataSubjectsInformed),
+      dataSubjectsInformedDetail: mirrorCohort('dataSubjectsInformedDetail', p.dataSubjectsInformedDetail),
+      includesControls: mirrorCohort('includesControls', p.includesControls) ?? false,
+      controlsDescription: mirrorCohort('controlsDescription', p.controlsDescription),
+      includesRelatives: mirrorCohort('includesRelatives', p.includesRelatives) ?? false,
+      relativesDescription: mirrorCohort('relativesDescription', p.relativesDescription),
       usesOptOutException: p.usesOptOutException ?? false,
       optOutExceptionJustification: p.optOutExceptionJustification,
       tabulationPlan: p.tabulationPlan,
+      ethicalReviewInput: p.ethicalReviewInput,
+      whatIsTheFrequencyOfUpdates: p.whatIsTheFrequencyOfUpdates,
 
       // §7
       otherDataToCombine: p.otherDataToCombine ?? false,
@@ -479,8 +624,27 @@ export async function createApplicationFromHdeuPayload(
       transferLegalBasis: p.transferLegalBasis,
       transferLegalArticle: p.transferLegalArticle,
       transferSafeguards: p.transferSafeguards ?? [],
+      whyWillDataBeTransferredOutsideEUArticle47: p.whyWillDataBeTransferredOutsideEUArticle47,
+      whyWillDataBeTransferredOutsideEUArticle47Options: p.whyWillDataBeTransferredOutsideEUArticle47Options ?? [],
+      whyWillDataBeTransferredOutsideEUArticle47a: p.whyWillDataBeTransferredOutsideEUArticle47a,
+      whyWillDataBeTransferredOutsideEUArticle47b: p.whyWillDataBeTransferredOutsideEUArticle47b,
+      whyWillDataBeTransferredOutsideEUArticle47c: p.whyWillDataBeTransferredOutsideEUArticle47c,
+      whyWillDataBeTransferredOutsideEUArticle48: p.whyWillDataBeTransferredOutsideEUArticle48,
+      whyWillDataBeTransferredOutsideEUArticle48a: p.whyWillDataBeTransferredOutsideEUArticle48a,
+      whyWillDataBeTransferredOutsideEUArticle48b: p.whyWillDataBeTransferredOutsideEUArticle48b,
+      whyWillDataBeTransferredOutsideEUArticle48bOptions: p.whyWillDataBeTransferredOutsideEUArticle48bOptions ?? [],
+      whyWillDataBeTransferredOutsideEUArticle48c: p.whyWillDataBeTransferredOutsideEUArticle48c,
+      whyWillDataBeTransferredOutsideEUArticle48cOpt: p.whyWillDataBeTransferredOutsideEUArticle48cOpt,
+      whyWillDataBeTransferredOutsideEUArticle48d: p.whyWillDataBeTransferredOutsideEUArticle48d,
+      whyWillDataBeTransferredOutsideEUArticle48e: p.whyWillDataBeTransferredOutsideEUArticle48e,
+      whyWillDataBeTransferredOutsideEUArticle49: p.whyWillDataBeTransferredOutsideEUArticle49,
+      legalBasisForTransferringTheDataOutsideEU: p.legalBasisForTransferringTheDataOutsideEU,
+      legalBasisForTransferringTheDataOutsideEUOtherOptions: p.legalBasisForTransferringTheDataOutsideEUOtherOptions ?? [],
+      safeguardsAreProvidedByReferringGDCP: p.safeguardsAreProvidedByReferringGDCP ?? [],
+      safeguardsAreProvidedByOtherExceptionalLegalBases: p.safeguardsAreProvidedByOtherExceptionalLegalBases,
       dataController: p.dataController,
       dataMinimisationCompliance: p.dataMinimisationCompliance,
+      complyWithDataMinimisationPrincipleNotEUMember: p.complyWithDataMinimisationPrincipleNotEUMember,
       protectionStatement1: p.protectionStatement1,
       protectionStatement2: p.protectionStatement2,
       protectionStatement3: p.protectionStatement3,
@@ -489,12 +653,24 @@ export async function createApplicationFromHdeuPayload(
       dataProcessingPersonnel: p.dataProcessingPersonnel ?? [],
       lawfulnessOfProcessing: p.lawfulnessOfProcessing ?? [],
       lawfulnessLegalBasisOther: p.lawfulnessLegalBasisOther,
+      lawfulForProcessingPersonalData: p.lawfulForProcessingPersonalData ?? [],
+      europeanUnionInstitution: p.europeanUnionInstitution ?? [],
+      legalBasisForProcessingCombinedData: p.legalBasisForProcessingCombinedData ?? [],
+      otherLegalBasisForProcessingCombinedData: p.otherLegalBasisForProcessingCombinedData,
+      legalBasisForProcessingApplicationData: p.legalBasisForProcessingApplicationData ?? [],
+      otherLegalBasisForProcessingApplicationData: p.otherLegalBasisForProcessingApplicationData,
+      legalBasisForProcessingCombinedApplicationData: p.legalBasisForProcessingCombinedApplicationData ?? [],
+      otherLegalBasisForProcessingCombinedApplicationData: p.otherLegalBasisForProcessingCombinedApplicationData,
+
+      // §9
+      additionalInformation: p.additionalInformation,
 
       // §10
       consentAwareProcessingFee: p.consentAwareProcessingFee,
       consentAwareChargeFee: p.consentAwareChargeFee,
       consentAwareInformationCorrect: p.consentAwareInformationCorrect,
       consentNoAccessToUnderlyingData: p.consentNoAccessToUnderlyingData,
+      consentAcceptHealthDataBody: p.consentAcceptHealthDataBody,
 
       submittedAt: now,
       decisionDeadline: calculateDecisionDeadline(now),
@@ -502,20 +678,36 @@ export async function createApplicationFromHdeuPayload(
   });
 
   if (p.invoicingDetails) {
+    const { section4ProfileDataDate, ...invoicingData } = p.invoicingDetails;
     await prisma.applicantInvoicingDetails.create({
-      data: { applicationId: application.id, ...p.invoicingDetails },
+      data: { applicationId: application.id, ...invoicingData, section4ProfileDataDate: toDate(section4ProfileDataDate) },
     });
   }
 
-  if (p.attachments && p.attachments.length > 0) {
+  const attachmentsWithContent = (p.attachments ?? []).filter(
+    (a): a is HdeuAttachment & { content: Buffer } => a.content !== undefined,
+  );
+  if (attachmentsWithContent.length > 0) {
     await prisma.attachment.createMany({
-      data: p.attachments.map((a) => ({ applicationId: application.id, ...a })),
+      data: attachmentsWithContent.map((a) => ({ applicationId: application.id, ...a })),
     });
   }
 
   if (p.datasetVariables && p.datasetVariables.length > 0) {
     await prisma.datasetVariable.createMany({
       data: p.datasetVariables.map((v) => ({ applicationId: application.id, ...v })),
+    });
+  }
+
+  if (p.relatedDataPermits && p.relatedDataPermits.length > 0) {
+    await prisma.relatedDataPermit.createMany({
+      data: p.relatedDataPermits.map((r) => ({ applicationId: application.id, ...r })),
+    });
+  }
+
+  if (p.tabulationPlans && p.tabulationPlans.length > 0) {
+    await prisma.tabulationPlan.createMany({
+      data: p.tabulationPlans.map((t) => ({ applicationId: application.id, ...t })),
     });
   }
 
@@ -541,6 +733,7 @@ export async function createApplicationFromHdeuPayload(
           priorPermitDate: toDate(data.priorPermitDate),
           priorPermitValidFrom: toDate(data.priorPermitValidFrom),
           priorPermitValidTo: toDate(data.priorPermitValidTo),
+          personProfileDataDate: toDate(data.personProfileDataDate),
         },
       });
       idByIndex.set(index, created.id);
@@ -564,6 +757,7 @@ export async function createApplicationFromHdeuPayload(
           priorPermitDate: toDate(data.priorPermitDate),
           priorPermitValidFrom: toDate(data.priorPermitValidFrom),
           priorPermitValidTo: toDate(data.priorPermitValidTo),
+          personProfileDataDate: toDate(data.personProfileDataDate),
         },
       });
     }

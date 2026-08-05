@@ -89,3 +89,14 @@ export function extractionFrequencyLabel(code?: string | null): string | undefin
   };
   return map[code] ?? code;
 }
+
+export function extractionIntervalLabel(code?: string | null): string | undefined {
+  if (!code) return undefined;
+  const map: Record<string, string> = {
+    YEARLY: 'Yearly',
+    HALF_YEARLY: 'Every six months',
+    QUARTERLY: 'Quarterly',
+    OTHER: 'Other',
+  };
+  return map[code] ?? code;
+}

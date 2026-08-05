@@ -2,8 +2,14 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { StudyCohort } from '@prisma/client';
-import { cohortFormationLabel, extractionFrequencyLabel, extractionMethodLabel, formatDate } from '@/lib/utils';
+import { Attachment, StudyCohort } from '@prisma/client';
+import {
+  cohortFormationLabel,
+  extractionFrequencyLabel,
+  extractionIntervalLabel,
+  extractionMethodLabel,
+  formatDate,
+} from '@/lib/utils';
 
 type SubTab = 'base' | '6.1' | '6.2' | '6.3';
 
@@ -23,14 +29,15 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
 function GroupFields({
   row,
   t,
-  hdeuApplicationId,
+  attachmentByNcpId,
   extra,
 }: {
   row: StudyCohort;
   t: ReturnType<typeof useTranslations>;
-  hdeuApplicationId: string | null;
+  attachmentByNcpId: Map<string, Attachment>;
   extra?: React.ReactNode;
 }) {
+  const variablesAttachment = row.variablesAttachmentId ? attachmentByNcpId.get(row.variablesAttachmentId) : undefined;
   return (
     <>
       <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
@@ -52,12 +59,48 @@ function GroupFields({
         <Field label={t('inclusion')} value={row.inclusionCriteria} />
         <Field label={t('exclusion')} value={row.exclusionCriteria} />
         <Field label={t('extractionFrequency')} value={extractionFrequencyLabel(row.extractionFrequency ?? undefined)} />
+        <Field
+          label={t('extractionInterval')}
+          value={
+            row.extractionInterval
+              ? `${extractionIntervalLabel(row.extractionInterval)}${row.extractionIntervalOther ? ` — ${row.extractionIntervalOther}` : ''}`
+              : undefined
+          }
+        />
         <Field label={t('orderForExtraction')} value={row.orderForExtraction} />
+        <Field
+          label={t('willDataBeExtractedSimultaneously')}
+          value={row.willDataBeExtractedSimultaneously !== null ? (row.willDataBeExtractedSimultaneously ? t('yes') : t('no')) : undefined}
+        />
+        <Field label={t('sameAsCohortData')} value={row.sameAsCohortData !== null ? (row.sameAsCohortData ? t('yes') : t('no')) : undefined} />
+        <Field label={t('dataHolders')} value={row.dataHolderIds.join(', ')} />
+        <Field label={t('databases')} value={row.databaseIds.join(', ')} />
+        <Field label={t('datasets')} value={row.datasetIds.join(', ')} />
+        {row.formedFromPriorPermit && (
+          <Field
+            label={t('priorPermit')}
+            value={
+              <>
+                {[row.priorPermitIssuer, row.priorPermitNumber].filter(Boolean).join(' — ')}
+                {row.priorPermitDate && (
+                  <span className="text-gray-500 font-normal">
+                    {' '}
+                    ({formatDate(row.priorPermitDate)}
+                    {row.priorPermitValidFrom
+                      ? `, ${formatDate(row.priorPermitValidFrom)} – ${formatDate(row.priorPermitValidTo)}`
+                      : ''}
+                    )
+                  </span>
+                )}
+              </>
+            }
+          />
+        )}
         {extra}
       </dl>
-      {row.variablesAttachmentRef && hdeuApplicationId && (
+      {row.variablesAttachmentRef && variablesAttachment && (
         <a
-          href={`/api/import/ncp-applications/${hdeuApplicationId}/attachments/${encodeURIComponent(row.variablesAttachmentRef)}`}
+          href={`/api/attachments/${variablesAttachment.id}`}
           target="_blank"
           rel="noopener noreferrer"
           className="mt-3 inline-block rounded border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100"
@@ -73,14 +116,15 @@ export function StudyCohortExplorer({
   studyCohorts,
   includesControls,
   includesRelatives,
-  hdeuApplicationId,
+  attachments,
 }: {
   studyCohorts: StudyCohort[];
   includesControls: boolean;
   includesRelatives: boolean;
-  hdeuApplicationId: string | null;
+  attachments: Attachment[];
 }) {
   const t = useTranslations('applicationDetail');
+  const attachmentByNcpId = new Map(attachments.filter((a) => a.description).map((a) => [a.description as string, a]));
   const countries = Array.from(new Set(studyCohorts.map((c) => c.countryId)));
   const [country, setCountry] = useState(countries[0]);
   const [tab, setTab] = useState<SubTab>('base');
@@ -88,6 +132,20 @@ export function StudyCohortExplorer({
   const cohort = studyCohorts.find((c) => c.countryId === country && c.role === 'COHORT');
   const control = studyCohorts.find((c) => c.countryId === country && c.role === 'CONTROL');
   const relative = studyCohorts.find((c) => c.countryId === country && c.role === 'RELATIVE');
+  const hasBaseData =
+    cohort &&
+    (cohort.hdabContacts ||
+      cohort.howWillDataBeLinked ||
+      cohort.dataSubjectsInformed !== null ||
+      cohort.hasTheStudyCohortBeenFormedBasedOnInformationOfStudyParticipants !== null ||
+      cohort.doesTheInformedConsentCoverTheRequestedRegistryExtractions !== null ||
+      cohort.confirmThatDataPermitHasBeenGrantedForTheResearchProject !== null ||
+      cohort.howTheStudyCohortWasObtained ||
+      cohort.detailsOfHowTheStudyCohortHasBeenFormed ||
+      cohort.whyNeedDataOfaWholePopulation ||
+      cohort.regionsSeekForData ||
+      cohort.informationProviderName ||
+      cohort.informationProviderSameAsContactPerson);
 
   const tabs: { value: SubTab; label: string }[] = [
     { value: 'base', label: t('section6BaseTab') },
@@ -138,10 +196,59 @@ export function StudyCohortExplorer({
         {tab === 'base' && (
           <div className="space-y-3">
             <p className="text-sm font-semibold text-gray-900">{t('section6BaseHeading', { country })}</p>
-            {cohort?.hdabContacts || cohort?.howWillDataBeLinked ? (
+            {hasBaseData ? (
               <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
-                <Field label={t('hdabContacts')} value={cohort?.hdabContacts} />
-                <Field label={t('dataLinkingMethod')} value={cohort?.howWillDataBeLinked} />
+                <Field label={t('hdabContacts')} value={cohort.hdabContacts} />
+                <Field label={t('dataLinkingMethod')} value={cohort.howWillDataBeLinked} />
+                <Field
+                  label={t('dataSubjectsInformed')}
+                  value={cohort.dataSubjectsInformed !== null ? (cohort.dataSubjectsInformed ? t('yes') : t('no')) : undefined}
+                />
+                <Field label={t('dataSubjectsInformedDetail')} value={cohort.dataSubjectsInformedDetail} />
+                <Field
+                  label={t('cohortFormedFromParticipantInformation')}
+                  value={
+                    cohort.hasTheStudyCohortBeenFormedBasedOnInformationOfStudyParticipants !== null
+                      ? cohort.hasTheStudyCohortBeenFormedBasedOnInformationOfStudyParticipants
+                        ? t('yes')
+                        : t('no')
+                      : undefined
+                  }
+                />
+                <Field
+                  label={t('consentCoversRegistryExtractions')}
+                  value={
+                    cohort.doesTheInformedConsentCoverTheRequestedRegistryExtractions !== null
+                      ? cohort.doesTheInformedConsentCoverTheRequestedRegistryExtractions
+                        ? t('yes')
+                        : t('no')
+                      : undefined
+                  }
+                />
+                <Field
+                  label={t('dataPermitGrantedForResearchProject')}
+                  value={
+                    cohort.confirmThatDataPermitHasBeenGrantedForTheResearchProject !== null
+                      ? cohort.confirmThatDataPermitHasBeenGrantedForTheResearchProject
+                        ? t('yes')
+                        : t('no')
+                      : undefined
+                  }
+                />
+                <Field label={t('howTheStudyCohortWasObtained')} value={cohort.howTheStudyCohortWasObtained} />
+                <Field label={t('detailsOfHowTheStudyCohortHasBeenFormed')} value={cohort.detailsOfHowTheStudyCohortHasBeenFormed} />
+                <Field label={t('whyNeedDataOfaWholePopulation')} value={cohort.whyNeedDataOfaWholePopulation} />
+                <Field label={t('regionsSeekForData')} value={cohort.regionsSeekForData} />
+                <Field
+                  label={t('informationProvider')}
+                  value={
+                    cohort.informationProviderSameAsContactPerson
+                      ? t('sameAsContactPerson')
+                      : [cohort.informationProviderName, cohort.informationProviderEmail, cohort.informationProviderPhone]
+                          .filter(Boolean)
+                          .join(' · ')
+                  }
+                />
               </dl>
             ) : (
               <p className="text-sm text-gray-500">{t('noDataCaptured')}</p>
@@ -153,7 +260,7 @@ export function StudyCohortExplorer({
           <div className="space-y-3">
             <p className="text-sm font-semibold text-gray-900">{t('section61Heading', { country })}</p>
             {cohort ? (
-              <GroupFields row={cohort} t={t} hdeuApplicationId={hdeuApplicationId} />
+              <GroupFields row={cohort} t={t} attachmentByNcpId={attachmentByNcpId} />
             ) : (
               <p className="text-sm text-gray-500">{t('noDataCaptured')}</p>
             )}
@@ -172,7 +279,7 @@ export function StudyCohortExplorer({
                 <GroupFields
                   row={control}
                   t={t}
-                  hdeuApplicationId={hdeuApplicationId}
+                  attachmentByNcpId={attachmentByNcpId}
                   extra={
                     <>
                       <Field label={t('matchingCriteria')} value={control.matchingCriteria} />
@@ -198,7 +305,7 @@ export function StudyCohortExplorer({
                 <GroupFields
                   row={relative}
                   t={t}
-                  hdeuApplicationId={hdeuApplicationId}
+                  attachmentByNcpId={attachmentByNcpId}
                   extra={<Field label={t('relationshipToSubject')} value={relative.relationshipToSubject} />}
                 />
               ) : (

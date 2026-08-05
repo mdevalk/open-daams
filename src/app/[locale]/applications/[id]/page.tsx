@@ -22,6 +22,16 @@ import { groupDatasetsByHolder } from '@/lib/permit-signing';
 
 export const dynamic = 'force-dynamic';
 
+function Field({ label, value }: { label: string; value: React.ReactNode }) {
+  if (value === undefined || value === null || value === '') return null;
+  return (
+    <div>
+      <dt className="text-gray-500">{label}</dt>
+      <dd className="font-medium">{value}</dd>
+    </div>
+  );
+}
+
 export default async function ApplicationDetailPage({
   params,
   searchParams,
@@ -64,6 +74,8 @@ export default async function ApplicationDetailPage({
         invoicingDetails: true,
         attachments: { orderBy: { field: 'asc' } },
         datasetVariables: { orderBy: { name: 'asc' } },
+        relatedDataPermits: { orderBy: { createdAt: 'asc' } },
+        tabulationPlans: { orderBy: { createdAt: 'asc' } },
       },
     }),
     prisma.user.findMany({ orderBy: { name: 'asc' } }),
@@ -78,13 +90,28 @@ export default async function ApplicationDetailPage({
   // One current permit version per application (D6.4 §9.3 version chain).
   const currentPermit = application.dataPermits[0] ?? null;
 
-  // Attachment bytes aren't stored in DAAMS — resolved on demand via the NCP
-  // detail archive using the sending application's own id, which is only
-  // available for HD@EU-sourced applications.
-  const attachmentHref = (filename: string) =>
-    `/api/import/ncp-applications/${application.hdeuApplicationId}/attachments/${encodeURIComponent(filename)}`;
+  const attachmentHref = (a: { id: string }) => `/api/attachments/${a.id}`;
 
   const cohortRows = application.studyCohorts.filter((c) => c.role === 'COHORT');
+
+  // Art. 47/48/49 transfer legal grounds — rendered as a bullet list of
+  // whichever specific grounds the applicant flagged true, rather than 11
+  // always-visible checkboxes.
+  const transferArticleFlags = (
+    [
+      ['art47', application.whyWillDataBeTransferredOutsideEUArticle47],
+      ['art47a', application.whyWillDataBeTransferredOutsideEUArticle47a],
+      ['art47b', application.whyWillDataBeTransferredOutsideEUArticle47b],
+      ['art47c', application.whyWillDataBeTransferredOutsideEUArticle47c],
+      ['art48', application.whyWillDataBeTransferredOutsideEUArticle48],
+      ['art48a', application.whyWillDataBeTransferredOutsideEUArticle48a],
+      ['art48b', application.whyWillDataBeTransferredOutsideEUArticle48b],
+      ['art48c', application.whyWillDataBeTransferredOutsideEUArticle48c],
+      ['art48d', application.whyWillDataBeTransferredOutsideEUArticle48d],
+      ['art48e', application.whyWillDataBeTransferredOutsideEUArticle48e],
+      ['art49', application.whyWillDataBeTransferredOutsideEUArticle49],
+    ] as const
+  ).filter(([, flag]) => flag);
 
   const currentUser =
     (queryUserId ? users.find(u => u.id === queryUserId) : null) ??
@@ -291,6 +318,58 @@ export default async function ApplicationDetailPage({
                 <dt className="text-gray-500 text-xs uppercase tracking-wide mb-1">{t('projectDescription')}</dt>
                 <dd className="text-gray-800 whitespace-pre-wrap">{application.projectDescription}</dd>
               </div>
+              {application.theResearchFocusesOnTheFollowingObjectives.length > 0 && (
+                <div>
+                  <dt className="text-gray-500 mb-1">{t('researchObjectives')}</dt>
+                  <ul className="space-y-1">
+                    {application.theResearchFocusesOnTheFollowingObjectives.map((o) => (
+                      <li key={o} className="flex items-start gap-2 font-medium">
+                        <span className="text-emerald-600 mt-0.5">✓</span>
+                        <span>{o}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  {application.theResearchFocusesOnTheFollowingObjectivesOther && (
+                    <p className="text-gray-800 mt-1">{application.theResearchFocusesOnTheFollowingObjectivesOther}</p>
+                  )}
+                </div>
+              )}
+              {application.areaOfResearch && (
+                <div>
+                  <dt className="text-gray-500">{t('areaOfResearch')}</dt>
+                  <dd className="font-medium">
+                    {application.areaOfResearch}
+                    {application.areaOfResearchOther ? ` — ${application.areaOfResearchOther}` : ''}
+                  </dd>
+                </div>
+              )}
+              {application.descriptionOfTheDataYouWillUse && (
+                <div>
+                  <dt className="text-gray-500 text-xs uppercase tracking-wide mb-1">{t('descriptionOfTheDataYouWillUse')}</dt>
+                  <dd className="text-gray-800 whitespace-pre-wrap">{application.descriptionOfTheDataYouWillUse}</dd>
+                </div>
+              )}
+              {application.descriptionOfTheProject && (
+                <div>
+                  <dt className="text-gray-500 text-xs uppercase tracking-wide mb-1">{t('descriptionOfTheProject')}</dt>
+                  <dd className="text-gray-800 whitespace-pre-wrap">{application.descriptionOfTheProject}</dd>
+                </div>
+              )}
+              {application.summaryOfTheProject ? (
+                <div>
+                  <dt className="text-gray-500 text-xs uppercase tracking-wide mb-1">{t('summaryOfTheProject')}</dt>
+                  <dd className="text-gray-800 whitespace-pre-wrap">{application.summaryOfTheProject}</dd>
+                </div>
+              ) : (
+                application.theNatureOfTheProjectDoesNotLetYouProvideASummaryReason && (
+                  <div>
+                    <dt className="text-gray-500 text-xs uppercase tracking-wide mb-1">{t('summaryNotProvidedReason')}</dt>
+                    <dd className="text-gray-800 whitespace-pre-wrap">
+                      {application.theNatureOfTheProjectDoesNotLetYouProvideASummaryReason}
+                    </dd>
+                  </div>
+                )
+              )}
             </dl>
           </section>
 
@@ -309,6 +388,24 @@ export default async function ApplicationDetailPage({
                 <dt className="text-gray-500">{t('organisation')}</dt>
                 <dd className="font-medium">{application.applicant.dataUser?.name ?? '—'}</dd>
               </div>
+              {application.contactPersonOrganisationName && (
+                <div>
+                  <dt className="text-gray-500">{t('contactPersonOrganisationName')}</dt>
+                  <dd className="font-medium">{application.contactPersonOrganisationName}</dd>
+                </div>
+              )}
+              {application.contactPersonOperatorID && (
+                <div>
+                  <dt className="text-gray-500">{t('contactPersonOperatorID')}</dt>
+                  <dd className="font-medium">{application.contactPersonOperatorID}</dd>
+                </div>
+              )}
+              {application.applyingForMandatedTasks !== null && (
+                <div>
+                  <dt className="text-gray-500">{t('applyingForMandatedTasks')}</dt>
+                  <dd className="font-medium">{application.applyingForMandatedTasks ? t('yes') : t('no')}</dd>
+                </div>
+              )}
             </dl>
           </section>
 
@@ -367,6 +464,56 @@ export default async function ApplicationDetailPage({
           <section className="rounded-xl border border-gray-200 bg-white p-5">
             <h2 className="font-semibold text-gray-900 mb-3">{t('section5Title')}</h2>
             <p className="text-sm text-gray-800">{application.legalBasis || '—'}</p>
+            <dl className="mt-3 space-y-3 text-sm">
+              {application.whatIsTheAimAndTopicOfTheProject && (
+                <div>
+                  <dt className="text-gray-500 text-xs uppercase tracking-wide mb-1">{t('aimAndTopic')}</dt>
+                  <dd className="text-gray-800 whitespace-pre-wrap">{application.whatIsTheAimAndTopicOfTheProject}</dd>
+                </div>
+              )}
+              {application.linkToTheSupportingLegalBasis && (
+                <div>
+                  <dt className="text-gray-500">{t('linkToTheSupportingLegalBasis')}</dt>
+                  <dd className="font-medium break-all">{application.linkToTheSupportingLegalBasis}</dd>
+                </div>
+              )}
+              {application.summaryOfPlanForUsingTheDataLanguage && (
+                <div>
+                  <dt className="text-gray-500">{t('summaryOfPlanForUsingTheDataLanguage')}</dt>
+                  <dd className="font-medium">{application.summaryOfPlanForUsingTheDataLanguage}</dd>
+                </div>
+              )}
+              {application.summaryOfResearchPlanLanguage && (
+                <div>
+                  <dt className="text-gray-500">{t('summaryOfResearchPlanLanguage')}</dt>
+                  <dd className="font-medium">{application.summaryOfResearchPlanLanguage}</dd>
+                </div>
+              )}
+              {(application.personResponsibleName || application.personResponsibleSameAsContactPerson) && (
+                <div>
+                  <dt className="text-gray-500 text-xs uppercase tracking-wide mb-1">{t('personResponsible')}</dt>
+                  <dd className="font-medium">
+                    {application.personResponsibleSameAsContactPerson
+                      ? t('sameAsContactPerson')
+                      : [application.personResponsibleName, application.personResponsibleJobTitle, application.personResponsibleAffiliation]
+                          .filter(Boolean)
+                          .join(' · ')}
+                  </dd>
+                </div>
+              )}
+              {(application.personResearchName || application.personResearchSameAsContactPerson) && (
+                <div>
+                  <dt className="text-gray-500 text-xs uppercase tracking-wide mb-1">{t('personResearch')}</dt>
+                  <dd className="font-medium">
+                    {application.personResearchSameAsContactPerson
+                      ? t('sameAsContactPerson')
+                      : [application.personResearchName, application.personResearchJobTitle, application.personResearchAffiliation]
+                          .filter(Boolean)
+                          .join(' · ')}
+                  </dd>
+                </div>
+              )}
+            </dl>
             {application.attachments.filter((a) => a.field.startsWith('section5.')).length > 0 && (
               <div className="mt-3 flex flex-wrap gap-2 border-t border-gray-100 pt-3">
                 {application.attachments
@@ -374,7 +521,7 @@ export default async function ApplicationDetailPage({
                   .map((a) => (
                     <a
                       key={a.id}
-                      href={attachmentHref(a.filename)}
+                      href={attachmentHref(a)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="rounded border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100"
@@ -425,7 +572,7 @@ export default async function ApplicationDetailPage({
                   studyCohorts={application.studyCohorts}
                   includesControls={application.includesControls}
                   includesRelatives={application.includesRelatives}
-                  hdeuApplicationId={application.hdeuApplicationId}
+                  attachments={application.attachments}
                 />
               ) : (
                 <>
@@ -462,7 +609,7 @@ export default async function ApplicationDetailPage({
                     .map((a) => (
                       <a
                         key={a.id}
-                        href={attachmentHref(a.filename)}
+                        href={attachmentHref(a)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="rounded border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100"
@@ -475,10 +622,112 @@ export default async function ApplicationDetailPage({
             </div>
           </section>
 
-          {application.otherDataToCombine && (
+          {application.type === 'DATA_REQUEST' &&
+            (application.ethicalReviewInput ||
+              application.whatIsTheFrequencyOfUpdates ||
+              application.tabulationPlan ||
+              application.tabulationPlans.length > 0) && (
+              <section className="rounded-xl border border-gray-200 bg-white p-5">
+                <h2 className="font-semibold text-gray-900 mb-3">{t('dataRequestDetailsTitle')}</h2>
+                <dl className="space-y-3 text-sm">
+                  {application.ethicalReviewInput && (
+                    <div>
+                      <dt className="text-gray-500 text-xs uppercase tracking-wide mb-1">{t('ethicalReviewInput')}</dt>
+                      <dd className="text-gray-800 whitespace-pre-wrap">{application.ethicalReviewInput}</dd>
+                    </div>
+                  )}
+                  {application.whatIsTheFrequencyOfUpdates && (
+                    <div>
+                      <dt className="text-gray-500">{t('frequencyOfUpdates')}</dt>
+                      <dd className="font-medium">{application.whatIsTheFrequencyOfUpdates}</dd>
+                    </div>
+                  )}
+                  {application.tabulationPlan && (
+                    <div>
+                      <dt className="text-gray-500 text-xs uppercase tracking-wide mb-1">{t('tabulationPlan')}</dt>
+                      <dd className="text-gray-800 whitespace-pre-wrap">{application.tabulationPlan}</dd>
+                    </div>
+                  )}
+                  {application.tabulationPlans.map((tp, i) => (
+                    <div key={tp.id} className="rounded border border-gray-100 p-3">
+                      <p className="text-gray-500 text-xs uppercase tracking-wide mb-2">
+                        {t('tabulationPlanEntry', { index: i + 1 })}
+                      </p>
+                      <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+                        <Field label={t('tabulationRegisteredToBeUsed')} value={tp.tabulationRegisteredToBeUsed} />
+                        <Field label={t('tabulationPossibleStudyCohort')} value={tp.tabulationPossibleStudyCohort} />
+                        <Field
+                          label={t('tabulationInformationOfRequiredVariables')}
+                          value={tp.tabulationInformationOfRequiredVariables}
+                        />
+                        <Field label={t('tabulationFormationVariables')} value={tp.tabulationFormationVariables} />
+                        <Field label={t('tabulationDesiredDirection')} value={tp.tabulationDesiredDirection} />
+                        <Field label={t('tabulationOrderInWhichTable')} value={tp.tabulationOrderInWhichTable} />
+                        <Field label={t('tabulationAnyOtherRelevant')} value={tp.tabulationAnyOtherRelevant} />
+                      </dl>
+                    </div>
+                  ))}
+                </dl>
+              </section>
+            )}
+
+          {(application.otherDataToCombine ||
+            application.hasPendingPermitApplications ||
+            application.relatedDataPermits.length > 0) && (
             <section className="rounded-xl border border-gray-200 bg-white p-5">
               <h2 className="font-semibold text-gray-900 mb-3">{t('section7Title')}</h2>
-              <p className="text-sm text-gray-800 whitespace-pre-wrap">{application.otherDataDescription || '—'}</p>
+              <dl className="space-y-3 text-sm">
+                {application.otherDataToCombine && (
+                  <>
+                    <div>
+                      <dt className="text-gray-500 text-xs uppercase tracking-wide mb-1">{t('otherDataDescription')}</dt>
+                      <dd className="text-gray-800 whitespace-pre-wrap">{application.otherDataDescription || '—'}</dd>
+                    </div>
+                    {(application.otherDataCountries.length > 0 ||
+                      application.otherDataHolders.length > 0 ||
+                      application.otherDataDatabases.length > 0 ||
+                      application.otherDataDatasets.length > 0) && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+                        <Field label={t('otherDataCountries')} value={application.otherDataCountries.join(', ')} />
+                        <Field label={t('otherDataHolders')} value={application.otherDataHolders.join(', ')} />
+                        <Field label={t('otherDataDatabases')} value={application.otherDataDatabases.join(', ')} />
+                        <Field label={t('otherDataDatasets')} value={application.otherDataDatasets.join(', ')} />
+                      </div>
+                    )}
+                    <Field label={t('otherDataCombinationMethod')} value={application.otherDataCombinationMethod} />
+                  </>
+                )}
+                {application.hasPendingPermitApplications && (
+                  <div>
+                    <dt className="text-gray-500">{t('pendingPermitApplication')}</dt>
+                    <dd className="font-medium">
+                      {[application.pendingApplicationIssuer, application.pendingApplicationPermitCode]
+                        .filter(Boolean)
+                        .join(' · ')}
+                      {application.pendingApplicationDate ? ` (${formatDate(application.pendingApplicationDate)})` : ''}
+                    </dd>
+                  </div>
+                )}
+                {application.relatedDataPermits.length > 0 && (
+                  <div>
+                    <dt className="text-gray-500 mb-1">{t('relatedDataPermits')}</dt>
+                    <ul className="space-y-1">
+                      {application.relatedDataPermits.map((p) => (
+                        <li key={p.id} className="font-medium">
+                          {[p.permitIssuer, p.permitIdentificationInformation].filter(Boolean).join(' — ')}
+                          {p.permitStartDateOfIssue && (
+                            <span className="text-gray-500 font-normal">
+                              {' '}
+                              ({formatDate(p.permitStartDateOfIssue)}
+                              {p.permitEndDateOfIssue ? ` – ${formatDate(p.permitEndDateOfIssue)}` : ''})
+                            </span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </dl>
             </section>
           )}
 
@@ -497,18 +746,72 @@ export default async function ApplicationDetailPage({
                   <dd className="font-medium">{application.dataController}</dd>
                 </div>
               )}
+              <Field label={t('dataAccessLaterDate')} value={application.dataAccessLaterDate && formatDate(application.dataAccessLaterDate)} />
+              <Field label={t('dataAccessPeriodInfo')} value={application.dataAccessPeriodInfo} />
+              <Field label={t('dataAccessUpdateFrequency')} value={application.dataAccessUpdateFrequency} />
               {application.transfersOutsideEuEea && (
                 <div>
                   <dt className="text-gray-500">{t('transfersOutsideEuEea')}</dt>
                   <dd className="font-medium">{application.transferCountries.join(', ') || t('yes')}</dd>
                 </div>
               )}
+              {transferArticleFlags.length > 0 && (
+                <div className="sm:col-span-2">
+                  <dt className="text-gray-500 mb-1">{t('transferLegalGrounds')}</dt>
+                  <ul className="list-disc list-inside space-y-0.5">
+                    {transferArticleFlags.map(([key]) => (
+                      <li key={key} className="font-medium">
+                        {t(`transferArticle.${key}`)}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              <Field
+                label={t('legalBasisForTransfer')}
+                value={[application.legalBasisForTransferringTheDataOutsideEU, ...application.legalBasisForTransferringTheDataOutsideEUOtherOptions]
+                  .filter(Boolean)
+                  .join(', ')}
+              />
+              <Field label={t('safeguardsGDCP')} value={application.safeguardsAreProvidedByReferringGDCP.join(', ')} />
+              <Field label={t('safeguardsOther')} value={application.safeguardsAreProvidedByOtherExceptionalLegalBases} />
+              {application.complyWithDataMinimisationPrincipleNotEUMember && (
+                <div className="sm:col-span-2">
+                  <dt className="text-gray-500 text-xs uppercase tracking-wide mb-1">{t('dataMinimisationNonEU')}</dt>
+                  <dd className="text-gray-800 whitespace-pre-wrap">{application.complyWithDataMinimisationPrincipleNotEUMember}</dd>
+                </div>
+              )}
               {application.lawfulnessOfProcessing.length > 0 && (
                 <div>
                   <dt className="text-gray-500">{t('lawfulnessOfProcessing')}</dt>
-                  <dd className="font-medium">{application.lawfulnessOfProcessing.join(', ')}</dd>
+                  <dd className="font-medium">
+                    {[...application.lawfulnessOfProcessing, application.lawfulnessLegalBasisOther].filter(Boolean).join(', ')}
+                  </dd>
                 </div>
               )}
+              <Field label={t('lawfulForProcessingPersonalData')} value={application.lawfulForProcessingPersonalData.join(', ')} />
+              <Field label={t('europeanUnionInstitution')} value={application.europeanUnionInstitution.join(', ')} />
+              <Field
+                label={t('legalBasisForProcessingCombinedData')}
+                value={[...application.legalBasisForProcessingCombinedData, application.otherLegalBasisForProcessingCombinedData]
+                  .filter(Boolean)
+                  .join(', ')}
+              />
+              <Field
+                label={t('legalBasisForProcessingApplicationData')}
+                value={[...application.legalBasisForProcessingApplicationData, application.otherLegalBasisForProcessingApplicationData]
+                  .filter(Boolean)
+                  .join(', ')}
+              />
+              <Field
+                label={t('legalBasisForProcessingCombinedApplicationData')}
+                value={[
+                  ...application.legalBasisForProcessingCombinedApplicationData,
+                  application.otherLegalBasisForProcessingCombinedApplicationData,
+                ]
+                  .filter(Boolean)
+                  .join(', ')}
+              />
               {application.dataProcessingPersonnel.length > 0 && (
                 <div className="sm:col-span-2">
                   <dt className="text-gray-500">{t('dataProcessingPersonnel')}</dt>
@@ -518,10 +821,38 @@ export default async function ApplicationDetailPage({
             </dl>
           </section>
 
+          {(application.additionalInformation ||
+            application.attachments.some((a) => a.field.startsWith('section9.'))) && (
+            <section className="rounded-xl border border-gray-200 bg-white p-5">
+              <h2 className="font-semibold text-gray-900 mb-3">{t('section9Title')}</h2>
+              {application.additionalInformation && (
+                <p className="text-sm text-gray-800 whitespace-pre-wrap">{application.additionalInformation}</p>
+              )}
+              {application.attachments.filter((a) => a.field.startsWith('section9.')).length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2 border-t border-gray-100 pt-3">
+                  {application.attachments
+                    .filter((a) => a.field.startsWith('section9.'))
+                    .map((a) => (
+                      <a
+                        key={a.id}
+                        href={attachmentHref(a)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100"
+                      >
+                        {a.filename}
+                      </a>
+                    ))}
+                </div>
+              )}
+            </section>
+          )}
+
           {(application.consentAwareProcessingFee !== null ||
             application.consentAwareChargeFee !== null ||
             application.consentAwareInformationCorrect !== null ||
-            application.consentNoAccessToUnderlyingData !== null) && (
+            application.consentNoAccessToUnderlyingData !== null ||
+            application.consentAcceptHealthDataBody !== null) && (
             <section className="rounded-xl border border-gray-200 bg-white p-5">
               <h2 className="font-semibold text-gray-900 mb-3">{t('section10Title')}</h2>
               <ul className="text-sm text-gray-800 space-y-1 list-disc list-inside">
@@ -529,6 +860,7 @@ export default async function ApplicationDetailPage({
                 {application.consentAwareChargeFee && <li>{t('consentAwareChargeFee')}</li>}
                 {application.consentAwareInformationCorrect && <li>{t('consentAwareInformationCorrect')}</li>}
                 {application.consentNoAccessToUnderlyingData && <li>{t('consentNoAccessToUnderlyingData')}</li>}
+                {application.consentAcceptHealthDataBody && <li>{t('consentAcceptHealthDataBody')}</li>}
               </ul>
             </section>
           )}

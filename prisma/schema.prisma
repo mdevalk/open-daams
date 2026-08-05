@@ -269,51 +269,83 @@ model Application {
 
   // TEHDAS2 D6.3 Annex 5/6 §3 — applicant/contact person detail beyond what's
   // on the User/DataUser masterdata record
-  applyingOnBehalfOfPublicSector Boolean?
-  applyingForMandatedTasks       Boolean?
-  legalOrNaturalPerson           String? // "Legal person" | "Natural person", as transmitted
-  legalPersonAddress             String?
-  legalPersonZipCode             String?
-  legalPersonCity                String?
-  legalPersonCountry             String?
-  contactPersonJobTitle          String?
-  contactPersonAffiliation       String?
-  contactPersonRelationship      String?
-  contactPersonBusinessId        String?
-  contactPersonPhone             String? // formatted "+<countryCode> <number>", as transmitted
+  applyingOnBehalfOfPublicSector      Boolean?
+  applyingForMandatedTasks            Boolean?
+  legalOrNaturalPerson                String? // "Legal person" | "Natural person", as transmitted
+  legalPersonAddress                  String?
+  legalPersonZipCode                  String?
+  legalPersonCity                     String?
+  legalPersonCountry                  String?
+  contactPersonJobTitle               String?
+  contactPersonAffiliation            String?
+  contactPersonOrganisationName       String? // distinct field from contactPersonAffiliation (Release 7 §3)
+  contactPersonRelationship           String?
+  contactPersonBusinessId             String?
+  contactPersonOperatorID             String?
+  contactPersonPhone                  String? // formatted "+<countryCode> <number>", as transmitted
+  // "Profile data last confirmed" timestamps (Release 7 §3/§4/§5/§6) — low
+  // case-management value, just mark when a reused profile block was synced
+  legalOrNaturalPersonProfileDataDate DateTime?
+  contactPersonProfileDataDate        DateTime?
 
   // EHDS common data access application form fields
-  title                 String
-  projectDescription    String    @db.Text
-  purposeCategory       String
+  title                                                   String
+  projectDescription                                      String    @db.Text
+  purposeCategory                                         String
   // TEHDAS2 D6.3 Annex 5/6 §2 — full multi-select purpose list (Art. 53(1)(a)-(f));
   // purposeCategory above keeps the single-value simplification for backward compat
-  purposeCategories     String[]
-  projectLeaderName     String?
-  projectLeaderCountry  String?
-  requestedVariables    String    @db.Text
-  studyPopulation       String    @db.Text
-  inclusionCriteria     String    @db.Text
-  exclusionCriteria     String    @db.Text
-  dataStartDate         DateTime?
-  dataEndDate           DateTime?
-  projectStartDate      DateTime?
-  projectEndDate        DateTime?
-  legalBasis            String
-  dataProcessingCountry String
-  isCrossBorder         Boolean   @default(false)
+  purposeCategories                                       String[]
+  projectLeaderName                                       String?
+  projectLeaderCountry                                    String?
+  // Release 7 §2 — research-detail fields beyond the purpose/summary above
+  theResearchFocusesOnTheFollowingObjectives              String[]
+  theResearchFocusesOnTheFollowingObjectivesOther         String?
+  areaOfResearch                                          String?
+  areaOfResearchOther                                     String?
+  descriptionOfTheDataYouWillUse                          String?   @db.Text
+  theNatureOfTheDataDoesNotLetYouProvideADescription      Boolean?
+  // Release 7 §2 — projectDescription above keeps its existing merged-text
+  // behaviour (non-nullable, fed by the manual form); these three mirror the
+  // real form's own distinct fields precisely instead of a merged approximation
+  descriptionOfTheProject                                 String?   @db.Text
+  summaryOfTheProject                                     String?   @db.Text
+  theNatureOfTheProjectDoesNotLetYouProvideASummary       Boolean?
+  theNatureOfTheProjectDoesNotLetYouProvideASummaryReason String?   @db.Text
+  requestedVariables                                      String    @db.Text
+  studyPopulation                                         String    @db.Text
+  inclusionCriteria                                       String    @db.Text
+  exclusionCriteria                                       String    @db.Text
+  dataStartDate                                           DateTime?
+  dataEndDate                                             DateTime?
+  projectStartDate                                        DateTime?
+  projectEndDate                                          DateTime?
+  legalBasis                                              String
+  dataProcessingCountry                                   String
+  isCrossBorder                                           Boolean   @default(false)
 
   // TEHDAS2 D6.3 Annex 5/6 §5 — purpose-of-use detail beyond legalBasis/projectDescription
-  whyDataIsNeeded                String?  @db.Text
-  expectedBenefits               String?  @db.Text
-  applicantQualifications        String?  @db.Text
-  personResponsibleName          String?
-  personResponsibleJobTitle      String?
-  personResponsibleAffiliation   String?
-  electronicHealthDataFormat     String? // "Anonymised" | "Pseudonymised", as transmitted
-  pseudonymisedDataJustification String?  @db.Text
-  consentCompliesWithArt6        Boolean?
-  consentAssessedEthicalAspects  Boolean?
+  whyDataIsNeeded                      String?   @db.Text
+  whatIsTheAimAndTopicOfTheProject     String?   @db.Text // distinct field per Release 7 §5 (was folded into projectDescription)
+  expectedBenefits                     String?   @db.Text
+  applicantQualifications              String?   @db.Text
+  linkToTheSupportingLegalBasis        String?
+  summaryOfPlanForUsingTheDataLanguage String?
+  summaryOfResearchPlanLanguage        String?
+  personResponsibleSameAsContactPerson Boolean?
+  personResponsibleName                String?
+  personResponsibleJobTitle            String?
+  personResponsibleAffiliation         String?
+  personResponsibleProfileDataDate     DateTime?
+  // Release 7 §5 — a second, parallel person-block distinct from personResponsible*
+  personResearchSameAsContactPerson    Boolean?
+  personResearchName                   String?
+  personResearchJobTitle               String?
+  personResearchAffiliation            String?
+  personResearchProfileDataDate        DateTime?
+  electronicHealthDataFormat           String? // "Anonymised" | "Pseudonymised", as transmitted
+  pseudonymisedDataJustification       String?   @db.Text
+  consentCompliesWithArt6              Boolean?
+  consentAssessedEthicalAspects        Boolean?
 
   // Cohort/dataset extraction (D6.3 Annex 5 §6.1 / Annex 6 §6.1 — shared)
   cohortSizeIsEstimate      Boolean?
@@ -355,44 +387,86 @@ model Application {
   pendingApplicationIssuer     String?
   pendingApplicationPermitCode String?
 
-  speName                    String?
-  speTechnicalRequirements   String?           @db.Text
-  dataAccessTiming           DataAccessTiming?
-  dataAccessLaterDate        DateTime?
-  environmentProviderName    String? // provider of the named SPE (speName is its name)
-  dataAccessPeriodInfo       String?           @db.Text
-  dataAccessUpdateFrequency  String?
-  inactiveStoragePeriodStart DateTime?
-  inactiveStoragePeriodEnd   DateTime?
-  transfersOutsideEuEea      Boolean           @default(false)
-  transferCountries          String[]
-  transferLegalBasis         String?           @db.Text
-  // Art. 47/48/49 transfer legal-basis tree (Annex 5 §8) — captured as codes
-  // rather than one column per nested checkbox; the citation structure itself
-  // is boilerplate legal text, not case data DAAMS branches on
-  transferLegalArticle       String? // "47" | "48" | "49", as transmitted
-  transferSafeguards         String[] // selected safeguard mechanism codes
-  dataController             String?
-  dataMinimisationCompliance String?           @db.Text
+  // Release 7 §9 — free-form additional notes, no equivalent field prior to
+  // this section being modelled at all
+  additionalInformation String? @db.Text
+
+  speName                                               String?
+  speTechnicalRequirements                              String?           @db.Text
+  dataAccessTiming                                      DataAccessTiming?
+  dataAccessLaterDate                                   DateTime?
+  environmentProviderName                               String? // provider of the named SPE (speName is its name)
+  dataAccessPeriodInfo                                  String?           @db.Text
+  dataAccessUpdateFrequency                             String?
+  inactiveStoragePeriodStart                            DateTime?
+  inactiveStoragePeriodEnd                              DateTime?
+  transfersOutsideEuEea                                 Boolean           @default(false)
+  transferCountries                                     String[]
+  transferLegalBasis                                    String?           @db.Text
+  // transferLegalArticle/transferSafeguards below stay as a condensed summary
+  // (backward compat); the full Art. 47/48/49 tree (Release 7 §8) is modelled
+  // explicitly alongside it, one field per checkbox, per the "all fields
+  // explicit" decision — this citation structure is large but not boilerplate
+  // DAAMS can safely collapse, since which safeguard was actually selected is
+  // itself case-relevant
+  transferLegalArticle                                  String? // "47" | "48" | "49", as transmitted
+  transferSafeguards                                    String[] // selected safeguard mechanism codes
+  whyWillDataBeTransferredOutsideEUArticle47            Boolean?
+  whyWillDataBeTransferredOutsideEUArticle47Options     String[]
+  whyWillDataBeTransferredOutsideEUArticle47a           Boolean?
+  whyWillDataBeTransferredOutsideEUArticle47b           Boolean?
+  whyWillDataBeTransferredOutsideEUArticle47c           Boolean?
+  whyWillDataBeTransferredOutsideEUArticle48            Boolean?
+  whyWillDataBeTransferredOutsideEUArticle48a           Boolean?
+  whyWillDataBeTransferredOutsideEUArticle48b           Boolean?
+  whyWillDataBeTransferredOutsideEUArticle48bOptions    String[]
+  whyWillDataBeTransferredOutsideEUArticle48c           Boolean?
+  whyWillDataBeTransferredOutsideEUArticle48cOpt        String?
+  whyWillDataBeTransferredOutsideEUArticle48d           Boolean?
+  whyWillDataBeTransferredOutsideEUArticle48e           Boolean?
+  whyWillDataBeTransferredOutsideEUArticle49            Boolean?
+  legalBasisForTransferringTheDataOutsideEU             String?
+  legalBasisForTransferringTheDataOutsideEUOtherOptions String[]
+  safeguardsAreProvidedByReferringGDCP                  String[]
+  safeguardsAreProvidedByOtherExceptionalLegalBases     String?
+  dataController                                        String?
+  dataMinimisationCompliance                            String?           @db.Text
+  complyWithDataMinimisationPrincipleNotEUMember        String?           @db.Text
   // The five fixed data-protection/security attestation checkboxes (Annex 5 §8)
-  protectionStatement1       Boolean?
-  protectionStatement2       Boolean?
-  protectionStatement3       Boolean?
-  protectionStatement4       Boolean?
-  protectionStatement5       Boolean?
-  dataProcessingPersonnel    String[] // names/affiliations/emails of people processing the data
-  lawfulnessOfProcessing     String[] // selected GDPR Art. 6(1) grounds, stored as codes
-  lawfulnessLegalBasisOther  String? // free-text "Other, which?" fallback
+  protectionStatement1                                  Boolean?
+  protectionStatement2                                  Boolean?
+  protectionStatement3                                  Boolean?
+  protectionStatement4                                  Boolean?
+  protectionStatement5                                  Boolean?
+  dataProcessingPersonnel                               String[] // names/affiliations/emails of people processing the data
+  // lawfulnessOfProcessing below is the GDPR Art. 6(1) selector; Release 7 §8
+  // has four more distinct legal-basis selectors alongside it, one per data
+  // scope, plus the EU-institution Art. 5(1) EUDPR variant
+  lawfulnessOfProcessing                                String[] // selected GDPR Art. 6(1) grounds, stored as codes
+  lawfulnessLegalBasisOther                             String? // free-text "Other, which?" fallback
+  lawfulForProcessingPersonalData                       String[] // Art. 5(1) EUDPR variant, EU institutions
+  europeanUnionInstitution                              String[]
+  legalBasisForProcessingCombinedData                   String[]
+  otherLegalBasisForProcessingCombinedData              String?
+  legalBasisForProcessingApplicationData                String[]
+  otherLegalBasisForProcessingApplicationData           String?
+  legalBasisForProcessingCombinedApplicationData        String[]
+  otherLegalBasisForProcessingCombinedApplicationData   String?
 
   // Data request only (Annex 6 §6) — the tabulation plan for compiling
-  // anonymised aggregated statistics; not applicable to data access applications
-  tabulationPlan String? @db.Text
+  // anonymised aggregated statistics; not applicable to data access applications.
+  // Kept as a flat summary for backward compat; full fidelity (Release 7 §6 —
+  // the real form models this as an array) is in the TabulationPlan relation below
+  tabulationPlan              String? @db.Text
+  ethicalReviewInput          String? @db.Text // Data Request §6 — distinct from ethicalReviewAttachment
+  whatIsTheFrequencyOfUpdates String?
 
   // TEHDAS2 D6.3 Annex 5/6 §10 — confirmation checkboxes required to submit
   consentAwareProcessingFee       Boolean?
   consentAwareChargeFee           Boolean?
   consentAwareInformationCorrect  Boolean?
   consentNoAccessToUnderlyingData Boolean? // Annex 6 (DATA_REQUEST) only
+  consentAcceptHealthDataBody     Boolean? // Release 7 Table 47 "acceptHealthDataBody" (DATA_REQUEST only)
 
   // Ethical review (D6.3 §6.1, required where member state law mandates it)
   ethicalReviewRequired  Boolean              @default(false)
@@ -431,6 +505,8 @@ model Application {
   studyCohorts       StudyCohort[]
   invoicingDetails   ApplicantInvoicingDetails?
   attachments        Attachment[]
+  relatedDataPermits RelatedDataPermit[]
+  tabulationPlans    TabulationPlan[]
 }
 
 // TEHDAS2 D6.3 Annex 5 §6.1-6.3 — one row per country x role (cohort, its
@@ -448,8 +524,9 @@ model StudyCohort {
 
   // Section 6 "base" fields (not 6.1/6.2/6.3-specific) — country-scoped, so
   // kept on the COHORT row, the one guaranteed-present row per country
-  hdabContacts        String? @db.Text
-  howWillDataBeLinked String? @db.Text
+  hdabContacts          String?   @db.Text
+  howWillDataBeLinked   String?   @db.Text
+  personProfileDataDate DateTime?
 
   relatesToId   String?
   relatesTo     StudyCohort?  @relation("StudyCohortRelation", fields: [relatesToId], references: [id])
@@ -457,21 +534,46 @@ model StudyCohort {
 
   relationshipToSubject String? // RELATIVE only, e.g. "grandparent", "biological parent"
 
-  cohortFormationMethod CohortFormationMethod? // COHORT only
-  formedFromPriorPermit Boolean?
-  priorPermitIssuer     String?
-  priorPermitDate       DateTime?
-  priorPermitValidFrom  DateTime?
-  priorPermitValidTo    DateTime?
-  priorPermitNumber     String?
+  cohortFormationMethod                                            CohortFormationMethod? // COHORT only
+  // Release 7 §6 — consent/permit basis for the cohort (COHORT only)
+  hasTheStudyCohortBeenFormedBasedOnInformationOfStudyParticipants Boolean?
+  doesTheInformedConsentCoverTheRequestedRegistryExtractions       Boolean?
+  confirmThatDataPermitHasBeenGrantedForTheResearchProject         Boolean?
+  howTheStudyCohortWasObtained                                     String?                @db.Text
+  detailsOfHowTheStudyCohortHasBeenFormed                          String?                @db.Text
+  whyNeedDataOfaWholePopulation                                    String?                @db.Text // justification when cohortFormationMethod = WHOLE_POPULATION
+  regionsSeekForData                                               String?
+  informationProviderName                                          String?
+  informationProviderEmail                                         String?
+  informationProviderPhone                                         String?
+  informationProviderSameAsContactPerson                           Boolean?
+  formedFromPriorPermit                                            Boolean?
+  priorPermitIssuer                                                String?
+  priorPermitDate                                                  DateTime?
+  priorPermitValidFrom                                             DateTime?
+  priorPermitValidTo                                               DateTime?
+  priorPermitNumber                                                String?
 
   size              Int?
   sizeIsEstimate    Boolean?
   sizeJustification String?  @db.Text
 
+  // Relocated from Application (Release 7 §6 scopes these per country, not
+  // application-wide) — Application keeps mirroring the first COHORT row's
+  // values into its own flat columns of the same name, for backward compat
+  dataSubjectsInformed       Boolean?
+  dataSubjectsInformedDetail String?  @db.Text
+  includesControls           Boolean? // COHORT only: will controls be extracted for this cohort
+  controlsDescription        String?  @db.Text
+  includesRelatives          Boolean? // COHORT only: will relatives be extracted for this cohort
+  relativesDescription       String?  @db.Text
+
   sameAsCohortData       Boolean? // CONTROL/RELATIVE: reuse the cohort's holder/variables/period?
   dataHolderIds          String[]
-  variablesAttachmentRef String? // Attachment.filename
+  databaseIds            String[] // CONTROL/RELATIVE: "databasesForControls[]"/"databasesForRelatives[]"
+  datasetIds             String[] // CONTROL/RELATIVE: "datasetsForControls[]"/"datasetsForRelatives[]"
+  variablesAttachmentRef String? // bare filename, as transmitted — not unique alone
+  variablesAttachmentId  String? // NCP attachment id; real archive entries are named "<id>_<filename>"
   timePeriod             String? // free text, as transmitted
   dataStartDate          DateTime?
   dataEndDate            DateTime?
@@ -484,11 +586,12 @@ model StudyCohort {
   matchingCriteria          String?           @db.Text // CONTROL only
   controlsPerCohortPerson   String? // CONTROL only
 
-  extractionFrequency     ExtractionFrequency?
-  extractionInterval      ExtractionInterval?
-  extractionIntervalOther String?
-  extractionTimingNotes   String?              @db.Text
-  orderForExtraction      String?              @db.Text
+  willDataBeExtractedSimultaneously Boolean? // CONTROL/RELATIVE: same timing as the cohort?
+  extractionFrequency               ExtractionFrequency?
+  extractionInterval                ExtractionInterval?
+  extractionIntervalOther           String?
+  extractionTimingNotes             String?              @db.Text
+  orderForExtraction                String?              @db.Text
 
   createdAt DateTime @default(now())
 }
@@ -506,7 +609,7 @@ model ApplicantInvoicingDetails {
   email                       String?
   phone                       String?
   organisationName            String?
-  address                     String?  @db.Text
+  address                     String?   @db.Text
   businessId                  String?
   vatNumber                   String?
   invoiceType                 String? // "Paper" | "Electronic", as transmitted
@@ -516,15 +619,16 @@ model ApplicantInvoicingDetails {
   peppolCode                  String?
   isProjectFinanciallyCovered Boolean?
   financingAmountRange        String? // the a-f bracket, as transmitted
+  section4ProfileDataDate     DateTime?
 
   createdAt DateTime @default(now())
 }
 
 // Structured reference to a file supplied with the form (research plan,
-// variable list, consent letter, prior permit, etc.). No file bytes stored
-// here — filename resolves on demand via the existing NCP attachment route
-// (Application.hdeuApplicationId + filename), so retrieval still depends on
-// the sending NCP continuing to serve that application.
+// variable list, consent letter, prior permit, etc.). Bytes are extracted
+// from the NCP detail archive and persisted here at import time — the NCP
+// is a message gateway, not a store, so nothing after import depends on it
+// still being able to serve the application.
 model Attachment {
   id            String      @id @default(cuid())
   applicationId String
@@ -533,7 +637,9 @@ model Attachment {
   field       String // which form field this supports, e.g. "section5.summaryOfPlanForUsingTheData"
   filename    String
   sizeBytes   Int?
-  description String?
+  description String? // NCP-issued attachment id, e.g. "6a70b820164b1a3858b83f06"
+  content     Bytes
+  mimeType    String?
 
   createdAt DateTime @default(now())
 }
@@ -593,6 +699,45 @@ model DatasetVariable {
   description     String? @db.Text
   datatype        String?
   propertyUrl     String?
+
+  createdAt DateTime @default(now())
+}
+
+// Release 7 §7 — otherDataPermits[]: prior data permits the applicant cites
+// when combining this application's data with data already covered by
+// another permit. One row per cited permit, distinct from DataPermit (the
+// permits DAAMS itself issues) and from StudyCohort's own priorPermit*
+// fields (which cover the cohort's own formation basis, not combined data).
+model RelatedDataPermit {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  permitIssuer                    String?
+  permitStartDateOfIssue          String? // free text, as transmitted
+  permitEndDateOfIssue            String?
+  permitIdentificationInformation String?
+
+  createdAt DateTime @default(now())
+}
+
+// Release 7 Data Request §6 — tabulationPlanArray: a data request models its
+// tabulation plan as an array of structured entries, not the single flat
+// Application.tabulationPlan text field (kept for backward compat).
+model TabulationPlan {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  tabulationRegisteredToBeUsed             String? @db.Text
+  tabulationPossibleStudyCohort            String? @db.Text
+  tabulationInformationOfRequiredVariables String? @db.Text
+  tabulationFormationVariables             String? @db.Text
+  tabulationDesiredDirection               String? @db.Text
+  tabulationOrderInWhichTable              String? @db.Text
+  tabulationAnyOtherRelevant               String? @db.Text
+  // tabulationPlan itself (the attachment) is captured via the Attachment
+  // model, tagged field = "tabulationPlan[<index>].tabulationPlan"
 
   createdAt DateTime @default(now())
 }
