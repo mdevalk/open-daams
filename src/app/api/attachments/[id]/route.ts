@@ -1,6 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { fileResponse } from '@/lib/http';
+import { requireRoleOrOwner } from '@/lib/authz';
+
+const STAFF_ROLES = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN', 'DATA_HOLDER'] as const;
 
 /**
  * GET /api/attachments/[id]
@@ -10,14 +13,21 @@ import { fileResponse } from '@/lib/http';
  * (see mapNcpDetailZipToHdeuPayload) — the NCP is a message gateway, not a
  * store, so retrieval here never calls back out to it.
  */
-export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
   try {
-    const attachment = await prisma.attachment.findUnique({ where: { id } });
+    const attachment = await prisma.attachment.findUnique({
+      where: { id },
+      include: { application: { select: { applicantId: true } } },
+    });
     if (!attachment) {
       return NextResponse.json({ error: 'Attachment not found' }, { status: 404 });
     }
+
+    const requestingUserId = req.nextUrl.searchParams.get('userId');
+    const auth = await requireRoleOrOwner(requestingUserId, [...STAFF_ROLES], attachment.application.applicantId);
+    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     return fileResponse(attachment.content, attachment.filename, {
       mimeType: attachment.mimeType ?? 'application/octet-stream',

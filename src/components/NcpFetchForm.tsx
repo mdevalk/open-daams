@@ -14,7 +14,7 @@ type NcpQueueEntry = NcpApplicationSummary & {
   alreadyImported: { id: string; referenceNumber: string } | null;
 };
 
-export function NcpFetchForm({ locale }: { locale?: string } = {}) {
+export function NcpFetchForm({ locale, actingUserId }: { locale?: string; actingUserId: string }) {
   const applicationHref = (id: string) => (locale ? `/${locale}/applications/${id}` : `/applications/${id}`);
   const terr = useTranslations('errors');
   const [entries, setEntries] = useState<NcpQueueEntry[] | null>(null);
@@ -65,7 +65,7 @@ export function NcpFetchForm({ locale }: { locale?: string } = {}) {
   async function importEntry(entry: NcpApplicationSummary) {
     setImportingId(entry.applicationId);
     try {
-      const res = await fetch(`/api/import/ncp-applications/${entry.applicationId}`, { method: 'POST' });
+      const res = await fetch(`/api/import/ncp-applications/${entry.applicationId}?userId=${actingUserId}`, { method: 'POST' });
       const data = await res.json();
       if (!res.ok) {
         setResults((r) => ({

@@ -3,13 +3,21 @@ import { prisma } from '@/lib/db';
 import { PERMIT_TRANSITIONS } from '@/lib/permit';
 import { DataPermitStatus } from '@prisma/client';
 import { regenerateStoredPermitPdf } from '@/lib/permit-pdf-store';
+import { requireRole } from '@/lib/authz';
+
+const STAFF_ROLES = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN', 'DATA_HOLDER'] as const;
 
 /**
- * GET /api/permits/[id]  — fetch permit with logs
+ * GET /api/permits/[id]  — fetch permit with logs (internal operational detail,
+ * staff-only — distinct from the deliberately-public /pdf and /json exports)
  * POST /api/permits/[id] — transition permit status (D6.4 §9.2)
  */
-export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+
+  const auth = await requireRole(req.nextUrl.searchParams.get('userId'), [...STAFF_ROLES]);
+  if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+
   const permit = await prisma.dataPermit.findUnique({
     where: { id },
     include: {

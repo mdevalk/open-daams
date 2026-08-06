@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { requireRole } from '@/lib/authz';
+import { requireRole, requireRoleOrOwner } from '@/lib/authz';
 
 const MANAGE_ROLES = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'] as const;
-const STAFF_ROLES = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN', 'DATA_HOLDER'];
+const STAFF_ROLES = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN', 'DATA_HOLDER'] as const;
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -29,8 +29,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     if (!application) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     const requestingUserId = req.nextUrl.searchParams.get('userId');
-    const requestingUser = requestingUserId ? await prisma.user.findUnique({ where: { id: requestingUserId } }) : null;
-    const isStaff = requestingUser ? STAFF_ROLES.includes(requestingUser.role) : false;
+    const auth = await requireRoleOrOwner(requestingUserId, [...STAFF_ROLES], application.applicantId);
+    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+
+    const isStaff = (STAFF_ROLES as readonly string[]).includes(auth.user.role);
 
     return NextResponse.json({
       ...application,

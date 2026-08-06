@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { ApplicationStatus, ApplicationType, Prisma } from '@prisma/client';
 import { calculateDecisionDeadline } from '@/lib/workflow';
 import { addWeeks } from 'date-fns';
+import { requireRole } from '@/lib/authz';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
@@ -34,6 +35,13 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+
+    const auth = await requireRole(body.actingUserId, ['APPLICANT', 'CASE_HANDLER', 'ADMIN']);
+    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+    if (auth.user.role === 'APPLICANT' && body.applicantId !== auth.user.id) {
+      return NextResponse.json({ error: 'An applicant may only create their own application' }, { status: 403 });
+    }
+
     const now = new Date();
     const isDataAccessApplication = body.type === 'DATA_ACCESS_APPLICATION';
 

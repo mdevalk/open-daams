@@ -35,9 +35,11 @@ type Applicant = User & { dataUser: { name: string } | null };
 export function NewApplicationForm({
   applicants,
   dataHolders,
+  currentUser,
 }: {
   applicants: Applicant[];
   dataHolders: { id: string; name: string }[];
+  currentUser: User;
 }) {
   const router = useRouter();
   const terr = useTranslations('errors');
@@ -108,8 +110,9 @@ export function NewApplicationForm({
     const form = new FormData(e.currentTarget);
 
     const body = {
+      actingUserId: currentUser.id,
       type: form.get('type'),
-      applicantId: form.get('applicantId'),
+      applicantId: currentUser.role === 'APPLICANT' ? currentUser.id : form.get('applicantId'),
       title: form.get('title'),
       projectDescription: form.get('projectDescription'),
       purposeCategory: form.get('purposeCategory'),
@@ -230,12 +233,18 @@ export function NewApplicationForm({
         <h2 className="font-semibold text-gray-900 mb-4">Applicant</h2>
         <div>
           <label className={labelCls}>Applicant <span className="text-red-500">*</span></label>
-          <select name="applicantId" required className={inputCls}>
-            <option value="">Select applicant...</option>
-            {applicants.map((u) => (
-              <option key={u.id} value={u.id}>{u.name} — {u.dataUser?.name ?? '—'}</option>
-            ))}
-          </select>
+          {currentUser.role === 'APPLICANT' ? (
+            <p className="text-sm text-gray-700 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200">
+              {currentUser.name}
+            </p>
+          ) : (
+            <select name="applicantId" required className={inputCls}>
+              <option value="">Select applicant...</option>
+              {applicants.map((u) => (
+                <option key={u.id} value={u.id}>{u.name} — {u.dataUser?.name ?? '—'}</option>
+              ))}
+            </select>
+          )}
         </div>
       </div>
 

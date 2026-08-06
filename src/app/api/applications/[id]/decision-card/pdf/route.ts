@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { fileResponse } from '@/lib/http';
+import { requireRoleOrOwner } from '@/lib/authz';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
+
+const STAFF_ROLES = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN', 'DATA_HOLDER'] as const;
 
 /**
  * GET /api/applications/[id]/decision-card/pdf
@@ -15,7 +18,7 @@ export const runtime = 'nodejs';
  * predates-this-feature case.
  */
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
@@ -23,12 +26,16 @@ export async function GET(
   try {
     const application = await prisma.application.findUnique({
       where: { id },
-      select: { decisionCardPdf: true, decisionId: true },
+      select: { decisionCardPdf: true, decisionId: true, applicantId: true },
     });
 
     if (!application || !application.decisionCardPdf || !application.decisionId) {
       return new NextResponse('Not found', { status: 404 });
     }
+
+    const requestingUserId = req.nextUrl.searchParams.get('userId');
+    const auth = await requireRoleOrOwner(requestingUserId, [...STAFF_ROLES], application.applicantId);
+    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const filename = `besluit-${application.decisionId.replace(/\//g, '-')}.pdf`;
 

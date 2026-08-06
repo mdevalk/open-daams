@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { findActingUser } from '@/lib/authz';
 
 const STAFF_ROLES = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN', 'DATA_HOLDER'];
 
@@ -8,10 +9,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   try {
     const body = await req.json();
 
-    const author = await prisma.user.findUnique({ where: { id: body.authorId } });
-    if (!author) {
-      return NextResponse.json({ error: 'A valid author id is required' }, { status: 401 });
-    }
+    const found = await findActingUser(body.authorId);
+    if (!found.ok) return NextResponse.json({ error: found.error }, { status: found.status });
+    const author = found.user;
 
     const note = await prisma.note.create({
       data: {

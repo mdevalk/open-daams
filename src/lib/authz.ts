@@ -48,3 +48,28 @@ export async function requireRole(userId: unknown, allowedRoles: UserRole[]): Pr
 
   return { ok: true, user: found.user };
 }
+
+/**
+ * Like requireRole, but also allows the specific owner of the resource being
+ * accessed (e.g. the applicant who owns an application), not just a fixed
+ * staff role list. Used by read routes where an applicant may view their own
+ * record but not anyone else's.
+ */
+export async function requireRoleOrOwner(
+  userId: unknown,
+  allowedRoles: UserRole[],
+  ownerId: string,
+): Promise<AuthzResult> {
+  const found = await findActingUser(userId);
+  if (!found.ok) return found;
+
+  if (!allowedRoles.includes(found.user.role) && found.user.id !== ownerId) {
+    return {
+      ok: false,
+      status: 403,
+      error: `Role ${found.user.role} is not permitted to access this resource`,
+    };
+  }
+
+  return { ok: true, user: found.user };
+}

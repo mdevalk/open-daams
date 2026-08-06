@@ -49,7 +49,7 @@ const SAMPLE_PAYLOAD = JSON.stringify(
   2,
 );
 
-export function HdeuImportForm({ locale }: { locale?: string } = {}) {
+export function HdeuImportForm({ locale, actingUserId }: { locale?: string; actingUserId: string }) {
   const router = useRouter();
   const applicationHref = (id: string) => (locale ? `/${locale}/applications/${id}` : `/applications/${id}`);
   const [mode, setMode] = useState<'paste' | 'file'>('paste');
@@ -82,7 +82,7 @@ export function HdeuImportForm({ locale }: { locale?: string } = {}) {
         return;
       }
 
-      const res = await fetch('/api/import/hdeu', {
+      const res = await fetch(`/api/import/hdeu?userId=${actingUserId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(parsed),

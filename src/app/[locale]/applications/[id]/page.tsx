@@ -94,7 +94,7 @@ export default async function ApplicationDetailPage({
   const currentPermit = application.dataPermits[0] ?? null;
   const trustedDataHolders = dataHolders.filter((dh) => dh.isTrusted);
 
-  const attachmentHref = (a: { id: string }) => `/api/attachments/${a.id}`;
+  const attachmentHref = (a: { id: string }) => `/api/attachments/${a.id}?userId=${currentUser.id}`;
 
   const cohortRows = application.studyCohorts.filter((c) => c.role === 'COHORT');
 

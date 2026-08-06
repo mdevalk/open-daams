@@ -13,6 +13,7 @@ type Applicant = User & { dataUser: { name: string } | null };
 export function NewApplicationTabs({
   applicants,
   dataHolders,
+  currentUser,
   locale,
   manualLabel,
   hdeuLabel,
@@ -20,6 +21,7 @@ export function NewApplicationTabs({
 }: {
   applicants: Applicant[];
   dataHolders: { id: string; name: string }[];
+  currentUser: User;
   locale: string;
   manualLabel: string;
   hdeuLabel: string;
@@ -54,11 +56,11 @@ export function NewApplicationTabs({
       </div>
 
       {tab === 'manual' ? (
-        <NewApplicationForm applicants={applicants} dataHolders={dataHolders} />
+        <NewApplicationForm applicants={applicants} dataHolders={dataHolders} currentUser={currentUser} />
       ) : tab === 'hdeu' ? (
-        <HdeuImportForm locale={locale} />
+        <HdeuImportForm locale={locale} actingUserId={currentUser.id} />
       ) : (
-        <NcpFetchForm locale={locale} />
+        <NcpFetchForm locale={locale} actingUserId={currentUser.id} />
       )}
     </div>
   );
