@@ -8,11 +8,12 @@ import { useRouter } from 'next/navigation';
 import { readErrorMessage } from '@/lib/utils';
 
 type Props = {
-  application: Pick<Application, 'id' | 'status' | 'decisionOutcome' | 'permitAcceptanceStatus'> & { dataPermit: DataPermit | null; feeEstimate?: FeeEstimate | null };
+  application: Pick<Application, 'id' | 'type' | 'status' | 'decisionOutcome' | 'permitAcceptanceStatus'> & { dataPermit: DataPermit | null; feeEstimate?: FeeEstimate | null };
   currentUser: User;
+  speOperators: { id: string; name: string }[];
 };
 
-export function PermitPanel({ application, currentUser }: Props) {
+export function PermitPanel({ application, currentUser, speOperators }: Props) {
   const router = useRouter();
   const tp = useTranslations('permitPanel');
   const terr = useTranslations('errors');
@@ -32,6 +33,7 @@ export function PermitPanel({ application, currentUser }: Props) {
   const [additionalServicesFee, setAdditionalServicesFee] = useState('');
   const [dataHolderFee, setDataHolderFee] = useState(estimate?.dataHolderFee?.toString() ?? '');
   const [paymentTerms, setPaymentTerms] = useState('');
+  const [speOperatorId, setSpeOperatorId] = useState('');
 
   // Only show if positive decision
   if (application.status !== 'DECISION_ISSUED' || application.decisionOutcome !== 'POSITIVE') {
@@ -68,6 +70,7 @@ export function PermitPanel({ application, currentUser }: Props) {
           additionalServicesFee,
           dataHolderFee,
           paymentTerms,
+          speOperatorId: speOperatorId || undefined,
         }),
       });
       if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
@@ -148,6 +151,22 @@ export function PermitPanel({ application, currentUser }: Props) {
                   className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
               </div>
             </div>
+
+            {application.type === 'DATA_ACCESS_APPLICATION' && (
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">{tp('speOperator')}</label>
+                <select
+                  value={speOperatorId}
+                  onChange={e => setSpeOperatorId(e.target.value)}
+                  className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
+                >
+                  <option value="">{tp('speOperatorNone')}</option>
+                  {speOperators.map(op => (
+                    <option key={op.id} value={op.id}>{op.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {error && <p className="text-xs text-red-600">{error}</p>}
             <button

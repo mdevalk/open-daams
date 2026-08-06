@@ -79,6 +79,10 @@ export default async function PermitDetailPage({
           },
         },
         previousPermit: { select: { id: true, permitNumber: true, version: true } },
+        // The SPE provider is never stored directly on the permit — it's
+        // derived via speOperator.speProvider (see schema.prisma), so this is
+        // included here for display and future SPE-provider API configuration.
+        speOperator: { include: { speProvider: true } },
         authorizedPersons: { orderBy: { addedAt: 'asc' } },
         grantedDatasets: { orderBy: { createdAt: 'asc' } },
         changeRequests: {
@@ -322,6 +326,18 @@ export default async function PermitDetailPage({
               <Field label={t('crossBorder')} value={app?.isCrossBorder ? t('crossBorderYes', { country: app.dataProcessingCountry ?? '—' }) : null} />
               {!isDataRequest && <Field label={t('speName')} value={app?.speName} />}
               {!isDataRequest && <Field label={t('speTechnical')} value={app?.speTechnicalRequirements} wide />}
+              {!isDataRequest && (
+                <Field
+                  label={t('speOperator')}
+                  value={
+                    permit.speOperator
+                      ? permit.speOperator.speProvider
+                        ? t('speOperatorViaProvider', { operator: permit.speOperator.name, provider: permit.speOperator.speProvider.name })
+                        : permit.speOperator.name
+                      : null
+                  }
+                />
+              )}
               <Field label={t('optOut')} value={app?.usesOptOutException ? t('optOutApplicable') : null} />
               <Field label={t('optOutJustification')} value={app?.usesOptOutException ? app.optOutExceptionJustification : null} wide />
             </dl>
@@ -384,6 +400,8 @@ export default async function PermitDetailPage({
             canDecide={permit.isCurrent && ['DECISION_MAKER', 'ADMIN'].includes(currentUser.role)}
             currentUserId={currentUser.id}
             pendingVersion={pendingVersion}
+            isDataRequest={isDataRequest}
+            speOperators={speOperators}
           />
           <AuthorizedPersonsPanel
             permitId={permit.id}

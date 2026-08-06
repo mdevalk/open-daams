@@ -122,7 +122,6 @@
     "permitAcceptanceDeadline": "Reactietermijn pre-vergunning",
     "caseManagementTitle": "Aanvraagdetails",
     "applicant": "Aanvrager",
-    "status": "Status",
     "purpose": "Doel (Art. 53)",
     "legalBasis": "Juridische grondslag",
     "applicationType": "Aanvraagtype",
@@ -178,6 +177,8 @@
     "section7Title": "Sectie 7 — Combineren van data",
     "section8Title": "Sectie 8 — Verwerkingstermijn",
     "dataController": "Verwerkingsverantwoordelijke",
+    "environmentProviderName": "SPE-aanbieder (naam/website)",
+    "speTechnicalRequirements": "Technische vereisten voor de SPE",
     "transfersOutsideEuEea": "Doorgifte buiten EU/EER",
     "lawfulnessOfProcessing": "Rechtmatigheid van verwerking",
     "dataProcessingPersonnel": "Verwerkend personeel",
@@ -331,6 +332,8 @@
     "crossBorder": "Grensoverschrijdend (Art. 76)",
     "crossBorderYes": "Ja — {country}",
     "speName": "Toegewezen SPE",
+    "speOperator": "SPE-operator",
+    "speOperatorViaProvider": "{operator} (via {provider})",
     "speTechnical": "Technische kenmerken SPE",
     "optOut": "Opt-out uitzondering (Art. 71(4))",
     "optOutApplicable": "Van toepassing",
@@ -357,6 +360,8 @@
     "accept": "Accepteren",
     "decline": "Weigeren",
     "markNoResponse": "Markeer als niet gereageerd — aanvraag intrekken",
+    "recordAcceptance": "Acceptatie registreren (ontvangen via ander kanaal)",
+    "recordDecline": "Weigering registreren (ontvangen via ander kanaal)",
     "status": {
       "PENDING": "Wacht op reactie aanvrager",
       "ACCEPTED": "Geaccepteerd",
@@ -384,6 +389,8 @@
     "feePreparation": "Gegevensvoorbereiding",
     "feeSpeSetup": "SPE opstartkosten",
     "feeSpeUsage": "SPE gebruikskosten",
+    "speOperator": "SPE-operator",
+    "speOperatorNone": "— geen geselecteerd —",
     "feeAdditional": "Aanvullende diensten",
     "feeDataHolder": "Kosten gegevenshouder(s)",
     "paymentTerms": "Betalingsvoorwaarden",
@@ -478,6 +485,14 @@
     "saveError": "Opslaan mislukt",
     "unknownError": "Onbekende fout"
   },
+  "trustedDataHolder": {
+    "title": "Betrokkenheid vertrouwde gegevenshouder (D6.4 §12)",
+    "noneSelected": "— geen geselecteerd —",
+    "edit": "Bewerken",
+    "save": "Opslaan",
+    "saving": "Bezig...",
+    "cancel": "Annuleren"
+  },
   "common": {
     "none": "—",
     "beta": "beta"
@@ -489,6 +504,8 @@
     "newExpiry": "Nieuwe vervaldatum",
     "effectiveDate": "Ingangsdatum",
     "effectiveDateHint": "Leeg laten om direct toe te passen. Een toekomstige datum stelt activering uit totdat een medewerker deze voltooit (D6.4 R9.3.9).",
+    "speOperator": "SPE-operator",
+    "speOperatorUnchanged": "— ongewijzigd laten —",
     "pendingActivation": "Wijziging goedgekeurd — wacht op activering (v{version})",
     "pendingActivationDate": "Wordt van kracht op {date}",
     "activateNow": "Nu activeren",
@@ -508,6 +525,11 @@
     "AMENDMENT": "Wijziging",
     "RENEWAL": "Verlenging",
     "REVOCATION_APPEAL": "Bezwaar tegen intrekking"
+  },
+  "changeTypeHint": {
+    "AMENDMENT": "Wijzigt de voorwaarden van de huidige vergunning (bijv. reikwijdte, gegevens, SPE-configuratie, geautoriseerde personen). Resulteert in een nieuwe vergunningsversie — kan direct ingaan of op een toekomstige datum, om tijd te geven de SPE opnieuw te configureren (D6.4 R9.3.9).",
+    "RENEWAL": "Verlengt alleen de geldigheidsdatum van de vergunning — verder verandert er niets. Gaat direct in en is beperkt tot één verlenging per vergunning (D6.4 R9.4.5, R9.4.8).",
+    "REVOCATION_APPEAL": "Alleen beschikbaar nadat een vergunning is ingetrokken. Bij goedkeuring wordt de vergunning hersteld als een nieuwe versie, met onmiddellijke ingang (D6.4 R9.3.10, R9.4.9–9.4.13)."
   },
   "changeStatus": {
     "REQUESTED": "Aangevraagd",
@@ -585,7 +607,9 @@
     "delete": "Verwijderen",
     "save": "Opslaan",
     "cancel": "Annuleren",
-    "empty": "Nog geen gegevenshouders geregistreerd."
+    "empty": "Nog geen gegevenshouders geregistreerd.",
+    "trustedCheckbox": "Vertrouwde gegevenshouder",
+    "trustedBadge": "Vertrouwd"
   },
   "speOperators": {
     "name": "Naam",

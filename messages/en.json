@@ -122,7 +122,6 @@
     "permitAcceptanceDeadline": "Pre-permit acceptance deadline",
     "caseManagementTitle": "Application detail",
     "applicant": "Applicant",
-    "status": "Status",
     "purpose": "Purpose (Art. 53)",
     "legalBasis": "Legal basis",
     "applicationType": "Application type",
@@ -178,6 +177,8 @@
     "section7Title": "Section 7 — Data combination",
     "section8Title": "Section 8 — Processing timeline",
     "dataController": "Data controller",
+    "environmentProviderName": "SPE provider (name/website)",
+    "speTechnicalRequirements": "Technical requirements for the SPE",
     "transfersOutsideEuEea": "Transfers outside EU/EEA",
     "lawfulnessOfProcessing": "Lawfulness of processing",
     "dataProcessingPersonnel": "Processing personnel",
@@ -331,6 +332,8 @@
     "crossBorder": "Cross-border (Art. 76)",
     "crossBorderYes": "Yes — {country}",
     "speName": "Assigned SPE",
+    "speOperator": "SPE operator",
+    "speOperatorViaProvider": "{operator} (via {provider})",
     "speTechnical": "SPE technical characteristics",
     "optOut": "Opt-out exception (Art. 71(4))",
     "optOutApplicable": "Applicable",
@@ -357,6 +360,8 @@
     "accept": "Accept",
     "decline": "Decline",
     "markNoResponse": "Mark as no response — withdraw application",
+    "recordAcceptance": "Record acceptance (received via another channel)",
+    "recordDecline": "Record decline (received via another channel)",
     "status": {
       "PENDING": "Awaiting applicant response",
       "ACCEPTED": "Accepted",
@@ -384,6 +389,8 @@
     "feePreparation": "Data preparation",
     "feeSpeSetup": "SPE setup",
     "feeSpeUsage": "SPE usage",
+    "speOperator": "SPE operator",
+    "speOperatorNone": "— none selected —",
     "feeAdditional": "Additional services",
     "feeDataHolder": "Data holder fee(s)",
     "paymentTerms": "Payment terms",
@@ -478,6 +485,14 @@
     "saveError": "Save failed",
     "unknownError": "Unknown error"
   },
+  "trustedDataHolder": {
+    "title": "Trusted data holder involvement (D6.4 §12)",
+    "noneSelected": "— none selected —",
+    "edit": "Edit",
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel"
+  },
   "common": {
     "none": "—",
     "beta": "beta"
@@ -489,6 +504,8 @@
     "newExpiry": "New expiry date",
     "effectiveDate": "Effective date",
     "effectiveDateHint": "Leave blank to apply immediately. A future date defers activation until staff completes it (D6.4 R9.3.9).",
+    "speOperator": "SPE operator",
+    "speOperatorUnchanged": "— leave unchanged —",
     "pendingActivation": "Amendment approved — pending activation (v{version})",
     "pendingActivationDate": "Becomes effective {date}",
     "activateNow": "Activate now",
@@ -508,6 +525,11 @@
     "AMENDMENT": "Amendment",
     "RENEWAL": "Renewal",
     "REVOCATION_APPEAL": "Revocation appeal"
+  },
+  "changeTypeHint": {
+    "AMENDMENT": "Changes the conditions of the current permit (e.g. scope, data, SPE setup, authorised persons). Creates a new permit version — can take effect immediately or on a future date, to allow time to reconfigure the SPE (D6.4 R9.3.9).",
+    "RENEWAL": "Extends the permit's validity date only — nothing else about the permit changes. Takes effect immediately, and is limited to one renewal per permit (D6.4 R9.4.5, R9.4.8).",
+    "REVOCATION_APPEAL": "Only available after a permit has been revoked. If approved, reinstates the permit as a new version, with immediate effect (D6.4 R9.3.10, R9.4.9–9.4.13)."
   },
   "changeStatus": {
     "REQUESTED": "Requested",
@@ -585,7 +607,9 @@
     "delete": "Delete",
     "save": "Save",
     "cancel": "Cancel",
-    "empty": "No data holders registered yet."
+    "empty": "No data holders registered yet.",
+    "trustedCheckbox": "Trusted data holder",
+    "trustedBadge": "Trusted"
   },
   "speOperators": {
     "name": "Name",

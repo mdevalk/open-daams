@@ -17,7 +17,7 @@ export async function GET() {
 /**
  * POST /api/data-holders
  * Register a new data holder (Reference data masterdata, ADMIN-only).
- * body: { name, contactEmail?, contactPhone?, actingUserId }
+ * body: { name, contactEmail?, contactPhone?, isTrusted?, actingUserId }
  */
 export async function POST(req: NextRequest) {
   try {
@@ -35,6 +35,7 @@ export async function POST(req: NextRequest) {
         name: String(body.name).trim(),
         contactEmail: body.contactEmail || null,
         contactPhone: body.contactPhone || null,
+        isTrusted: Boolean(body.isTrusted),
       },
     });
 

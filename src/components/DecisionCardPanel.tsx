@@ -119,10 +119,15 @@ export function DecisionCardPanel({ application, currentUser }: Props) {
                 </button>
               </>
             )}
-            {canActOnBehalf && overdue && (
-              <button disabled={loading} onClick={() => respond('DECLINED')} className="text-xs text-gray-600 hover:underline">
-                {t('markNoResponse')}
-              </button>
+            {canActOnBehalf && (
+              <>
+                <button disabled={loading} onClick={() => respond('ACCEPTED')} className="text-xs font-medium text-emerald-700 hover:underline">
+                  {t('recordAcceptance')}
+                </button>
+                <button disabled={loading} onClick={() => respond('DECLINED')} className="text-xs font-medium text-red-700 hover:underline">
+                  {overdue ? t('markNoResponse') : t('recordDecline')}
+                </button>
+              </>
             )}
           </div>
         </>

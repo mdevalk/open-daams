@@ -41,8 +41,8 @@ export default async function ReferenceDataPage({
 
   const isAdmin = currentUser.role === 'ADMIN';
 
-  const tabConfig: Record<Tab, { label: string; apiBasePath: string; namespace: string; entities: unknown[]; relationOptions?: { id: string; name: string }[] }> = {
-    'data-holders': { label: t('tabDataHolders'), apiBasePath: '/api/data-holders', namespace: 'dataHolders', entities: dataHolders },
+  const tabConfig: Record<Tab, { label: string; apiBasePath: string; namespace: string; entities: unknown[]; relationOptions?: { id: string; name: string }[]; hasTrustedFlag?: boolean }> = {
+    'data-holders': { label: t('tabDataHolders'), apiBasePath: '/api/data-holders', namespace: 'dataHolders', entities: dataHolders, hasTrustedFlag: true },
     'spe-operators': {
       label: t('tabSpeOperators'),
       apiBasePath: '/api/spe-operators',
@@ -86,6 +86,7 @@ export default async function ReferenceDataPage({
             namespace={tabConfig[tab].namespace}
             entities={tabConfig[tab].entities as never}
             relationOptions={tabConfig[tab].relationOptions}
+            hasTrustedFlag={tabConfig[tab].hasTrustedFlag}
             isAdmin={isAdmin}
             currentUserId={currentUser.id}
           />

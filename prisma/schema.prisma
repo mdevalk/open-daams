@@ -267,6 +267,10 @@ model Application {
   caseHandlerId String?
   caseHandler   User?   @relation("CaseHandler", fields: [caseHandlerId], references: [id])
 
+  // TEHDAS2 D6.4 §12 / EHDS Art. 72 — trusted data holder selected for this application
+  trustedDataHolderId String?
+  trustedDataHolder   DataHolder? @relation(fields: [trustedDataHolderId], references: [id])
+
   // TEHDAS2 D6.3 Annex 5/6 §3 — applicant/contact person detail beyond what's
   // on the User/DataUser masterdata record
   applyingOnBehalfOfPublicSector      Boolean?
@@ -862,6 +866,16 @@ model DataPermit {
   dataHolderFee         Decimal? @db.Decimal(10, 2)
   paymentTerms          String?  @db.Text
 
+  // SPE operator selected by the HDAB for this permit version (issuance, or
+  // changed on an amendment) — carried forward unchanged on renewal/revocation-
+  // appeal approval, same as the fee fields above. The SPE *provider* is
+  // deliberately NOT stored here: it's derived via speOperator.speProvider,
+  // so it always reflects the operator's current provider in the reference-data
+  // registry rather than a value that could drift out of sync. Needed both for
+  // display and, eventually, for calling the provider's provisioning API.
+  speOperatorId String?
+  speOperator   SpeOperator? @relation(fields: [speOperatorId], references: [id])
+
   issuedAt  DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -1084,12 +1098,16 @@ model DataHolder {
   name         String   @unique
   contactEmail String?
   contactPhone String?
+  // TEHDAS2 D6.4 §12 / EHDS Art. 72 trusted data holder — eligible for
+  // referral/selection on an application.
+  isTrusted    Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  requestedDatasets  RequestedDataset[]
-  grantedDatasets    GrantedDataset[]
-  extractionRequests DataExtractionRequest[]
+  requestedDatasets      RequestedDataset[]
+  grantedDatasets        GrantedDataset[]
+  extractionRequests     DataExtractionRequest[]
+  trustedForApplications Application[]
 }
 
 // The party actually providing/hosting the SPE technology. Distinct from
@@ -1118,6 +1136,7 @@ model SpeOperator {
   speProvider   SpeProvider? @relation(fields: [speProviderId], references: [id])
 
   provisioningOrders SpeProvisioningOrder[]
+  permits            DataPermit[]
 }
 
 // The "data user" per EHDS Art. 61 — the organisation an applicant/case

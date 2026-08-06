@@ -122,7 +122,6 @@
     "permitAcceptanceDeadline": "Délai d'acceptation de la pré-autorisation",
     "caseManagementTitle": "Détails de la demande",
     "applicant": "Demandeur",
-    "status": "Statut",
     "purpose": "Finalité (Art. 53)",
     "legalBasis": "Base juridique",
     "applicationType": "Type de demande",
@@ -178,6 +177,8 @@
     "section7Title": "Section 7 — Combinaison de données",
     "section8Title": "Section 8 — Calendrier de traitement",
     "dataController": "Responsable du traitement",
+    "environmentProviderName": "Fournisseur du SPE (nom/site web)",
+    "speTechnicalRequirements": "Exigences techniques pour le SPE",
     "transfersOutsideEuEea": "Transferts hors UE/EEE",
     "lawfulnessOfProcessing": "Licéité du traitement",
     "dataProcessingPersonnel": "Personnel de traitement",
@@ -331,6 +332,8 @@
     "crossBorder": "Transfrontalier (art. 76)",
     "crossBorderYes": "Oui — {country}",
     "speName": "SPE attribué",
+    "speOperator": "Opérateur SPE",
+    "speOperatorViaProvider": "{operator} (via {provider})",
     "speTechnical": "Caractéristiques techniques SPE",
     "optOut": "Exception de retrait (art. 71(4))",
     "optOutApplicable": "Applicable",
@@ -357,6 +360,8 @@
     "accept": "Accepter",
     "decline": "Refuser",
     "markNoResponse": "Marquer comme sans réponse — retirer la demande",
+    "recordAcceptance": "Enregistrer l'acceptation (reçue par un autre canal)",
+    "recordDecline": "Enregistrer le refus (reçu par un autre canal)",
     "status": {
       "PENDING": "En attente de réponse du demandeur",
       "ACCEPTED": "Accepté",
@@ -384,6 +389,8 @@
     "feePreparation": "Préparation des données",
     "feeSpeSetup": "Mise en place SPE",
     "feeSpeUsage": "Utilisation SPE",
+    "speOperator": "Opérateur SPE",
+    "speOperatorNone": "— aucun sélectionné —",
     "feeAdditional": "Services supplémentaires",
     "feeDataHolder": "Frais détenteur(s) de données",
     "paymentTerms": "Conditions de paiement",
@@ -478,6 +485,14 @@
     "saveError": "Échec de l'enregistrement",
     "unknownError": "Erreur inconnue"
   },
+  "trustedDataHolder": {
+    "title": "Implication d'un détenteur de données de confiance (D6.4 §12)",
+    "noneSelected": "— aucun sélectionné —",
+    "edit": "Modifier",
+    "save": "Enregistrer",
+    "saving": "En cours...",
+    "cancel": "Annuler"
+  },
   "common": {
     "none": "—",
     "beta": "beta"
@@ -489,6 +504,8 @@
     "newExpiry": "Nouvelle date d'expiration",
     "effectiveDate": "Date d'entrée en vigueur",
     "effectiveDateHint": "Laisser vide pour une application immédiate. Une date future reporte l'activation jusqu'à ce qu'un membre du personnel la complète (D6.4 R9.3.9).",
+    "speOperator": "Opérateur SPE",
+    "speOperatorUnchanged": "— laisser inchangé —",
     "pendingActivation": "Modification approuvée — en attente d'activation (v{version})",
     "pendingActivationDate": "Entre en vigueur le {date}",
     "activateNow": "Activer maintenant",
@@ -508,6 +525,11 @@
     "AMENDMENT": "Modification",
     "RENEWAL": "Renouvellement",
     "REVOCATION_APPEAL": "Recours contre la révocation"
+  },
+  "changeTypeHint": {
+    "AMENDMENT": "Modifie les conditions de l'autorisation actuelle (par ex. portée, données, configuration SPE, personnes autorisées). Génère une nouvelle version de l'autorisation — peut prendre effet immédiatement ou à une date future, afin de laisser le temps de reconfigurer le SPE (D6.4 R9.3.9).",
+    "RENEWAL": "Prolonge uniquement la date de validité de l'autorisation — rien d'autre ne change. Prend effet immédiatement et est limité à un seul renouvellement par autorisation (D6.4 R9.4.5, R9.4.8).",
+    "REVOCATION_APPEAL": "Disponible uniquement après la révocation d'une autorisation. En cas d'approbation, l'autorisation est rétablie sous une nouvelle version, avec effet immédiat (D6.4 R9.3.10, R9.4.9–9.4.13)."
   },
   "changeStatus": {
     "REQUESTED": "Demandé",
@@ -585,7 +607,9 @@
     "delete": "Supprimer",
     "save": "Enregistrer",
     "cancel": "Annuler",
-    "empty": "Aucun détenteur de données enregistré pour le moment."
+    "empty": "Aucun détenteur de données enregistré pour le moment.",
+    "trustedCheckbox": "Détenteur de données de confiance",
+    "trustedBadge": "De confiance"
   },
   "speOperators": {
     "name": "Nom",

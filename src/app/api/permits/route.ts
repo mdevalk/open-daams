@@ -38,7 +38,7 @@ function toDecimalOrNull(v: unknown): number | null {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    // body: { applicationId, validFrom, validUntil, issuedByUserId }
+    // body: { applicationId, validFrom, validUntil, issuedByUserId, speOperatorId? }
 
     const auth = await requireRole(body.issuedByUserId, ['DECISION_MAKER', 'ADMIN']);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
@@ -108,6 +108,7 @@ export async function POST(req: NextRequest) {
             additionalServicesFee: toDecimalOrNull(body.additionalServicesFee),
             dataHolderFee: toDecimalOrNull(body.dataHolderFee),
             paymentTerms: body.paymentTerms || null,
+            speOperatorId: body.speOperatorId || null,
           },
         });
         break;

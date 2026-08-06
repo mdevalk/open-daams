@@ -13,6 +13,7 @@ import { EthicalReviewPanel } from '@/components/EthicalReviewPanel';
 import { AppealsPanel } from '@/components/AppealsPanel';
 import { CompletenessCheckPanel } from '@/components/CompletenessCheckPanel';
 import { ExtractionRequestsPanel } from '@/components/ExtractionRequestsPanel';
+import { TrustedDataHolderPanel } from '@/components/TrustedDataHolderPanel';
 import { UserSwitcher } from '@/components/UserSwitcher';
 import { StudyCohortExplorer } from '@/components/StudyCohortExplorer';
 import type { CompletenessItem } from '@/app/api/applications/[id]/completeness-check/route';
@@ -44,7 +45,7 @@ export default async function ApplicationDetailPage({
 
   const t = await getTranslations({ locale, namespace: 'applicationDetail' });
 
-  const [rawApplication, users, dataHolders] = await Promise.all([
+  const [rawApplication, users, dataHolders, speOperators] = await Promise.all([
     prisma.application.findUnique({
       where: { id },
       include: {
@@ -62,6 +63,7 @@ export default async function ApplicationDetailPage({
         documents: { orderBy: { uploadedAt: 'desc' } },
         appeals: { orderBy: { submittedAt: 'desc' } },
         completenessCheck: true,
+        trustedDataHolder: { select: { name: true } },
         extractionRequests: {
           include: { dataHolder: { select: { name: true } } },
           orderBy: { requestedAt: 'desc' },
@@ -80,6 +82,7 @@ export default async function ApplicationDetailPage({
     }),
     prisma.user.findMany({ orderBy: { name: 'asc' } }),
     prisma.dataHolder.findMany({ orderBy: { name: 'asc' } }),
+    prisma.speOperator.findMany({ orderBy: { name: 'asc' } }),
   ]);
 
   if (!rawApplication) notFound();
@@ -89,6 +92,7 @@ export default async function ApplicationDetailPage({
   const application = serializePrisma(rawApplication);
   // One current permit version per application (D6.4 §9.3 version chain).
   const currentPermit = application.dataPermits[0] ?? null;
+  const trustedDataHolders = dataHolders.filter((dh) => dh.isTrusted);
 
   const attachmentHref = (a: { id: string }) => `/api/attachments/${a.id}`;
 
@@ -205,12 +209,6 @@ export default async function ApplicationDetailPage({
                 <dt className="text-gray-500">{t('applicationType')}</dt>
                 <dd className="font-medium">
                   {application.type === 'DATA_ACCESS_APPLICATION' ? t('typeDataAccess') : t('typeDataRequest')}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-gray-500">{t('status')}</dt>
-                <dd className="font-medium">
-                  <StatusBadge status={application.status} decisionOutcome={application.decisionOutcome} />
                 </dd>
               </div>
               <div>
@@ -756,6 +754,13 @@ export default async function ApplicationDetailPage({
                   <dd className="font-medium">{application.dataController}</dd>
                 </div>
               )}
+              <Field label={t('environmentProviderName')} value={application.environmentProviderName} />
+              {application.speTechnicalRequirements && (
+                <div className="sm:col-span-2">
+                  <dt className="text-gray-500 text-xs uppercase tracking-wide mb-1">{t('speTechnicalRequirements')}</dt>
+                  <dd className="text-gray-800 whitespace-pre-wrap">{application.speTechnicalRequirements}</dd>
+                </div>
+              )}
               <Field label={t('dataAccessLaterDate')} value={application.dataAccessLaterDate && formatDate(application.dataAccessLaterDate)} />
               <Field label={t('dataAccessPeriodInfo')} value={application.dataAccessPeriodInfo} />
               <Field label={t('dataAccessUpdateFrequency')} value={application.dataAccessUpdateFrequency} />
@@ -893,10 +898,19 @@ export default async function ApplicationDetailPage({
         {/* Sidebar */}
         <div className="space-y-4">
           <UserSwitcher users={users} currentUserId={currentUser.id} />
+          <TrustedDataHolderPanel
+            application={application}
+            dataHolders={trustedDataHolders}
+            currentUser={currentUser}
+          />
           <TransitionPanel application={application} currentUser={currentUser} />
           <FeeEstimatePanel application={application} currentUser={currentUser} />
           <DecisionCardPanel application={application} currentUser={currentUser} />
-          <PermitPanel application={{ ...application, dataPermit: currentPermit }} currentUser={currentUser} />
+          <PermitPanel
+            application={{ ...application, dataPermit: currentPermit }}
+            currentUser={currentUser}
+            speOperators={speOperators}
+          />
           {application.decisionOutcome === 'POSITIVE' && (
             <ExtractionRequestsPanel
               applicationId={application.id}

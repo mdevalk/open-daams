@@ -17,7 +17,11 @@ import { regenerateStoredPermitPdf } from '@/lib/permit-pdf-store';
  * (with effectiveAt set) and the old version keeps operating until a staff
  * member activates it via POST /api/permits/[id]/activate once the date is
  * due. Renewals and revocation appeals always stay immediate, per spec.
- * body: { decision: 'APPROVED' | 'REJECTED', actingUserId, comment?, newValidUntil?, effectiveDate? }
+ * body: { decision: 'APPROVED' | 'REJECTED', actingUserId, comment?, newValidUntil?, effectiveDate?, speOperatorId? }
+ *
+ * speOperatorId carries forward from the current version onto the new one by
+ * default (same as the fee fields) — pass it explicitly (a real id, or ''/null
+ * to clear it) only to change it, which is only meaningful for AMENDMENT.
  */
 export async function PATCH(
   req: NextRequest,
@@ -77,6 +81,8 @@ export async function PATCH(
 
     const newVersion = permit.version + 1;
     const newValidUntilResolved = newValidUntil ?? permit.validUntil;
+    const speOperatorId =
+      request.type === 'AMENDMENT' && 'speOperatorId' in body ? body.speOperatorId || null : permit.speOperatorId;
     const { signature, signedAt, signingKeyId } = await signPermit({
       permitNumber: permit.permitNumber,
       version: newVersion,
@@ -119,6 +125,7 @@ export async function PATCH(
           additionalServicesFee: permit.additionalServicesFee,
           dataHolderFee: permit.dataHolderFee,
           paymentTerms: permit.paymentTerms,
+          speOperatorId,
         },
       });
 

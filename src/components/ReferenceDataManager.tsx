@@ -12,6 +12,7 @@ type Entity = {
   contactPhone: string | null;
   speProvider?: { name: string } | null;
   speProviderId?: string | null;
+  isTrusted?: boolean;
 };
 
 type Props = {
@@ -19,6 +20,7 @@ type Props = {
   namespace: string;
   entities: Entity[];
   relationOptions?: { id: string; name: string }[];
+  hasTrustedFlag?: boolean;
   isAdmin: boolean;
   currentUserId: string;
 };
@@ -26,7 +28,7 @@ type Props = {
 const inputCls =
   'w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]';
 
-export function ReferenceDataManager({ apiBasePath, namespace, entities, relationOptions, isAdmin, currentUserId }: Props) {
+export function ReferenceDataManager({ apiBasePath, namespace, entities, relationOptions, hasTrustedFlag, isAdmin, currentUserId }: Props) {
   const router = useRouter();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const t = useTranslations(namespace as any);
@@ -39,12 +41,14 @@ export function ReferenceDataManager({ apiBasePath, namespace, entities, relatio
   const [editEmail, setEditEmail] = useState('');
   const [editPhone, setEditPhone] = useState('');
   const [editProviderId, setEditProviderId] = useState('');
+  const [editTrusted, setEditTrusted] = useState(false);
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [newName, setNewName] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [newPhone, setNewPhone] = useState('');
   const [newProviderId, setNewProviderId] = useState('');
+  const [newTrusted, setNewTrusted] = useState(false);
 
   function startEdit(entity: Entity) {
     setEditingId(entity.id);
@@ -52,6 +56,7 @@ export function ReferenceDataManager({ apiBasePath, namespace, entities, relatio
     setEditEmail(entity.contactEmail ?? '');
     setEditPhone(entity.contactPhone ?? '');
     setEditProviderId(entity.speProviderId ?? '');
+    setEditTrusted(entity.isTrusted ?? false);
     setError(null);
   }
 
@@ -67,6 +72,7 @@ export function ReferenceDataManager({ apiBasePath, namespace, entities, relatio
           contactEmail: editEmail || null,
           contactPhone: editPhone || null,
           ...(relationOptions ? { speProviderId: editProviderId || null } : {}),
+          ...(hasTrustedFlag ? { isTrusted: editTrusted } : {}),
           actingUserId: currentUserId,
         }),
       });
@@ -110,6 +116,7 @@ export function ReferenceDataManager({ apiBasePath, namespace, entities, relatio
           contactEmail: newEmail || null,
           contactPhone: newPhone || null,
           ...(relationOptions ? { speProviderId: newProviderId || null } : {}),
+          ...(hasTrustedFlag ? { isTrusted: newTrusted } : {}),
           actingUserId: currentUserId,
         }),
       });
@@ -118,6 +125,7 @@ export function ReferenceDataManager({ apiBasePath, namespace, entities, relatio
       setNewEmail('');
       setNewPhone('');
       setNewProviderId('');
+      setNewTrusted(false);
       setShowAddForm(false);
       router.refresh();
     } catch (e: unknown) {
@@ -153,6 +161,12 @@ export function ReferenceDataManager({ apiBasePath, namespace, entities, relatio
                     ))}
                   </select>
                 )}
+                {hasTrustedFlag && (
+                  <label className="flex items-center gap-2 text-xs text-gray-700">
+                    <input type="checkbox" checked={editTrusted} onChange={(e) => setEditTrusted(e.target.checked)} />
+                    {t('trustedCheckbox')}
+                  </label>
+                )}
                 <div className="flex gap-2">
                   <button disabled={loading || !editName.trim()} onClick={() => saveEdit(entity.id)}
                     className="rounded px-3 py-1.5 text-xs font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50">
@@ -167,7 +181,14 @@ export function ReferenceDataManager({ apiBasePath, namespace, entities, relatio
             ) : (
               <div className="flex items-start justify-between gap-3">
                 <div className="text-sm">
-                  <p className="font-medium text-gray-900">{entity.name}</p>
+                  <p className="font-medium text-gray-900">
+                    {entity.name}
+                    {hasTrustedFlag && entity.isTrusted && (
+                      <span className="ml-2 text-xs font-medium px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700">
+                        {t('trustedBadge')}
+                      </span>
+                    )}
+                  </p>
                   {(entity.contactEmail || entity.contactPhone) && (
                     <p className="text-xs text-gray-500">
                       {[entity.contactEmail, entity.contactPhone].filter(Boolean).join(' · ')}
@@ -204,6 +225,12 @@ export function ReferenceDataManager({ apiBasePath, namespace, entities, relatio
                   <option key={opt.id} value={opt.id}>{opt.name}</option>
                 ))}
               </select>
+            )}
+            {hasTrustedFlag && (
+              <label className="flex items-center gap-2 text-xs text-gray-700">
+                <input type="checkbox" checked={newTrusted} onChange={(e) => setNewTrusted(e.target.checked)} />
+                {t('trustedCheckbox')}
+              </label>
             )}
             <div className="flex gap-2">
               <button disabled={loading || !newName.trim()} onClick={submitNew}

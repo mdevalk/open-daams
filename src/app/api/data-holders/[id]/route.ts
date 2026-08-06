@@ -6,7 +6,7 @@ import { requireRole } from '@/lib/authz';
 /**
  * PATCH /api/data-holders/[id]
  * Update a data holder's masterdata (ADMIN-only).
- * body: { name?, contactEmail?, contactPhone?, actingUserId }
+ * body: { name?, contactEmail?, contactPhone?, isTrusted?, actingUserId }
  */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -22,6 +22,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         ...(body.name !== undefined ? { name: String(body.name).trim() } : {}),
         ...(body.contactEmail !== undefined ? { contactEmail: body.contactEmail || null } : {}),
         ...(body.contactPhone !== undefined ? { contactPhone: body.contactPhone || null } : {}),
+        ...(body.isTrusted !== undefined ? { isTrusted: Boolean(body.isTrusted) } : {}),
       },
     });
 

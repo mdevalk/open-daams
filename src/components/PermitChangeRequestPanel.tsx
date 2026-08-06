@@ -35,6 +35,8 @@ type Props = {
   canDecide: boolean;
   currentUserId: string;
   pendingVersion?: PendingVersion | null;
+  isDataRequest: boolean;
+  speOperators: { id: string; name: string }[];
 };
 
 const inputCls =
@@ -48,11 +50,14 @@ export function PermitChangeRequestPanel({
   canDecide,
   currentUserId,
   pendingVersion,
+  isDataRequest,
+  speOperators,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const t = useTranslations('permitChanges');
   const tt = useTranslations('changeType');
+  const tth = useTranslations('changeTypeHint');
   const tstat = useTranslations('changeStatus');
   const terr = useTranslations('errors');
   const [loading, setLoading] = useState(false);
@@ -86,6 +91,7 @@ export function PermitChangeRequestPanel({
   const [decisionComment, setDecisionComment] = useState('');
   const [newValidUntil, setNewValidUntil] = useState('');
   const [effectiveDate, setEffectiveDate] = useState('');
+  const [speOperatorId, setSpeOperatorId] = useState('');
 
   async function submitRequest() {
     if (!newType) return;
@@ -123,6 +129,8 @@ export function PermitChangeRequestPanel({
             decision === 'APPROVED' && request.type === 'RENEWAL' ? newValidUntil : undefined,
           effectiveDate:
             decision === 'APPROVED' && request.type === 'AMENDMENT' ? effectiveDate || undefined : undefined,
+          speOperatorId:
+            decision === 'APPROVED' && request.type === 'AMENDMENT' ? speOperatorId || undefined : undefined,
         }),
       });
       if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
@@ -131,6 +139,7 @@ export function PermitChangeRequestPanel({
       setDecisionComment('');
       setNewValidUntil('');
       setEffectiveDate('');
+      setSpeOperatorId('');
       // Immediate approval issues a new CURRENT permit version — navigate to
       // it. A deferred (pending-activation) approval stays on this page,
       // since the old version is still the operative one.
@@ -178,7 +187,7 @@ export function PermitChangeRequestPanel({
       {requests.map((r) => (
         <div key={r.id} className="rounded border border-gray-200 p-3 text-sm">
           <div className="flex items-center justify-between">
-            <span className="font-medium">{tt(r.type)}</span>
+            <span className="font-medium" title={tth(r.type)}>{tt(r.type)}</span>
             <span className={`text-xs font-medium px-2 py-0.5 rounded ${CHANGE_STATUS_COLORS[r.status]}`}>
               {tstat(r.status)}
             </span>
@@ -209,6 +218,17 @@ export function PermitChangeRequestPanel({
                       <label className="block text-xs font-medium text-gray-700 mb-1">{t('effectiveDate')}</label>
                       <input type="date" value={effectiveDate} onChange={(e) => setEffectiveDate(e.target.value)} className={inputCls} />
                       <p className="text-xs text-gray-400 mt-1">{t('effectiveDateHint')}</p>
+                    </div>
+                  )}
+                  {r.type === 'AMENDMENT' && !isDataRequest && (
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">{t('speOperator')}</label>
+                      <select value={speOperatorId} onChange={(e) => setSpeOperatorId(e.target.value)} className={inputCls}>
+                        <option value="">{t('speOperatorUnchanged')}</option>
+                        {speOperators.map((op) => (
+                          <option key={op.id} value={op.id}>{op.name}</option>
+                        ))}
+                      </select>
                     </div>
                   )}
                   <textarea
@@ -249,6 +269,7 @@ export function PermitChangeRequestPanel({
                     setDecisionComment('');
                     setNewValidUntil('');
                     setEffectiveDate('');
+                    setSpeOperatorId('');
                   }}
                   className="text-xs text-[#01689b] hover:underline"
                 >
@@ -268,9 +289,10 @@ export function PermitChangeRequestPanel({
           <select value={newType} onChange={(e) => setNewType(e.target.value as PermitChangeType)} className={inputCls}>
             <option value="">{t('selectType')}</option>
             {available.map((ct) => (
-              <option key={ct} value={ct}>{tt(ct)}</option>
+              <option key={ct} value={ct} title={tth(ct)}>{tt(ct)}</option>
             ))}
           </select>
+          {newType && <p className="text-xs text-gray-500">{tth(newType)}</p>}
           <textarea
             rows={2}
             value={justification}
