@@ -10,14 +10,14 @@ const MANAGE_ROLES = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'] as const;
  * POST /api/permits/[id]/spe-provisioning
  * Request SPE provisioning for a granted data-access permit
  * (EHDS Art. 73 / TEHDAS2 D6.4 §9). Only one order per permit.
- * body: { userId }
+ * body: { actingUserId }
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const body = await req.json();
 
-    const authz = await requireRole(body.userId, [...MANAGE_ROLES]);
+    const authz = await requireRole(body.actingUserId, [...MANAGE_ROLES]);
     if (!authz.ok) return NextResponse.json({ error: authz.error }, { status: authz.status });
 
     const permit = await prisma.dataPermit.findUnique({
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
  * Transition the SPE provisioning order. speOperatorId may be set/changed
  * alongside any transition (e.g. assigning the operator at activation) —
  * it's independent of the status machine itself.
- * body: { userId, toStatus, environmentReference?, speOperatorId?, comment? }
+ * body: { actingUserId, toStatus, environmentReference?, speOperatorId?, comment? }
  */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -70,7 +70,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const order = await prisma.speProvisioningOrder.findUnique({ where: { permitId: id } });
     if (!order) return NextResponse.json({ error: 'No SPE provisioning order found for this permit' }, { status: 404 });
 
-    const authz = await requireRole(body.userId, [...MANAGE_ROLES]);
+    const authz = await requireRole(body.actingUserId, [...MANAGE_ROLES]);
     if (!authz.ok) return NextResponse.json({ error: authz.error }, { status: authz.status });
 
     const toStatus = body.toStatus as SpeProvisioningStatus;

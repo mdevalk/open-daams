@@ -3,6 +3,7 @@ import { DataPermitStatus } from '@prisma/client';
 import { APP_NAME } from './branding';
 import { formatPermitId } from './permit';
 import { buildDigitalPermitDocument, groupDatasetsByHolder } from './permit-signing';
+import { formatDateNumeric } from './utils';
 
 // Layout follows TEHDAS2 D6.3 "Guideline for Health Data Access Bodies on the
 // procedures and formats for data access", Annex 9 - Data permit template
@@ -58,10 +59,7 @@ function fmtMoney(v: unknown, currency: string): string | null {
   return new Intl.NumberFormat('nl-NL', { style: 'currency', currency }).format(n);
 }
 
-export function fmt(d: Date | null | undefined): string {
-  if (!d) return '—';
-  return new Date(d).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' });
-}
+export const fmt = formatDateNumeric;
 
 const STATUS_NL: Record<string, string> = {
   GRANTED: 'Verleend',

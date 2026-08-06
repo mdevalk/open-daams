@@ -4,13 +4,9 @@ import { PrintTrigger } from '@/components/PrintTrigger';
 import { getTranslations } from 'next-intl/server';
 import { formatPermitId } from '@/lib/permit';
 import { APP_NAME } from '@/lib/branding';
+import { formatDateNumeric as fmt } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
-
-function fmt(d: Date | null | undefined): string {
-  if (!d) return '—';
-  return new Date(d).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' });
-}
 
 export default async function PermitPrintPage({
   params,

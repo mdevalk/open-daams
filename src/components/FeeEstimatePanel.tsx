@@ -74,7 +74,7 @@ export function FeeEstimatePanel({ application, currentUser }: Props) {
       const res = await fetch(`/api/applications/${application.id}/provisional-invoice`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: currentUser.id }),
+        body: JSON.stringify({ actingUserId: currentUser.id }),
       });
       if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
       router.refresh();
@@ -92,7 +92,7 @@ export function FeeEstimatePanel({ application, currentUser }: Props) {
       const res = await fetch(`/api/invoices/${invoiceId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: currentUser.id, action }),
+        body: JSON.stringify({ actingUserId: currentUser.id, action }),
       });
       if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
       router.refresh();

@@ -59,7 +59,7 @@ export function InvoicePanel({
       const res = await fetch(`/api/permits/${permitId}/invoices`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: currentUserId }),
+        body: JSON.stringify({ actingUserId: currentUserId }),
       });
       if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
       router.refresh();
@@ -77,7 +77,7 @@ export function InvoicePanel({
       const res = await fetch(`/api/permits/${permitId}/invoices/${invoiceId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: currentUserId, action }),
+        body: JSON.stringify({ actingUserId: currentUserId, action }),
       });
       if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
       router.refresh();

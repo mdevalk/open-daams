@@ -31,7 +31,7 @@ export function TransitionPanel({ application, currentUser }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           toStatus: selected.to,
-          userId: currentUser.id,
+          actingUserId: currentUser.id,
           comment,
           decisionOutcome: selected.requiresDecisionOutcome ?? null,
         }),

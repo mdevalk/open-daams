@@ -66,7 +66,7 @@ export function PermitChangeRequestPanel({
       const res = await fetch(`/api/permits/${pendingVersion.id}/activate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: currentUserId }),
+        body: JSON.stringify({ actingUserId: currentUserId }),
       });
       if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
       router.push(pathname.replace(/[^/]+$/, pendingVersion.id));
@@ -117,7 +117,7 @@ export function PermitChangeRequestPanel({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           decision,
-          userId: currentUserId,
+          actingUserId: currentUserId,
           comment: decisionComment || null,
           newValidUntil:
             decision === 'APPROVED' && request.type === 'RENEWAL' ? newValidUntil : undefined,

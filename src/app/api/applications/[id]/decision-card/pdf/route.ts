@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { fileResponse } from '@/lib/http';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -19,23 +20,25 @@ export async function GET(
 ) {
   const { id } = await params;
 
-  const application = await prisma.application.findUnique({
-    where: { id },
-    select: { decisionCardPdf: true, decisionId: true },
-  });
+  try {
+    const application = await prisma.application.findUnique({
+      where: { id },
+      select: { decisionCardPdf: true, decisionId: true },
+    });
 
-  if (!application || !application.decisionCardPdf || !application.decisionId) {
-    return new NextResponse('Not found', { status: 404 });
+    if (!application || !application.decisionCardPdf || !application.decisionId) {
+      return new NextResponse('Not found', { status: 404 });
+    }
+
+    const filename = `besluit-${application.decisionId.replace(/\//g, '-')}.pdf`;
+
+    return fileResponse(Buffer.from(application.decisionCardPdf), filename, {
+      mimeType: 'application/pdf',
+      cacheControl: 'no-store',
+    });
+  } catch (e) {
+    console.error(`Failed to serve decision-card PDF for ${id}`, e);
+    const message = e instanceof Error ? e.message : 'Failed to serve decision-card PDF';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-
-  const filename = `besluit-${application.decisionId.replace(/\//g, '-')}.pdf`;
-
-  return new NextResponse(Buffer.from(application.decisionCardPdf), {
-    status: 200,
-    headers: {
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="${filename}"`,
-      'Cache-Control': 'no-store',
-    },
-  });
 }

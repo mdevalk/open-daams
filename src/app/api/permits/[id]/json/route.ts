@@ -14,26 +14,32 @@ export const runtime = 'nodejs';
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const permit = await prisma.dataPermit.findUnique({
-    where: { id },
-    include: { grantedDatasets: { orderBy: { createdAt: 'asc' } } },
-  });
-  if (!permit) {
-    return NextResponse.json({ error: 'Permit not found' }, { status: 404 });
+  try {
+    const permit = await prisma.dataPermit.findUnique({
+      where: { id },
+      include: { grantedDatasets: { orderBy: { createdAt: 'asc' } } },
+    });
+    if (!permit) {
+      return NextResponse.json({ error: 'Permit not found' }, { status: 404 });
+    }
+
+    const document = buildDigitalPermitDocument({
+      ...permit,
+      grantedDatasets: groupDatasetsByHolder(permit.grantedDatasets),
+    });
+    const filename = `${document.permitId.replace(/\//g, '-')}.json`;
+
+    return new NextResponse(JSON.stringify(document, null, 2), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Disposition': `attachment; filename="${filename}"`,
+        'Cache-Control': 'no-store',
+      },
+    });
+  } catch (e) {
+    console.error(`Failed to serve digital permit document for ${id}`, e);
+    const message = e instanceof Error ? e.message : 'Failed to serve digital permit document';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-
-  const document = buildDigitalPermitDocument({
-    ...permit,
-    grantedDatasets: groupDatasetsByHolder(permit.grantedDatasets),
-  });
-  const filename = `${document.permitId.replace(/\//g, '-')}.json`;
-
-  return new NextResponse(JSON.stringify(document, null, 2), {
-    status: 200,
-    headers: {
-      'Content-Type': 'application/json',
-      'Content-Disposition': `attachment; filename="${filename}"`,
-      'Cache-Control': 'no-store',
-    },
-  });
 }

@@ -11,6 +11,14 @@ export function formatDate(date: Date | string | null | undefined): string {
   );
 }
 
+// Numeric DD-MM-YYYY form, used for formal documents (the permit PDF and its
+// print page) — deliberately distinct from formatDate's short-month form used
+// for casual in-app display.
+export function formatDateNumeric(date: Date | string | null | undefined): string {
+  if (!date) return '—';
+  return new Date(date).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
 export function formatDateTime(date: Date | string | null | undefined): string {
   if (!date) return '—';
   return new Intl.DateTimeFormat('nl-NL', {

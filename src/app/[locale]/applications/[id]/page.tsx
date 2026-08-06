@@ -124,6 +124,16 @@ export default async function ApplicationDetailPage({
 
   if (!currentUser) notFound();
 
+  // Filter on the application object itself, not just at the NotesList call
+  // site — application is passed whole to several other client components
+  // below, and every prop given to a client component is serialised into
+  // the page, so a separate filtered variable used in just one place would
+  // still leak internal notes via any other component receiving `application`.
+  const STAFF_ROLES = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN', 'DATA_HOLDER'];
+  if (!STAFF_ROLES.includes(currentUser.role)) {
+    application.notes = application.notes.filter((n) => !n.isInternal);
+  }
+
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
@@ -865,10 +875,7 @@ export default async function ApplicationDetailPage({
             </section>
           )}
 
-          <EthicalReviewPanel
-            application={application}
-            canManage={['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(currentUser.role)}
-          />
+          <EthicalReviewPanel application={application} currentUser={currentUser} />
 
           {application.decisionSummary && (
             <section className="rounded-xl border border-gray-200 bg-white p-5">

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { regenerateStoredPermitPdf } from '@/lib/permit-pdf-store';
+import { fileResponse } from '@/lib/http';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -18,31 +19,30 @@ export async function GET(
 ) {
   const { id } = await params;
 
-  let permit = await prisma.dataPermit.findUnique({
-    where: { id },
-    select: { pdf: true, permitNumber: true, version: true },
-  });
-
-  if (!permit) {
-    return new NextResponse('Not found', { status: 404 });
-  }
-
-  if (!permit.pdf) {
-    await regenerateStoredPermitPdf(id, prisma);
-    permit = await prisma.dataPermit.findUniqueOrThrow({
+  try {
+    let permit = await prisma.dataPermit.findUnique({
       where: { id },
       select: { pdf: true, permitNumber: true, version: true },
     });
+
+    if (!permit) {
+      return new NextResponse('Not found', { status: 404 });
+    }
+
+    if (!permit.pdf) {
+      await regenerateStoredPermitPdf(id, prisma);
+      permit = await prisma.dataPermit.findUniqueOrThrow({
+        where: { id },
+        select: { pdf: true, permitNumber: true, version: true },
+      });
+    }
+
+    const filename = `vergunning-${permit.permitNumber.replace(/\//g, '-')}-v${permit.version}.pdf`;
+
+    return fileResponse(Buffer.from(permit.pdf!), filename, { mimeType: 'application/pdf', cacheControl: 'no-store' });
+  } catch (e) {
+    console.error(`Failed to serve permit PDF for ${id}`, e);
+    const message = e instanceof Error ? e.message : 'Failed to serve permit PDF';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-
-  const filename = `vergunning-${permit.permitNumber.replace(/\//g, '-')}-v${permit.version}.pdf`;
-
-  return new NextResponse(Buffer.from(permit.pdf!), {
-    status: 200,
-    headers: {
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="${filename}"`,
-      'Cache-Control': 'no-store',
-    },
-  });
 }

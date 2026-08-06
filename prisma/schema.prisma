@@ -507,6 +507,11 @@ model Application {
   attachments        Attachment[]
   relatedDataPermits RelatedDataPermit[]
   tabulationPlans    TabulationPlan[]
+
+  @@index([status])
+  @@index([decisionDeadline])
+  @@index([additionalInfoDeadline])
+  @@index([permitAcceptanceDeadline])
 }
 
 // TEHDAS2 D6.3 Annex 5 §6.1-6.3 — one row per country x role (cohort, its
@@ -883,6 +888,8 @@ model DataPermit {
   grantedDatasets   GrantedDataset[]
 
   @@unique([permitNumber, version])
+  @@index([validUntil])
+  @@index([effectiveAt])
 }
 
 // EHDS Art. 73 / TEHDAS2 D6.4 §13 — provisioning of the secure processing
@@ -979,6 +986,8 @@ model Invoice {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([dueAt])
 }
 
 // Annex 9 §6.8 — persons entitled to process the data granted under this

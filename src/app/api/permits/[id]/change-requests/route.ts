@@ -28,7 +28,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       );
     }
     if (!body.justification || !String(body.justification).trim()) {
-      return NextResponse.json({ error: 'A justification is required' }, { status: 400 });
+      return NextResponse.json({ error: 'A justification is required' }, { status: 422 });
     }
 
     const created = await prisma.permitChangeRequest.create({

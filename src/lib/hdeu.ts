@@ -766,18 +766,21 @@ export async function createApplicationFromHdeuPayload(
   if (p.requestedDatasets.length > 0) {
     // Same find-or-create treatment as the applicant's DataUser above —
     // incoming data holder names are free text from another HDAB, not
-    // guaranteed to already exist in our registry.
-    const dataHolderIdsByName = new Map<string, string>();
-    for (const g of p.requestedDatasets) {
-      if (!dataHolderIdsByName.has(g.dataHolderName)) {
-        const dh = await prisma.dataHolder.upsert({
-          where: { name: g.dataHolderName },
-          update: {},
-          create: { name: g.dataHolderName },
-        });
-        dataHolderIdsByName.set(g.dataHolderName, dh.id);
-      }
+    // guaranteed to already exist in our registry. Batched (pre-fetch +
+    // create-missing) rather than one upsert per distinct name, mirroring
+    // the same pattern in applications/route.ts's POST handler.
+    const distinctNames = [...new Set(p.requestedDatasets.map((g) => g.dataHolderName))];
+    const existingDataHolders = await prisma.dataHolder.findMany({ where: { name: { in: distinctNames } } });
+    const missingNames = distinctNames.filter((n) => !existingDataHolders.some((dh) => dh.name === n));
+    if (missingNames.length > 0) {
+      await prisma.dataHolder.createMany({ data: missingNames.map((name) => ({ name })), skipDuplicates: true });
     }
+    const allDataHolders =
+      missingNames.length > 0
+        ? await prisma.dataHolder.findMany({ where: { name: { in: distinctNames } } })
+        : existingDataHolders;
+    const dataHolderIdsByName = new Map(allDataHolders.map((dh) => [dh.name, dh.id]));
+
     await prisma.requestedDataset.createMany({
       data: p.requestedDatasets.flatMap((g) =>
         g.datasets.map((d) => ({

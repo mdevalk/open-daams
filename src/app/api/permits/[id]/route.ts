@@ -28,12 +28,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   try {
     const { id } = await params;
     const body = await req.json();
-    // body: { toStatus, userId, comment, validUntil? (for RENEWED) }
+    // body: { toStatus, actingUserId, comment, validUntil? (for RENEWED) }
 
     const permit = await prisma.dataPermit.findUnique({ where: { id } });
     if (!permit) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-    const user = await prisma.user.findUnique({ where: { id: body.userId } });
+    const user = await prisma.user.findUnique({ where: { id: body.actingUserId } });
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 400 });
 
     const available = PERMIT_TRANSITIONS[permit.status] ?? [];
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       prisma.dataPermitLog.create({
         data: {
           permitId: id,
-          userId: body.userId,
+          userId: body.actingUserId,
           fromStatus: permit.status,
           toStatus,
           action: transition.label,

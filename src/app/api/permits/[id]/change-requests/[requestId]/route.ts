@@ -17,7 +17,7 @@ import { regenerateStoredPermitPdf } from '@/lib/permit-pdf-store';
  * (with effectiveAt set) and the old version keeps operating until a staff
  * member activates it via POST /api/permits/[id]/activate once the date is
  * due. Renewals and revocation appeals always stay immediate, per spec.
- * body: { decision: 'APPROVED' | 'REJECTED', userId, comment?, newValidUntil?, effectiveDate? }
+ * body: { decision: 'APPROVED' | 'REJECTED', actingUserId, comment?, newValidUntil?, effectiveDate? }
  */
 export async function PATCH(
   req: NextRequest,
@@ -32,7 +32,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'decision must be APPROVED or REJECTED' }, { status: 400 });
     }
 
-    const auth = await requireRole(body.userId, [...DECIDE_ROLES]);
+    const auth = await requireRole(body.actingUserId, [...DECIDE_ROLES]);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const request = await prisma.permitChangeRequest.findUnique({
@@ -66,7 +66,7 @@ export async function PATCH(
     const newValidUntil =
       request.type === 'RENEWAL' && body.newValidUntil ? new Date(body.newValidUntil) : undefined;
     if (request.type === 'RENEWAL' && !newValidUntil) {
-      return NextResponse.json({ error: 'A new validUntil date is required to approve a renewal' }, { status: 400 });
+      return NextResponse.json({ error: 'A new validUntil date is required to approve a renewal' }, { status: 422 });
     }
 
     // R9.3.9: only AMENDMENT supports a delayed effective date; a blank or

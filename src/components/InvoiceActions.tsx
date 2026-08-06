@@ -25,7 +25,7 @@ export function InvoiceActions({
       const res = await fetch(`/api/invoices/${invoiceId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: currentUserId, action }),
+        body: JSON.stringify({ actingUserId: currentUserId, action }),
       });
       if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
       router.refresh();

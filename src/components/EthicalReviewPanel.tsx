@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Application } from "@prisma/client";
+import { Application, User } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { formatDate, readErrorMessage } from "@/lib/utils";
+
+const MANAGE_ROLES = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'];
 
 type Props = {
   application: Pick<
@@ -16,7 +18,7 @@ type Props = {
     | "ethicalReviewReference"
     | "ethicalReviewDate"
   >;
-  canManage: boolean;
+  currentUser: User;
 };
 
 const STATUS_STYLES: Record<string, string> = {
@@ -26,7 +28,8 @@ const STATUS_STYLES: Record<string, string> = {
   REJECTED: "bg-red-100 text-red-700",
 };
 
-export function EthicalReviewPanel({ application, canManage }: Props) {
+export function EthicalReviewPanel({ application, currentUser }: Props) {
+  const canManage = MANAGE_ROLES.includes(currentUser.role);
   const router = useRouter();
   const t = useTranslations("ethicalReview");
   const [editing, setEditing] = useState(false);
@@ -49,6 +52,7 @@ export function EthicalReviewPanel({ application, canManage }: Props) {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          actingUserId: currentUser.id,
           ethicalReviewRequired: required,
           ethicalReviewStatus: required ? status : "NOT_REQUIRED",
           ethicalReviewBody: body || null,

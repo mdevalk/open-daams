@@ -12,7 +12,7 @@ import { DECIDE_ROLES } from '@/lib/permit-change';
  * triggered, same as every other deadline-driven transition in this app —
  * no cron enforces this once effectiveAt is reached, it's just surfaced
  * (dashboard, this permit's predecessor page) for staff to complete.
- * body: { userId }
+ * body: { actingUserId }
  */
 export async function POST(
   req: NextRequest,
@@ -22,7 +22,7 @@ export async function POST(
     const { id } = await params;
     const body = await req.json();
 
-    const auth = await requireRole(body.userId, [...DECIDE_ROLES]);
+    const auth = await requireRole(body.actingUserId, [...DECIDE_ROLES]);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const pending = await prisma.dataPermit.findUnique({

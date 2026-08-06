@@ -46,7 +46,7 @@ export function PermitLifecyclePanel({ permitId, permitStatus, currentUserId, cu
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           toStatus,
-          userId: currentUserId,
+          actingUserId: currentUserId,
           comment: toStatus === 'REVOKED' ? revokeReason : comment,
         }),
       });

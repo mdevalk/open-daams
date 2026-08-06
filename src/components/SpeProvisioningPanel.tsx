@@ -59,7 +59,7 @@ export function SpeProvisioningPanel({
       const res = await fetch(`/api/permits/${permitId}/spe-provisioning`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: currentUserId }),
+        body: JSON.stringify({ actingUserId: currentUserId }),
       });
       if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
       router.refresh();
@@ -78,7 +78,7 @@ export function SpeProvisioningPanel({
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: currentUserId,
+          actingUserId: currentUserId,
           toStatus,
           environmentReference: envRef.trim() || undefined,
           speOperatorId: operatorId || undefined,
