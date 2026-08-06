@@ -17,9 +17,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const auth = await requireRole(body.actingUserId, [...MANAGE_ROLES]);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
+    const trustedDataHolderId: string | null = body.trustedDataHolderId || null;
+    if (trustedDataHolderId) {
+      const dataHolder = await prisma.dataHolder.findUnique({ where: { id: trustedDataHolderId } });
+      if (!dataHolder || !dataHolder.isTrusted) {
+        return NextResponse.json({ error: 'That data holder is not marked as trusted' }, { status: 422 });
+      }
+    }
+
     const application = await prisma.application.update({
       where: { id },
-      data: { trustedDataHolderId: body.trustedDataHolderId || null },
+      data: { trustedDataHolderId },
     });
 
     return NextResponse.json(application);
