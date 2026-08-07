@@ -25,6 +25,21 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       },
     });
 
+    const changes: string[] = [];
+    if (body.name !== undefined) changes.push('name');
+    if (body.contactEmail !== undefined) changes.push('contact email');
+    if (body.contactPhone !== undefined) changes.push('contact phone');
+
+    await prisma.auditLog.create({
+      data: {
+        userId: auth.user.id,
+        entityType: 'DataUser',
+        entityId: dataUser.id,
+        action: `Data user updated: ${dataUser.name}`,
+        comment: changes.length > 0 ? changes.join(', ') : null,
+      },
+    });
+
     return NextResponse.json(dataUser);
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
@@ -61,6 +76,16 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     }
 
     await prisma.dataUser.delete({ where: { id } });
+
+    await prisma.auditLog.create({
+      data: {
+        userId: auth.user.id,
+        entityType: 'DataUser',
+        entityId: id,
+        action: `Data user deleted: ${dataUser.name}`,
+      },
+    });
+
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error('Failed to delete data user', e);

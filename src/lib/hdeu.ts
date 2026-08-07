@@ -793,7 +793,7 @@ export async function createApplicationFromHdeuPayload(
     });
   }
 
-  await prisma.auditLog.create({
+  await prisma.applicationLog.create({
     data: {
       applicationId: application.id,
       userId: systemUser.id,

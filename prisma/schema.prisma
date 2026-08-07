@@ -209,9 +209,10 @@ model User {
 
   applications                Application[]           @relation("Applicant")
   handledCases                Application[]           @relation("CaseHandler")
-  auditLogs                   AuditLog[]
+  applicationLogs              ApplicationLog[]
   notes                       Note[]
   permitActions               DataPermitLog[]
+  auditLogs                   AuditLog[]
   completenessChecks          CompletenessCheck[]
   extractionRequests          DataExtractionRequest[]
   issuedInvoices              Invoice[]
@@ -495,7 +496,7 @@ model Application {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  auditLogs          AuditLog[]
+  logs               ApplicationLog[]
   notes              Note[]
   documents          Document[]
   dataPermits        DataPermit[]
@@ -1053,7 +1054,7 @@ model DataPermitLog {
   createdAt  DateTime          @default(now())
 }
 
-model AuditLog {
+model ApplicationLog {
   id            String             @id @default(cuid())
   applicationId String
   application   Application        @relation(fields: [applicationId], references: [id])
@@ -1064,6 +1065,22 @@ model AuditLog {
   action        String
   comment       String?            @db.Text
   createdAt     DateTime           @default(now())
+}
+
+// General-purpose audit trail (D6.4 R15.4) for actions not scoped to a
+// specific Application/DataPermit — currently reference-data (masterdata)
+// CRUD. Deliberately no live FK to the audited entity: it must keep
+// recording "X was deleted by Y" after X is gone, which a cascading or
+// SetNull FK would break or make useless.
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  entityType String
+  entityId   String
+  action     String
+  comment    String?  @db.Text
+  createdAt  DateTime @default(now())
 }
 
 model Note {

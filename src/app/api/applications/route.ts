@@ -149,7 +149,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    await prisma.auditLog.create({
+    await prisma.applicationLog.create({
       data: {
         applicationId: application.id,
         userId: body.applicantId,

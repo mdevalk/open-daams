@@ -37,6 +37,15 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    await prisma.auditLog.create({
+      data: {
+        userId: auth.user.id,
+        entityType: 'SpeProvider',
+        entityId: speProvider.id,
+        action: `SPE provider created: ${speProvider.name}`,
+      },
+    });
+
     return NextResponse.json(speProvider, { status: 201 });
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {

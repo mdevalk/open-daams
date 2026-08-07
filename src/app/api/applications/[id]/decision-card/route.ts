@@ -46,7 +46,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     const [updated] = await prisma.$transaction([
       prisma.application.update({ where: { id }, data: applicationUpdate }),
-      prisma.auditLog.create({
+      prisma.applicationLog.create({
         data: {
           applicationId: id,
           userId: body.actingUserId,

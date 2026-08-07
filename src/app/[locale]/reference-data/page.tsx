@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import { prisma } from '@/lib/db';
 import { UserSwitcher } from '@/components/UserSwitcher';
 import { ReferenceDataManager } from '@/components/ReferenceDataManager';
+import { ReferenceDataAuditLog } from '@/components/ReferenceDataAuditLog';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +22,7 @@ export default async function ReferenceDataPage({
 
   const t = await getTranslations({ locale, namespace: 'referenceData' });
 
-  const [users, dataHolders, speOperators, speProviders, dataUsers] = await Promise.all([
+  const [users, dataHolders, speOperators, speProviders, dataUsers, auditLogEntries] = await Promise.all([
     prisma.user.findMany({ orderBy: { name: 'asc' } }),
     prisma.dataHolder.findMany({ orderBy: { name: 'asc' } }),
     prisma.speOperator.findMany({
@@ -30,6 +31,11 @@ export default async function ReferenceDataPage({
     }),
     prisma.speProvider.findMany({ orderBy: { name: 'asc' } }),
     prisma.dataUser.findMany({ orderBy: { name: 'asc' } }),
+    prisma.auditLog.findMany({
+      include: { user: { select: { name: true } } },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+    }),
   ]);
 
   const currentUser =
@@ -94,6 +100,7 @@ export default async function ReferenceDataPage({
 
         <div className="space-y-4">
           <UserSwitcher users={users} currentUserId={currentUser.id} />
+          {isAdmin && <ReferenceDataAuditLog entries={auditLogEntries} locale={locale} />}
         </div>
       </div>
     </div>

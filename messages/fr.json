@@ -596,7 +596,9 @@
     "tabDataHolders": "Détenteurs de données",
     "tabSpeOperators": "Opérateurs SPE",
     "tabSpeProviders": "Fournisseurs SPE",
-    "tabDataUsers": "Utilisateurs de données"
+    "tabDataUsers": "Utilisateurs de données",
+    "recentChanges": "Modifications récentes",
+    "noRecentChanges": "Aucune modification pour l'instant."
   },
   "dataHolders": {
     "name": "Nom",

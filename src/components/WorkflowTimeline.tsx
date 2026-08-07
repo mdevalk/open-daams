@@ -1,8 +1,8 @@
-import { AuditLog, User } from '@prisma/client';
+import { ApplicationLog, User } from '@prisma/client';
 import { STATUS_LABELS } from '@/lib/workflow';
 import { formatDateTime } from '@/lib/utils';
 
-type LogEntry = AuditLog & { user: Pick<User, 'id' | 'name' | 'role'> };
+type LogEntry = ApplicationLog & { user: Pick<User, 'id' | 'name' | 'role'> };
 
 export function WorkflowTimeline({ logs }: { logs: LogEntry[] }) {
   if (logs.length === 0) return <p className="text-sm text-gray-500">No history yet.</p>;

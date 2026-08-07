@@ -13,7 +13,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       include: {
         applicant: true,
         caseHandler: true,
-        auditLogs: {
+        logs: {
           include: { user: { select: { id: true, name: true, role: true } } },
           orderBy: { createdAt: 'asc' },
         },

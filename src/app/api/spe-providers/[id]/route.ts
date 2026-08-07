@@ -25,6 +25,21 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       },
     });
 
+    const changes: string[] = [];
+    if (body.name !== undefined) changes.push('name');
+    if (body.contactEmail !== undefined) changes.push('contact email');
+    if (body.contactPhone !== undefined) changes.push('contact phone');
+
+    await prisma.auditLog.create({
+      data: {
+        userId: auth.user.id,
+        entityType: 'SpeProvider',
+        entityId: speProvider.id,
+        action: `SPE provider updated: ${speProvider.name}`,
+        comment: changes.length > 0 ? changes.join(', ') : null,
+      },
+    });
+
     return NextResponse.json(speProvider);
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
@@ -61,6 +76,16 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     }
 
     await prisma.speProvider.delete({ where: { id } });
+
+    await prisma.auditLog.create({
+      data: {
+        userId: auth.user.id,
+        entityType: 'SpeProvider',
+        entityId: id,
+        action: `SPE provider deleted: ${speProvider.name}`,
+      },
+    });
+
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error('Failed to delete SPE provider', e);

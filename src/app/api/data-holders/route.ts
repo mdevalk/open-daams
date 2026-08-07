@@ -39,6 +39,15 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    await prisma.auditLog.create({
+      data: {
+        userId: auth.user.id,
+        entityType: 'DataHolder',
+        entityId: dataHolder.id,
+        action: `Data holder created: ${dataHolder.name}`,
+      },
+    });
+
     return NextResponse.json(dataHolder, { status: 201 });
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {

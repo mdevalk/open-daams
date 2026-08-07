@@ -26,6 +26,22 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       },
     });
 
+    const changes: string[] = [];
+    if (body.name !== undefined) changes.push('name');
+    if (body.contactEmail !== undefined) changes.push('contact email');
+    if (body.contactPhone !== undefined) changes.push('contact phone');
+    if (body.isTrusted !== undefined) changes.push(body.isTrusted ? 'marked as trusted' : 'un-marked as trusted');
+
+    await prisma.auditLog.create({
+      data: {
+        userId: auth.user.id,
+        entityType: 'DataHolder',
+        entityId: dataHolder.id,
+        action: `Data holder updated: ${dataHolder.name}`,
+        comment: changes.length > 0 ? changes.join(', ') : null,
+      },
+    });
+
     return NextResponse.json(dataHolder);
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
@@ -64,6 +80,16 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     }
 
     await prisma.dataHolder.delete({ where: { id } });
+
+    await prisma.auditLog.create({
+      data: {
+        userId: auth.user.id,
+        entityType: 'DataHolder',
+        entityId: id,
+        action: `Data holder deleted: ${dataHolder.name}`,
+      },
+    });
+
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error('Failed to delete data holder', e);

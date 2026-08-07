@@ -174,7 +174,7 @@ async function main() {
     { from: ApplicationStatus.SUBMITTED, to: ApplicationStatus.PRE_SCREENING, action: 'Start pre-screening', userId: handler.id },
     { from: ApplicationStatus.PRE_SCREENING, to: ApplicationStatus.PROCESSING, action: 'Complete pre-screening — proceed to processing', userId: handler.id, comment: 'All mandatory fields complete and consistent.' },
   ]) {
-    await prisma.auditLog.create({
+    await prisma.applicationLog.create({
       data: {
         applicationId: app1.id,
         userId: entry.userId,
@@ -193,7 +193,7 @@ async function main() {
     { from: ApplicationStatus.SUBMITTED, to: ApplicationStatus.PRE_SCREENING, action: 'Start pre-screening', userId: handler.id },
     { from: ApplicationStatus.PRE_SCREENING, to: ApplicationStatus.AWAITING_ADDITIONAL_INFORMATION, action: 'Request additional information', userId: handler.id, comment: 'Missing: exact CBS socioeconomic variable codes and aggregation method.' },
   ]) {
-    await prisma.auditLog.create({
+    await prisma.applicationLog.create({
       data: {
         applicationId: app2.id,
         userId: entry.userId,

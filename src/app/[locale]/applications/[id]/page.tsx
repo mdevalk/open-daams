@@ -52,7 +52,7 @@ export default async function ApplicationDetailPage({
         applicant: { include: { dataUser: { select: { name: true } } } },
         dataPermits: { where: { isCurrent: true } },
         feeEstimate: { include: { invoice: true } },
-        auditLogs: {
+        logs: {
           include: { user: { select: { id: true, name: true, role: true } } },
           orderBy: { createdAt: 'asc' },
         },
@@ -930,7 +930,7 @@ export default async function ApplicationDetailPage({
           )}
           <section className="rounded-xl border border-gray-200 bg-white p-5">
             <h2 className="font-semibold text-gray-900 mb-4">{t('historyTitle')}</h2>
-            <WorkflowTimeline logs={application.auditLogs} />
+            <WorkflowTimeline logs={application.logs} />
           </section>
         </div>
       </div>

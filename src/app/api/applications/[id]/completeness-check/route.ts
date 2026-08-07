@@ -60,7 +60,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       }),
       ...(isDecision
         ? [
-            prisma.auditLog.create({
+            prisma.applicationLog.create({
               data: {
                 applicationId: id,
                 userId: auth.user.id,

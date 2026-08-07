@@ -596,7 +596,9 @@
     "tabDataHolders": "Data holders",
     "tabSpeOperators": "SPE operators",
     "tabSpeProviders": "SPE providers",
-    "tabDataUsers": "Data users"
+    "tabDataUsers": "Data users",
+    "recentChanges": "Recent changes",
+    "noRecentChanges": "No changes yet."
   },
   "dataHolders": {
     "name": "Name",

@@ -160,7 +160,7 @@ async function issueDecision(
     try {
       const [updated] = await prisma.$transaction([
         prisma.application.update({ where: { id }, data: attemptUpdates }),
-        prisma.auditLog.create({
+        prisma.applicationLog.create({
           data: {
             applicationId: id,
             userId: actingUserId,
@@ -195,7 +195,7 @@ async function recordTransition(
 ) {
   const [updated] = await prisma.$transaction([
     prisma.application.update({ where: { id }, data: updates }),
-    prisma.auditLog.create({
+    prisma.applicationLog.create({
       data: {
         applicationId: id,
         userId: actingUserId,

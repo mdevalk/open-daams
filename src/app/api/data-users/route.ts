@@ -37,6 +37,15 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    await prisma.auditLog.create({
+      data: {
+        userId: auth.user.id,
+        entityType: 'DataUser',
+        entityId: dataUser.id,
+        action: `Data user created: ${dataUser.name}`,
+      },
+    });
+
     return NextResponse.json(dataUser, { status: 201 });
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
