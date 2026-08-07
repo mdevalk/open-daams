@@ -16,9 +16,12 @@
 - **Statutory deadlines** — EHDS decision deadline (Art. 68): 3 months for standard applicants (extendable by 3) or 2 months for the accelerated public-body track (extendable by 1); 4-week incomplete response window; visual overdue/warning indicators
 - **Role-based transitions** — APPLICANT, CASE_HANDLER, DECISION_MAKER, DATA_HOLDER, ADMIN
 - **Case dashboard** — KPIs, overdue alerts, status breakdown, recent activity
-- **Audit trail** — immutable log of every state transition with actor, timestamp, and comment
+- **Audit trail** — append-only log of every application/permit/SPE-provisioning state transition (actor, timestamp, comment), plus a separate log of reference-data (masterdata) changes
 - **Notes** — internal (staff-only) and external notes per application
 - **EHDS common form** — application form aligned with TEHDAS2 D6.2 fields, with type-specific sections (Annex 5 vs Annex 6)
+- **Internationalised UI** — tool chrome available in Dutch, English, and French (`next-intl`); permit content and the issued PDF stay in the issuing HDAB's language by design
+- **SPE operator assignment** — HDAB selects an SPE operator at permit issuance or amendment; the SPE provider is derived from the operator's reference-data record, never stored redundantly
+- **Trusted data holder flag** — data holders can be marked trusted in the reference-data registry and selected on an application (a first step toward the full Art. 72 procedure — see below)
 
 ## Functionality → EHDS articles
 
@@ -40,18 +43,22 @@ fit together in code.
 | Permit validity, amendment, renewal (once) | Art. 68(12) |
 | Permit revocation for non-compliance | Art. 63(1) |
 | List of persons authorised to process data in the SPE | D6.3 Annex 9 §6.8, Art. 73 |
+| SPE operator selection at permit issuance/amendment (provider derived from operator) | Art. 73 |
 | Extraction requests to health data holders | Art. 60, Art. 68(7) |
 | Appeal (bezwaar/beroep) tracking against a decision | Art. 63 / national administrative law |
 | Public transparency register (applications & decisions) | Art. 57(1)(j)(ii), Art. 58, Art. 61(4) |
 | Cross-border application import via HealthData@EU | Art. 75 |
-| Role-based access control on every state transition | Art. 57 (HDAB responsibilities), implemented as internal RBAC |
-| Immutable audit trail of application & permit changes | supports record-keeping under Art. 57(1) |
+| Role-based access control, enforced server-side on reads and writes (no real authentication — see [security assessments](#security)) | Art. 57 (HDAB responsibilities), implemented as internal RBAC |
+| Audit trail of application/permit/SPE-provisioning transitions and reference-data changes | supports record-keeping under Art. 57(1) |
+| Trusted data holder flag (registry) + selector on an application | Art. 72 — partial, see below |
 
-Not yet implemented: the trusted-health-data-holder procedure (Art. 72), IPR/trade-secret
-contractual arrangements (Art. 52, Annex 11), mutual recognition of another HDAB's permit (Art.
-68(5)), the biennial activity report (Art. 59), tracking of the applicant's post-permit results
-publication (Art. 61(4)), ongoing compliance monitoring during a permit's validity (Art.
-57(1)(a)(ii)), the dataset metadata catalogue (Art. 77–80), and real secure processing environment
+Not yet implemented: the **full** trusted-health-data-holder referral/assessment procedure (Art.
+72 — only the trusted flag and selector exist today, not the referral/proposed-decision
+workflow), IPR/trade-secret contractual arrangements (Art. 52, Annex 11), mutual recognition of
+another HDAB's permit (Art. 68(5)), the biennial activity report (Art. 59), tracking of the
+applicant's post-permit results publication (Art. 61(4)), ongoing compliance monitoring during a
+permit's validity (Art. 57(1)(a)(ii)), the dataset metadata catalogue (Art. 77–80), and real
+secure processing environment
 integration (only name/requirements are recorded as text today).
 
 ## Workflow states
@@ -99,10 +106,13 @@ Blue = HDAB handling · Amber = waiting on applicant · Teal = outcome · Gray =
 
 ## Tech stack
 
-- **Next.js 15** (App Router, server components)
+- **Next.js 16** (App Router, server components, Turbopack)
 - **PostgreSQL** + **Prisma** ORM
+- **next-intl** (nl/en/fr UI localisation)
 - **Tailwind CSS**
 - TypeScript
+- **Vitest** — unit tests for the pure `src/lib/` logic (permit lifecycle rules, deadline
+  calculations, invoice math, signing payloads)
 
 ## Getting started
 
@@ -128,6 +138,18 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+Run the unit test suite with `npm run test` (or `npm run test:watch` while developing).
+
+## Security
+
+This app has **no real authentication** — role-based access control trusts a client-supplied
+user id, a documented and deliberate simplification for this reference implementation (see
+[`CLAUDE.md`](./CLAUDE.md)). Two assessments track the resulting gaps and what's been hardened
+around them:
+
+- [`docs/nist-assessment.md`](./docs/nist-assessment.md) — mapped to NIST SP 800-53r5 control families
+- [`docs/owasp-top10-assessment.md`](./docs/owasp-top10-assessment.md) — mapped to the OWASP Top 10 (2021)
 
 ## References
 
