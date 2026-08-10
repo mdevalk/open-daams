@@ -3,12 +3,12 @@
 import { useTranslations } from 'next-intl';
 
 import { useState } from 'react';
-import { Application, User } from '@prisma/client';
+import { Application, FeeEstimate, User } from '@prisma/client';
 import { getAvailableTransitions, Transition } from '@/lib/workflow';
 import { useRouter } from 'next/navigation';
 import { readErrorMessage } from '@/lib/utils';
 
-type Props = { application: Application; currentUser: User };
+type Props = { application: Application & { feeEstimate: Pick<FeeEstimate, 'status'> | null }; currentUser: User };
 
 export function TransitionPanel({ application, currentUser }: Props) {
   const router = useRouter();
@@ -18,7 +18,8 @@ export function TransitionPanel({ application, currentUser }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const transitions = getAvailableTransitions(application.status, application.type, currentUser.role);
+  const feeEstimateAccepted = application.feeEstimate?.status === 'ACCEPTED';
+  const transitions = getAvailableTransitions(application.status, application.type, currentUser.role, feeEstimateAccepted);
   if (transitions.length === 0) return null;
 
   async function submit() {

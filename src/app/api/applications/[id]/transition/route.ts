@@ -6,6 +6,7 @@ import {
   calculateDecisionDeadline,
   calculateAdditionalInfoDeadline,
   calculatePermitAcceptanceDeadline,
+  TRANSITIONS,
 } from '@/lib/workflow';
 import { signDecisionCard } from '@/lib/permit-signing';
 import { generateDecisionPdf } from '@/lib/generate-decision-pdf';
@@ -215,13 +216,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const body = await req.json();
     // body: { toStatus, actingUserId, comment, decisionOutcome? }
 
-    const application = await prisma.application.findUnique({ where: { id } });
+    const application = await prisma.application.findUnique({ where: { id }, include: { feeEstimate: true } });
     if (!application) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     const found = await findActingUser(body.actingUserId);
     if (!found.ok) return NextResponse.json({ error: found.error }, { status: found.status });
 
-    const available = getAvailableTransitions(application.status, application.type, found.user.role);
+    const feeEstimateAccepted = application.feeEstimate?.status === 'ACCEPTED';
+    const available = getAvailableTransitions(application.status, application.type, found.user.role, feeEstimateAccepted);
     const transition = available.find(
       (t) =>
         t.to === body.toStatus &&
@@ -229,6 +231,21 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     );
 
     if (!transition) {
+      // A positive decision is blocked by the fee-estimate gate specifically
+      // (not role/status) — give an accurate reason rather than the generic
+      // "not allowed for role X" message below.
+      const wouldMatchWithoutFeeGate = (TRANSITIONS[application.status] ?? []).find(
+        (t) =>
+          t.to === body.toStatus &&
+          t.requiredRole.includes(found.user.role) &&
+          (!t.requiresDecisionOutcome || t.requiresDecisionOutcome === body.decisionOutcome),
+      );
+      if (wouldMatchWithoutFeeGate?.requiresFeeEstimateAccepted && !feeEstimateAccepted) {
+        return NextResponse.json(
+          { error: 'A positive decision requires an accepted fee estimate first.' },
+          { status: 422 },
+        );
+      }
       return NextResponse.json(
         { error: `Transition to ${body.toStatus} not allowed from ${application.status} for role ${found.user.role}` },
         { status: 422 },

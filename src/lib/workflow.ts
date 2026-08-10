@@ -6,6 +6,10 @@ export type Transition = {
   requiredRole: UserRole[];
   description: string;
   requiresDecisionOutcome?: 'POSITIVE' | 'NEGATIVE';
+  // A positive decision commits HDAB-NL to granting the permit whose cost
+  // was estimated — only meaningful alongside requiresDecisionOutcome:
+  // 'POSITIVE'; a refusal has no such commitment.
+  requiresFeeEstimateAccepted?: boolean;
 };
 
 /**
@@ -110,6 +114,7 @@ export const TRANSITIONS: Record<ApplicationStatus, Transition[]> = {
       requiredRole: ['DECISION_MAKER', 'ADMIN'],
       description: 'HDAB neemt een positief besluit op de aanvraag (D6.4 Fig. 1/2).',
       requiresDecisionOutcome: 'POSITIVE',
+      requiresFeeEstimateAccepted: true,
     },
     {
       to: 'DECISION_ISSUED',
@@ -136,8 +141,11 @@ export function getAvailableTransitions(
   currentStatus: ApplicationStatus,
   _applicationType: ApplicationType,
   userRole: UserRole,
+  feeEstimateAccepted: boolean,
 ): Transition[] {
-  return (TRANSITIONS[currentStatus] ?? []).filter((t) => t.requiredRole.includes(userRole));
+  return (TRANSITIONS[currentStatus] ?? []).filter(
+    (t) => t.requiredRole.includes(userRole) && (!t.requiresFeeEstimateAccepted || feeEstimateAccepted),
+  );
 }
 
 export const STATUS_LABELS: Record<ApplicationStatus, string> = {

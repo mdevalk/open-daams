@@ -10,15 +10,25 @@ import {
 
 describe('getAvailableTransitions', () => {
   it('only returns transitions the given role is allowed to take', () => {
-    const forApplicant = getAvailableTransitions('SUBMITTED', 'DATA_ACCESS_APPLICATION', 'APPLICANT');
+    const forApplicant = getAvailableTransitions('SUBMITTED', 'DATA_ACCESS_APPLICATION', 'APPLICANT', true);
     expect(forApplicant.map((t) => t.to)).toEqual(['WITHDRAWN']);
 
-    const forCaseHandler = getAvailableTransitions('SUBMITTED', 'DATA_ACCESS_APPLICATION', 'CASE_HANDLER');
+    const forCaseHandler = getAvailableTransitions('SUBMITTED', 'DATA_ACCESS_APPLICATION', 'CASE_HANDLER', true);
     expect(forCaseHandler.map((t) => t.to).sort()).toEqual(['PRE_SCREENING', 'WITHDRAWN']);
   });
 
   it('returns nothing for a terminal status', () => {
-    expect(getAvailableTransitions('WITHDRAWN', 'DATA_ACCESS_APPLICATION', 'ADMIN')).toEqual([]);
+    expect(getAvailableTransitions('WITHDRAWN', 'DATA_ACCESS_APPLICATION', 'ADMIN', true)).toEqual([]);
+  });
+
+  it('hides the positive-decision transition until the fee estimate is accepted', () => {
+    const withoutAcceptedEstimate = getAvailableTransitions('PROCESSING', 'DATA_ACCESS_APPLICATION', 'DECISION_MAKER', false);
+    expect(withoutAcceptedEstimate.some((t) => t.requiresDecisionOutcome === 'POSITIVE')).toBe(false);
+    // A negative decision carries no cost commitment, so it stays available.
+    expect(withoutAcceptedEstimate.some((t) => t.requiresDecisionOutcome === 'NEGATIVE')).toBe(true);
+
+    const withAcceptedEstimate = getAvailableTransitions('PROCESSING', 'DATA_ACCESS_APPLICATION', 'DECISION_MAKER', true);
+    expect(withAcceptedEstimate.some((t) => t.requiresDecisionOutcome === 'POSITIVE')).toBe(true);
   });
 });
 
