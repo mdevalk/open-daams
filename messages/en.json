@@ -3,7 +3,7 @@
     "applications": "Applications",
     "permits": "Permits",
     "invoices": "Invoices",
-    "import": "HD@EU import",
+    "import": "Import JSON",
     "public": "Public register",
     "referenceData": "Reference data",
     "newApplication": "New application",
@@ -92,7 +92,7 @@
   "applications": {
     "title": "Applications",
     "new": "New application",
-    "import": "HD@EU import",
+    "import": "Import JSON",
     "manualEntry": "Manual entry",
     "ncpFetch": "Fetch from NCP",
     "searchLabel": "Search",
@@ -295,7 +295,7 @@
     "validFrom": "Valid from",
     "validUntil": "Valid until",
     "issuedAt": "Issued",
-    "viewApplication": "View application →",
+    "viewApplication": "Related application",
     "detailsTitle": "Permit details",
     "applicantTitle": "Applicant",
     "name": "Name",
@@ -318,6 +318,9 @@
     "purpose": "Purpose of use",
     "legalBasis": "Legal basis",
     "datasets": "Datasets",
+    "datasetId": "Dataset ID",
+    "catalogId": "Catalogue ID",
+    "distributions": "Distributions",
     "variables": "Requested variables",
     "studyPopulation": "Study population",
     "inclusionCriteria": "Inclusion criteria",
@@ -391,10 +394,13 @@
     "feeSpeUsage": "SPE usage",
     "speOperator": "SPE operator",
     "speOperatorNone": "— none selected —",
+    "speType": "SPE type",
+    "speTypeNone": "— none selected —",
+    "feeSpeDerivedFromType": "Derived from the selected SPE type",
     "feeAdditional": "Additional services",
     "feeDataHolder": "Data holder fee(s)",
-    "paymentTerms": "Payment terms",
-    "paymentTermsPlaceholder": "Payment term, invoicing process, discounts..."
+    "paymentTerms": "Comments",
+    "paymentTermsPlaceholder": "Additional cost justification..."
   },
   "userSwitcher": {
     "label": "Acting as"
@@ -623,7 +629,14 @@
     "save": "Save",
     "cancel": "Cancel",
     "empty": "No SPE operators registered yet.",
-    "providerLabel": "Provider"
+    "providerLabel": "Provider",
+    "typesLabel": "SPE types",
+    "typesEmpty": "No types registered yet.",
+    "typeName": "Type name",
+    "setupFee": "Setup fee",
+    "monthlyFee": "Monthly fee",
+    "addType": "Add type",
+    "addTypeSubmit": "Add type"
   },
   "speProviders": {
     "name": "Name",

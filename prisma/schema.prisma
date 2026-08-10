@@ -687,6 +687,16 @@ model RequestedDataset {
   dataHolder    DataHolder  @relation(fields: [dataHolderId], references: [id])
   name          String
   url           String?
+  // EU Dataset Catalogue identifiers (HD@EU/NCP wire: dataset_id, catalog_id)
+  // — traceability references, not foreign keys into a local catalogue table
+  // (open-daams doesn't own the catalogue, see CLAUDE.md's scope note).
+  // Carried forward onto GrantedDataset at issuance, same as name/url.
+  datasetId     String?
+  catalogId     String?
+  // Array of { distributionId: string, title: string | null } — the wire
+  // format's distributions[] for this dataset. Stored as-is; not modelled as
+  // a child table since nothing here queries or filters on it.
+  distributions Json?
   createdAt     DateTime    @default(now())
 }
 
@@ -869,13 +879,30 @@ model DataPermit {
 
   // SPE operator selected by the HDAB for this permit version (issuance, or
   // changed on an amendment) — carried forward unchanged on renewal/revocation-
-  // appeal approval, same as the fee fields above. The SPE *provider* is
-  // deliberately NOT stored here: it's derived via speOperator.speProvider,
-  // so it always reflects the operator's current provider in the reference-data
-  // registry rather than a value that could drift out of sync. Needed both for
-  // display and, eventually, for calling the provider's provisioning API.
+  // appeal approval, same as the fee fields above. This live FK is for
+  // staff-facing display and eventually calling the provider's provisioning
+  // API — it always reflects the operator's *current* reference-data record.
   speOperatorId String?
   speOperator   SpeOperator? @relation(fields: [speOperatorId], references: [id])
+
+  // The specific tier/type offered by the selected operator, if any — its
+  // setupFee/monthlyFee pre-fill speSetupFee/speUsageFee above at issuance
+  // (which stay independently editable), and the choice itself is recorded
+  // here for the same audit reason as speOperatorId. Carried forward the
+  // same way on renewal/revocation-appeal.
+  speTypeId String?
+  speType   SpeType? @relation(fields: [speTypeId], references: [id])
+
+  // Frozen snapshot of the above, taken at the moment this permit version
+  // was signed — same rationale as GrantedDataset.dataHolderName: this is
+  // what's actually inside the signed digital-permit payload (R13.0.1), so
+  // it must never change even if the operator/type is later renamed in the
+  // reference-data registry (which would otherwise silently break signature
+  // verification for every permit that already referenced it). See
+  // src/lib/permit-signing.ts's SignableSpeOperator/SignableSpeType.
+  speOperatorName         String?
+  speOperatorProviderName String?
+  speTypeName             String?
 
   issuedAt  DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1037,6 +1064,13 @@ model GrantedDataset {
   dataHolder     DataHolder? @relation(fields: [dataHolderId], references: [id])
   name           String
   url            String?
+  // Frozen at issuance, like dataHolderName/name/url above — EU Dataset
+  // Catalogue identifiers (dataset_id/catalog_id) and the wire format's
+  // distributions[] ({ distributionId, title }), also fed into the signed
+  // permit payload. See RequestedDataset's identical fields for the source.
+  datasetId      String?
+  catalogId      String?
+  distributions  Json?
   createdAt      DateTime    @default(now())
 }
 
@@ -1154,6 +1188,25 @@ model SpeOperator {
 
   provisioningOrders SpeProvisioningOrder[]
   permits            DataPermit[]
+  types              SpeType[]
+}
+
+// A tier/product an SPE operator offers (e.g. "Standard", "High-security"),
+// each with its own setup and recurring cost — selected per permit (see
+// DataPermit.speType) to pre-fill that permit's SPE fee fields.
+model SpeType {
+  id            String      @id @default(cuid())
+  speOperatorId String
+  speOperator   SpeOperator @relation(fields: [speOperatorId], references: [id], onDelete: Cascade)
+  name          String
+  setupFee      Decimal     @db.Decimal(10, 2)
+  monthlyFee    Decimal     @db.Decimal(10, 2)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  permits DataPermit[]
+
+  @@unique([speOperatorId, name])
 }
 
 // The "data user" per EHDS Art. 61 — the organisation an applicant/case

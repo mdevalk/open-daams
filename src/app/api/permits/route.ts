@@ -38,7 +38,7 @@ function toDecimalOrNull(v: unknown): number | null {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    // body: { applicationId, validFrom, validUntil, issuedByUserId, speOperatorId? }
+    // body: { applicationId, validFrom, validUntil, issuedByUserId, speOperatorId?, speTypeId? }
 
     const auth = await requireRole(body.issuedByUserId, ['DECISION_MAKER', 'ADMIN']);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
@@ -73,8 +73,33 @@ export async function POST(req: NextRequest) {
         dataHolderName: rd.dataHolder?.name ?? 'Unknown',
         name: rd.name,
         url: rd.url,
+        datasetId: rd.datasetId,
+        catalogId: rd.catalogId,
+        distributions: rd.distributions,
       })),
     );
+
+    // Resolved once here and frozen into both the signature and the permit
+    // row itself (speOperatorName/etc.) — see the schema comment on those
+    // columns for why this can't just be a live join at verify time.
+    const [speOperatorRow, speTypeRow] = await Promise.all([
+      body.speOperatorId
+        ? prisma.speOperator.findUnique({
+            where: { id: body.speOperatorId },
+            include: { speProvider: { select: { name: true } } },
+          })
+        : null,
+      body.speTypeId
+        ? prisma.speType.findUnique({ where: { id: body.speTypeId } })
+        : null,
+    ]);
+    const speType = speTypeRow && { id: speTypeRow.id, name: speTypeRow.name };
+    const speOperator = speOperatorRow && {
+      id: speOperatorRow.id,
+      name: speOperatorRow.name,
+      providerName: speOperatorRow.speProvider?.name ?? null,
+      type: speType || null,
+    };
 
     let permit;
     const MAX_ATTEMPTS = 5;
@@ -88,6 +113,7 @@ export async function POST(req: NextRequest) {
         validFrom,
         validUntil,
         grantedDatasets,
+        speOperator: speOperator || null,
       });
       try {
         permit = await prisma.dataPermit.create({
@@ -109,6 +135,10 @@ export async function POST(req: NextRequest) {
             dataHolderFee: toDecimalOrNull(body.dataHolderFee),
             paymentTerms: body.paymentTerms || null,
             speOperatorId: body.speOperatorId || null,
+            speTypeId: body.speTypeId || null,
+            speOperatorName: speOperator ? speOperator.name : null,
+            speOperatorProviderName: speOperator ? speOperator.providerName : null,
+            speTypeName: speType ? speType.name : null,
           },
         });
         break;
@@ -131,6 +161,9 @@ export async function POST(req: NextRequest) {
           dataHolderId: rd.dataHolderId,
           name: rd.name,
           url: rd.url,
+          datasetId: rd.datasetId,
+          catalogId: rd.catalogId,
+          distributions: rd.distributions ?? undefined,
         })),
       });
     }

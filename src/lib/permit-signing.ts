@@ -55,22 +55,71 @@ function stableStringify(value: unknown): string {
   return JSON.stringify(value);
 }
 
-export type DatasetEntry = { name: string; url: string | null };
+// EU Dataset Catalogue's own distribution — one way a dataset can actually be
+// accessed. Carried through verbatim from the HD@EU/NCP wire (distribution_id
+// + title), not modelled beyond that (open-daams doesn't own the catalogue).
+export type Distribution = { distributionId: string; title: string | null };
+
+export type DatasetEntry = {
+  name: string;
+  url: string | null;
+  // EU Dataset Catalogue identifiers — traceability, not local FKs (see
+  // RequestedDataset/GrantedDataset in schema.prisma for the source fields).
+  datasetId: string | null;
+  catalogId: string | null;
+  distributions: Distribution[];
+};
 export type GrantedDatasetGroup = { dataHolderName: string; datasets: DatasetEntry[] };
 
-/** Groups flat (dataHolderName, name, url) rows — as stored in RequestedDataset/GrantedDataset — by holder. */
+/**
+ * Groups flat (dataHolderName, name, url, ...) rows — as stored in
+ * RequestedDataset/GrantedDataset — by holder. `distributions` is accepted as
+ * `unknown` and cast internally: it round-trips through a Prisma `Json`
+ * column, so callers passing a raw query result have it typed as
+ * `Prisma.JsonValue`, not `Distribution[]`, even though its actual shape is
+ * always the latter (or absent).
+ */
 export function groupDatasetsByHolder(
-  rows: { dataHolderName: string; name: string; url: string | null }[],
+  rows: {
+    dataHolderName: string;
+    name: string;
+    url: string | null;
+    datasetId?: string | null;
+    catalogId?: string | null;
+    distributions?: unknown;
+  }[],
 ): GrantedDatasetGroup[] {
   const byHolder = new Map<string, DatasetEntry[]>();
   for (const row of rows) {
-    const entry = { name: row.name, url: row.url };
+    const entry: DatasetEntry = {
+      name: row.name,
+      url: row.url,
+      datasetId: row.datasetId ?? null,
+      catalogId: row.catalogId ?? null,
+      distributions: (row.distributions as Distribution[] | null) ?? [],
+    };
     const existing = byHolder.get(row.dataHolderName);
     if (existing) existing.push(entry);
     else byHolder.set(row.dataHolderName, [entry]);
   }
   return Array.from(byHolder.entries()).map(([dataHolderName, datasets]) => ({ dataHolderName, datasets }));
 }
+
+// Frozen snapshots, not live FK references — same rationale as
+// GrantedDataset.dataHolderName: renaming an SpeOperator/SpeType in
+// the reference-data registry after a permit references it must not change
+// what that permit's signature attests to. Resolved once, at the moment a
+// permit version is created (issuance, or a version-creating amendment that
+// changes the operator/type), and carried forward unchanged on versions
+// that don't touch it — see the callers in
+// src/app/api/permits/route.ts and .../change-requests/[requestId]/route.ts.
+export type SignableSpeType = { id: string; name: string };
+export type SignableSpeOperator = {
+  id: string;
+  name: string;
+  providerName: string | null;
+  type: SignableSpeType | null;
+};
 
 export type SignablePermit = {
   permitNumber: string;
@@ -80,6 +129,7 @@ export type SignablePermit = {
   validFrom: Date;
   validUntil: Date;
   grantedDatasets: GrantedDatasetGroup[];
+  speOperator: SignableSpeOperator | null;
 };
 
 /**
@@ -96,7 +146,11 @@ export type SignablePermit = {
  * data holder," which the signature should attest to. Mirrors the same
  * exclusion/inclusion principle used by the reference
  * hdab-nl-permit-generator/validator pair (whose canonical payload signs
- * `datasets` alongside identity fields).
+ * `datasets` alongside identity fields). `speOperator` (with its `type`
+ * nested inside) is signed for the same reason (R13.0.1 — the designated
+ * SPE/operator is part of what the permit grants); fees are deliberately
+ * excluded — those stay on the human-readable PDF only, not this signed
+ * structured document.
  *
  * `issuerKid` is passed explicitly rather than always read from the
  * currently-loaded key file — after a key rotation (`generate-signing-key
@@ -112,6 +166,7 @@ export function canonicalPermitPayload(permit: SignablePermit, issuerKid: string
     validFrom: permit.validFrom.toISOString(),
     validUntil: permit.validUntil.toISOString(),
     grantedDatasets: permit.grantedDatasets,
+    speOperator: permit.speOperator,
     issuerKid,
   };
 }
@@ -207,18 +262,12 @@ export type DigitalPermitDocument = ReturnType<typeof canonicalPermitPayload> & 
 
 /**
  * Assembles the full exportable "digital permit" document: the signed
- * canonical fields, plus unsigned/live display fields (status, revocation).
- * Used by both the JSON export route and the PDF's embedded attachment, so
- * there's a single definition of what the digital permit document contains.
+ * canonical fields (now including speOperator/speType — R13.0.1),
+ * plus unsigned/live display fields (status, revocation). Used by both the
+ * JSON export route and the PDF's embedded attachment, so there's a single
+ * definition of what the digital permit document contains.
  */
-export function buildDigitalPermitDocument(permit: {
-  permitNumber: string;
-  version: number;
-  applicationId: string;
-  issuedAt: Date;
-  validFrom: Date;
-  validUntil: Date;
-  grantedDatasets: GrantedDatasetGroup[];
+export function buildDigitalPermitDocument(permit: SignablePermit & {
   status: DataPermitStatus;
   revocationReason: string | null;
   revocationAt: Date | null;

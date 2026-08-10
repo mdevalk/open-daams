@@ -200,7 +200,7 @@ const ATTACHMENT_CONTENT_TYPES: Record<string, string> = {
   txt: 'text/plain',
 };
 
-function guessAttachmentMimeType(filename: string): string {
+export function guessAttachmentMimeType(filename: string): string {
   const ext = filename.split('.').pop()?.toLowerCase() ?? '';
   return ATTACHMENT_CONTENT_TYPES[ext] ?? 'application/octet-stream';
 }
@@ -213,7 +213,7 @@ function guessAttachmentMimeType(filename: string): string {
  * after import re-fetches from the NCP, which is a message gateway, not a
  * store.
  */
-function resolveAttachmentBytes(zip: AdmZip, ncpId: string | undefined, filename: string): Buffer | undefined {
+export function resolveAttachmentBytes(zip: AdmZip, ncpId: string | undefined, filename: string): Buffer | undefined {
   const target = ncpId ? `${ncpId}_${filename}` : filename;
   for (const entry of zip.getEntries()) {
     if (matchesEntry(entry.entryName, target)) return entry.getData();
@@ -261,13 +261,18 @@ function collectAttachmentNames(zip: AdmZip): string[] {
 type NcpKeyValue = { key: string; value: string };
 type NcpAttachmentRef = { id: string; name: string; size: number };
 
+type NcpDistributionEntry = { distribution_id: string; title: string | null };
+
 type NcpDatasetEntry = {
   dataset_id: string;
+  catalog_id?: string;
+  catalog_languages?: string[];
   publisher: { name: string };
   title: Record<string, string>;
   country: { country_id: string };
   hdab: { name: string };
   variables: { titles: Record<string, string> }[];
+  distributions?: NcpDistributionEntry[];
 };
 
 /** One `form.section6` entry (one country's cohort/controls/relatives scope).
@@ -943,7 +948,18 @@ function mapMetadataToHdeuPayload(meta: NcpMetadata): HdeuPayload {
     ? [
         {
           dataHolderName,
-          datasets: [{ name: localized(dataset.title, meta.title), url: null }],
+          datasets: [
+            {
+              name: localized(dataset.title, meta.title),
+              url: null,
+              datasetId: dataset.dataset_id || null,
+              catalogId: dataset.catalog_id || null,
+              distributions: dataset.distributions?.map((d) => ({
+                distributionId: d.distribution_id,
+                title: d.title ?? null,
+              })),
+            },
+          ],
         },
       ]
     : [];

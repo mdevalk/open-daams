@@ -15,13 +15,52 @@ describe('groupDatasetsByHolder', () => {
     ];
 
     expect(groupDatasetsByHolder(rows)).toEqual([
-      { dataHolderName: 'Hospital A', datasets: [{ name: 'Dataset 1', url: null }, { name: 'Dataset 3', url: null }] },
-      { dataHolderName: 'Hospital B', datasets: [{ name: 'Dataset 2', url: 'https://example.com' }] },
+      {
+        dataHolderName: 'Hospital A',
+        datasets: [
+          { name: 'Dataset 1', url: null, datasetId: null, catalogId: null, distributions: [] },
+          { name: 'Dataset 3', url: null, datasetId: null, catalogId: null, distributions: [] },
+        ],
+      },
+      {
+        dataHolderName: 'Hospital B',
+        datasets: [
+          { name: 'Dataset 2', url: 'https://example.com', datasetId: null, catalogId: null, distributions: [] },
+        ],
+      },
     ]);
   });
 
   it('returns an empty array for no rows', () => {
     expect(groupDatasetsByHolder([])).toEqual([]);
+  });
+
+  it('carries the EU Dataset Catalogue identifiers and distributions through', () => {
+    const rows = [
+      {
+        dataHolderName: 'RIVM',
+        name: 'Praeventis',
+        url: null,
+        datasetId: '24b6a9b2-4519-4f94-8c0f-c4c85f295806',
+        catalogId: '6be71aaf-abd3-464f-a417-708b780d4bef',
+        distributions: [{ distributionId: '58501e07-7717-497c-869a-c52826e3bb24', title: null }],
+      },
+    ];
+
+    expect(groupDatasetsByHolder(rows)).toEqual([
+      {
+        dataHolderName: 'RIVM',
+        datasets: [
+          {
+            name: 'Praeventis',
+            url: null,
+            datasetId: '24b6a9b2-4519-4f94-8c0f-c4c85f295806',
+            catalogId: '6be71aaf-abd3-464f-a417-708b780d4bef',
+            distributions: [{ distributionId: '58501e07-7717-497c-869a-c52826e3bb24', title: null }],
+          },
+        ],
+      },
+    ]);
   });
 });
 
@@ -36,6 +75,7 @@ describe('canonicalPermitPayload', () => {
         validFrom: new Date('2026-01-01T00:00:00Z'),
         validUntil: new Date('2027-01-01T00:00:00Z'),
         grantedDatasets: [],
+        speOperator: null,
       },
       'kid-1',
     );
@@ -48,7 +88,36 @@ describe('canonicalPermitPayload', () => {
       validFrom: '2026-01-01T00:00:00.000Z',
       validUntil: '2027-01-01T00:00:00.000Z',
       grantedDatasets: [],
+      speOperator: null,
       issuerKid: 'kid-1',
+    });
+  });
+
+  it('carries the SPE operator, with its type nested inside, into the signed payload (R13.0.1)', () => {
+    const payload = canonicalPermitPayload(
+      {
+        permitNumber: 'DP-NL-2025-0001',
+        version: 1,
+        applicationId: 'app-1',
+        issuedAt: new Date('2026-01-01T00:00:00Z'),
+        validFrom: new Date('2026-01-01T00:00:00Z'),
+        validUntil: new Date('2027-01-01T00:00:00Z'),
+        grantedDatasets: [],
+        speOperator: {
+          id: 'op-1',
+          name: 'RIVM SPE Operations',
+          providerName: 'Acme Cloud',
+          type: { id: 'type-1', name: 'Enterprise' },
+        },
+      },
+      'kid-1',
+    );
+
+    expect(payload.speOperator).toEqual({
+      id: 'op-1',
+      name: 'RIVM SPE Operations',
+      providerName: 'Acme Cloud',
+      type: { id: 'type-1', name: 'Enterprise' },
     });
   });
 });
@@ -85,6 +154,7 @@ describe('buildDigitalPermitDocument', () => {
       validFrom: new Date('2026-01-01T00:00:00Z'),
       validUntil: new Date('2027-01-01T00:00:00Z'),
       grantedDatasets: [],
+      speOperator: null,
       status: 'REVOKED',
       revocationReason: 'No longer needed',
       revocationAt: new Date('2026-06-01T00:00:00Z'),
@@ -109,6 +179,7 @@ describe('buildDigitalPermitDocument', () => {
       validFrom: new Date('2026-01-01T00:00:00Z'),
       validUntil: new Date('2027-01-01T00:00:00Z'),
       grantedDatasets: [],
+      speOperator: null,
       status: 'GRANTED',
       revocationReason: null,
       revocationAt: null,

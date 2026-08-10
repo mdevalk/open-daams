@@ -60,7 +60,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 /**
  * DELETE /api/spe-operators/[id]
  * Remove an SPE operator (ADMIN-only). Blocked with 409 if still referenced
- * by any SPE provisioning order.
+ * by any SPE provisioning order, or if it still has SPE types registered —
+ * the schema cascades on delete, so without this guard removing an operator
+ * would silently wipe its whole type/price catalogue.
  * body: { actingUserId }
  */
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -73,12 +75,15 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
     const speOperator = await prisma.speOperator.findUnique({
       where: { id },
-      include: { _count: { select: { provisioningOrders: true } } },
+      include: { _count: { select: { provisioningOrders: true, types: true } } },
     });
     if (!speOperator) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     if (speOperator._count.provisioningOrders > 0) {
       return NextResponse.json({ error: 'This SPE operator is still referenced and cannot be deleted' }, { status: 409 });
+    }
+    if (speOperator._count.types > 0) {
+      return NextResponse.json({ error: 'This SPE operator still has SPE types and cannot be deleted — delete its types first' }, { status: 409 });
     }
 
     await prisma.speOperator.delete({ where: { id } });

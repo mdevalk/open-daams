@@ -17,11 +17,12 @@ import { regenerateStoredPermitPdf } from '@/lib/permit-pdf-store';
  * (with effectiveAt set) and the old version keeps operating until a staff
  * member activates it via POST /api/permits/[id]/activate once the date is
  * due. Renewals and revocation appeals always stay immediate, per spec.
- * body: { decision: 'APPROVED' | 'REJECTED', actingUserId, comment?, newValidUntil?, effectiveDate?, speOperatorId? }
+ * body: { decision: 'APPROVED' | 'REJECTED', actingUserId, comment?, newValidUntil?, effectiveDate?, speOperatorId?, speTypeId? }
  *
- * speOperatorId carries forward from the current version onto the new one by
- * default (same as the fee fields) — pass it explicitly (a real id, or ''/null
- * to clear it) only to change it, which is only meaningful for AMENDMENT.
+ * speOperatorId/speTypeId carry forward from the current version
+ * onto the new one by default (same as the fee fields) — pass them
+ * explicitly (a real id, or ''/null to clear) only to change them, which is
+ * only meaningful for AMENDMENT.
  */
 export async function PATCH(
   req: NextRequest,
@@ -83,6 +84,28 @@ export async function PATCH(
     const newValidUntilResolved = newValidUntil ?? permit.validUntil;
     const speOperatorId =
       request.type === 'AMENDMENT' && 'speOperatorId' in body ? body.speOperatorId || null : permit.speOperatorId;
+    const speTypeId =
+      request.type === 'AMENDMENT' && 'speTypeId' in body ? body.speTypeId || null : permit.speTypeId;
+
+    // Only re-resolve (and re-freeze) the name snapshot when the id actually
+    // changes — carrying the id forward unchanged means the previous
+    // version's frozen name is still correct, no lookup needed. See the
+    // schema comment on speOperatorName/etc. for why this can't be a live
+    // join at verify time.
+    const speOperatorChanged = speOperatorId !== permit.speOperatorId;
+    const speTypeChanged = speTypeId !== permit.speTypeId;
+    const speOperatorRow = speOperatorChanged && speOperatorId
+      ? await prisma.speOperator.findUnique({ where: { id: speOperatorId }, include: { speProvider: { select: { name: true } } } })
+      : null;
+    const speTypeRow = speTypeChanged && speTypeId
+      ? await prisma.speType.findUnique({ where: { id: speTypeId } })
+      : null;
+    const speOperatorName = speOperatorChanged ? (speOperatorRow?.name ?? null) : permit.speOperatorName;
+    const speOperatorProviderName = speOperatorChanged
+      ? (speOperatorRow?.speProvider?.name ?? null)
+      : permit.speOperatorProviderName;
+    const speTypeName = speTypeChanged ? (speTypeRow?.name ?? null) : permit.speTypeName;
+
     const { signature, signedAt, signingKeyId } = await signPermit({
       permitNumber: permit.permitNumber,
       version: newVersion,
@@ -91,6 +114,14 @@ export async function PATCH(
       validFrom: permit.validFrom,
       validUntil: newValidUntilResolved,
       grantedDatasets: groupDatasetsByHolder(permit.grantedDatasets),
+      speOperator: speOperatorId
+        ? {
+            id: speOperatorId,
+            name: speOperatorName ?? '',
+            providerName: speOperatorProviderName,
+            type: speTypeId ? { id: speTypeId, name: speTypeName ?? '' } : null,
+          }
+        : null,
     });
 
     const newPermitId = await prisma.$transaction(async (tx) => {
@@ -126,6 +157,10 @@ export async function PATCH(
           dataHolderFee: permit.dataHolderFee,
           paymentTerms: permit.paymentTerms,
           speOperatorId,
+          speTypeId,
+          speOperatorName,
+          speOperatorProviderName,
+          speTypeName,
         },
       });
 
@@ -150,6 +185,9 @@ export async function PATCH(
             dataHolderId: gd.dataHolderId,
             name: gd.name,
             url: gd.url,
+            datasetId: gd.datasetId,
+            catalogId: gd.catalogId,
+            distributions: gd.distributions ?? undefined,
           })),
         });
       }

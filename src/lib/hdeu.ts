@@ -160,7 +160,18 @@ export type HdeuPayload = {
   // TEHDAS2 D6.4 interoperability schema doesn't define per-holder
   // granularity at the application stage); Member States may extend the
   // envelope with such fields per the module comment above.
-  requestedDatasets: { dataHolderName: string; datasets: { name: string; url?: string | null }[] }[];
+  requestedDatasets: {
+    dataHolderName: string;
+    datasets: {
+      name: string;
+      url?: string | null;
+      // EU Dataset Catalogue identifiers, when the source provides them
+      // (HD@EU/NCP wire: dataset_id, catalog_id, distributions[]).
+      datasetId?: string | null;
+      catalogId?: string | null;
+      distributions?: { distributionId: string; title: string | null }[];
+    }[];
+  }[];
   requestedVariables: string;
   studyPopulation: string;
   inclusionCriteria: string;
@@ -788,6 +799,9 @@ export async function createApplicationFromHdeuPayload(
           dataHolderId: dataHolderIdsByName.get(g.dataHolderName)!,
           name: d.name,
           url: d.url || null,
+          datasetId: d.datasetId || null,
+          catalogId: d.catalogId || null,
+          distributions: d.distributions && d.distributions.length > 0 ? d.distributions : undefined,
         })),
       ),
     });

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { readErrorMessage } from '@/lib/utils';
+import { SpeTypeList, SpeType } from './SpeTypeList';
 
 type Entity = {
   id: string;
@@ -13,6 +14,7 @@ type Entity = {
   speProvider?: { name: string } | null;
   speProviderId?: string | null;
   isTrusted?: boolean;
+  types?: SpeType[];
 };
 
 type Props = {
@@ -21,6 +23,7 @@ type Props = {
   entities: Entity[];
   relationOptions?: { id: string; name: string }[];
   hasTrustedFlag?: boolean;
+  hasSpeTypes?: boolean;
   isAdmin: boolean;
   currentUserId: string;
 };
@@ -28,7 +31,7 @@ type Props = {
 const inputCls =
   'w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]';
 
-export function ReferenceDataManager({ apiBasePath, namespace, entities, relationOptions, hasTrustedFlag, isAdmin, currentUserId }: Props) {
+export function ReferenceDataManager({ apiBasePath, namespace, entities, relationOptions, hasTrustedFlag, hasSpeTypes, isAdmin, currentUserId }: Props) {
   const router = useRouter();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const t = useTranslations(namespace as any);
@@ -205,6 +208,15 @@ export function ReferenceDataManager({ apiBasePath, namespace, entities, relatio
                   </div>
                 )}
               </div>
+            )}
+            {hasSpeTypes && (
+              <SpeTypeList
+                speOperatorId={entity.id}
+                types={entity.types ?? []}
+                isAdmin={isAdmin}
+                currentUserId={currentUserId}
+                editable={editingId === entity.id}
+              />
             )}
           </div>
         ))}

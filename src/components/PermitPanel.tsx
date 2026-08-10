@@ -6,11 +6,12 @@ import { useTranslations } from 'next-intl';
 import { PermitCard } from './PermitCard';
 import { useRouter } from 'next/navigation';
 import { readErrorMessage } from '@/lib/utils';
+import { SpeType } from './SpeTypeList';
 
 type Props = {
   application: Pick<Application, 'id' | 'type' | 'status' | 'decisionOutcome' | 'permitAcceptanceStatus'> & { dataPermit: DataPermit | null; feeEstimate?: FeeEstimate | null };
   currentUser: User;
-  speOperators: { id: string; name: string }[];
+  speOperators: { id: string; name: string; types: SpeType[] }[];
 };
 
 export function PermitPanel({ application, currentUser, speOperators }: Props) {
@@ -34,6 +35,23 @@ export function PermitPanel({ application, currentUser, speOperators }: Props) {
   const [dataHolderFee, setDataHolderFee] = useState(estimate?.dataHolderFee?.toString() ?? '');
   const [paymentTerms, setPaymentTerms] = useState('');
   const [speOperatorId, setSpeOperatorId] = useState('');
+  const [speTypeId, setSpeTypeId] = useState('');
+
+  const speTypes = speOperators.find((op) => op.id === speOperatorId)?.types ?? [];
+
+  function selectSpeOperator(id: string) {
+    setSpeOperatorId(id);
+    setSpeTypeId('');
+  }
+
+  function selectSpeType(id: string) {
+    setSpeTypeId(id);
+    const type = speTypes.find((t) => t.id === id);
+    if (type) {
+      setSpeSetupFee(String(type.setupFee));
+      setSpeUsageFee(String(type.monthlyFee));
+    }
+  }
 
   // Only show if positive decision
   if (application.status !== 'DECISION_ISSUED' || application.decisionOutcome !== 'POSITIVE') {
@@ -71,6 +89,7 @@ export function PermitPanel({ application, currentUser, speOperators }: Props) {
           dataHolderFee,
           paymentTerms,
           speOperatorId: speOperatorId || undefined,
+          speTypeId: speTypeId || undefined,
         }),
       });
       if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
@@ -110,54 +129,12 @@ export function PermitPanel({ application, currentUser, speOperators }: Props) {
               />
             </div>
 
-            <div className="border-t border-emerald-200 pt-3 space-y-2">
-              <p className="text-xs font-semibold text-emerald-900">{tp('feesTitle')}</p>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-xs text-gray-700 mb-1">{tp('feeProcessing')}</label>
-                  <input type="number" step="0.01" value={permitProcessingFee} onChange={e => setPermitProcessingFee(e.target.value)}
-                    className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-700 mb-1">{tp('feePreparation')}</label>
-                  <input type="number" step="0.01" value={dataPreparationFee} onChange={e => setDataPreparationFee(e.target.value)}
-                    className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-700 mb-1">{tp('feeSpeSetup')}</label>
-                  <input type="number" step="0.01" value={speSetupFee} onChange={e => setSpeSetupFee(e.target.value)}
-                    className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-700 mb-1">{tp('feeSpeUsage')}</label>
-                  <input type="number" step="0.01" value={speUsageFee} onChange={e => setSpeUsageFee(e.target.value)}
-                    className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-700 mb-1">{tp('feeAdditional')}</label>
-                  <input type="number" step="0.01" value={additionalServicesFee} onChange={e => setAdditionalServicesFee(e.target.value)}
-                    className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-700 mb-1">{tp('feeDataHolder')}</label>
-                  <input type="number" step="0.01" value={dataHolderFee} onChange={e => setDataHolderFee(e.target.value)}
-                    className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs text-gray-700 mb-1">{tp('paymentTerms')}</label>
-                <textarea rows={2} value={paymentTerms} onChange={e => setPaymentTerms(e.target.value)}
-                  placeholder={tp('paymentTermsPlaceholder')}
-                  className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
-              </div>
-            </div>
-
             {application.type === 'DATA_ACCESS_APPLICATION' && (
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">{tp('speOperator')}</label>
                 <select
                   value={speOperatorId}
-                  onChange={e => setSpeOperatorId(e.target.value)}
+                  onChange={e => selectSpeOperator(e.target.value)}
                   className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
                 >
                   <option value="">{tp('speOperatorNone')}</option>
@@ -167,6 +144,60 @@ export function PermitPanel({ application, currentUser, speOperators }: Props) {
                 </select>
               </div>
             )}
+
+            {application.type === 'DATA_ACCESS_APPLICATION' && speTypes.length > 0 && (
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">{tp('speType')}</label>
+                <select
+                  value={speTypeId}
+                  onChange={e => selectSpeType(e.target.value)}
+                  className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
+                >
+                  <option value="">{tp('speTypeNone')}</option>
+                  {speTypes.map(type => (
+                    <option key={type.id} value={type.id}>
+                      {type.name} (€{String(type.setupFee)} / €{String(type.monthlyFee)})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div className="border-t border-emerald-200 pt-3 space-y-2">
+              <p className="text-xs font-semibold text-emerald-900">{tp('feesTitle')}</p>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs text-gray-700 mb-1">{tp('feeSpeSetup')}</label>
+                  <input type="number" step="0.01" value={speSetupFee} readOnly={!!speTypeId} onChange={e => setSpeSetupFee(e.target.value)}
+                    className={`w-full rounded border px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b] ${
+                      speTypeId ? 'border-gray-200 bg-gray-100 cursor-not-allowed' : 'border-gray-300'
+                    }`} />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-700 mb-1">{tp('feeSpeUsage')}</label>
+                  <input type="number" step="0.01" value={speUsageFee} readOnly={!!speTypeId} onChange={e => setSpeUsageFee(e.target.value)}
+                    className={`w-full rounded border px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b] ${
+                      speTypeId ? 'border-gray-200 bg-gray-100 cursor-not-allowed' : 'border-gray-300'
+                    }`} />
+                </div>
+                {speTypeId && (
+                  <p className="col-span-2 text-xs text-gray-500 -mt-1">{tp('feeSpeDerivedFromType')}</p>
+                )}
+                <div>
+                  <label className="block text-xs text-gray-700 mb-1">{tp('feeAdditional')}</label>
+                  <input type="number" step="0.01" value={additionalServicesFee} onChange={e => setAdditionalServicesFee(e.target.value)}
+                    className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                </div>
+              </div>
+              {additionalServicesFee.trim() !== '' && Number(additionalServicesFee) >= 0 && (
+                <div>
+                  <label className="block text-xs text-gray-700 mb-1">{tp('paymentTerms')}</label>
+                  <textarea rows={2} value={paymentTerms} onChange={e => setPaymentTerms(e.target.value)}
+                    placeholder={tp('paymentTermsPlaceholder')}
+                    className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
+                </div>
+              )}
+            </div>
 
             {error && <p className="text-xs text-red-600">{error}</p>}
             <button

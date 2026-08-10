@@ -3,7 +3,7 @@
     "applications": "Demandes",
     "permits": "Autorisations",
     "invoices": "Factures",
-    "import": "Import HD@EU",
+    "import": "Importer JSON",
     "public": "Registre public",
     "referenceData": "Données de référence",
     "newApplication": "Nouvelle demande",
@@ -92,7 +92,7 @@
   "applications": {
     "title": "Demandes",
     "new": "Nouvelle demande",
-    "import": "Import HD@EU",
+    "import": "Importer JSON",
     "manualEntry": "Saisie manuelle",
     "ncpFetch": "Récupérer depuis le PCN",
     "searchLabel": "Rechercher",
@@ -295,7 +295,7 @@
     "validFrom": "Valable du",
     "validUntil": "Valable jusqu'au",
     "issuedAt": "Délivré",
-    "viewApplication": "Voir la demande →",
+    "viewApplication": "Demande associée",
     "detailsTitle": "Détails de l'autorisation",
     "applicantTitle": "Demandeur",
     "name": "Nom",
@@ -318,6 +318,9 @@
     "purpose": "Finalité d'utilisation",
     "legalBasis": "Base juridique",
     "datasets": "Jeux de données",
+    "datasetId": "ID du jeu de données",
+    "catalogId": "ID du catalogue",
+    "distributions": "Distributions",
     "variables": "Variables demandées",
     "studyPopulation": "Population étudiée",
     "inclusionCriteria": "Critères d'inclusion",
@@ -391,10 +394,13 @@
     "feeSpeUsage": "Utilisation SPE",
     "speOperator": "Opérateur SPE",
     "speOperatorNone": "— aucun sélectionné —",
+    "speType": "Type SPE",
+    "speTypeNone": "— aucun sélectionné —",
+    "feeSpeDerivedFromType": "Dérivé du type SPE sélectionné",
     "feeAdditional": "Services supplémentaires",
     "feeDataHolder": "Frais détenteur(s) de données",
-    "paymentTerms": "Conditions de paiement",
-    "paymentTermsPlaceholder": "Délai de paiement, processus de facturation, remises..."
+    "paymentTerms": "Commentaires",
+    "paymentTermsPlaceholder": "Justification du coût supplémentaire..."
   },
   "userSwitcher": {
     "label": "Agissant en tant que"
@@ -623,7 +629,14 @@
     "save": "Enregistrer",
     "cancel": "Annuler",
     "empty": "Aucun opérateur SPE enregistré pour le moment.",
-    "providerLabel": "Fournisseur"
+    "providerLabel": "Fournisseur",
+    "typesLabel": "Types de SPE",
+    "typesEmpty": "Aucun type enregistré pour le moment.",
+    "typeName": "Nom du type",
+    "setupFee": "Frais de mise en place",
+    "monthlyFee": "Frais mensuels",
+    "addType": "Ajouter un type",
+    "addTypeSubmit": "Ajouter un type"
   },
   "speProviders": {
     "name": "Nom",

@@ -201,14 +201,12 @@ export default async function PermitDetailPage({
             {permit.application?.referenceNumber} — {permit.application?.title}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <a
-            href={`/${locale}/applications/${permit.application?.id}`}
-            className="rounded border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50 transition-colors"
-          >
-            {t('viewApplication')}
-          </a>
-        </div>
+        <a
+          href={`/${locale}/applications/${permit.application?.id}`}
+          className="shrink-0 rounded border border-[#01689b] px-3 py-1.5 text-sm font-medium text-[#154273] hover:bg-[#e8f4fb] transition-colors"
+        >
+          {t('viewApplication')}
+        </a>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -286,6 +284,17 @@ export default async function PermitDetailPage({
                                   </a>
                                 ) : (
                                   dataset.name
+                                )}
+                                {(dataset.datasetId || dataset.catalogId || dataset.distributions.length > 0) && (
+                                  <div className="text-xs text-gray-500 font-mono">
+                                    {dataset.datasetId && <div>{t('datasetId')}: {dataset.datasetId}</div>}
+                                    {dataset.catalogId && <div>{t('catalogId')}: {dataset.catalogId}</div>}
+                                    {dataset.distributions.length > 0 && (
+                                      <div>
+                                        {t('distributions')}: {dataset.distributions.map((d) => d.title || d.distributionId).join(', ')}
+                                      </div>
+                                    )}
+                                  </div>
                                 )}
                               </li>
                             ))}

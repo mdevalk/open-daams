@@ -26,7 +26,7 @@ export default async function ReferenceDataPage({
     prisma.user.findMany({ orderBy: { name: 'asc' } }),
     prisma.dataHolder.findMany({ orderBy: { name: 'asc' } }),
     prisma.speOperator.findMany({
-      include: { speProvider: { select: { name: true } } },
+      include: { speProvider: { select: { name: true } }, types: { orderBy: { name: 'asc' } } },
       orderBy: { name: 'asc' },
     }),
     prisma.speProvider.findMany({ orderBy: { name: 'asc' } }),
@@ -47,14 +47,23 @@ export default async function ReferenceDataPage({
 
   const isAdmin = currentUser.role === 'ADMIN';
 
-  const tabConfig: Record<Tab, { label: string; apiBasePath: string; namespace: string; entities: unknown[]; relationOptions?: { id: string; name: string }[]; hasTrustedFlag?: boolean }> = {
+  // Decimal is a class instance, not a plain object — React's server->client
+  // prop serialization rejects it outright, so convert before it crosses
+  // that boundary (ReferenceDataManager is a client component).
+  const speOperatorsForClient = speOperators.map((op) => ({
+    ...op,
+    types: op.types.map((t) => ({ ...t, setupFee: t.setupFee.toString(), monthlyFee: t.monthlyFee.toString() })),
+  }));
+
+  const tabConfig: Record<Tab, { label: string; apiBasePath: string; namespace: string; entities: unknown[]; relationOptions?: { id: string; name: string }[]; hasTrustedFlag?: boolean; hasSpeTypes?: boolean }> = {
     'data-holders': { label: t('tabDataHolders'), apiBasePath: '/api/data-holders', namespace: 'dataHolders', entities: dataHolders, hasTrustedFlag: true },
     'spe-operators': {
       label: t('tabSpeOperators'),
       apiBasePath: '/api/spe-operators',
       namespace: 'speOperators',
-      entities: speOperators,
+      entities: speOperatorsForClient,
       relationOptions: speProviders,
+      hasSpeTypes: true,
     },
     'spe-providers': { label: t('tabSpeProviders'), apiBasePath: '/api/spe-providers', namespace: 'speProviders', entities: speProviders },
     'data-users': { label: t('tabDataUsers'), apiBasePath: '/api/data-users', namespace: 'dataUsers', entities: dataUsers },
@@ -93,6 +102,7 @@ export default async function ReferenceDataPage({
             entities={tabConfig[tab].entities as never}
             relationOptions={tabConfig[tab].relationOptions}
             hasTrustedFlag={tabConfig[tab].hasTrustedFlag}
+            hasSpeTypes={tabConfig[tab].hasSpeTypes}
             isAdmin={isAdmin}
             currentUserId={currentUser.id}
           />

@@ -23,9 +23,19 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Permit not found' }, { status: 404 });
     }
 
+    // Read the frozen snapshot columns, not a live join — see the schema
+    // comment on speOperatorName/etc.
     const document = buildDigitalPermitDocument({
       ...permit,
       grantedDatasets: groupDatasetsByHolder(permit.grantedDatasets),
+      speOperator: permit.speOperatorId
+        ? {
+            id: permit.speOperatorId,
+            name: permit.speOperatorName ?? '',
+            providerName: permit.speOperatorProviderName,
+            type: permit.speTypeId ? { id: permit.speTypeId, name: permit.speTypeName ?? '' } : null,
+          }
+        : null,
     });
     const filename = `${document.permitId.replace(/\//g, '-')}.json`;
 

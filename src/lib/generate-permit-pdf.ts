@@ -48,8 +48,11 @@ const WINANSI_REPLACEMENT_PATTERN = new RegExp(
 
 function sanitizeText(str: string): string {
   const replaced = str.replace(WINANSI_REPLACEMENT_PATTERN, (ch) => WINANSI_REPLACEMENTS[ch] ?? ch);
+  // € (U+20AC) sits outside Latin-1 but WinAnsiEncoding (used by pdf-lib's
+  // standard fonts) can render it directly, so it's exempted from the filter
+  // below rather than being replaced like the truly unsupported characters.
   // eslint-disable-next-line no-control-regex
-  return replaced.replace(/[^\x00-\xFF]/g, '?');
+  return replaced.replace(/[^\x00-\xFF€]/g, '?');
 }
 
 function fmtMoney(v: unknown, currency: string): string | null {
@@ -93,7 +96,21 @@ export type PermitPdfData = {
   dataHolderFee?: unknown;
   paymentTerms?: string | null;
   authorizedPersons?: Array<{ name: string; affiliation: string; email: string }> | null;
-  grantedDatasets?: Array<{ dataHolderName: string; name: string; url: string | null }> | null;
+  grantedDatasets?: Array<{
+    dataHolderName: string;
+    name: string;
+    url: string | null;
+    datasetId?: string | null;
+    catalogId?: string | null;
+    // Prisma.JsonValue at the call site (a raw query result) — see
+    // groupDatasetsByHolder's own comment on why this stays untyped here.
+    distributions?: unknown;
+  }> | null;
+  speOperatorId?: string | null;
+  speOperatorName?: string | null;
+  speOperatorProviderName?: string | null;
+  speTypeId?: string | null;
+  speTypeName?: string | null;
   application: {
     referenceNumber: string;
     title: string;
@@ -246,7 +263,7 @@ export class Doc {
   }
 
   footer() {
-    this.page.drawLine({ start: { x: M, y: PH - 40 }, end: { x: PW - M, y: PH - 40 }, thickness: 0.5, color: C.divider });
+    this.page.drawLine({ start: { x: M, y: 40 }, end: { x: PW - M, y: 40 }, thickness: 0.5, color: C.divider });
     this.page.drawText(
       'Demo-document uit een open-sourceproject — HDAB-NL is een fictieve organisatie, dit is geen officieel EHDS-document.',
       { x: M, y: 12, font: this.italic, size: 6.5, color: C.placeholder },
@@ -286,9 +303,14 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
 
   doc.newPage();
 
-  // Running header, per Annex 9 top block
+  // Running header, per Annex 9 top block — the title bar carries the
+  // template's own title ("Data permit decision" / "Dataverwerkingsvergunning"),
+  // not a generic placeholder.
   doc.rect(0, 0, PW, 62, C.darkBlue);
-  doc.text('BESLUIT', M, 12, doc.bold, 15, C.white);
+  doc.text(
+    isDataRequest ? 'Besluit op gezondheidsgegevensverzoek' : 'Dataverwerkingsvergunning',
+    M, 12, doc.bold, 15, C.white,
+  );
   doc.text(`Dossier- / vergunningsnummer: ${permitId}`, M, 32, doc.regular, 8.5, rgb(0.85, 0.9, 0.95));
   doc.text('Health Data Access Body Nederland (HDAB-NL) | Nederland', M, 44, doc.regular, 8.5, rgb(0.85, 0.9, 0.95));
   doc.y = 78;
@@ -303,10 +325,6 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
     `Uw aanvraag ${app?.referenceNumber ?? '—'}, ingediend op ${fmt(app?.submittedAt)}.`,
     { size: 8, color: C.gray, font: doc.italic },
   );
-  doc.paragraph(
-    isDataRequest ? 'Besluit op gezondheidsgegevensverzoek' : 'Dataverwerkingsvergunning / besluit op gezondheidsgegevensaanvraag',
-    { size: 8, color: C.gray, font: doc.italic },
-  );
   doc.spacer(6);
 
   // 1. Issuing authority
@@ -314,11 +332,6 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
   doc.field('Naam', 'Health Data Access Body Nederland (HDAB-NL)');
   doc.field('Contactgegevens', 'info@hdab.nl');
   doc.spacer(6);
-  doc.text('Ondertekening:', M, doc.y, doc.regular, 8.5, C.gray);
-  doc.y += 16;
-  doc.page.drawLine({ start: { x: M, y: PH - doc.y }, end: { x: M + 200, y: PH - doc.y }, thickness: 0.6, color: C.divider });
-  doc.y += 4;
-  doc.spacer(8);
 
   // 2. Health data user / applicant
   doc.heading('2', 'GEZONDHEIDSGEGEVENSGEBRUIKER / AANVRAGER');
@@ -456,7 +469,17 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
   for (const group of groupDatasetsByHolder(permit.grantedDatasets ?? [])) {
     doc.paragraph(group.dataHolderName, { size: 8.5, color: C.darkBlue, font: doc.bold });
     for (const dataset of group.datasets) {
-      doc.bullet(dataset.url ? `${dataset.name} — ${dataset.url}` : dataset.name);
+      const label = dataset.url ? `${dataset.name} — ${dataset.url}` : dataset.name;
+      const idBits = [
+        dataset.datasetId ? `dataset: ${dataset.datasetId}` : null,
+        dataset.catalogId ? `catalogus: ${dataset.catalogId}` : null,
+        dataset.distributions.length > 0
+          ? `distributies: ${dataset.distributions.map((d) => d.distributionId).join(', ')}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join(' | ');
+      doc.bullet(idBits ? `${label} (${idBits})` : label);
     }
   }
   if (app?.requestedVariables) {
@@ -626,6 +649,14 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
       revocationAt: permit.revocationAt ?? null,
       signature: permit.signature,
       signingKeyId: permit.signingKeyId,
+      speOperator: permit.speOperatorId
+        ? {
+            id: permit.speOperatorId,
+            name: permit.speOperatorName ?? '',
+            providerName: permit.speOperatorProviderName ?? null,
+            type: permit.speTypeId ? { id: permit.speTypeId, name: permit.speTypeName ?? '' } : null,
+          }
+        : null,
     });
     await doc.pdfDoc.attach(
       new TextEncoder().encode(JSON.stringify(digitalPermit, null, 2)),
