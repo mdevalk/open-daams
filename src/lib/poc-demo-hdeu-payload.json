@@ -1,0 +1,180 @@
+{
+  "hdeuApplicationId": "NL-POC-DEMO-2026-0001",
+  "sendingCountry": "NL",
+  "sendingHdab": "Toekomstig Autoriteit Digitale Gezondheid (ADG)",
+  "transmissionTimestamp": "2026-08-03T16:06:16.461529238Z",
+  "applicationType": "DATA_ACCESS_APPLICATION",
+  "datasetVariables": [
+    {
+      "sourceDatasetId": "24b6a9b2-4519-4f94-8c0f-c4c85f295806",
+      "name": "Overledenen_1",
+      "title": "Overledenen",
+      "description": "Overledenen",
+      "datatype": "long"
+    },
+    {
+      "sourceDatasetId": "24b6a9b2-4519-4f94-8c0f-c4c85f295806",
+      "name": "Perioden",
+      "title": "Perioden",
+      "description": "Perioden",
+      "datatype": "string",
+      "propertyUrl": "https://opendata.cbs.nl/ODataApi/OData/7233/Perioden"
+    },
+    {
+      "sourceDatasetId": "24b6a9b2-4519-4f94-8c0f-c4c85f295806",
+      "name": "DoodsoorzakenUitgebreideLijst",
+      "title": "Doodsoorzaken (uitgebreide lijst)",
+      "description": "Doodsoorzaken (uitgebreide lijst)",
+      "datatype": "string",
+      "propertyUrl": "https://opendata.cbs.nl/ODataApi/OData/7233/DoodsoorzakenUitgebreideLijst"
+    },
+    {
+      "sourceDatasetId": "24b6a9b2-4519-4f94-8c0f-c4c85f295806",
+      "name": "Leeftijd",
+      "title": "Leeftijd",
+      "description": "Leeftijd",
+      "datatype": "string",
+      "propertyUrl": "https://opendata.cbs.nl/ODataApi/OData/7233/Leeftijd"
+    },
+    {
+      "sourceDatasetId": "24b6a9b2-4519-4f94-8c0f-c4c85f295806",
+      "name": "Geslacht",
+      "title": "Geslacht",
+      "description": "Geslacht",
+      "datatype": "string",
+      "propertyUrl": "https://opendata.cbs.nl/ODataApi/OData/7233/Geslacht"
+    }
+  ],
+  "applicantName": "Sophie Jansen",
+  "applicantEmail": "sophie.jansen@testorganisatie.example",
+  "applicantOrganisation": "ZorgData Innovatie B.V.",
+  "title": "Test Data Access Application for PoC demo",
+  "projectDescription": "Het doel van het project is het ontwikkelen en valideren van analysemethoden voor het evalueren van zorgprocessen en kwaliteitsindicatoren binnen de gezondheidszorg. Het project onderzoekt hoe secundair gebruik van gezondheidsgegevens kan bijdragen aan betere inzichten in zorgverlening, zorguitkomsten en mogelijkheden voor procesverbetering. De resultaten worden gebruikt voor onderzoek, beleidsontwikkeling en innovatie binnen de zorgsector.\n\nsamenvatting van het project\n\na. het algemeen belang op het gebied van de volksgezondheid of de gezondheid op het werk, zoals activiteiten ter bescherming tegen ernstige grensoverschrijdende bedreigingen van de gezondheid, bewaking van de volksgezondheid of activiteiten ter waarborging van een hoog kwaliteits- en veiligheidsniveau van de gezondheidszorg, met inbegrip van patiëntveiligheid, en van geneesmiddelen of medische hulpmiddelen.\n\nb. activiteiten op het gebied van beleidsvorming en regelgeving ter ondersteuning van openbare lichamen of instellingen, organen of instanties van de Unie, met inbegrip van regelgevende autoriteiten, in de gezondheids- of zorgsector bij de uitvoering van de in hun mandaat omschreven taken.\n\nc. statistieken zoals gedefinieerd in artikel 3, punt 1, van Verordening (EG) nr. 223/2009, zoals officiële statistieken op nationaal, multinationaal en Unieniveau met betrekking tot de gezondheids- of zorgsector.\n\nd. het ontvangen of geven van onderwijs in de gezondheids- of zorgsector op het niveau van het beroepsonderwijs of het hoger onderwijs.\n\ne. wetenschappelijk onderzoek in verband met de gezondheids- of zorgsector waarmee een bijdrage wordt geleverd aan de volksgezondheid of de evaluatie van gezondheidstechnologie, of waarmee een hoog kwaliteits- en veiligheidsniveau van gezondheidszorg, geneesmiddelen of medische hulpmiddelen wordt gewaarborgd ten behoeve van de eindgebruikers, zoals patiënten, gezondheidswerkers en gezondheidsbeheerders, met inbegrip van:\ni) ontwikkelings- en innovatieactiviteiten voor producten of diensten;\nii) het trainen, testen en evalueren van algoritmen, onder meer in medische hulpmiddelen, medische hulpmiddelen voor in-vitrodiagnostiek, AI-systemen en digitalegezondheidsapps.\n",
+  "purposeCategory": "PUBLIC_HEALTH",
+  "purposeCategories": [
+    "PUBLIC_HEALTH",
+    "POLICY_MAKING",
+    "STATISTICS",
+    "EDUCATION",
+    "SCIENTIFIC_RESEARCH"
+  ],
+  "projectLeaderName": "RIVM",
+  "projectLeaderCountry": "Nederland",
+  "legalBasis": "De gegevens worden aangevraagd ten behoeve van onderzoek, innovatie en analyse van gezondheidszorgprocessen. Het gebruik van de gegevens vindt plaats binnen het kader van de toepasselijke Europese en nationale wet- en regelgeving inzake gegevensbescherming, gezondheidsgegevens en wetenschappelijk onderzoek. De organisatie verwerkt uitsluitend gepseudonimiseerde gegevens en neemt passende technische en organisatorische maatregelen om de bescherming van persoonsgegevens te waarborgen. De aangevraagde gegevens worden uitsluitend gebruikt voor de in deze aanvraag beschreven doeleinden.",
+  "requestedDatasets": [
+    {
+      "dataHolderName": "Toekomstig Autoriteit Digitale Gezondheid (ADG)",
+      "datasets": [
+        {
+          "name": "Overleden inwoners van Nederland naar doodsoorzaak (uitgebreide lijst van 'drie-teken categorieën'), leeftijd en geslacht",
+          "url": null
+        }
+      ]
+    }
+  ],
+  "requestedVariables": "Overledenen, Perioden, Doodsoorzaken (uitgebreide lijst), Leeftijd, Geslacht",
+  "studyPopulation": "170000 — Het cohort wordt gevormd op basis van de onderstaande criteria.",
+  "inclusionCriteria": "De gegevensextractie heeft betrekking op alle beschikbare registraties van overleden inwoners van Nederland in de periode van 1 januari 2019 tot en met 31 december 2024.",
+  "exclusionCriteria": "Van de extractie worden records uitgesloten die onvolledig, inconsistent of onvoldoende gevalideerd zijn voor statistische verwerking. Daarnaast worden registraties buiten de geselecteerde verslagperiode uitgesloten. Eventuele dubbele registraties worden verwijderd overeenkomstig de kwaliteitscontroles van de gegevenshouder. Indien van toepassing worden records waarvoor leeftijd, geslacht of doodsoorzaak niet betrouwbaar konden worden vastgesteld eveneens uitgesloten.",
+  "dataStartDate": "2019-01-01",
+  "dataEndDate": "2024-12-31",
+  "projectStartDate": "2027-01-01",
+  "projectEndDate": "2029-12-31",
+  "dataProcessingCountry": "NL",
+  "applyingOnBehalfOfPublicSector": false,
+  "legalOrNaturalPerson": "Rechtspersoon,",
+  "legalPersonAddress": "Laan van de Toekomst 125",
+  "legalPersonZipCode": "3528 AB",
+  "legalPersonCity": "Utrecht",
+  "legalPersonCountry": "Nederland",
+  "contactPersonAffiliation": "ZorgData Innovatie B.V.",
+  "contactPersonRelationship": "Sophie Jansen is Data Governance Manager bij de verzoekende organisatie en fungeert als primair aanspreekpunt voor deze aanvraag.",
+  "contactPersonBusinessId": "KVK:12345678",
+  "contactPersonPhone": "+31 6 23456789",
+  "contactPersonOrganisationName": "ZorgData Innovatie B.V.",
+  "invoicingDetails": {
+    "sameAsContactPerson": true,
+    "fullName": "ZorgData Innovatie B.V.",
+    "email": "sophie.jansen@testorganisatie.example",
+    "phone": "+31 6 23456789",
+    "organisationName": "ZorgData Innovatie B.V.",
+    "address": "Laan van de Toekomst 125",
+    "businessId": "KVK:12345678",
+    "vatNumber": "NL123456789B01",
+    "invoiceType": "Elektronisch",
+    "invoiceReferenceNumber": "ZDIG-2026-001",
+    "eInvoiceAddress": "NL91ABNA0417164300",
+    "operatorId": "OP-987654321",
+    "peppolCode": "0190:12345678",
+    "isProjectFinanciallyCovered": true,
+    "financingAmountRange": "10 000-50 000 EUR"
+  },
+  "summaryOfTheProject": "samenvatting van het project\n\na. het algemeen belang op het gebied van de volksgezondheid of de gezondheid op het werk, zoals activiteiten ter bescherming tegen ernstige grensoverschrijdende bedreigingen van de gezondheid, bewaking van de volksgezondheid of activiteiten ter waarborging van een hoog kwaliteits- en veiligheidsniveau van de gezondheidszorg, met inbegrip van patiëntveiligheid, en van geneesmiddelen of medische hulpmiddelen.\n\nb. activiteiten op het gebied van beleidsvorming en regelgeving ter ondersteuning van openbare lichamen of instellingen, organen of instanties van de Unie, met inbegrip van regelgevende autoriteiten, in de gezondheids- of zorgsector bij de uitvoering van de in hun mandaat omschreven taken.\n\nc. statistieken zoals gedefinieerd in artikel 3, punt 1, van Verordening (EG) nr. 223/2009, zoals officiële statistieken op nationaal, multinationaal en Unieniveau met betrekking tot de gezondheids- of zorgsector.\n\nd. het ontvangen of geven van onderwijs in de gezondheids- of zorgsector op het niveau van het beroepsonderwijs of het hoger onderwijs.\n\ne. wetenschappelijk onderzoek in verband met de gezondheids- of zorgsector waarmee een bijdrage wordt geleverd aan de volksgezondheid of de evaluatie van gezondheidstechnologie, of waarmee een hoog kwaliteits- en veiligheidsniveau van gezondheidszorg, geneesmiddelen of medische hulpmiddelen wordt gewaarborgd ten behoeve van de eindgebruikers, zoals patiënten, gezondheidswerkers en gezondheidsbeheerders, met inbegrip van:\ni) ontwikkelings- en innovatieactiviteiten voor producten of diensten;\nii) het trainen, testen en evalueren van algoritmen, onder meer in medische hulpmiddelen, medische hulpmiddelen voor in-vitrodiagnostiek, AI-systemen en digitalegezondheidsapps.\n",
+  "whyDataIsNeeded": "De aangevraagde elektronische gezondheidsgegevens zijn noodzakelijk om patronen en trends in zorggebruik, zorgpaden en behandeluitkomsten te analyseren. Het project richt zich op het identificeren van factoren die van invloed zijn op de kwaliteit en efficiëntie van zorgprocessen. Hiervoor zijn gegevens nodig over patiëntkenmerken, zorgcontacten, diagnoses en behandeltrajecten in gepseudonimiseerde vorm. De gevraagde gegevens zijn beperkt tot hetgeen noodzakelijk is om betrouwbare analyses uit te voeren en valide onderzoeksresultaten te verkrijgen.",
+  "whatIsTheAimAndTopicOfTheProject": "Het doel van het project is het ontwikkelen en valideren van analysemethoden voor het evalueren van zorgprocessen en kwaliteitsindicatoren binnen de gezondheidszorg. Het project onderzoekt hoe secundair gebruik van gezondheidsgegevens kan bijdragen aan betere inzichten in zorgverlening, zorguitkomsten en mogelijkheden voor procesverbetering. De resultaten worden gebruikt voor onderzoek, beleidsontwikkeling en innovatie binnen de zorgsector.",
+  "expectedBenefits": "Het verwachte voordeel is een beter inzicht in zorgprocessen, behandelpatronen en uitkomsten van zorg. Deze inzichten kunnen bijdragen aan kwaliteitsverbetering, efficiëntere inzet van middelen en beter onderbouwde besluitvorming. Daarnaast ondersteunt het project de ontwikkeling van innovatieve analysemethoden die kunnen worden ingezet voor onderzoek en beleidsvorming. Hierdoor wordt de maatschappelijke waarde van gezondheidsgegevens vergroot zonder dat individuele personen direct identificeerbaar zijn.",
+  "applicantQualifications": "De aanvrager beschikt over ervaring op het gebied van gezondheidsgegevens, datamanagement, informatievoorziening en data-analyse binnen de zorgsector. Het projectteam bestaat uit professionals met expertise in gezondheidsinformatica, gegevensanalyse, gegevensbescherming en projectmanagement. Daarnaast beschikt het team over kennis van relevante regelgeving, gegevensgovernance en het verantwoord gebruik van gezondheidsgegevens voor onderzoeks- en innovatieactiviteiten.",
+  "linkToTheSupportingLegalBasis": "https://eur-lex.europa.eu/eli/reg/2025/327/oj/eng",
+  "personResponsibleSameAsContactPerson": true,
+  "personResponsibleName": "ZorgData Innovatie B.V.",
+  "personResearchSameAsContactPerson": true,
+  "personResearchName": "ZorgData Innovatie B.V.",
+  "electronicHealthDataFormat": "Geanonimiseerd",
+  "studyCohorts": [
+    {
+      "countryId": "NETHERLANDS",
+      "role": "COHORT",
+      "hdabContacts": "Er heeft geen voorafgaand contact plaatsgevonden met medewerkers van de instantie voor toegang tot gezondheidsgegevens met betrekking tot deze aanvraag.\n",
+      "howWillDataBeLinked": "Niet van toepassing.",
+      "cohortFormationMethod": "CRITERIA",
+      "size": 170000,
+      "sizeIsEstimate": true,
+      "sizeJustification": "Voor de analyse van doodsoorzaken naar leeftijd en geslacht is een landelijke dataset nodig die voldoende omvang heeft om betrouwbare en representatieve statistische analyses uit te voeren. Het gebruik van de volledige beschikbare populatie voorkomt vertekening als gevolg van steekproeftrekking en maakt het mogelijk om ook minder voorkomende doodsoorzaken en subgroepen naar leeftijd en geslacht adequaat te analyseren. De omvang van het cohort is daarom noodzakelijk om de onderzoeksdoelstellingen te behalen en statistisch valide resultaten te verkrijgen.",
+      "variablesAttachmentRef": "Samenvatting plan.docx",
+      "variablesAttachmentId": "6a70b95e164b1a3858b83f0c",
+      "timePeriod": "01-01-2019 t/m 31-12-2024",
+      "dataStartDate": "2019-01-01",
+      "dataEndDate": "2024-12-31",
+      "extractionMethod": "ALL_QUALIFYING",
+      "inclusionCriteria": "De gegevensextractie heeft betrekking op alle beschikbare registraties van overleden inwoners van Nederland in de periode van 1 januari 2019 tot en met 31 december 2024.",
+      "exclusionCriteria": "Van de extractie worden records uitgesloten die onvolledig, inconsistent of onvoldoende gevalideerd zijn voor statistische verwerking. Daarnaast worden registraties buiten de geselecteerde verslagperiode uitgesloten. Eventuele dubbele registraties worden verwijderd overeenkomstig de kwaliteitscontroles van de gegevenshouder. Indien van toepassing worden records waarvoor leeftijd, geslacht of doodsoorzaak niet betrouwbaar konden worden vastgesteld eveneens uitgesloten.",
+      "extractionFrequency": "ONCE",
+      "orderForExtraction": "Toekomstig Autoriteit Digitale Gezondheid (ADG) - extractie van de dataset \"Overleden inwoners van Nederland naar doodsoorzaak (uitgebreide lijst van drie-teken categorieën), leeftijd en geslacht\".",
+      "includesControls": false,
+      "includesRelatives": false
+    }
+  ],
+  "cohortSizeIsEstimate": true,
+  "cohortSize": 170000,
+  "cohortSizeJustification": "Voor de analyse van doodsoorzaken naar leeftijd en geslacht is een landelijke dataset nodig die voldoende omvang heeft om betrouwbare en representatieve statistische analyses uit te voeren. Het gebruik van de volledige beschikbare populatie voorkomt vertekening als gevolg van steekproeftrekking en maakt het mogelijk om ook minder voorkomende doodsoorzaken en subgroepen naar leeftijd en geslacht adequaat te analyseren. De omvang van het cohort is daarom noodzakelijk om de onderzoeksdoelstellingen te behalen en statistisch valide resultaten te verkrijgen.",
+  "cohortFormationMethod": "CRITERIA",
+  "extractionMethod": "ALL_QUALIFYING",
+  "extractionFrequency": "ONCE",
+  "includesControls": false,
+  "includesRelatives": false,
+  "otherDataToCombine": false,
+  "hasPendingPermitApplications": false,
+  "speTechnicalRequirements": "De gegevens dienen beschikbaar te worden gesteld in een beveiligde verwerkingsomgeving die voldoet aan de geldende informatiebeveiligings- en privacyvereisten. De aanvrager heeft de volgende technische vereisten:\n\n• Toegang via multi-factor authenticatie (MFA).\n• Rolgebaseerde autorisatie voor geautoriseerde projectmedewerkers.\n• Mogelijkheid tot analyse met standaard statistische en data-analysetools (bijvoorbeeld Python, R en SQL).\n• Mogelijkheid om geaggregeerde resultaten en statistische rapportages te exporteren na controle door de gegevenshouder.\n• Logging en auditing van gebruikersactiviteiten binnen de omgeving.\n• Versleuteling van gegevens tijdens opslag en verwerking.\n• Mogelijkheid om documentatie, scripts en configuratiebestanden binnen de beveiligde omgeving op te slaan.\n• Toegang via een webbrowser zonder aanvullende lokale installaties.\n• Ondersteuning voor samenwerking tussen meerdere geautoriseerde projectleden.\n• Geen noodzaak voor toegang tot direct identificerende persoonsgegevens.\n\nEr zijn geen aanvullende of bijzondere technische vereisten buiten de standaardfunctionaliteit van een beveiligde onderzoeks- en analyseomgeving.",
+  "environmentProviderName": "Beveiligde verwerkingsomgeving met MFA, rolgebaseerde toegangscontrole, audit logging, ondersteuning voor Python/R/SQL-analyses en export van uitsluitend geaggregeerde resultaten na goedkeuring door de gegevenshouder.",
+  "dataAccessTiming": "AS_SOON_AS_POSSIBLE",
+  "inactiveStoragePeriodStart": "2030-01-01",
+  "inactiveStoragePeriodEnd": "2034-12-31",
+  "usesOptOutException": false,
+  "transfersOutsideEuEea": false,
+  "dataController": "ZorgData Innovatie B.V.  Verwerkingsverantwoordelijke: ZorgData Innovatie B.V. Laan van de Toekomst 125 3528 AB Utrecht Nederland  Contactpersoon: Sophie Jansen Data Governance Manager sophie.jansen@testorganisatie.example",
+  "dataMinimisationCompliance": "De organisatie verwerkt uitsluitend de gegevens die noodzakelijk zijn voor het beantwoorden van de onderzoeksvragen. Alleen variabelen die direct relevant zijn voor de analyse van doodsoorzaken, leeftijd en geslacht worden opgevraagd. Er worden geen direct identificerende persoonsgegevens verwerkt. De gegevens worden uitsluitend gebruikt voor de in deze aanvraag beschreven doeleinden en uitsluitend gedurende de noodzakelijke verwerkingsperiode bewaard.",
+  "protectionStatement1": true,
+  "protectionStatement2": true,
+  "protectionStatement3": true,
+  "protectionStatement4": true,
+  "protectionStatement5": true,
+  "dataProcessingPersonnel": [
+    "Sophie Jansen <sophie.jansen@testorganisatie.example>"
+  ],
+  "lawfulnessOfProcessing": [
+    "1. e) de verwerking noodzakelijk is voor de vervulling van een taak van algemeen belang of in het kader van de uitoefening van het openbaar gezag dat aan de verwerkingsverantwoordelijke is verleend;"
+  ],
+  "consentAwareProcessingFee": true,
+  "consentAwareChargeFee": true,
+  "consentAwareInformationCorrect": true
+}

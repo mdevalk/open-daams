@@ -2,52 +2,24 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import pocDemoPayload from '@/lib/poc-demo-hdeu-payload.json';
 
-const SAMPLE_PAYLOAD = JSON.stringify(
-  {
-    hdeuApplicationId: 'FI-HDAB-2025-0042',
-    sendingCountry: 'FI',
-    sendingHdab: 'Findata',
-    transmissionTimestamp: new Date().toISOString(),
-    ncpTransactionId: 'NCP-TXN-20250625-001',
-    applicationType: 'DATA_ACCESS_APPLICATION',
-    applicantName: 'Dr. K. Virtanen',
-    applicantEmail: 'k.virtanen@helsinki.fi',
-    applicantOrganisation: 'University of Helsinki',
-    title: 'Comparative analysis of type-2 diabetes outcomes in Finland and the Netherlands 2018-2023',
-    projectDescription:
-      'Cross-national cohort study comparing long-term complications and treatment pathways for type-2 diabetes patients in Finland and the Netherlands, leveraging routine primary care and hospital data from both countries.',
-    purposeCategory: 'SCIENTIFIC_RESEARCH',
-    legalBasis: 'EHDS Art. 53(1) – scientific research',
-    requestedDatasets: [
-      {
-        dataHolderName: 'CBS',
-        datasets: [
-          {
-            name: "Overleden inwoners van Nederland naar doodsoorzaak (uitgebreide lijst van 'drie-teken categorieën'), leeftijd en geslacht",
-            url: 'https://acceptance.data.health.europa.eu/healthdata-central-platform/datasets/24b6a9b2-4519-4f94-8c0f-c4c85f295806?locale=nl',
-          },
-        ],
-      },
-      {
-        dataHolderName: 'GP Information Network (LINH)',
-        datasets: [{ name: 'Medicatievoorschriften huisartsenpraktijken (ATC A10)', url: null }],
-      },
-    ],
-    requestedVariables:
-      'Age, sex, diabetes diagnosis date (ICD-10 E11), HbA1c, BMI, medication (ATC A10), hospitalisations, complications (ICD-10 E110-E149)',
-    studyPopulation: 'Adults aged 18+ with a diagnosis of type-2 diabetes registered in Dutch general practices',
-    inclusionCriteria: 'Age ≥18, ICD-10 E11 diagnosis confirmed, registered ≥1 year',
-    exclusionCriteria: 'Type-1 diabetes, opt-out from research use',
-    dataStartDate: '2018-01-01',
-    dataEndDate: '2023-12-31',
-    projectStartDate: '2025-09-01',
-    projectEndDate: '2027-08-31',
-    dataProcessingCountry: 'NL',
-  },
-  null,
-  2,
-);
+// Real NCP application 6a70b4d104db074a00fd905d (HDAB-2026-0008), mapped
+// through mapNcpDetailZipToHdeuPayload — title is overridden so it reads as
+// a demo, not a duplicate of a real case; hdeuApplicationId gets a fresh
+// UUID on every load so repeated demo runs never collide on the dedup check.
+function buildSamplePayload(): string {
+  return JSON.stringify(
+    {
+      ...pocDemoPayload,
+      hdeuApplicationId: crypto.randomUUID(),
+      title: 'Test Data Access Application for PoC demo',
+      transmissionTimestamp: new Date().toISOString(),
+    },
+    null,
+    2,
+  );
+}
 
 export function HdeuImportForm({ locale, actingUserId }: { locale?: string; actingUserId: string }) {
   const router = useRouter();
@@ -58,7 +30,7 @@ export function HdeuImportForm({ locale, actingUserId }: { locale?: string; acti
   const [result, setResult] = useState<{ ok: true; ref: string; id: string; deadline: string } | { ok: false; error: string; details?: string[] } | null>(null);
 
   function loadSample() {
-    setJson(SAMPLE_PAYLOAD);
+    setJson(buildSamplePayload());
     setResult(null);
   }
 
