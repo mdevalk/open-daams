@@ -5,7 +5,7 @@ import { Application } from '@prisma/client';
 import { STATUS_COLORS } from '@/lib/workflow';
 import { cn } from '@/lib/utils';
 
-type Props = Pick<Application, 'status' | 'decisionOutcome'>;
+type Props = Pick<Application, 'status'>;
 
 const NL_STATUS_COLORS: Record<string, string> = {
   DRAFT:                           'bg-gray-100 text-gray-700 border border-gray-300',
@@ -17,25 +17,12 @@ const NL_STATUS_COLORS: Record<string, string> = {
   WITHDRAWN:                       'bg-gray-100 text-gray-500 border border-gray-300',
 };
 
-export function StatusBadge({ status, decisionOutcome }: Props) {
+export function StatusBadge({ status }: Props) {
   const tStatus = useTranslations('status');
-  const tDetail = useTranslations('applicationDetail');
-
-  const label =
-    status === 'DECISION_ISSUED' && decisionOutcome
-      ? `${tDetail('decision')}: ${decisionOutcome === 'POSITIVE' ? tDetail('positive') : tDetail('negative')}`
-      : tStatus(status);
-
-  const color =
-    status === 'DECISION_ISSUED'
-      ? decisionOutcome === 'POSITIVE'
-        ? 'bg-[#e6f5ea] text-[#1a5c2e] border border-[#39870c]'
-        : 'bg-[#fce8e6] text-[#7a1711] border border-[#d52b1e]'
-      : NL_STATUS_COLORS[status] ?? 'bg-gray-100 text-gray-700';
 
   return (
-    <span className={cn('status-badge', color)}>
-      {label}
+    <span className={cn('status-badge', NL_STATUS_COLORS[status] ?? 'bg-gray-100 text-gray-700')}>
+      {tStatus(status)}
     </span>
   );
 }

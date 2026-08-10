@@ -82,8 +82,16 @@ export default async function ApplicationDetailPage({
     }),
     prisma.user.findMany({ orderBy: { name: 'asc' } }),
     prisma.dataHolder.findMany({ orderBy: { name: 'asc' } }),
-    prisma.speOperator.findMany({ orderBy: { name: 'asc' } }),
+    prisma.speOperator.findMany({ include: { types: { orderBy: { name: 'asc' } } }, orderBy: { name: 'asc' } }),
   ]);
+
+  // Decimal is a class instance, not a plain object — React's server->client
+  // prop serialization rejects it outright, so convert before it crosses
+  // that boundary (PermitPanel is a client component).
+  const speOperatorsForClient = speOperators.map((op) => ({
+    ...op,
+    types: op.types.map((t) => ({ ...t, setupFee: t.setupFee.toString(), monthlyFee: t.monthlyFee.toString() })),
+  }));
 
   if (!rawApplication) notFound();
 
@@ -152,7 +160,7 @@ export default async function ApplicationDetailPage({
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-bold text-gray-900">{application.title}</h1>
-            <StatusBadge status={application.status} decisionOutcome={application.decisionOutcome} />
+            <StatusBadge status={application.status} />
           </div>
           <p className="text-sm text-gray-500 mt-1">
             {application.referenceNumber} &middot;{' '}
@@ -909,7 +917,7 @@ export default async function ApplicationDetailPage({
           <PermitPanel
             application={{ ...application, dataPermit: currentPermit }}
             currentUser={currentUser}
-            speOperators={speOperators}
+            speOperators={speOperatorsForClient}
           />
           {application.decisionOutcome === 'POSITIVE' && (
             <ExtractionRequestsPanel

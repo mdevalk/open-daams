@@ -33,7 +33,7 @@ export function ApplicationCard({ application: app, locale = 'nl' }: Props) {
               {app.title}
             </h3>
           </div>
-          <StatusBadge status={app.status} decisionOutcome={app.decisionOutcome} />
+          <StatusBadge status={app.status} />
         </div>
 
         <dl className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
