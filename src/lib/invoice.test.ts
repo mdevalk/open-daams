@@ -1,66 +1,28 @@
 import { describe, it, expect } from 'vitest';
-import type { DataPermit, FeeEstimate } from '@prisma/client';
-import {
-  buildInvoiceLineItems,
-  buildProvisionalInvoiceLineItems,
-  sumLineItems,
-  calculateDueDate,
-  nextInvoiceNumber,
-} from '@/lib/invoice';
+import { snapshotLineItems, sumLineItems, calculateDueDate, nextInvoiceNumber, type SourceLineItem } from '@/lib/invoice';
 
-describe('buildInvoiceLineItems', () => {
-  it('includes only the fee fields that are set', () => {
-    const permit = {
-      permitProcessingFee: 100,
-      dataPreparationFee: null,
-      speSetupFee: 250.5,
-      speUsageFee: null,
-      additionalServicesFee: null,
-      dataHolderFee: null,
-    } as unknown as DataPermit;
+describe('snapshotLineItems', () => {
+  it('copies category/glCode/description/amount/currency, dropping identity fields', () => {
+    const source = [
+      { category: 'ADMINISTRATIVE', glCode: '4010', description: null, amount: 100, currency: 'EUR' },
+      { category: 'SPE_SETUP', glCode: '4040', description: null, amount: 250.5, currency: 'EUR' },
+    ] as unknown as SourceLineItem[];
 
-    expect(buildInvoiceLineItems(permit)).toEqual([
-      { description: 'Permit processing fee', amount: '100' },
-      { description: 'Secure processing environment — setup fee', amount: '250.5' },
+    expect(snapshotLineItems(source)).toEqual([
+      { category: 'ADMINISTRATIVE', glCode: '4010', description: null, amount: 100, currency: 'EUR' },
+      { category: 'SPE_SETUP', glCode: '4040', description: null, amount: 250.5, currency: 'EUR' },
     ]);
   });
 
-  it('returns no line items when no fees are set', () => {
-    const permit = {
-      permitProcessingFee: null,
-      dataPreparationFee: null,
-      speSetupFee: null,
-      speUsageFee: null,
-      additionalServicesFee: null,
-      dataHolderFee: null,
-    } as unknown as DataPermit;
-
-    expect(buildInvoiceLineItems(permit)).toEqual([]);
-  });
-});
-
-describe('buildProvisionalInvoiceLineItems', () => {
-  it('only considers the narrower fee-estimate fee set', () => {
-    const estimate = {
-      administrativeFee: 50,
-      dataPreparationFee: 75,
-      dataHolderFee: null,
-    } as unknown as FeeEstimate;
-
-    expect(buildProvisionalInvoiceLineItems(estimate)).toEqual([
-      { description: 'Administrative / processing fee', amount: '50' },
-      { description: 'Data preparation fee', amount: '75' },
-    ]);
+  it('returns an empty array for no source items', () => {
+    expect(snapshotLineItems([])).toEqual([]);
   });
 });
 
 describe('sumLineItems', () => {
   it('sums the amounts across line items', () => {
     expect(
-      sumLineItems([
-        { description: 'a', amount: '100' },
-        { description: 'b', amount: '250.5' },
-      ]),
+      sumLineItems([{ amount: 100 }, { amount: 250.5 }] as unknown as SourceLineItem[]),
     ).toBe(350.5);
   });
 

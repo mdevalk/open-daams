@@ -51,7 +51,7 @@ export default async function ApplicationDetailPage({
       include: {
         applicant: { include: { dataUser: { select: { name: true } } } },
         dataPermits: { where: { isCurrent: true } },
-        feeEstimate: { include: { invoice: true } },
+        feeEstimate: { include: { invoice: true, speOperator: true, speType: true, lineItems: true } },
         logs: {
           include: { user: { select: { id: true, name: true, role: true } } },
           orderBy: { createdAt: 'asc' },
@@ -912,12 +912,11 @@ export default async function ApplicationDetailPage({
             currentUser={currentUser}
           />
           <TransitionPanel application={application} currentUser={currentUser} />
-          <FeeEstimatePanel application={application} currentUser={currentUser} />
+          <FeeEstimatePanel application={application} currentUser={currentUser} speOperators={speOperatorsForClient} />
           <DecisionCardPanel application={application} currentUser={currentUser} />
           <PermitPanel
             application={{ ...application, dataPermit: currentPermit }}
             currentUser={currentUser}
-            speOperators={speOperatorsForClient}
           />
           {application.decisionOutcome === 'POSITIVE' && (
             <ExtractionRequestsPanel

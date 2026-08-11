@@ -816,10 +816,20 @@ model FeeEstimate {
   application   Application @relation(fields: [applicationId], references: [id])
   currency      String      @default("EUR")
 
-  administrativeFee  Decimal? @db.Decimal(10, 2) // processing/application management
-  dataPreparationFee Decimal? @db.Decimal(10, 2) // anonymisation, pseudonymisation, etc.
-  dataHolderFee      Decimal? @db.Decimal(10, 2) // fees charged by health data holder(s)
-  totalAmount        Decimal  @db.Decimal(10, 2)
+  // Cost breakdown — see FinancialLineItem. totalAmount is a stored cache,
+  // recomputed server-side as sum(lineItems.amount) on every write.
+  lineItems   FinancialLineItem[]
+  totalAmount Decimal             @db.Decimal(10, 2)
+
+  // SPE operator/type chosen upfront so the applicant's accepted cost
+  // estimate already reflects real SPE costs, carried forward unchanged into
+  // the permit at issuance (DataPermit.speOperatorId/speTypeId) — see
+  // PermitPanel. No frozen name snapshot here (unlike DataPermit): this row
+  // isn't a signed legal document, a live relation is fine.
+  speOperatorId String?
+  speOperator   SpeOperator? @relation(fields: [speOperatorId], references: [id])
+  speTypeId     String?
+  speType       SpeType?     @relation(fields: [speTypeId], references: [id])
 
   notes  String?           @db.Text
   status FeeEstimateStatus @default(PENDING)
@@ -868,14 +878,14 @@ model DataPermit {
   revocationAt     DateTime?
 
   // Fees for data permit and processing services (Annex 9 §7 / EHDS Art. 62)
-  currency              String   @default("EUR")
-  permitProcessingFee   Decimal? @db.Decimal(10, 2)
-  dataPreparationFee    Decimal? @db.Decimal(10, 2)
-  speSetupFee           Decimal? @db.Decimal(10, 2)
-  speUsageFee           Decimal? @db.Decimal(10, 2)
-  additionalServicesFee Decimal? @db.Decimal(10, 2)
-  dataHolderFee         Decimal? @db.Decimal(10, 2)
-  paymentTerms          String?  @db.Text
+  // — see FinancialLineItem. These are a frozen copy of the accepted
+  // FeeEstimate's line items, taken at issuance (D6.4 §9: no re-entry, the
+  // estimate is the sole source of financial terms) and carried forward
+  // unchanged on amendment/renewal/revocation-appeal, same as speOperatorId
+  // etc. below.
+  currency    String   @default("EUR")
+  lineItems   FinancialLineItem[]
+  totalAmount Decimal? @db.Decimal(10, 2)
 
   // SPE operator selected by the HDAB for this permit version (issuance, or
   // changed on an amendment) — carried forward unchanged on renewal/revocation-
@@ -886,8 +896,8 @@ model DataPermit {
   speOperator   SpeOperator? @relation(fields: [speOperatorId], references: [id])
 
   // The specific tier/type offered by the selected operator, if any — its
-  // setupFee/monthlyFee pre-fill speSetupFee/speUsageFee above at issuance
-  // (which stay independently editable), and the choice itself is recorded
+  // setupFee/monthlyFee become this permit's SPE_SETUP/SPE_USAGE line items
+  // (see FinancialLineItem) at issuance, and the choice itself is recorded
   // here for the same audit reason as speOperatorId. Carried forward the
   // same way on renewal/revocation-appeal.
   speTypeId String?
@@ -1012,10 +1022,10 @@ model Invoice {
   feeEstimateId String?      @unique
   feeEstimate   FeeEstimate? @relation(fields: [feeEstimateId], references: [id])
 
-  currency    String        @default("EUR")
-  lineItems   Json // [{ description: string, amount: string }]
-  totalAmount Decimal       @db.Decimal(10, 2)
-  status      InvoiceStatus @default(ISSUED)
+  currency    String              @default("EUR")
+  lineItems   FinancialLineItem[]
+  totalAmount Decimal             @db.Decimal(10, 2)
+  status      InvoiceStatus       @default(ISSUED)
 
   issuedAt DateTime  @default(now())
   dueAt    DateTime
@@ -1030,6 +1040,43 @@ model Invoice {
   updatedAt DateTime @updatedAt
 
   @@index([dueAt])
+}
+
+// A single cost breakdown line — the one shared model behind Kostenraming
+// (FeeEstimate), an issued permit's fees (DataPermit), and an invoice
+// (Invoice), replacing what used to be three independently hand-rolled field
+// lists (see src/lib/financial-line-items.ts). Owned by exactly one of the
+// three via whichever *Id is set — enforced in application code, same
+// pattern Invoice already used for its own optional owner FKs.
+enum FinancialLineCategory {
+  ADMINISTRATIVE
+  DATA_PREPARATION
+  DATA_HOLDER
+  SPE_SETUP
+  SPE_USAGE
+  ADDITIONAL_SERVICES
+}
+
+model FinancialLineItem {
+  id          String                @id @default(cuid())
+  category    FinancialLineCategory
+  glCode      String?
+  description String?               @db.Text
+  amount      Decimal               @db.Decimal(10, 2)
+  currency    String                @default("EUR")
+
+  feeEstimateId String?
+  feeEstimate   FeeEstimate? @relation(fields: [feeEstimateId], references: [id], onDelete: Cascade)
+  dataPermitId  String?
+  dataPermit    DataPermit?  @relation(fields: [dataPermitId], references: [id], onDelete: Cascade)
+  invoiceId     String?
+  invoice       Invoice?     @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([feeEstimateId])
+  @@index([dataPermitId])
+  @@index([invoiceId])
 }
 
 // Annex 9 §6.8 — persons entitled to process the data granted under this
@@ -1188,6 +1235,7 @@ model SpeOperator {
 
   provisioningOrders SpeProvisioningOrder[]
   permits            DataPermit[]
+  feeEstimates       FeeEstimate[]
   types              SpeType[]
 }
 
@@ -1204,7 +1252,8 @@ model SpeType {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
-  permits DataPermit[]
+  permits      DataPermit[]
+  feeEstimates FeeEstimate[]
 
   @@unique([speOperatorId, name])
 }

@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { prisma } from '@/lib/db';
-import { InvoiceStatus } from '@prisma/client';
-import { formatDate } from '@/lib/utils';
+import { InvoiceStatus, FeeEstimateStatus } from '@prisma/client';
+import { formatDate, formatDateTime } from '@/lib/utils';
 import { formatPermitId } from '@/lib/permit';
 
 export const dynamic = 'force-dynamic';
@@ -13,22 +13,109 @@ const STATUS_COLORS: Record<InvoiceStatus, string> = {
   CANCELLED: 'bg-red-100 text-red-700',
 };
 
+const ESTIMATE_STATUS_COLORS: Record<FeeEstimateStatus, string> = {
+  PENDING: 'bg-amber-100 text-amber-800',
+  ACCEPTED: 'bg-emerald-100 text-emerald-700',
+  REJECTED: 'bg-red-100 text-red-700',
+};
+
 const STATUSES: InvoiceStatus[] = ['ISSUED', 'PAID', 'DRAFT', 'CANCELLED'];
 
 function isOverdue(invoice: { status: InvoiceStatus; dueAt: Date }): boolean {
   return invoice.status === 'ISSUED' && invoice.dueAt < new Date();
 }
 
-export default async function InvoicesPage({
+export default async function FinancialsPage({
   params,
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ status?: string; overdue?: string }>;
+  searchParams: Promise<{ tab?: string; status?: string; overdue?: string }>;
 }) {
   const { locale } = await params;
-  const { status, overdue } = await searchParams;
+  const { tab: rawTab, status, overdue } = await searchParams;
+  const tab = rawTab === 'invoices' ? 'invoices' : 'estimates';
   const t = await getTranslations({ locale, namespace: 'invoices' });
+
+  const tabs = (
+    <div className="flex gap-1 border-b border-gray-200">
+      <a
+        href={`/${locale}/financials`}
+        className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${
+          tab === 'estimates' ? 'border-[#154273] text-[#154273]' : 'border-transparent text-gray-500 hover:text-gray-700'
+        }`}
+      >
+        {t('tabEstimates')}
+      </a>
+      <a
+        href={`/${locale}/financials?tab=invoices`}
+        className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${
+          tab === 'invoices' ? 'border-[#154273] text-[#154273]' : 'border-transparent text-gray-500 hover:text-gray-700'
+        }`}
+      >
+        {t('tabInvoices')}
+      </a>
+    </div>
+  );
+
+  if (tab !== 'invoices') {
+    const estimates = await prisma.feeEstimate.findMany({
+      include: {
+        application: { select: { id: true, referenceNumber: true, title: true, applicant: { select: { name: true, dataUser: { select: { name: true } } } } } },
+      },
+      orderBy: { sentAt: 'desc' },
+    });
+
+    return (
+      <div className="space-y-6">
+        <div className="border-b border-gray-200 pb-4">
+          <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
+          <p className="text-sm text-gray-500 mt-1">{t('subtitle')}</p>
+        </div>
+        {tabs}
+        {estimates.length === 0 ? (
+          <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
+            <p className="font-medium text-gray-700">{t('estimatesNoResults')}</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {estimates.map((estimate) => (
+              <a
+                key={estimate.id}
+                href={`/${locale}/applications/${estimate.application.id}`}
+                className="block rounded-lg border border-gray-200 bg-white p-4 hover:border-[#01689b] transition-colors"
+              >
+                <div className="flex items-start justify-between gap-4 mb-3">
+                  <div>
+                    <span className="font-mono text-sm font-bold text-gray-900">{estimate.application.referenceNumber}</span>
+                    <p className="text-xs text-gray-500 mt-0.5">{estimate.application.title}</p>
+                  </div>
+                  <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold ${ESTIMATE_STATUS_COLORS[estimate.status]}`}>
+                    {t(`estimateStatus${estimate.status}`)}
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <p className="text-xs text-gray-500">{t('applicant')}</p>
+                    <p className="font-medium">{estimate.application.applicant.name}</p>
+                    <p className="text-xs text-gray-400">{estimate.application.applicant.dataUser?.name}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">{t('amount')}</p>
+                    <p className="font-medium">{estimate.totalAmount.toString()} {estimate.currency}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">{t('sentOn')}</p>
+                    <p className="font-medium">{formatDateTime(estimate.sentAt)}</p>
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   const invoices = await prisma.invoice.findMany({
     where: {
@@ -68,10 +155,11 @@ export default async function InvoicesPage({
         <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
         <p className="text-sm text-gray-500 mt-1">{t('subtitle')}</p>
       </div>
+      {tabs}
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <a
-          href={`/${locale}/invoices`}
+          href={`/${locale}/financials?tab=invoices`}
           className={`rounded-lg border p-4 text-center transition-colors ${
             !status && !overdue ? 'border-[#154273] bg-[#e8f4fb]' : 'border-gray-200 bg-white hover:bg-gray-50'
           }`}
@@ -82,7 +170,7 @@ export default async function InvoicesPage({
         {STATUSES.map((s) => (
           <a
             key={s}
-            href={`/${locale}/invoices?status=${s}`}
+            href={`/${locale}/financials?tab=invoices&status=${s}`}
             className={`rounded-lg border p-4 text-center transition-colors ${
               status === s ? 'border-[#154273] bg-[#e8f4fb]' : 'border-gray-200 bg-white hover:bg-gray-50'
             }`}
@@ -92,7 +180,7 @@ export default async function InvoicesPage({
           </a>
         ))}
         <a
-          href={`/${locale}/invoices?overdue=1`}
+          href={`/${locale}/financials?tab=invoices&overdue=1`}
           className={`rounded-lg border p-4 text-center transition-colors ${
             overdue ? 'border-amber-500 bg-amber-50' : 'border-gray-200 bg-white hover:bg-gray-50'
           }`}
@@ -126,7 +214,7 @@ export default async function InvoicesPage({
             const reference = invoice.permit
               ? `${formatPermitId(invoice.permit.permitNumber, invoice.permit.version)} — ${invoice.permit.application?.referenceNumber} — ${invoice.permit.application?.title}`
               : `${invoice.application?.referenceNumber} — ${invoice.application?.title}`;
-            const href = `/${locale}/invoices/${invoice.id}`;
+            const href = `/${locale}/financials/${invoice.id}`;
             return (
               <a
                 key={invoice.id}

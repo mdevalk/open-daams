@@ -42,7 +42,7 @@ export async function PATCH(
 
     const request = await prisma.permitChangeRequest.findUnique({
       where: { id: requestId },
-      include: { permit: { include: { authorizedPersons: true, speProvisioning: true, grantedDatasets: true } } },
+      include: { permit: { include: { authorizedPersons: true, speProvisioning: true, grantedDatasets: true, lineItems: true } } },
     });
     if (!request || request.permitId !== id) {
       return NextResponse.json({ error: 'Change request not found' }, { status: 404 });
@@ -149,13 +149,16 @@ export async function PATCH(
           signedAt,
           signingKeyId,
           currency: permit.currency,
-          permitProcessingFee: permit.permitProcessingFee,
-          dataPreparationFee: permit.dataPreparationFee,
-          speSetupFee: permit.speSetupFee,
-          speUsageFee: permit.speUsageFee,
-          additionalServicesFee: permit.additionalServicesFee,
-          dataHolderFee: permit.dataHolderFee,
-          paymentTerms: permit.paymentTerms,
+          totalAmount: permit.totalAmount,
+          lineItems: {
+            create: permit.lineItems.map((item) => ({
+              category: item.category,
+              glCode: item.glCode,
+              description: item.description,
+              amount: item.amount,
+              currency: item.currency,
+            })),
+          },
           speOperatorId,
           speTypeId,
           speOperatorName,

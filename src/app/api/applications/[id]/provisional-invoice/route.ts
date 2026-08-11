@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
-import { buildProvisionalInvoiceLineItems, calculateDueDate, nextInvoiceNumber, sumLineItems } from '@/lib/invoice';
+import { snapshotLineItems, calculateDueDate, nextInvoiceNumber, sumLineItems } from '@/lib/invoice';
 
 /**
  * POST /api/applications/[id]/provisional-invoice
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     const feeEstimate = await prisma.feeEstimate.findUnique({
       where: { applicationId: id },
-      include: { invoice: true },
+      include: { invoice: true, lineItems: true },
     });
     if (!feeEstimate) return NextResponse.json({ error: 'No fee estimate found for this application' }, { status: 404 });
     if (feeEstimate.status !== 'ACCEPTED') {
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: `A provisional invoice already exists: ${feeEstimate.invoice.invoiceNumber}` }, { status: 409 });
     }
 
-    const lineItems = buildProvisionalInvoiceLineItems(feeEstimate);
+    const lineItems = snapshotLineItems(feeEstimate.lineItems);
     if (lineItems.length === 0) {
       return NextResponse.json({ error: 'The fee estimate has no fee amounts to invoice' }, { status: 422 });
     }
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         applicationId: id,
         feeEstimateId: feeEstimate.id,
         currency: feeEstimate.currency,
-        lineItems,
+        lineItems: { create: lineItems },
         totalAmount,
         status: 'ISSUED',
         issuedAt: now,
@@ -57,6 +57,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         notes: body.notes ?? null,
         createdById: authz.user.id,
       },
+      include: { lineItems: true },
     });
 
     return NextResponse.json(invoice, { status: 201 });

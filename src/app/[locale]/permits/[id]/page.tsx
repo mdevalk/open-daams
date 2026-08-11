@@ -79,6 +79,7 @@ export default async function PermitDetailPage({
           },
         },
         previousPermit: { select: { id: true, permitNumber: true, version: true } },
+        lineItems: true,
         // The SPE provider is never stored directly on the permit — it's
         // derived via speOperator.speProvider (see schema.prisma), so this is
         // included here for display and future SPE-provider API configuration.
@@ -93,7 +94,7 @@ export default async function PermitDetailPage({
           orderBy: { requestedAt: 'desc' },
         },
         invoices: {
-          include: { createdBy: { select: { name: true, role: true } } },
+          include: { createdBy: { select: { name: true, role: true } }, lineItems: true },
           orderBy: { createdAt: 'desc' },
         },
         speProvisioning: {
@@ -424,14 +425,7 @@ export default async function PermitDetailPage({
             canIssue={['DECISION_MAKER', 'ADMIN'].includes(currentUser.role)}
             canManage={['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(currentUser.role)}
             currentUserId={currentUser.id}
-            hasFeesRecorded={[
-              permit.permitProcessingFee,
-              permit.dataPreparationFee,
-              permit.speSetupFee,
-              permit.speUsageFee,
-              permit.additionalServicesFee,
-              permit.dataHolderFee,
-            ].some((v) => v != null)}
+            hasFeesRecorded={permit.lineItems.length > 0}
           />
           {permit.application?.type === 'DATA_ACCESS_APPLICATION' && (
             <SpeProvisioningPanel

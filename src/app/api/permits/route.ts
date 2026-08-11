@@ -24,21 +24,19 @@ async function generatePermitNumber(year: number): Promise<string> {
   return `${prefix}${String(lastSeq + 1).padStart(4, '0')}`;
 }
 
-function toDecimalOrNull(v: unknown): number | null {
-  if (v === undefined || v === null || v === '') return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
-
 /**
  * POST /api/permits
  * Issue a new data permit after a positive DECISION_ISSUED.
  * Implements D6.4 §9 / §9.1 (after optional permit-pending-acceptance step).
+ * The permit's cost line items and SPE operator/type are not accepted from
+ * the client — they're derived from the application's accepted FeeEstimate,
+ * which is the sole source of financial terms (D6.4 §9: no re-entry at
+ * issuance).
  */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    // body: { applicationId, validFrom, validUntil, issuedByUserId, speOperatorId?, speTypeId? }
+    // body: { applicationId, validFrom, validUntil, issuedByUserId }
 
     const auth = await requireRole(body.issuedByUserId, ['DECISION_MAKER', 'ADMIN']);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
@@ -51,6 +49,7 @@ export async function POST(req: NextRequest) {
           include: { dataHolder: { select: { name: true } } },
           orderBy: { createdAt: 'asc' },
         },
+        feeEstimate: { include: { lineItems: true } },
       },
     });
 
@@ -79,18 +78,23 @@ export async function POST(req: NextRequest) {
       })),
     );
 
+    const speOperatorId = application.feeEstimate?.speOperatorId ?? null;
+    const speTypeId = application.feeEstimate?.speTypeId ?? null;
+    const estimateLineItems = application.feeEstimate?.lineItems ?? [];
+    const totalAmount = estimateLineItems.reduce((sum, item) => sum + Number(item.amount), 0);
+
     // Resolved once here and frozen into both the signature and the permit
     // row itself (speOperatorName/etc.) — see the schema comment on those
     // columns for why this can't just be a live join at verify time.
     const [speOperatorRow, speTypeRow] = await Promise.all([
-      body.speOperatorId
+      speOperatorId
         ? prisma.speOperator.findUnique({
-            where: { id: body.speOperatorId },
+            where: { id: speOperatorId },
             include: { speProvider: { select: { name: true } } },
           })
         : null,
-      body.speTypeId
-        ? prisma.speType.findUnique({ where: { id: body.speTypeId } })
+      speTypeId
+        ? prisma.speType.findUnique({ where: { id: speTypeId } })
         : null,
     ]);
     const speType = speTypeRow && { id: speTypeRow.id, name: speTypeRow.name };
@@ -127,15 +131,18 @@ export async function POST(req: NextRequest) {
             signature,
             signedAt,
             signingKeyId,
-            permitProcessingFee: toDecimalOrNull(body.permitProcessingFee),
-            dataPreparationFee: toDecimalOrNull(body.dataPreparationFee),
-            speSetupFee: toDecimalOrNull(body.speSetupFee),
-            speUsageFee: toDecimalOrNull(body.speUsageFee),
-            additionalServicesFee: toDecimalOrNull(body.additionalServicesFee),
-            dataHolderFee: toDecimalOrNull(body.dataHolderFee),
-            paymentTerms: body.paymentTerms || null,
-            speOperatorId: body.speOperatorId || null,
-            speTypeId: body.speTypeId || null,
+            totalAmount: estimateLineItems.length > 0 ? totalAmount : null,
+            lineItems: {
+              create: estimateLineItems.map((item) => ({
+                category: item.category,
+                glCode: item.glCode,
+                description: item.description,
+                amount: item.amount,
+                currency: item.currency,
+              })),
+            },
+            speOperatorId,
+            speTypeId,
             speOperatorName: speOperator ? speOperator.name : null,
             speOperatorProviderName: speOperator ? speOperator.providerName : null,
             speTypeName: speType ? speType.name : null,

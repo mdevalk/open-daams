@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
-import { buildInvoiceLineItems, calculateDueDate, nextInvoiceNumber, sumLineItems } from '@/lib/invoice';
+import { snapshotLineItems, calculateDueDate, nextInvoiceNumber, sumLineItems } from '@/lib/invoice';
 
 /**
  * GET  /api/permits/[id]/invoices  — list invoices for a permit
@@ -27,10 +27,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const authz = await requireRole(body.actingUserId, ['DECISION_MAKER', 'ADMIN']);
     if (!authz.ok) return NextResponse.json({ error: authz.error }, { status: authz.status });
 
-    const permit = await prisma.dataPermit.findUnique({ where: { id } });
+    const permit = await prisma.dataPermit.findUnique({ where: { id }, include: { lineItems: true } });
     if (!permit) return NextResponse.json({ error: 'Permit not found' }, { status: 404 });
 
-    const lineItems = buildInvoiceLineItems(permit);
+    const lineItems = snapshotLineItems(permit.lineItems);
     if (lineItems.length === 0) {
       return NextResponse.json(
         { error: 'This permit has no fee amounts recorded to invoice' },
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         invoiceNumber,
         permitId: id,
         currency: permit.currency,
-        lineItems,
+        lineItems: { create: lineItems },
         totalAmount,
         status: 'ISSUED',
         issuedAt: now,
@@ -58,6 +58,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         notes: body.notes ?? null,
         createdById: authz.user.id,
       },
+      include: { lineItems: true },
     });
 
     return NextResponse.json(invoice, { status: 201 });

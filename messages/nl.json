@@ -2,7 +2,7 @@
   "nav": {
     "applications": "Aanvragen",
     "permits": "Vergunningen",
-    "invoices": "Facturen",
+    "financials": "Financiën",
     "import": "JSON importeren",
     "public": "Openbaar register",
     "referenceData": "Referentiegegevens",
@@ -392,15 +392,8 @@
     "feePreparation": "Gegevensvoorbereiding",
     "feeSpeSetup": "SPE opstartkosten",
     "feeSpeUsage": "SPE gebruikskosten",
-    "speOperator": "SPE-operator",
-    "speOperatorNone": "— geen geselecteerd —",
-    "speType": "SPE-type",
-    "speTypeNone": "— geen geselecteerd —",
-    "feeSpeDerivedFromType": "Afgeleid van het geselecteerde SPE-type",
     "feeAdditional": "Aanvullende diensten",
-    "feeDataHolder": "Kosten gegevenshouder(s)",
-    "paymentTerms": "Opmerkingen",
-    "paymentTermsPlaceholder": "Onderbouwing van de aanvullende kosten..."
+    "feeDataHolder": "Kosten gegevenshouder(s)"
   },
   "userSwitcher": {
     "label": "Actief als"
@@ -440,6 +433,8 @@
   "invoices": {
     "title": "Facturen",
     "subtitle": "Vergoedingen voor secundair gebruik op grond van artikel 62 EHDS",
+    "tabInvoices": "Facturen",
+    "tabEstimates": "Kostenramingen",
     "breadcrumb": "Facturen",
     "total": "Totaal",
     "overdue": "Achterstallig",
@@ -469,7 +464,12 @@
     "lineItemsTitle": "Regels",
     "notes": "Notities",
     "viewApplication": "Bekijk aanvraag →",
-    "permitTitle": "Vergunning"
+    "permitTitle": "Vergunning",
+    "estimatesNoResults": "Geen kostenramingen gevonden",
+    "estimateStatusPENDING": "In afwachting van reactie aanvrager",
+    "estimateStatusACCEPTED": "Geaccepteerd door aanvrager",
+    "estimateStatusREJECTED": "Afgewezen door aanvrager",
+    "sentOn": "Verzonden op"
   },
   "ethicalReview": {
     "title": "Ethische toetsing (D6.3 §6.1)",

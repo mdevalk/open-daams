@@ -4,8 +4,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { readErrorMessage, formatDate } from '@/lib/utils';
+import { LINE_CATEGORY_META } from '@/lib/financial-line-items';
+import type { FinancialLineCategory } from '@prisma/client';
 
-type InvoiceLineItem = { description: string; amount: string };
+type InvoiceLineItem = { id: string; category: FinancialLineCategory; description: string | null; amount: string };
 
 type Invoice = {
   id: string;
@@ -126,9 +128,9 @@ export function InvoicePanel({
                 </div>
 
                 <ul className="text-xs text-gray-600 space-y-0.5">
-                  {invoice.lineItems.map((item, i) => (
-                    <li key={i} className="flex justify-between">
-                      <span>{item.description}</span>
+                  {invoice.lineItems.map((item) => (
+                    <li key={item.id} className="flex justify-between">
+                      <span>{LINE_CATEGORY_META[item.category].label}{item.description ? ` — ${item.description}` : ''}</span>
                       <span>{item.amount} {invoice.currency}</span>
                     </li>
                   ))}

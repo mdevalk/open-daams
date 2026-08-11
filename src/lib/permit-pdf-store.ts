@@ -36,6 +36,7 @@ const PDF_INCLUDE = {
   authorizedPersons: { orderBy: { addedAt: 'asc' as const } },
   grantedDatasets: { orderBy: { createdAt: 'asc' as const } },
   previousPermit: { select: { permitNumber: true, version: true } },
+  lineItems: true,
 } satisfies Prisma.DataPermitInclude;
 
 /**

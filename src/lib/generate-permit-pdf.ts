@@ -1,9 +1,10 @@
 import { PDFDocument, rgb, StandardFonts, PDFFont, PDFPage } from 'pdf-lib';
-import { DataPermitStatus } from '@prisma/client';
+import { DataPermitStatus, FinancialLineCategory } from '@prisma/client';
 import { APP_NAME } from './branding';
 import { formatPermitId } from './permit';
 import { buildDigitalPermitDocument, groupDatasetsByHolder } from './permit-signing';
 import { formatDateNumeric } from './utils';
+import { LINE_CATEGORY_META } from './financial-line-items';
 
 // Layout follows TEHDAS2 D6.3 "Guideline for Health Data Access Bodies on the
 // procedures and formats for data access", Annex 9 - Data permit template
@@ -88,13 +89,7 @@ export type PermitPdfData = {
   signedAt?: Date | null;
   signingKeyId?: string | null;
   currency?: string | null;
-  permitProcessingFee?: unknown;
-  dataPreparationFee?: unknown;
-  speSetupFee?: unknown;
-  speUsageFee?: unknown;
-  additionalServicesFee?: unknown;
-  dataHolderFee?: unknown;
-  paymentTerms?: string | null;
+  lineItems?: Array<{ category: FinancialLineCategory; description?: string | null; amount: unknown }> | null;
   authorizedPersons?: Array<{ name: string; affiliation: string; email: string }> | null;
   grantedDatasets?: Array<{
     dataHolderName: string;
@@ -553,33 +548,24 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
   doc.heading('7', 'KOSTEN VOOR VERGUNNING EN GEGEVENSVERWERKING');
   {
     const currency = permit.currency ?? 'EUR';
-    const feeLines: Array<[string, unknown]> = [
-      ['Behandelkosten vergunning', permit.permitProcessingFee],
-      ['Kosten gegevensvoorbereiding', permit.dataPreparationFee],
-      ...(!isDataRequest ? ([
-        ['SPE opstartkosten', permit.speSetupFee],
-        ['SPE gebruikskosten', permit.speUsageFee],
-      ] as Array<[string, unknown]>) : []),
-      ['Aanvullende diensten', permit.additionalServicesFee],
-      ['Kosten gegevenshouder(s)', permit.dataHolderFee],
-    ];
-    const known = feeLines.filter(([, v]) => fmtMoney(v, currency) !== null);
+    const lineItems = (permit.lineItems ?? []).filter(
+      (item) => !isDataRequest || (item.category !== 'SPE_SETUP' && item.category !== 'SPE_USAGE'),
+    );
 
-    if (known.length > 0) {
+    if (lineItems.length > 0) {
       doc.paragraph(`Kosten worden vermeld in ${currency}, conform artikel 62 EHDS.`, { size: 8, color: C.gray });
       doc.spacer(4);
       let total = 0;
-      for (const [label, v] of known) {
-        const formatted = fmtMoney(v, currency)!;
-        total += Number(v);
+      for (const item of lineItems) {
+        const formatted = fmtMoney(item.amount, currency) ?? '—';
+        total += Number(item.amount);
+        const label = item.description
+          ? `${LINE_CATEGORY_META[item.category].label} — ${item.description}`
+          : LINE_CATEGORY_META[item.category].label;
         doc.field(label, formatted);
       }
       doc.spacer(2);
       doc.field('Totaal', fmtMoney(total, currency) ?? '—');
-      if (permit.paymentTerms) {
-        doc.spacer(4);
-        doc.paragraph(permit.paymentTerms, { size: 8 });
-      }
     } else {
       doc.paragraph(`Kosten worden vermeld in ${currency}, conform artikel 62 EHDS.`, { size: 8, color: C.gray });
       doc.spacer(4);

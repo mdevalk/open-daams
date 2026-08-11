@@ -2,7 +2,7 @@
   "nav": {
     "applications": "Applications",
     "permits": "Permits",
-    "invoices": "Invoices",
+    "financials": "Financials",
     "import": "Import JSON",
     "public": "Public register",
     "referenceData": "Reference data",
@@ -392,15 +392,8 @@
     "feePreparation": "Data preparation",
     "feeSpeSetup": "SPE setup",
     "feeSpeUsage": "SPE usage",
-    "speOperator": "SPE operator",
-    "speOperatorNone": "— none selected —",
-    "speType": "SPE type",
-    "speTypeNone": "— none selected —",
-    "feeSpeDerivedFromType": "Derived from the selected SPE type",
     "feeAdditional": "Additional services",
-    "feeDataHolder": "Data holder fee(s)",
-    "paymentTerms": "Comments",
-    "paymentTermsPlaceholder": "Additional cost justification..."
+    "feeDataHolder": "Data holder fee(s)"
   },
   "userSwitcher": {
     "label": "Acting as"
@@ -440,6 +433,8 @@
   "invoices": {
     "title": "Invoices",
     "subtitle": "Fees for secondary use under Article 62 EHDS",
+    "tabInvoices": "Invoices",
+    "tabEstimates": "Cost estimates",
     "breadcrumb": "Invoices",
     "total": "Total",
     "overdue": "Overdue",
@@ -469,7 +464,12 @@
     "lineItemsTitle": "Line items",
     "notes": "Notes",
     "viewApplication": "View application →",
-    "permitTitle": "Permit"
+    "permitTitle": "Permit",
+    "estimatesNoResults": "No cost estimates found",
+    "estimateStatusPENDING": "Awaiting applicant response",
+    "estimateStatusACCEPTED": "Accepted by applicant",
+    "estimateStatusREJECTED": "Rejected by applicant",
+    "sentOn": "Sent on"
   },
   "ethicalReview": {
     "title": "Ethical review (D6.3 §6.1)",

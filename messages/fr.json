@@ -2,7 +2,7 @@
   "nav": {
     "applications": "Demandes",
     "permits": "Autorisations",
-    "invoices": "Factures",
+    "financials": "Finances",
     "import": "Importer JSON",
     "public": "Registre public",
     "referenceData": "Données de référence",
@@ -392,15 +392,8 @@
     "feePreparation": "Préparation des données",
     "feeSpeSetup": "Mise en place SPE",
     "feeSpeUsage": "Utilisation SPE",
-    "speOperator": "Opérateur SPE",
-    "speOperatorNone": "— aucun sélectionné —",
-    "speType": "Type SPE",
-    "speTypeNone": "— aucun sélectionné —",
-    "feeSpeDerivedFromType": "Dérivé du type SPE sélectionné",
     "feeAdditional": "Services supplémentaires",
-    "feeDataHolder": "Frais détenteur(s) de données",
-    "paymentTerms": "Commentaires",
-    "paymentTermsPlaceholder": "Justification du coût supplémentaire..."
+    "feeDataHolder": "Frais détenteur(s) de données"
   },
   "userSwitcher": {
     "label": "Agissant en tant que"
@@ -440,6 +433,8 @@
   "invoices": {
     "title": "Factures",
     "subtitle": "Frais pour l'utilisation secondaire en vertu de l'article 62 EHDS",
+    "tabInvoices": "Factures",
+    "tabEstimates": "Estimations de coûts",
     "breadcrumb": "Factures",
     "total": "Total",
     "overdue": "En retard",
@@ -469,7 +464,12 @@
     "lineItemsTitle": "Lignes",
     "notes": "Notes",
     "viewApplication": "Voir la demande →",
-    "permitTitle": "Autorisation"
+    "permitTitle": "Autorisation",
+    "estimatesNoResults": "Aucune estimation de coûts trouvée",
+    "estimateStatusPENDING": "En attente de réponse du demandeur",
+    "estimateStatusACCEPTED": "Acceptée par le demandeur",
+    "estimateStatusREJECTED": "Rejetée par le demandeur",
+    "sentOn": "Envoyée le"
   },
   "ethicalReview": {
     "title": "Évaluation éthique (D6.3 §6.1)",

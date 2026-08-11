@@ -7,6 +7,7 @@ import { PermitCard } from '@/components/PermitCard';
 import { formatDate, serializePrisma } from '@/lib/utils';
 import { formatPermitId } from '@/lib/permit';
 import { InvoiceStatus } from '@prisma/client';
+import { LINE_CATEGORY_META } from '@/lib/financial-line-items';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,6 +57,7 @@ export default async function InvoiceDetailPage({
           select: { id: true, referenceNumber: true, title: true, applicant: { select: { name: true, email: true, dataUser: { select: { name: true } } } } },
         },
         createdBy: { select: { name: true, role: true } },
+        lineItems: true,
       },
     }),
     prisma.user.findMany({ orderBy: { name: 'asc' } }),
@@ -76,12 +78,11 @@ export default async function InvoiceDetailPage({
   const canManage = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(currentUser.role);
   const applicant = invoice.permit?.application?.applicant ?? invoice.application?.applicant;
   const overdue = isOverdue(invoice);
-  const lineItems = invoice.lineItems as { description: string; amount: string }[];
 
   return (
     <div className="space-y-6">
       <div className="text-sm text-gray-500">
-        <a href={`/${locale}/invoices`} className="hover:text-gray-900">{t('breadcrumb')}</a>
+        <a href={`/${locale}/financials`} className="hover:text-gray-900">{t('breadcrumb')}</a>
         <span className="mx-2">/</span>
         <span className="text-gray-900 font-mono">{invoice.invoiceNumber}</span>
       </div>
@@ -133,10 +134,10 @@ export default async function InvoiceDetailPage({
           <section className="rounded-xl border border-gray-200 bg-white p-5">
             <h2 className="font-semibold text-gray-900 mb-4">{t('lineItemsTitle')}</h2>
             <ul className="text-sm divide-y divide-gray-100">
-              {lineItems.map((item, i) => (
-                <li key={i} className="flex justify-between py-2">
-                  <span className="text-gray-700">{item.description}</span>
-                  <span className="font-medium">{item.amount} {invoice.currency}</span>
+              {invoice.lineItems.map((item) => (
+                <li key={item.id} className="flex justify-between py-2">
+                  <span className="text-gray-700">{LINE_CATEGORY_META[item.category].label}{item.description ? ` — ${item.description}` : ''}</span>
+                  <span className="font-medium">{String(item.amount)} {invoice.currency}</span>
                 </li>
               ))}
             </ul>

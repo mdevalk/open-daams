@@ -3,13 +3,25 @@
 import { useTranslations } from 'next-intl';
 
 import { useState } from 'react';
-import { Application, FeeEstimate, Invoice, User } from '@prisma/client';
+import { Application, FeeEstimate, FinancialLineCategory, FinancialLineItem, Invoice, SpeOperator, User } from '@prisma/client';
 import { useRouter } from 'next/navigation';
 import { formatDate, formatDateTime, readErrorMessage } from '@/lib/utils';
+import { SpeType } from './SpeTypeList';
+import { LINE_CATEGORY_META } from '@/lib/financial-line-items';
 
 type Props = {
-  application: Application & { feeEstimate: (FeeEstimate & { invoice: Invoice | null }) | null };
+  application: Application & {
+    feeEstimate:
+      | (FeeEstimate & {
+          invoice: Invoice | null;
+          speOperator: SpeOperator | null;
+          speType: SpeType | null;
+          lineItems: FinancialLineItem[];
+        })
+      | null;
+  };
   currentUser: User;
+  speOperators: { id: string; name: string; types: SpeType[] }[];
 };
 
 const INVOICE_STATUS_LABELS: Record<string, string> = {
@@ -38,12 +50,19 @@ const STATUS_STYLES: Record<string, string> = {
   REJECTED: 'bg-red-100 text-red-700',
 };
 
+// Manually addable/removable rows. SPE_SETUP/SPE_USAGE are managed
+// exclusively via the operator/type picker below, since their amounts are
+// derived from the chosen SpeType, not typed in freely.
+const MANUAL_CATEGORIES: FinancialLineCategory[] = ['ADMINISTRATIVE', 'DATA_PREPARATION', 'DATA_HOLDER', 'ADDITIONAL_SERVICES'];
+
+type Row = { key: string; category: FinancialLineCategory; amount: string; description: string };
+
 function fmtAmount(v: unknown, currency: string): string {
   if (v === null || v === undefined) return '—';
   return new Intl.NumberFormat('nl-NL', { style: 'currency', currency }).format(Number(v));
 }
 
-export function FeeEstimatePanel({ application, currentUser }: Props) {
+export function FeeEstimatePanel({ application, currentUser, speOperators }: Props) {
   const router = useRouter();
   const terr = useTranslations('errors');
   const [error, setError] = useState<string | null>(null);
@@ -52,10 +71,48 @@ export function FeeEstimatePanel({ application, currentUser }: Props) {
 
   const estimate = application.feeEstimate;
 
-  const [administrativeFee, setAdministrativeFee] = useState(estimate?.administrativeFee?.toString() ?? '');
-  const [dataPreparationFee, setDataPreparationFee] = useState(estimate?.dataPreparationFee?.toString() ?? '');
-  const [dataHolderFee, setDataHolderFee] = useState(estimate?.dataHolderFee?.toString() ?? '');
+  const [rows, setRows] = useState<Row[]>(() =>
+    (estimate?.lineItems ?? [])
+      .filter((li) => li.category !== 'SPE_SETUP' && li.category !== 'SPE_USAGE')
+      .map((li) => ({ key: li.id, category: li.category, amount: li.amount.toString(), description: li.description ?? '' })),
+  );
   const [notes, setNotes] = useState(estimate?.notes ?? '');
+  const [speOperatorId, setSpeOperatorId] = useState(estimate?.speOperatorId ?? '');
+  const [speTypeId, setSpeTypeId] = useState(estimate?.speTypeId ?? '');
+  const [speSetupFee, setSpeSetupFee] = useState(
+    estimate?.lineItems.find((li) => li.category === 'SPE_SETUP')?.amount?.toString() ?? '',
+  );
+  const [speUsageFee, setSpeUsageFee] = useState(
+    estimate?.lineItems.find((li) => li.category === 'SPE_USAGE')?.amount?.toString() ?? '',
+  );
+
+  const speTypes = speOperators.find((op) => op.id === speOperatorId)?.types ?? [];
+
+  function selectSpeOperator(id: string) {
+    setSpeOperatorId(id);
+    setSpeTypeId('');
+  }
+
+  function selectSpeType(id: string) {
+    setSpeTypeId(id);
+    const type = speTypes.find((t) => t.id === id);
+    if (type) {
+      setSpeSetupFee(String(type.setupFee));
+      setSpeUsageFee(String(type.monthlyFee));
+    }
+  }
+
+  function addRow() {
+    setRows((r) => [...r, { key: crypto.randomUUID(), category: 'ADMINISTRATIVE', amount: '', description: '' }]);
+  }
+
+  function updateRow(key: string, patch: Partial<Row>) {
+    setRows((r) => r.map((row) => (row.key === key ? { ...row, ...patch } : row)));
+  }
+
+  function removeRow(key: string) {
+    setRows((r) => r.filter((row) => row.key !== key));
+  }
 
   // Only relevant while the application is being assessed — unless an
   // estimate (and possibly its provisional invoice) already exists, in
@@ -107,10 +164,21 @@ export function FeeEstimatePanel({ application, currentUser }: Props) {
     setLoading(true);
     setError(null);
     try {
+      const lineItems = [
+        ...rows.filter((r) => r.amount.trim() !== '').map((r) => ({ category: r.category, amount: r.amount, description: r.description || undefined })),
+        ...(speSetupFee.trim() !== '' ? [{ category: 'SPE_SETUP' as const, amount: speSetupFee }] : []),
+        ...(speUsageFee.trim() !== '' ? [{ category: 'SPE_USAGE' as const, amount: speUsageFee }] : []),
+      ];
       const res = await fetch(`/api/applications/${application.id}/fee-estimate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ administrativeFee, dataPreparationFee, dataHolderFee, notes, actingUserId: currentUser.id }),
+        body: JSON.stringify({
+          lineItems,
+          speOperatorId: speOperatorId || undefined,
+          speTypeId: speTypeId || undefined,
+          notes,
+          actingUserId: currentUser.id,
+        }),
       });
       if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
       setEditing(false);
@@ -141,6 +209,7 @@ export function FeeEstimatePanel({ application, currentUser }: Props) {
   }
 
   const showForm = editing || !estimate;
+  const showSpe = application.type === 'DATA_ACCESS_APPLICATION';
 
   return (
     <div className="rounded border border-gray-200 bg-white p-4 space-y-3">
@@ -155,9 +224,21 @@ export function FeeEstimatePanel({ application, currentUser }: Props) {
 
       {estimate && !showForm && (
         <div className="text-sm space-y-1">
-          <div className="flex justify-between"><span className="text-gray-500">Behandelkosten</span><span>{fmtAmount(estimate.administrativeFee, estimate.currency)}</span></div>
-          <div className="flex justify-between"><span className="text-gray-500">Gegevensvoorbereiding</span><span>{fmtAmount(estimate.dataPreparationFee, estimate.currency)}</span></div>
-          <div className="flex justify-between"><span className="text-gray-500">Kosten gegevenshouder(s)</span><span>{fmtAmount(estimate.dataHolderFee, estimate.currency)}</span></div>
+          {estimate.lineItems.map((item) => (
+            <div key={item.id} className="flex justify-between">
+              <span className="text-gray-500">
+                {LINE_CATEGORY_META[item.category].label}
+                {(item.category === 'SPE_SETUP' || item.category === 'SPE_USAGE') && estimate.speType && ` — ${estimate.speType.name}`}
+                {(item.category === 'SPE_SETUP' || item.category === 'SPE_USAGE') && estimate.speOperator && ` (${estimate.speOperator.name})`}
+              </span>
+              <span>{fmtAmount(item.amount, item.currency)}</span>
+            </div>
+          ))}
+          {estimate.lineItems.map((item) =>
+            item.description ? (
+              <p key={`${item.id}-description`} className="text-xs text-gray-500 -mt-0.5">{item.description}</p>
+            ) : null,
+          )}
           <div className="flex justify-between font-semibold border-t border-gray-200 pt-1 mt-1"><span>Totaal</span><span>{fmtAmount(estimate.totalAmount, estimate.currency)}</span></div>
           {estimate.notes && <p className="text-xs text-gray-500 mt-1">{estimate.notes}</p>}
           <p className="text-xs text-gray-400 mt-1">Verzonden op {formatDateTime(estimate.sentAt)}</p>
@@ -208,21 +289,92 @@ export function FeeEstimatePanel({ application, currentUser }: Props) {
 
       {canManage && showForm && (
         <div className="space-y-2">
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Behandelkosten (EUR)</label>
-            <input type="number" step="0.01" value={administrativeFee} onChange={e => setAdministrativeFee(e.target.value)}
-              className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Gegevensvoorbereiding (EUR)</label>
-            <input type="number" step="0.01" value={dataPreparationFee} onChange={e => setDataPreparationFee(e.target.value)}
-              className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Kosten gegevenshouder(s) (EUR)</label>
-            <input type="number" step="0.01" value={dataHolderFee} onChange={e => setDataHolderFee(e.target.value)}
-              className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
-          </div>
+          {rows.map((row) => (
+            <div key={row.key} className="flex gap-2 items-start">
+              <select
+                value={row.category}
+                onChange={(e) => updateRow(row.key, { category: e.target.value as FinancialLineCategory })}
+                className="rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
+              >
+                {MANUAL_CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>{LINE_CATEGORY_META[cat].label}</option>
+                ))}
+              </select>
+              <input
+                type="number" step="0.01" placeholder="Bedrag (EUR)" value={row.amount}
+                onChange={(e) => updateRow(row.key, { amount: e.target.value })}
+                className="w-28 rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              />
+              <input
+                type="text" placeholder="Omschrijving (optioneel)" value={row.description}
+                onChange={(e) => updateRow(row.key, { description: e.target.value })}
+                className="flex-1 rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
+              />
+              <button onClick={() => removeRow(row.key)} className="text-xs text-red-600 hover:underline px-1 py-1.5" aria-label="Regel verwijderen">
+                ✕
+              </button>
+            </div>
+          ))}
+          <button onClick={addRow} className="text-xs text-[#01689b] hover:underline">
+            + Kostenregel toevoegen
+          </button>
+
+          {showSpe && (
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">SPE-operator</label>
+              <select
+                value={speOperatorId}
+                onChange={e => selectSpeOperator(e.target.value)}
+                className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
+              >
+                <option value="">— geen geselecteerd —</option>
+                {speOperators.map(op => (
+                  <option key={op.id} value={op.id}>{op.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {showSpe && speTypes.length > 0 && (
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">SPE-type</label>
+              <select
+                value={speTypeId}
+                onChange={e => selectSpeType(e.target.value)}
+                className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
+              >
+                <option value="">— geen geselecteerd —</option>
+                {speTypes.map(type => (
+                  <option key={type.id} value={type.id}>
+                    {type.name} (€{String(type.setupFee)} / €{String(type.monthlyFee)})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {showSpe && (
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">SPE opstartkosten (EUR)</label>
+                <input type="number" step="0.01" value={speSetupFee} readOnly={!!speTypeId} onChange={e => setSpeSetupFee(e.target.value)}
+                  className={`w-full rounded border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b] ${
+                    speTypeId ? 'border-gray-200 bg-gray-100 cursor-not-allowed' : 'border-gray-300'
+                  }`} />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">SPE gebruikskosten (EUR)</label>
+                <input type="number" step="0.01" value={speUsageFee} readOnly={!!speTypeId} onChange={e => setSpeUsageFee(e.target.value)}
+                  className={`w-full rounded border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b] ${
+                    speTypeId ? 'border-gray-200 bg-gray-100 cursor-not-allowed' : 'border-gray-300'
+                  }`} />
+              </div>
+              {speTypeId && (
+                <p className="col-span-2 text-xs text-gray-500 -mt-1">Afgeleid van het geselecteerde SPE-type</p>
+              )}
+            </div>
+          )}
+
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">Toelichting</label>
             <textarea rows={2} value={notes} onChange={e => setNotes(e.target.value)}

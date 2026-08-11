@@ -1,42 +1,22 @@
-import { DataPermit, FeeEstimate } from '@prisma/client';
+import type { FinancialLineItem } from '@prisma/client';
 
-// EHDS Art. 62 / TEHDAS2 D6.3 Ch. 8 — fee transparency: invoices must break
-// down the individual cost components that make up the total.
-const PERMIT_FEE_LINE_DEFS: Array<{ key: keyof DataPermit; description: string }> = [
-  { key: 'permitProcessingFee', description: 'Permit processing fee' },
-  { key: 'dataPreparationFee', description: 'Data preparation fee' },
-  { key: 'speSetupFee', description: 'Secure processing environment — setup fee' },
-  { key: 'speUsageFee', description: 'Secure processing environment — usage fee' },
-  { key: 'additionalServicesFee', description: 'Additional services fee' },
-  { key: 'dataHolderFee', description: 'Data holder fee(s)' },
-];
+export type SourceLineItem = Pick<FinancialLineItem, 'category' | 'glCode' | 'description' | 'amount' | 'currency'>;
 
-const FEE_ESTIMATE_LINE_DEFS: Array<{ key: keyof FeeEstimate; description: string }> = [
-  { key: 'administrativeFee', description: 'Administrative / processing fee' },
-  { key: 'dataPreparationFee', description: 'Data preparation fee' },
-  { key: 'dataHolderFee', description: 'Data holder fee(s)' },
-];
-
-export type InvoiceLineItem = { description: string; amount: string };
-
-export function buildInvoiceLineItems(permit: DataPermit): InvoiceLineItem[] {
-  return PERMIT_FEE_LINE_DEFS.filter(({ key }) => permit[key] != null).map(({ key, description }) => ({
+// Snapshots a source's current line items (a FeeEstimate's or DataPermit's)
+// into fresh create-input rows for a new invoice-owned copy — invoices are a
+// point-in-time record, so amounts must never retroactively change if the
+// source is edited later.
+export function snapshotLineItems(source: SourceLineItem[]) {
+  return source.map(({ category, glCode, description, amount, currency }) => ({
+    category,
+    glCode,
     description,
-    amount: (permit[key] as { toString(): string }).toString(),
+    amount,
+    currency,
   }));
 }
 
-// A provisional invoice (issued from an accepted fee estimate, before a
-// permit exists) uses the same line-item shape but a narrower fee set,
-// since permit-only fees (e.g. SPE) aren't known until the permit is granted.
-export function buildProvisionalInvoiceLineItems(estimate: FeeEstimate): InvoiceLineItem[] {
-  return FEE_ESTIMATE_LINE_DEFS.filter(({ key }) => estimate[key] != null).map(({ key, description }) => ({
-    description,
-    amount: (estimate[key] as { toString(): string }).toString(),
-  }));
-}
-
-export function sumLineItems(items: InvoiceLineItem[]): number {
+export function sumLineItems(items: Pick<FinancialLineItem, 'amount'>[]): number {
   return items.reduce((sum, item) => sum + Number(item.amount), 0);
 }
 

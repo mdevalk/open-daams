@@ -1,14 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type { FinancialLineCategory } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
+import { LINE_CATEGORY_META } from '@/lib/financial-line-items';
 
 const MANAGE_ROLES = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'] as const;
+
+type LineItemInput = { category: FinancialLineCategory; amount: number | string; description?: string | null };
+
+function buildLineItemsCreate(items: LineItemInput[]) {
+  return items
+    .filter((item) => item.amount !== undefined && item.amount !== null && item.amount !== '')
+    .map((item) => ({
+      category: item.category,
+      glCode: LINE_CATEGORY_META[item.category].glCode,
+      description: item.description || null,
+      amount: Number(item.amount),
+    }));
+}
 
 /**
  * POST /api/applications/[id]/fee-estimate
  * Create or update the cost estimate sent to the applicant during
  * assessment, before a decision is made (TEHDAS2 D6.3 §6.5, EHDS Art. 62(5)).
- * body: { administrativeFee?, dataPreparationFee?, dataHolderFee?, notes?, currency?, actingUserId }
+ * body: { lineItems: {category, amount, description?}[], speOperatorId?, speTypeId?,
+ *          notes?, currency?, actingUserId }
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -21,24 +37,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const application = await prisma.application.findUnique({ where: { id } });
     if (!application) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-    const administrativeFee = body.administrativeFee !== undefined && body.administrativeFee !== ''
-      ? Number(body.administrativeFee) : null;
-    const dataPreparationFee = body.dataPreparationFee !== undefined && body.dataPreparationFee !== ''
-      ? Number(body.dataPreparationFee) : null;
-    const dataHolderFee = body.dataHolderFee !== undefined && body.dataHolderFee !== ''
-      ? Number(body.dataHolderFee) : null;
-
-    const totalAmount = [administrativeFee, dataPreparationFee, dataHolderFee]
-      .reduce((sum: number, v) => sum + (v ?? 0), 0);
+    const lineItems = buildLineItemsCreate(body.lineItems ?? []);
+    const totalAmount = lineItems.reduce((sum, item) => sum + item.amount, 0);
 
     const feeEstimate = await prisma.feeEstimate.upsert({
       where: { applicationId: id },
       create: {
         applicationId: id,
         currency: body.currency ?? 'EUR',
-        administrativeFee,
-        dataPreparationFee,
-        dataHolderFee,
+        lineItems: { create: lineItems },
+        speOperatorId: body.speOperatorId || null,
+        speTypeId: body.speTypeId || null,
         totalAmount,
         notes: body.notes ?? null,
         status: 'PENDING',
@@ -46,15 +55,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       },
       update: {
         currency: body.currency ?? 'EUR',
-        administrativeFee,
-        dataPreparationFee,
-        dataHolderFee,
+        lineItems: { deleteMany: {}, create: lineItems },
+        speOperatorId: body.speOperatorId || null,
+        speTypeId: body.speTypeId || null,
         totalAmount,
         notes: body.notes ?? null,
         status: 'PENDING',
         sentAt: new Date(),
         respondedAt: null,
       },
+      include: { lineItems: true },
     });
 
     return NextResponse.json(feeEstimate, { status: 201 });
