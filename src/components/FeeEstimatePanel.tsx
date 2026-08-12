@@ -247,14 +247,14 @@ export function FeeEstimatePanel({ application, currentUser, speOperators }: Pro
 
       {estimate && estimate.status === 'ACCEPTED' && (
         <div className="border-t border-gray-100 pt-3">
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-xs font-medium text-gray-700">Voorlopige factuur</p>
-            {estimate.invoice && (
+          {estimate.invoice && (
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-xs font-medium text-gray-700">Voorlopige factuur</p>
               <span className={`text-xs font-medium px-2 py-0.5 rounded ${INVOICE_STATUS_STYLES[estimate.invoice.status]}`}>
                 {INVOICE_STATUS_LABELS[estimate.invoice.status]}
               </span>
-            )}
-          </div>
+            </div>
+          )}
           {estimate.invoice ? (
             <div className="text-sm space-y-1">
               <div className="flex justify-between"><span className="text-gray-500 font-mono text-xs">{estimate.invoice.invoiceNumber}</span><span>{fmtAmount(estimate.invoice.totalAmount, estimate.invoice.currency)}</span></div>
