@@ -1,6 +1,6 @@
 # OWASP Top 10 (2021) assessment: open-daams
 
-_Snapshot date: 2026-08-07._
+_Snapshot date: 2026-08-12 (previous snapshot: 2026-08-07)._
 
 This is a security assessment of the open-daams codebase mapped to the
 **OWASP Top 10 (2021)** categories. It complements `docs/nist-assessment.md` (NIST SP 800-53r5
@@ -144,7 +144,8 @@ with the equivalently-scoped `DataPermitLog`/`SpeProvisioningLog`. A new, separa
 covers reference-data (masterdata) CRUD — 12 previously entirely unlogged ADMIN write actions
 across data holders, SPE operators/providers, and data users — with entries recording *what*
 changed (field names for routine edits, explicit outcome phrasing like "marked as trusted" for
-the two access-control-relevant fields), not just that something did.
+the two access-control-relevant fields), not just that something did. Three new SPE-type CRUD
+actions (create/update/delete) added this round follow the same logged-by-default pattern.
 
 **The gap that remains, and it's a real one**: checked the design against NIST SP 800-53 AU-3's
 six required audit-record content elements (event type, when, where, source, **outcome**,

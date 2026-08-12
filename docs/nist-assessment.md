@@ -1,6 +1,6 @@
 # NIST security assessment: open-daams
 
-_Snapshot date: 2026-08-07 (previous snapshot: 2026-07-09)._
+_Snapshot date: 2026-08-12 (previous snapshot: 2026-08-07)._
 
 This is a security assessment of the open-daams codebase mapped to **NIST SP 800-53r5**
 control families, with **SSDF (SP 800-218)** noted for software-development-practice items.
@@ -17,27 +17,20 @@ Findings are grounded in the code as it exists at the time of writing; dependenc
 > This is an unofficial community project. Nothing here is a certification or compliance
 > attestation.
 
-## What changed since the 2026-07-09 snapshot
+## What changed since the 2026-08-07 snapshot
 
-- **Access control (AC-3) meaningfully hardened**, though the root issue (no real
-  authentication) is untouched. Several previously fully-open routes — full application detail
-  incl. PII/notes/audit log, raw attachment bytes, decision-card PDFs, the internal permit
-  record, and a `/api/users` endpoint leaking every user's id/email/role — now require a valid,
-  resolvable identity and either a staff role or ownership of the specific record
-  (`requireRoleOrOwner`, `src/lib/authz.ts`). `/api/users` also now returns only `id`/`name`/`role`.
-  See finding #1.
-- **Dependencies (RA-5) resolved**: `npm audit` is now clean (0 vulnerabilities, was 3
-  moderate) — `next` 15→16.3.0, `next-intl` 3→4.13.5. The `"*"`-pinned deps (SR-3) are
-  **still unresolved**. See finding #5.
-- **Audit coverage (AU-2/AU-3) expanded**, but the underlying gaps (AU-9 tamper-evidence,
-  AU-10 non-repudiation) are unchanged, and a more specific gap was identified this round:
-  **only successful actions are logged — rejected/unauthorized attempts leave no trace at
-  all**, which is a real gap against AU-3's "outcome of the event" element. See finding #6.
-- One of the two originally-cited central-helper bypass routes is fixed
-  (`applications/[id]/transition/route.ts` now uses `findActingUser`); the other
-  (`permits/[id]/route.ts` POST) still does its own inline lookup. See finding #1.
-- Nothing regressed: SI-11 (error disclosure), SI-10 (input validation), SC-8/SC-18 (headers),
-  SC-28 (data at rest), IA-5/SC-12 (secrets) are all unchanged from the prior snapshot.
+- **Financial data model unified**: `FeeEstimate`/`DataPermit`/`Invoice` now share one
+  `FinancialLineItem` table instead of duplicated flat fee fields. Every touched route
+  (`fee-estimate`, `permits`, `permits/[id]/invoices`, `provisional-invoice`,
+  `change-requests/[requestId]`) retains its existing `requireRole` gate — no AC-3 regression.
+- **Two new routes** (`spe-operators/[id]/types`, `spe-types/[id]`, ADMIN-only SPE-type CRUD)
+  follow the already-hardened pattern from the prior round: `requireRole`, explicit input
+  checks, and an `AuditLog` entry per write — extends AU-2/AU-3 masterdata coverage rather than
+  adding a new gap.
+- **SI-11 grew with the new/touched routes**: 53 handlers now return `e.message` to the client
+  (was 48). Same existing issue, not a new class of finding. See finding #3.
+- Nothing else regressed: SI-10 (input validation), SC-8/SC-18 (headers), SC-28 (data at rest),
+  IA-5/SC-12 (secrets) are all unchanged from the prior snapshot.
 
 ## Summary by control family
 
@@ -101,7 +94,7 @@ real session + same-site cookies, but rate limiting is a separate control.
 
 ### 3. SI-11 — Error message disclosure
 
-Unchanged in kind, grown in count: **48** handlers (was 40) return
+Unchanged in kind, grown in count: **53** handlers (was 48) return
 `e instanceof Error ? e.message : …` to the client. Prisma exceptions can leak column/constraint
 names and query fragments. **Remediation:** log detail server-side; return a generic message plus
 a correlation id.
@@ -142,7 +135,8 @@ A new, separate `AuditLog` was added for actions that aren't status transitions:
 (masterdata) CRUD across data holders, SPE operators/providers, and data users — 12 previously
 entirely unlogged ADMIN write actions. Entries now record *what changed*, not just that
 something did (field names for routine edits; explicit outcome phrasing — "marked as trusted",
-"SPE provider set to X" — for the two access-control-relevant fields).
+"SPE provider set to X" — for the two access-control-relevant fields). The three new SPE-type
+CRUD actions (create/update/delete) added this round follow the same logged-by-default pattern.
 
 **New, more specific gap identified this round**: checked the current design against NIST
 AU-3's six required content elements (event type, when, where, source, **outcome**, identity).

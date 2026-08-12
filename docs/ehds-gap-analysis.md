@@ -1,6 +1,6 @@
 # EHDS gap analysis: open-daams vs Regulation (EU) 2025/327
 
-_Snapshot date: 2026-07-23._
+_Snapshot date: 2026-08-12 (previous snapshot: 2026-07-23)._
 
 This document compares the functionality **actually modelled and wired** in open-daams against
 what the **EHDS Regulation (EU) 2025/327 (Chapter IV, secondary use)** itself prescribes for a
@@ -40,10 +40,10 @@ predictable places:
 |---|---|---|---|
 | Two application types (data access application + data request) | Art. 67 / 69 | `ApplicationType`, full distinct field sets | **Strong** — fields cover cohort formation, tabulation plan, controls/relatives, transfers outside EU/EEA, GDPR 6(1) grounds |
 | Application lifecycle + statutory deadlines | Art. 68(4)/69(4) | `ApplicationStatus` + deadline fields, void/recalc on info requests | **Strong** |
-| Cost estimate → applicant acceptance | Art. 62(5) | `FeeEstimate` | **Strong** |
+| Cost estimate → applicant acceptance | Art. 62(5) | `FeeEstimate` (header) + `FinancialLineItem` (breakdown, incl. SPE setup/usage and additional-services lines) | **Strong** |
 | Decision + permit issuance, permit document | Art. 68 | `DataPermit` + `generate-permit-pdf.ts` (real, signed PDF) | **Strong** |
 | Permit lifecycle + change requests (amendment / renewal / revocation appeal) | Art. 68(12), 63(1) | `DataPermitStatus` + `PermitChangeRequest` + `DataPermitLog` | **Strong** |
-| Invoicing (provisional + final) | Art. 62 | `Invoice` | **Strong** |
+| Invoicing (provisional + final) | Art. 62 | `Invoice` (header) + `FinancialLineItem` (line items, snapshotted from the accepted estimate/permit) | **Strong** |
 | Authorized persons in the SPE | Art. 73 | `AuthorizedPerson` | Present (list only) |
 | Appeals (bezwaar/beroep) | Art. 63 / national law | `Appeal` | Present |
 | Public transparency register | Art. 57(1)(j)(ii), 58, 61(4) | `publishedAt` / `decisionPublishedAt` + public route | Present |
@@ -111,6 +111,12 @@ explicit about for a compliance-themed demo.
 
 5. **`Document` is a metadata stub.** The model stores `filename`/`mimeType`/`sizeBytes` but
    there is no upload/storage route wired, so attachment handling is not real yet.
+
+6. **Fee/invoice line items unified — FIXED (2026-08-12).** `FeeEstimate`, `DataPermit`, and
+   `Invoice` each had their own duplicated fee-field lists; one was never updated when SPE/
+   additional-service fees were added, so provisional invoices silently understated the accepted
+   estimate. Replaced with one shared `FinancialLineItem` model, and SPE cost selection moved
+   from permit-issuance time into the upfront cost-estimate step.
 
 ## Suggested priorities
 
