@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import { deadlineStatus } from '@/lib/workflow';
 import { formatDate } from '@/lib/utils';
 
@@ -13,6 +14,7 @@ export function DeadlineBanner({
   label: string;
   deadline: Date | null | undefined;
 }) {
+  const t = useTranslations('deadlineBanner');
   if (!deadline) return null;
   const s = deadlineStatus(deadline);
   const days = daysUntil(deadline);
@@ -35,8 +37,8 @@ export function DeadlineBanner({
         {days !== null && (
           <span className="ml-2 text-xs">
             ({days < 0
-              ? `${Math.abs(days)} dag${Math.abs(days) !== 1 ? 'en' : ''} verlopen`
-              : `${days} dag${days !== 1 ? 'en' : ''} resterend`})
+              ? t('daysOverdue', { days: Math.abs(days) })
+              : t('daysRemaining', { days })})
           </span>
         )}
       </div>

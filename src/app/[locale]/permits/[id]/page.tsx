@@ -41,6 +41,7 @@ export default async function PermitDetailPage({
   const t = await getTranslations({ locale, namespace: 'permits' });
   const te = await getTranslations({ locale, namespace: 'ethicalReview' });
   const tps = await getTranslations({ locale, namespace: 'permitStatus' });
+  const ta = await getTranslations({ locale, namespace: 'applications' });
 
   const [rawPermit, users, speOperators] = await Promise.all([
     prisma.dataPermit.findUnique({
@@ -249,7 +250,7 @@ export default async function PermitDetailPage({
                 <Field label={t('email')} value={app.applicant.email} />
                 <Field
                   label={t('applicationType')}
-                  value={isDataRequest ? 'Dataverzoek (Art. 69)' : 'Data-toegangsaanvraag (Art. 67)'}
+                  value={isDataRequest ? ta('typeDataRequest') : ta('typeDataAccess')}
                 />
               </dl>
             </section>

@@ -15,13 +15,6 @@ type Props = {
   canManage: boolean;
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  REQUESTED: 'Aangevraagd',
-  CONFIRMED: 'Bevestigd door gegevenshouder',
-  DELIVERED: 'Geleverd',
-  DECLINED: 'Geweigerd',
-};
-
 const STATUS_STYLES: Record<string, string> = {
   REQUESTED: 'bg-amber-100 text-amber-800',
   CONFIRMED: 'bg-blue-100 text-blue-700',
@@ -38,6 +31,8 @@ const NEXT_STATUSES: Record<string, string[]> = {
 
 export function ExtractionRequestsPanel({ applicationId, currentUserId, requests, dataHolders, canManage }: Props) {
   const router = useRouter();
+  const t = useTranslations('extractionRequestsPanel');
+  const ts = useTranslations('extractionRequestStatus');
   const terr = useTranslations('errors');
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -88,16 +83,16 @@ export function ExtractionRequestsPanel({ applicationId, currentUserId, requests
   return (
     <div className="rounded border border-gray-200 bg-white p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="font-semibold text-gray-900 text-sm">Extractieverzoeken (Art. 60, 68(7))</h2>
+        <h2 className="font-semibold text-gray-900 text-sm">{t('title')}</h2>
         {canManage && !showForm && (
           <button onClick={() => setShowForm(true)} className="text-xs text-[#01689b] hover:underline">
-            + Verzoek registreren
+            + {t('registerRequest')}
           </button>
         )}
       </div>
 
       {requests.length === 0 && !showForm && (
-        <p className="text-xs text-gray-500">Nog geen extractieverzoek geregistreerd.</p>
+        <p className="text-xs text-gray-500">{t('noneRegistered')}</p>
       )}
 
       {error && <p className="text-xs text-red-600">{error}</p>}
@@ -108,12 +103,12 @@ export function ExtractionRequestsPanel({ applicationId, currentUserId, requests
             <div className="flex items-center justify-between">
               <span className="font-medium">{r.dataHolder?.name ?? '—'}</span>
               <span className={`text-xs font-medium px-2 py-0.5 rounded ${STATUS_STYLES[r.status]}`}>
-                {STATUS_LABELS[r.status]}
+                {ts(r.status)}
               </span>
             </div>
             <p className="text-gray-700 text-xs whitespace-pre-wrap">{r.datasetDescription}</p>
-            <p className="text-xs text-gray-400">Aangevraagd op {formatDate(r.requestedAt)}</p>
-            {r.deliveredAt && <p className="text-xs text-gray-400">Geleverd op {formatDate(r.deliveredAt)}</p>}
+            <p className="text-xs text-gray-400">{t('requestedOn')} {formatDate(r.requestedAt)}</p>
+            {r.deliveredAt && <p className="text-xs text-gray-400">{t('deliveredOn')} {formatDate(r.deliveredAt)}</p>}
             {r.deliveryNotes && <p className="text-xs text-gray-700 border-t border-gray-100 pt-1 mt-1">{r.deliveryNotes}</p>}
             {canManage && NEXT_STATUSES[r.status]?.length > 0 && (
               <div className="flex gap-2 pt-1">
@@ -124,7 +119,7 @@ export function ExtractionRequestsPanel({ applicationId, currentUserId, requests
                     onClick={() => updateStatus(r.id, next)}
                     className="text-xs text-[#01689b] hover:underline"
                   >
-                    → {STATUS_LABELS[next]}
+                    → {ts(next)}
                   </button>
                 ))}
               </div>
@@ -136,27 +131,27 @@ export function ExtractionRequestsPanel({ applicationId, currentUserId, requests
       {canManage && showForm && (
         <div className="space-y-2 border-t border-gray-100 pt-3">
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Gegevenshouder</label>
+            <label className="block text-xs font-medium text-gray-700 mb-1">{t('dataHolderLabel')}</label>
             <select value={dataHolderId} onChange={e => setDataHolderId(e.target.value)}
               className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]">
-              <option value="">Selecteer gegevenshouder...</option>
+              <option value="">{t('selectDataHolder')}</option>
               {dataHolders.map((dh) => (
                 <option key={dh.id} value={dh.id}>{dh.name}</option>
               ))}
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Beschrijving van de gevraagde extractie</label>
+            <label className="block text-xs font-medium text-gray-700 mb-1">{t('descriptionLabel')}</label>
             <textarea rows={3} value={datasetDescription} onChange={e => setDatasetDescription(e.target.value)}
               className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
           </div>
           <div className="flex gap-2">
             <button disabled={loading || !dataHolderId || !datasetDescription.trim()} onClick={submitRequest}
               className="flex-1 rounded px-3 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors">
-              {loading ? 'Bezig...' : 'Registreren'}
+              {loading ? t('loading') : t('registerRequest')}
             </button>
             <button disabled={loading} onClick={() => setShowForm(false)} className="rounded px-3 py-2 text-sm border border-gray-300 hover:bg-gray-50">
-              Annuleren
+              {t('cancel')}
             </button>
           </div>
         </div>

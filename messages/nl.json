@@ -8,7 +8,8 @@
     "referenceData": "Referentiegegevens",
     "newApplication": "Nieuwe aanvraag",
     "skipToContent": "Ga naar hoofdinhoud",
-    "testEnvironment": "Testomgeving"
+    "testEnvironment": "Testomgeving",
+    "dueDateAlerts": "{count} beslistermijn(en) vereisen aandacht"
   },
   "public": {
     "title": "Openbaar register",
@@ -371,6 +372,15 @@
       "DECLINED": "Geweigerd — ingetrokken"
     }
   },
+  "deadlineExtensionPanel": {
+    "title": "Beslistermijn",
+    "extendButton": "Verlengen met motivering",
+    "reasonPlaceholder": "Motivering voor de verlenging...",
+    "confirmButton": "Verlenging bevestigen",
+    "cancelButton": "Annuleren",
+    "loading": "Bezig...",
+    "extendedLabel": "Beslistermijn verlengd"
+  },
   "permitPanel": {
     "issueTitle": "Vergunning uitschrijven",
     "issueSubtitle": "Positief besluit genomen. Schrijf een EHDS-dataverwerkingsvergunning uit (D6.4 §9).",
@@ -663,5 +673,349 @@
   "errors": {
     "unexpected": "Er is een onverwachte fout opgetreden.",
     "requestFailed": "Het verzoek is mislukt. Probeer het opnieuw."
+  },
+  "transitionPanel": {
+    "title": "Beschikbare acties",
+    "comment": "Toelichting",
+    "commentRequiredNegative": "(verplicht bij negatief besluit)",
+    "commentPlaceholder": "Voeg een motivering of opmerking toe...",
+    "loading": "Bezig...",
+    "confirmButton": "Bevestig: {label}"
+  },
+  "workflowTimeline": {
+    "noHistory": "Nog geen historie."
+  },
+  "applicationStatus": {
+    "DRAFT": "Concept",
+    "SUBMITTED": "Ingediend",
+    "PRE_SCREENING": "Pre-screening",
+    "AWAITING_ADDITIONAL_INFORMATION": "Aanvullende informatie gevraagd",
+    "PROCESSING": "In behandeling",
+    "DECISION_ISSUED": "Besluit genomen",
+    "WITHDRAWN": "Ingetrokken"
+  },
+  "workflowTransitions": {
+    "submit": {
+      "label": "Aanvraag indienen",
+      "description": "Dien de aanvraag in bij HDAB-NL. De wettelijke termijn start bij ontvangst."
+    },
+    "withdrawDraft": {
+      "label": "Concept intrekken",
+      "description": "Verwijder dit concept zonder in te dienen."
+    },
+    "startPreScreening": {
+      "label": "Pre-screening starten",
+      "description": "Start de volledigheidstoets (TEHDAS2 D6.4 Fig. 1/2)."
+    },
+    "withdraw": {
+      "label": "Aanvraag intrekken",
+      "description": "Aanvrager trekt de aanvraag in."
+    },
+    "requestAdditionalInfo": {
+      "label": "Aanvullende informatie opvragen",
+      "description": "HDAB vraagt aanvullende informatie. Beslissingstermijn wordt opgeschort (D6.4 §8)."
+    },
+    "completePreScreening": {
+      "label": "Pre-screening afronden — doorzetten naar beoordeling",
+      "description": "HDAB rondt pre-screening af; aanvraag gaat naar inhoudelijke beoordeling (D6.4 Fig. 1/2)."
+    },
+    "resumePreScreening": {
+      "label": "Aanvullende informatie ingediend — pre-screening hervatten",
+      "description": "Aanvrager heeft aanvullende informatie ingediend; pre-screening hervat. Termijn herberekend (D6.4 §8)."
+    },
+    "autoNegativeNoResponse": {
+      "label": "Negatief besluit — geen reactie ontvangen",
+      "description": "Aanvrager heeft geen aanvullende informatie ingediend binnen de termijn (D6.4 Fig. 1/2)."
+    },
+    "positiveDecision": {
+      "label": "Positief besluit uitbrengen",
+      "description": "HDAB neemt een positief besluit op de aanvraag (D6.4 Fig. 1/2)."
+    },
+    "negativeDecision": {
+      "label": "Negatief besluit uitbrengen",
+      "description": "HDAB neemt een negatief besluit op de aanvraag (D6.4 Fig. 1/2)."
+    }
+  },
+  "deadlineBanner": {
+    "daysOverdue": "{days, plural, one {# dag verlopen} other {# dagen verlopen}}",
+    "daysRemaining": "{days, plural, one {# dag resterend} other {# dagen resterend}}"
+  },
+  "notesList": {
+    "placeholder": "Voeg een notitie toe...",
+    "internal": "Intern (niet zichtbaar voor aanvrager)",
+    "internalTag": "[intern]",
+    "saving": "Bezig...",
+    "addNote": "Notitie toevoegen",
+    "noNotes": "Nog geen notities."
+  },
+  "applicationCard": {
+    "organisation": "Organisatie",
+    "caseHandler": "Behandelaar:",
+    "decisionDeadline": "Beslisdeadline:",
+    "daysOverdue": "{count}d verlopen",
+    "daysRemaining": "{count}d resterend"
+  },
+  "hdeuImportForm": {
+    "invalidJson": "Ongeldige JSON — controleer de payload.",
+    "modePaste": "JSON plakken",
+    "modeFile": "Bestand uploaden",
+    "loadSample": "Voorbeeldpayload laden",
+    "jsonLabel": "NCP JSON-payload",
+    "uploadLabel": ".json-bestand uploaden",
+    "charactersLoaded": "{count} tekens geladen",
+    "requiredFields": "Verplichte payloadvelden",
+    "fieldHeader": "Veld",
+    "descriptionHeader": "Omschrijving",
+    "fieldHdeuApplicationId": "Referentie van het zendende DAAMS (bijv. FI-HDAB-2025-0042)",
+    "fieldSendingCountry": "ISO 3166-1 alpha-2 landcode",
+    "fieldSendingHdab": "Naam van het zendende HDAB",
+    "fieldTransmissionTimestamp": "ISO 8601-datumtijd (start van de termijn voor Art. 68)",
+    "fieldApplicationType": "DATA_ACCESS_APPLICATION of DATA_REQUEST",
+    "fieldApplicantIdentity": "Identiteit van de onderzoeker",
+    "fieldTitle": "Projecttitel",
+    "fieldProjectDescription": "Samenvatting in gewone taal",
+    "fieldPurposeCategory": "Doelcode conform Art. 53",
+    "fieldLegalBasis": "Toepasselijke EHDS-rechtsgrondslag",
+    "fieldRequestedDatasets": "Array van { dataHolderName, datasets: [{ name, url? }] }-groepen",
+    "fieldRequestedVariables": "Specificatie op variabelenniveau",
+    "fieldStudyPopulation": "Populatiedefinitie",
+    "fieldDataProcessingCountry": "ISO 3166-1 alpha-2 (moet NL bevatten)",
+    "importSuccess": "Aanvraag succesvol geïmporteerd",
+    "referenceLabel": "Kenmerk:",
+    "deadlineLabel": "Beslisdeadline:",
+    "openApplication": "Open aanvraag",
+    "importing": "Bezig met importeren...",
+    "importButton": "Aanvraag importeren"
+  },
+  "ncpFetchForm": {
+    "fetchFailed": "Kon geen verbinding maken met het HealthData@EU NCP",
+    "intro": "Bevraagt het HealthData@EU Nationaal Contactpunt (NCP) voor grensoverschrijdende aanvragen die door zendende lidstaten voor HDAB-NL zijn klaargezet (TEHDAS2 D6.4). Twee stappen tegen de HDAB-NL testomgeving: eerst een lijst met openstaande aanvragen, dan een detailbevraging per item bij import.",
+    "querying": "NCP bevragen...",
+    "refresh": "Wachtrij vernieuwen",
+    "pendingCount": "{count} openstaand",
+    "noneQueued": "Momenteel geen aanvragen openstaand bij het NCP.",
+    "submitted": "Ingediend",
+    "viewJson": "JSON bekijken",
+    "imported": "Geïmporteerd",
+    "importing": "Bezig met importeren...",
+    "import": "Importeren",
+    "importedAs": "Geïmporteerd als",
+    "openApplication": "Open aanvraag",
+    "openFile": "Open {filename}"
+  },
+  "financialLineCategory": {
+    "ADMINISTRATIVE": "Behandelkosten",
+    "DATA_PREPARATION": "Gegevensvoorbereiding",
+    "DATA_HOLDER": "Kosten gegevenshouder(s)",
+    "SPE_SETUP": "SPE opstartkosten",
+    "SPE_USAGE": "SPE gebruikskosten",
+    "ADDITIONAL_SERVICES": "Aanvullende diensten"
+  },
+  "feeEstimatePanel": {
+    "title": "Kostenraming (Art. 62 EHDS)",
+    "statusPENDING": "In afwachting van reactie aanvrager",
+    "statusACCEPTED": "Geaccepteerd door aanvrager",
+    "statusREJECTED": "Afgewezen door aanvrager",
+    "total": "Totaal",
+    "sentOn": "Verzonden op",
+    "provisionalInvoice": "Voorlopige factuur",
+    "dueOn": "Vervalt",
+    "paidOn": "Betaald",
+    "markPaid": "Markeer als betaald",
+    "cancel": "Annuleren",
+    "issueProvisionalInvoice": "Voorlopige factuur uitgeven",
+    "noProvisionalInvoiceYet": "Nog geen voorlopige factuur uitgegeven.",
+    "amountPlaceholder": "Bedrag (EUR)",
+    "descriptionPlaceholder": "Omschrijving (optioneel)",
+    "removeRow": "Regel verwijderen",
+    "addRow": "Kostenregel toevoegen",
+    "speOperator": "SPE-operator",
+    "noneSelected": "— geen geselecteerd —",
+    "speType": "SPE-type",
+    "speSetupFee": "SPE opstartkosten (EUR)",
+    "speUsageFee": "SPE gebruikskosten (EUR)",
+    "speFeeDerived": "Afgeleid van het geselecteerde SPE-type",
+    "notes": "Toelichting",
+    "loading": "Bezig...",
+    "sendEstimate": "Kostenraming versturen",
+    "edit": "Bewerken",
+    "markAccepted": "Markeer als geaccepteerd",
+    "markRejected": "Markeer als afgewezen",
+    "noEstimateYet": "Nog geen kostenraming verzonden."
+  },
+  "completenessCheckPanel": {
+    "title": "Volledigheidscontrole (D6.3 Ch. 5)",
+    "resultPENDING": "Nog niet beoordeeld",
+    "resultCOMPLETE": "Volledig",
+    "resultINCOMPLETE": "Onvolledig",
+    "remarks": "Opmerkingen (optioneel)",
+    "markComplete": "Markeer als volledig",
+    "notAllChecked": "Nog niet alle punten zijn afgevinkt.",
+    "items": {
+      "title": "Projectnaam is een plausibele titel (geen placeholder)",
+      "applicant": "Aanvrager-/organisatiegegevens zijn compleet en plausibel",
+      "purpose": "Doel van gebruik en onderbouwing zijn ingevuld",
+      "datasets": "Gevraagde datasets en variabelen zijn gespecificeerd",
+      "population": "Studiepopulatie en in-/exclusiecriteria zijn beschreven",
+      "legalBasis": "Rechtsgrondslag is opgegeven",
+      "processingCountry": "Verwerkingsland / grensoverschrijdende status is opgegeven",
+      "attachments": "Vereiste bijlagen zijn aanwezig en leesbaar"
+    }
+  },
+  "appealsPanel": {
+    "title": "Bezwaar & beroep (Art. 63)",
+    "register": "Registreren",
+    "noneRegistered": "Geen bezwaar of beroep geregistreerd.",
+    "handledBy": "Behandeld door:",
+    "submittedOn": "Ingediend op",
+    "submittedByLabel": "Naam bezwaarmaker/appellant",
+    "groundsLabel": "Gronden",
+    "authorityLabel": "Behandelende instantie (optioneel)",
+    "authorityPlaceholder": "bijv. HDAB-NL (bezwaar) of Rechtbank Den Haag",
+    "loading": "Bezig...",
+    "cancel": "Annuleren"
+  },
+  "appealStatus": {
+    "SUBMITTED": "Ingediend",
+    "UNDER_REVIEW": "In behandeling",
+    "UPHELD": "Toegewezen",
+    "REJECTED": "Afgewezen",
+    "WITHDRAWN": "Ingetrokken"
+  },
+  "extractionRequestsPanel": {
+    "title": "Extractieverzoeken (Art. 60, 68(7))",
+    "registerRequest": "Verzoek registreren",
+    "noneRegistered": "Nog geen extractieverzoek geregistreerd.",
+    "requestedOn": "Aangevraagd op",
+    "deliveredOn": "Geleverd op",
+    "dataHolderLabel": "Gegevenshouder",
+    "selectDataHolder": "Selecteer gegevenshouder...",
+    "descriptionLabel": "Beschrijving van de gevraagde extractie",
+    "loading": "Bezig...",
+    "cancel": "Annuleren"
+  },
+  "extractionRequestStatus": {
+    "REQUESTED": "Aangevraagd",
+    "CONFIRMED": "Bevestigd door gegevenshouder",
+    "DELIVERED": "Geleverd",
+    "DECLINED": "Geweigerd"
+  },
+  "newApplicationForm": {
+    "typeTitle": "Type aanvraag",
+    "typeDataAccessLabel": "Data-toegangsaanvraag",
+    "typeDataAccessDesc": "Volledige toegang tot persoonsgegevens in een Secure Processing Environment (Art. 67 EHDS)",
+    "typeDataRequestLabel": "Dataverzoek",
+    "typeDataRequestDesc": "Alleen geanonimiseerde / geaggregeerde statistische resultaten (Art. 69 EHDS)",
+    "applicantTitle": "Aanvrager",
+    "applicantLabel": "Aanvrager",
+    "selectApplicant": "Selecteer aanvrager...",
+    "projectInfoTitle": "Projectinformatie",
+    "projectTitleLabel": "Projecttitel",
+    "projectDescriptionLabel": "Projectbeschrijving",
+    "purposeLabel": "Doel (Art. 53)",
+    "selectPurpose": "Selecteer doel...",
+    "legalBasisLabel": "Rechtsgrondslag",
+    "legalBasisPlaceholder": "bijv. EHDS Art. 53(1)",
+    "projectStartLabel": "Start project",
+    "projectEndLabel": "Einde project",
+    "dataScopeTitle": "Reikwijdte gegevens",
+    "requestedDatasetsLabel": "Gevraagde datasets, per gegevenshouder",
+    "selectDataHolder": "Selecteer gegevenshouder...",
+    "remove": "Verwijderen",
+    "datasetNamePlaceholder": "Naam dataset",
+    "catalogueUrlPlaceholder": "Catalogus-URL (optioneel)",
+    "addDataset": "Dataset toevoegen",
+    "addDataHolder": "Gegevenshouder toevoegen",
+    "requestedVariablesLabel": "Gevraagde variabelen",
+    "dataPeriodStartLabel": "Start gegevensperiode",
+    "dataPeriodEndLabel": "Einde gegevensperiode",
+    "populationTitle": "Studiepopulatie",
+    "studyPopulationLabel": "Studiepopulatie",
+    "inclusionCriteriaLabel": "Inclusiecriteria",
+    "exclusionCriteriaLabel": "Exclusiecriteria",
+    "cohortFormationTitle": "Vorming van de cohort (Annex 5 §6.1)",
+    "cohortFormationMethodLabel": "Hoe wordt de cohort gevormd?",
+    "selectOption": "Selecteer...",
+    "cohortCriteria": "Gevormd op basis van de criteria in deze aanvraag",
+    "cohortPreviousCohort": "Een reeds bestaande cohort",
+    "cohortCombined": "Combinatie van criteria en een reeds bestaande cohort",
+    "cohortWholePopulation": "De volledige populatie van het/de aangegeven land(en)",
+    "dataSubjectsInformedLabel": "Zijn betrokkenen geïnformeerd over het gebruik van de gegevens?",
+    "yes": "Ja",
+    "no": "Nee",
+    "howInformed": "Hoe zijn zij geïnformeerd?",
+    "whyNot": "Waarom niet?",
+    "includesControlsLabel": "Controles worden geëxtraheerd voor de cohort (Annex 5 §6.2)",
+    "describeControlGroup": "Beschrijf de controlegroep (matchingcriteria, omvang, extractietiming)",
+    "includesRelativesLabel": "Familieleden worden geëxtraheerd voor de cohort (Annex 5 §6.3)",
+    "describeRelativesGroup": "Beschrijf de groep familieleden (relatie, omvang, extractietiming)",
+    "cohortSizeTitle": "Omvang cohort & extractiemethode",
+    "cohortSizeLabel": "Omvang cohort",
+    "estimate": "Schatting",
+    "exact": "Exact",
+    "cohortSizeJustificationLabel": "Waarom heeft u een cohort van deze omvang nodig?",
+    "extractionMethodLabel": "Extractiemethode",
+    "randomSample": "Aselecte steekproef",
+    "allQualifying": "Alle personen die aan de criteria voldoen",
+    "otherSample": "Andere steekproef",
+    "sampleSizeLabel": "Omvang steekproef",
+    "sampleSizePlaceholder": "bijv. 100000 personen of 50%",
+    "samplingMethodLabel": "Beschrijf de steekproefmethode",
+    "extractionFrequencyLabel": "Hoe vaak moeten de gegevens worden geëxtraheerd?",
+    "once": "Eenmalig",
+    "multipleTimes": "Meerdere keren",
+    "intervalLabel": "Interval",
+    "yearly": "Elk jaar",
+    "halfYearly": "Elk half jaar",
+    "quarterly": "Elk kwartaal",
+    "other": "Anders",
+    "specifyIntervalLabel": "Specificeer ander interval",
+    "extractionTimingNotesLabel": "Meer informatie over de extractieperiodes/-tijdstippen",
+    "tabulationPlanTitle": "Tabellatieplan (Annex 6 §6)",
+    "tabulationPlanDesc": "Geef per tabel aan: te gebruiken register, eventuele cohort, benodigde variabelen, vorming van afgeleide variabelen, richting van percentageaggregatie, volgorde van tabelgeneratie en andere relevante factoren.",
+    "otherDataTitle": "Overige te combineren gegevens (Annex 5 §7)",
+    "otherDataCheckboxLabel": "Deze gegevens worden gecombineerd met gegevens die al elders aanwezig zijn of verkregen worden",
+    "otherDataDescriptionLabel": "Beschrijf de overige gegevens en de beoogde combinatiemethode",
+    "safeguardsTitle": "Gegevensverwerking, bescherming & waarborgen (Annex 5 §8)",
+    "speNameLabel": "Naam van de secure processing environment (indien bekend)",
+    "dataControllerLabel": "Verwerkingsverantwoordelijke",
+    "speTechnicalRequirementsLabel": "Technische vereisten voor de SPE",
+    "dataAccessTimingLabel": "Wanneer heeft u de gegevens nodig?",
+    "asap": "Zo snel mogelijk na verwerking",
+    "later": "Later",
+    "whenLabel": "Wanneer?",
+    "transfersOutsideEuEeaLabel": "Gegevens worden overgedragen buiten de EU/EER",
+    "transferCountriesLabel": "Land/landen (komma-gescheiden)",
+    "transferLegalBasisLabel": "Rechtsgrondslag voor de overdracht",
+    "transferLegalBasisPlaceholder": "bijv. adequaatheidsbesluit, passende waarborgen",
+    "lawfulnessLabel": "Rechtmatigheid van de verwerking (AVG Art. 6(1))",
+    "optOutTitle": "Uitzondering opt-out (Art. 71(4) EHDS)",
+    "optOutCheckboxLabel": "Deze aanvraag betreft gegevens van personen die hun opt-outrecht hebben uitgeoefend, via het nationale uitzonderingsmechanisme",
+    "optOutJustificationLabel": "Motivering voor het gebruik van de uitzondering",
+    "decisionTimelineTitle": "Beslistermijn (Art. 68)",
+    "decisionTrackLabel": "Toepasselijke beslisdeadline",
+    "standardTrack": "Standaard — 3 maanden, verlengbaar met 3 (algemene aanvragers)",
+    "expeditedTrack": "Versneld — 2 maanden, verlengbaar met 1 (overheidsinstantie / EU-instelling met een volksgezondheids- of beleidsmandaat)",
+    "crossBorderTitle": "Grensoverschrijdend & verwerking",
+    "isCrossBorderLabel": "Dit is een grensoverschrijdende aanvraag (betrokkenheid HealthData@EU NCP vereist)",
+    "creating": "Bezig met aanmaken...",
+    "createButton": "Aanvraag aanmaken (opslaan als concept)",
+    "cancel": "Annuleren",
+    "purposeOption": {
+      "PUBLIC_HEALTH": "Volksgezondheid",
+      "POLICY_MAKING": "Beleidsvorming & regelgeving",
+      "STATISTICS": "Statistiek",
+      "EDUCATION": "Onderwijs & training",
+      "SCIENTIFIC_RESEARCH": "Wetenschappelijk onderzoek",
+      "CARE_IMPROVEMENT": "Zorgverbetering"
+    },
+    "lawfulnessOption": {
+      "CONSENT": "Toestemming van de betrokkene",
+      "CONTRACT": "Uitvoering van een overeenkomst",
+      "LEGAL_OBLIGATION": "Naleving van een wettelijke verplichting",
+      "VITAL_INTERESTS": "Bescherming van vitale belangen",
+      "PUBLIC_TASK": "Vervulling van een taak van algemeen belang",
+      "LEGITIMATE_INTERESTS": "Gerechtvaardigde belangen"
+    }
   }
 }

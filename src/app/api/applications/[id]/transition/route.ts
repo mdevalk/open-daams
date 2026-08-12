@@ -6,6 +6,7 @@ import {
   calculateDecisionDeadline,
   calculateAdditionalInfoDeadline,
   calculatePermitAcceptanceDeadline,
+  transitionLogLabel,
   TRANSITIONS,
 } from '@/lib/workflow';
 import { signDecisionCard } from '@/lib/permit-signing';
@@ -256,10 +257,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const toStatus = body.toStatus as ApplicationStatus;
     const updates = computeStatusUpdates(toStatus, application, body.comment, body.decisionOutcome, now);
 
+    const logLabel = transitionLogLabel(transition.key);
     const updated =
       toStatus === 'DECISION_ISSUED'
-        ? await issueDecision(id, application, updates, toStatus, transition.label, body.comment, found.user.id, now)
-        : await recordTransition(id, application, toStatus, transition.label, updates, body.comment, found.user.id);
+        ? await issueDecision(id, application, updates, toStatus, logLabel, body.comment, found.user.id, now)
+        : await recordTransition(id, application, toStatus, logLabel, updates, body.comment, found.user.id);
 
     return NextResponse.json(updated);
   } catch (e) {

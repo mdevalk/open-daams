@@ -6,7 +6,6 @@ import { useTranslations } from 'next-intl';
 import { PermitCard } from './PermitCard';
 import { useRouter } from 'next/navigation';
 import { readErrorMessage } from '@/lib/utils';
-import { LINE_CATEGORY_META } from '@/lib/financial-line-items';
 
 type Props = {
   application: Pick<Application, 'id' | 'type' | 'status' | 'decisionOutcome' | 'permitAcceptanceStatus'> & {
@@ -19,6 +18,7 @@ type Props = {
 export function PermitPanel({ application, currentUser }: Props) {
   const router = useRouter();
   const tp = useTranslations('permitPanel');
+  const tc = useTranslations('financialLineCategory');
   const terr = useTranslations('errors');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -103,7 +103,7 @@ export function PermitPanel({ application, currentUser }: Props) {
                 {estimate.lineItems.map((item) => (
                   <div key={item.id} className="flex justify-between text-xs text-gray-700">
                     <span>
-                      {LINE_CATEGORY_META[item.category].label}
+                      {tc(item.category)}
                       {(item.category === 'SPE_SETUP' || item.category === 'SPE_USAGE') && estimate.speType && ` — ${estimate.speType.name}`}
                       {(item.category === 'SPE_SETUP' || item.category === 'SPE_USAGE') && estimate.speOperator && ` (${estimate.speOperator.name})`}
                     </span>

@@ -7,7 +7,6 @@ import { Application, FeeEstimate, FinancialLineCategory, FinancialLineItem, Inv
 import { useRouter } from 'next/navigation';
 import { formatDate, formatDateTime, readErrorMessage } from '@/lib/utils';
 import { SpeType } from './SpeTypeList';
-import { LINE_CATEGORY_META } from '@/lib/financial-line-items';
 
 type Props = {
   application: Application & {
@@ -24,24 +23,11 @@ type Props = {
   speOperators: { id: string; name: string; types: SpeType[] }[];
 };
 
-const INVOICE_STATUS_LABELS: Record<string, string> = {
-  DRAFT: 'Concept',
-  ISSUED: 'Verzonden',
-  PAID: 'Betaald',
-  CANCELLED: 'Geannuleerd',
-};
-
 const INVOICE_STATUS_STYLES: Record<string, string> = {
   DRAFT: 'bg-gray-100 text-gray-600',
   ISSUED: 'bg-blue-100 text-blue-700',
   PAID: 'bg-emerald-100 text-emerald-700',
   CANCELLED: 'bg-red-100 text-red-700',
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  PENDING: 'In afwachting van reactie aanvrager',
-  ACCEPTED: 'Geaccepteerd door aanvrager',
-  REJECTED: 'Afgewezen door aanvrager',
 };
 
 const STATUS_STYLES: Record<string, string> = {
@@ -64,6 +50,9 @@ function fmtAmount(v: unknown, currency: string): string {
 
 export function FeeEstimatePanel({ application, currentUser, speOperators }: Props) {
   const router = useRouter();
+  const t = useTranslations('feeEstimatePanel');
+  const tc = useTranslations('financialLineCategory');
+  const ti = useTranslations('invoices');
   const terr = useTranslations('errors');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -214,10 +203,10 @@ export function FeeEstimatePanel({ application, currentUser, speOperators }: Pro
   return (
     <div className="rounded border border-gray-200 bg-white p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="font-semibold text-gray-900 text-sm">Kostenraming (Art. 62 EHDS)</h2>
+        <h2 className="font-semibold text-gray-900 text-sm">{t('title')}</h2>
         {estimate && (
           <span className={`text-xs font-medium px-2 py-0.5 rounded ${STATUS_STYLES[estimate.status]}`}>
-            {STATUS_LABELS[estimate.status]}
+            {t(`status${estimate.status}`)}
           </span>
         )}
       </div>
@@ -227,7 +216,7 @@ export function FeeEstimatePanel({ application, currentUser, speOperators }: Pro
           {estimate.lineItems.map((item) => (
             <div key={item.id} className="flex justify-between">
               <span className="text-gray-500">
-                {LINE_CATEGORY_META[item.category].label}
+                {tc(item.category)}
                 {(item.category === 'SPE_SETUP' || item.category === 'SPE_USAGE') && estimate.speType && ` — ${estimate.speType.name}`}
                 {(item.category === 'SPE_SETUP' || item.category === 'SPE_USAGE') && estimate.speOperator && ` (${estimate.speOperator.name})`}
               </span>
@@ -239,9 +228,9 @@ export function FeeEstimatePanel({ application, currentUser, speOperators }: Pro
               <p key={`${item.id}-description`} className="text-xs text-gray-500 -mt-0.5">{item.description}</p>
             ) : null,
           )}
-          <div className="flex justify-between font-semibold border-t border-gray-200 pt-1 mt-1"><span>Totaal</span><span>{fmtAmount(estimate.totalAmount, estimate.currency)}</span></div>
+          <div className="flex justify-between font-semibold border-t border-gray-200 pt-1 mt-1"><span>{t('total')}</span><span>{fmtAmount(estimate.totalAmount, estimate.currency)}</span></div>
           {estimate.notes && <p className="text-xs text-gray-500 mt-1">{estimate.notes}</p>}
-          <p className="text-xs text-gray-400 mt-1">Verzonden op {formatDateTime(estimate.sentAt)}</p>
+          <p className="text-xs text-gray-400 mt-1">{t('sentOn')} {formatDateTime(estimate.sentAt)}</p>
         </div>
       )}
 
@@ -249,9 +238,9 @@ export function FeeEstimatePanel({ application, currentUser, speOperators }: Pro
         <div className="border-t border-gray-100 pt-3">
           {estimate.invoice && (
             <div className="flex items-center justify-between mb-1">
-              <p className="text-xs font-medium text-gray-700">Voorlopige factuur</p>
+              <p className="text-xs font-medium text-gray-700">{t('provisionalInvoice')}</p>
               <span className={`text-xs font-medium px-2 py-0.5 rounded ${INVOICE_STATUS_STYLES[estimate.invoice.status]}`}>
-                {INVOICE_STATUS_LABELS[estimate.invoice.status]}
+                {ti(`status${estimate.invoice.status}`)}
               </span>
             </div>
           )}
@@ -259,16 +248,16 @@ export function FeeEstimatePanel({ application, currentUser, speOperators }: Pro
             <div className="text-sm space-y-1">
               <div className="flex justify-between"><span className="text-gray-500 font-mono text-xs">{estimate.invoice.invoiceNumber}</span><span>{fmtAmount(estimate.invoice.totalAmount, estimate.invoice.currency)}</span></div>
               <p className="text-xs text-gray-400">
-                Verzonden {formatDate(estimate.invoice.issuedAt)} · Vervalt {formatDate(estimate.invoice.dueAt)}
-                {estimate.invoice.paidAt && <> · Betaald {formatDate(estimate.invoice.paidAt)}</>}
+                {t('sentOn')} {formatDate(estimate.invoice.issuedAt)} · {t('dueOn')} {formatDate(estimate.invoice.dueAt)}
+                {estimate.invoice.paidAt && <> · {t('paidOn')} {formatDate(estimate.invoice.paidAt)}</>}
               </p>
               {canManage && estimate.invoice.status === 'ISSUED' && (
                 <div className="flex gap-3 pt-1">
                   <button disabled={loading} onClick={() => updateInvoice(estimate.invoice!.id, 'mark_paid')} className="text-xs text-emerald-700 hover:underline">
-                    Markeer als betaald
+                    {t('markPaid')}
                   </button>
                   <button disabled={loading} onClick={() => updateInvoice(estimate.invoice!.id, 'cancel')} className="text-xs text-red-600 hover:underline">
-                    Annuleren
+                    {t('cancel')}
                   </button>
                 </div>
               )}
@@ -276,10 +265,10 @@ export function FeeEstimatePanel({ application, currentUser, speOperators }: Pro
           ) : (
             canIssueInvoice ? (
               <button disabled={loading} onClick={issueProvisionalInvoice} className="text-xs text-[#01689b] hover:underline">
-                Voorlopige factuur uitgeven
+                {t('issueProvisionalInvoice')}
               </button>
             ) : (
-              <p className="text-xs text-gray-500">Nog geen voorlopige factuur uitgegeven.</p>
+              <p className="text-xs text-gray-500">{t('noProvisionalInvoiceYet')}</p>
             )
           )}
         </div>
@@ -297,37 +286,37 @@ export function FeeEstimatePanel({ application, currentUser, speOperators }: Pro
                 className="rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
               >
                 {MANUAL_CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>{LINE_CATEGORY_META[cat].label}</option>
+                  <option key={cat} value={cat}>{tc(cat)}</option>
                 ))}
               </select>
               <input
-                type="number" step="0.01" placeholder="Bedrag (EUR)" value={row.amount}
+                type="number" step="0.01" placeholder={t('amountPlaceholder')} value={row.amount}
                 onChange={(e) => updateRow(row.key, { amount: e.target.value })}
                 className="w-28 rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
               <input
-                type="text" placeholder="Omschrijving (optioneel)" value={row.description}
+                type="text" placeholder={t('descriptionPlaceholder')} value={row.description}
                 onChange={(e) => updateRow(row.key, { description: e.target.value })}
                 className="flex-1 rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
               />
-              <button onClick={() => removeRow(row.key)} className="text-xs text-red-600 hover:underline px-1 py-1.5" aria-label="Regel verwijderen">
+              <button onClick={() => removeRow(row.key)} className="text-xs text-red-600 hover:underline px-1 py-1.5" aria-label={t('removeRow')}>
                 ✕
               </button>
             </div>
           ))}
           <button onClick={addRow} className="text-xs text-[#01689b] hover:underline">
-            + Kostenregel toevoegen
+            + {t('addRow')}
           </button>
 
           {showSpe && (
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">SPE-operator</label>
+              <label className="block text-xs font-medium text-gray-700 mb-1">{t('speOperator')}</label>
               <select
                 value={speOperatorId}
                 onChange={e => selectSpeOperator(e.target.value)}
                 className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
               >
-                <option value="">— geen geselecteerd —</option>
+                <option value="">{t('noneSelected')}</option>
                 {speOperators.map(op => (
                   <option key={op.id} value={op.id}>{op.name}</option>
                 ))}
@@ -337,13 +326,13 @@ export function FeeEstimatePanel({ application, currentUser, speOperators }: Pro
 
           {showSpe && speTypes.length > 0 && (
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">SPE-type</label>
+              <label className="block text-xs font-medium text-gray-700 mb-1">{t('speType')}</label>
               <select
                 value={speTypeId}
                 onChange={e => selectSpeType(e.target.value)}
                 className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
               >
-                <option value="">— geen geselecteerd —</option>
+                <option value="">{t('noneSelected')}</option>
                 {speTypes.map(type => (
                   <option key={type.id} value={type.id}>
                     {type.name} (€{String(type.setupFee)} / €{String(type.monthlyFee)})
@@ -356,39 +345,39 @@ export function FeeEstimatePanel({ application, currentUser, speOperators }: Pro
           {showSpe && (
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">SPE opstartkosten (EUR)</label>
+                <label className="block text-xs font-medium text-gray-700 mb-1">{t('speSetupFee')}</label>
                 <input type="number" step="0.01" value={speSetupFee} readOnly={!!speTypeId} onChange={e => setSpeSetupFee(e.target.value)}
                   className={`w-full rounded border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b] ${
                     speTypeId ? 'border-gray-200 bg-gray-100 cursor-not-allowed' : 'border-gray-300'
                   }`} />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">SPE gebruikskosten (EUR)</label>
+                <label className="block text-xs font-medium text-gray-700 mb-1">{t('speUsageFee')}</label>
                 <input type="number" step="0.01" value={speUsageFee} readOnly={!!speTypeId} onChange={e => setSpeUsageFee(e.target.value)}
                   className={`w-full rounded border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b] ${
                     speTypeId ? 'border-gray-200 bg-gray-100 cursor-not-allowed' : 'border-gray-300'
                   }`} />
               </div>
               {speTypeId && (
-                <p className="col-span-2 text-xs text-gray-500 -mt-1">Afgeleid van het geselecteerde SPE-type</p>
+                <p className="col-span-2 text-xs text-gray-500 -mt-1">{t('speFeeDerived')}</p>
               )}
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Toelichting</label>
+            <label className="block text-xs font-medium text-gray-700 mb-1">{t('notes')}</label>
             <textarea rows={2} value={notes} onChange={e => setNotes(e.target.value)}
               className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
           </div>
           <div className="flex gap-2">
             <button disabled={loading} onClick={sendEstimate}
               className="flex-1 rounded px-3 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors">
-              {loading ? 'Bezig...' : 'Kostenraming versturen'}
+              {loading ? t('loading') : t('sendEstimate')}
             </button>
             {estimate && (
               <button disabled={loading} onClick={() => setEditing(false)}
                 className="rounded px-3 py-2 text-sm border border-gray-300 hover:bg-gray-50">
-                Annuleren
+                {t('cancel')}
               </button>
             )}
           </div>
@@ -398,15 +387,15 @@ export function FeeEstimatePanel({ application, currentUser, speOperators }: Pro
       {canManage && estimate && !showForm && (
         <div className="flex gap-2">
           <button onClick={() => setEditing(true)} className="text-xs text-[#01689b] hover:underline">
-            Bewerken
+            {t('edit')}
           </button>
           {estimate.status === 'PENDING' && (
             <>
               <button disabled={loading} onClick={() => respond('ACCEPTED')} className="text-xs text-emerald-700 hover:underline">
-                Markeer als geaccepteerd
+                {t('markAccepted')}
               </button>
               <button disabled={loading} onClick={() => respond('REJECTED')} className="text-xs text-red-700 hover:underline">
-                Markeer als afgewezen
+                {t('markRejected')}
               </button>
             </>
           )}
@@ -414,7 +403,7 @@ export function FeeEstimatePanel({ application, currentUser, speOperators }: Pro
       )}
 
       {!canManage && !estimate && (
-        <p className="text-xs text-gray-500">Nog geen kostenraming verzonden.</p>
+        <p className="text-xs text-gray-500">{t('noEstimateYet')}</p>
       )}
     </div>
   );

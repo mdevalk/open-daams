@@ -61,14 +61,6 @@ export const SPE_TRANSITIONS: Record<SpeProvisioningStatus, SpeTransition[]> = {
   DECOMMISSIONED: [],
 };
 
-export const SPE_STATUS_LABELS: Record<SpeProvisioningStatus, string> = {
-  REQUESTED: 'Requested',
-  PROVISIONING: 'Provisioning',
-  ACTIVE: 'Active',
-  DECOMMISSIONING: 'Decommissioning',
-  DECOMMISSIONED: 'Decommissioned',
-};
-
 export const SPE_STATUS_COLORS: Record<SpeProvisioningStatus, string> = {
   REQUESTED: 'bg-gray-100 text-gray-600',
   PROVISIONING: 'bg-blue-100 text-blue-700',

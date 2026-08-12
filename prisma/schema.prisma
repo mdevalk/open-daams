@@ -486,6 +486,7 @@ model Application {
   decisionTrack            DecisionTrack @default(STANDARD)
   decisionDeadline         DateTime?
   deadlineExtended         Boolean       @default(false)
+  deadlineExtensionReason  String?       @db.Text // R8.0.8 — required justification, set together with deadlineExtended
   additionalInfoDeadline   DateTime? // Applicant response window
   additionalInfoReceivedAt DateTime? // Recalculation anchor (D6.4 §8)
 

@@ -1,11 +1,14 @@
+import { useTranslations } from 'next-intl';
 import { ApplicationLog, User } from '@prisma/client';
-import { STATUS_LABELS } from '@/lib/workflow';
 import { formatDateTime } from '@/lib/utils';
 
 type LogEntry = ApplicationLog & { user: Pick<User, 'id' | 'name' | 'role'> };
 
 export function WorkflowTimeline({ logs }: { logs: LogEntry[] }) {
-  if (logs.length === 0) return <p className="text-sm text-gray-500">No history yet.</p>;
+  const t = useTranslations('workflowTimeline');
+  const ts = useTranslations('applicationStatus');
+
+  if (logs.length === 0) return <p className="text-sm text-gray-500">{t('noHistory')}</p>;
 
   return (
     <ol className="relative border-l border-gray-200 ml-3">
@@ -18,7 +21,7 @@ export function WorkflowTimeline({ logs }: { logs: LogEntry[] }) {
             <p className="font-medium text-sm text-gray-900">{log.action}</p>
             {log.fromStatus && (
               <p className="text-xs text-gray-500 mt-0.5">
-                {STATUS_LABELS[log.fromStatus]} → {STATUS_LABELS[log.toStatus]}
+                {ts(log.fromStatus)} → {ts(log.toStatus)}
               </p>
             )}
             {log.comment && (

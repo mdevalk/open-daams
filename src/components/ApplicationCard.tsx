@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Application, User } from '@prisma/client';
+import { useTranslations } from 'next-intl';
 import { StatusBadge } from './StatusBadge';
 import { formatDate, daysUntil } from '@/lib/utils';
 
@@ -12,6 +13,8 @@ type Props = {
 };
 
 export function ApplicationCard({ application: app, locale = 'nl' }: Props) {
+  const t = useTranslations('applicationCard');
+  const ta = useTranslations('applications');
   const days = daysUntil(app.decisionDeadline);
   const overdue = days !== null && days < 0;
   const warning = days !== null && days >= 0 && days < 14;
@@ -38,16 +41,16 @@ export function ApplicationCard({ application: app, locale = 'nl' }: Props) {
 
         <dl className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
           <div className="flex gap-1">
-            <dt className="sr-only">Type</dt>
-            <dd>{app.type === 'DATA_ACCESS_APPLICATION' ? 'Gegevenspermit' : 'Gegevensverzoek (Art. 69)'}</dd>
+            <dt className="sr-only">{ta('typeLabel')}</dt>
+            <dd>{app.type === 'DATA_ACCESS_APPLICATION' ? ta('typeDataAccess') : ta('typeDataRequest')}</dd>
           </div>
           <div className="flex gap-1">
-            <dt className="sr-only">Organisatie</dt>
+            <dt className="sr-only">{t('organisation')}</dt>
             <dd>{app.applicant.dataUser?.name ?? '—'}</dd>
           </div>
           {app.caseHandler && (
             <div className="flex gap-1">
-              <dt>Behandelaar:</dt>
+              <dt>{t('caseHandler')}</dt>
               <dd>{app.caseHandler.name}</dd>
             </div>
           )}
@@ -57,10 +60,10 @@ export function ApplicationCard({ application: app, locale = 'nl' }: Props) {
           <p className={`mt-3 text-xs font-medium ${
             overdue ? 'text-[#d52b1e]' : warning ? 'text-[#f0a500]' : 'text-gray-400'
           }`}>
-            Beslisdeadline: {formatDate(app.decisionDeadline)}
+            {t('decisionDeadline')} {formatDate(app.decisionDeadline)}
             {days !== null && (
               <span className="ml-1">
-                ({days < 0 ? `${Math.abs(days)}d verlopen` : `${days}d resterend`})
+                ({days < 0 ? t('daysOverdue', { count: Math.abs(days) }) : t('daysRemaining', { count: days })})
               </span>
             )}
           </p>

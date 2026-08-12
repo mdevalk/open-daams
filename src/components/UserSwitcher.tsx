@@ -1,19 +1,14 @@
 'use client';
 
 import { User } from '@prisma/client';
+import { useTranslations } from 'next-intl';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-
-const ROLE_LABELS: Record<string, string> = {
-  APPLICANT:      'Aanvrager',
-  CASE_HANDLER:   'Behandelaar',
-  DECISION_MAKER: 'Beslisser',
-  DATA_HOLDER:    'Datahouder',
-  ADMIN:          'Beheerder',
-};
 
 type Props = { users: User[]; currentUserId: string };
 
 export function UserSwitcher({ users, currentUserId }: Props) {
+  const t = useTranslations('userSwitcher');
+  const tr = useTranslations('roles');
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -26,7 +21,7 @@ export function UserSwitcher({ users, currentUserId }: Props) {
 
   return (
     <div className="rounded border border-gray-200 bg-white p-4">
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Actief als</p>
+      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">{t('label')}</p>
       <div className="space-y-1">
         {users.map(u => {
           const active = u.id === currentUserId;
@@ -44,7 +39,7 @@ export function UserSwitcher({ users, currentUserId }: Props) {
               <span className={`ml-2 text-xs ${
                 active ? 'text-white/70' : 'text-gray-400'
               }`}>
-                {ROLE_LABELS[u.role] ?? u.role}
+                {tr(u.role)}
               </span>
             </button>
           );

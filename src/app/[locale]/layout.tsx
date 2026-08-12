@@ -3,6 +3,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations } from 'next-intl/server';
 import '../globals.css';
 import { APP_NAME } from '@/lib/branding';
+import { prisma } from '@/lib/db';
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -26,6 +27,23 @@ export default async function LocaleLayout({
   const referenceList = tFooter.raw('standardsList') as { ref: string; title: string; url: string }[];
 
   const locales = ['nl', 'en', 'fr'] as const;
+
+  // R8.0.5 — in-app due-date "notification": an aggregate, non-personalized
+  // count (this layout has no session/user context to scope it further —
+  // matches the app's existing full-caseload-visibility design). Same
+  // where-clauses as the dashboard's own overdue/due-soon queries
+  // (src/app/[locale]/page.tsx), just counted instead of listed in full.
+  const now = new Date();
+  const in14Days = new Date(now.getTime() + 14 * 86_400_000);
+  const [overdueDecisionCount, dueSoonDecisionCount] = await Promise.all([
+    prisma.application.count({
+      where: { decisionDeadline: { lt: now }, status: { notIn: ['DECISION_ISSUED', 'WITHDRAWN'] } },
+    }),
+    prisma.application.count({
+      where: { decisionDeadline: { gte: now, lt: in14Days }, status: { notIn: ['DECISION_ISSUED', 'WITHDRAWN'] } },
+    }),
+  ]);
+  const attentionCount = overdueDecisionCount + dueSoonDecisionCount;
 
   return (
     <html lang={locale}>
@@ -65,6 +83,16 @@ export default async function LocaleLayout({
                       </a>
                     ))}
                   </nav>
+                  {attentionCount > 0 && (
+                    <a
+                      href={`/${locale}`}
+                      title={t('dueDateAlerts', { count: attentionCount })}
+                      className="ml-3 pl-3 border-l border-white/20 flex items-center gap-1 text-sm text-amber-200 hover:text-white transition-colors"
+                    >
+                      <span aria-hidden="true">⚠️</span>
+                      <span>{attentionCount}</span>
+                    </a>
+                  )}
                   <nav aria-label="Overige navigatie" className="flex items-center gap-1 ml-3 pl-3 border-l border-white/20">
                     {[
                       { href: `/${locale}/public`, label: t('public') },

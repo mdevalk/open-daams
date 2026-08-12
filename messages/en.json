@@ -8,7 +8,8 @@
     "referenceData": "Reference data",
     "newApplication": "New application",
     "skipToContent": "Skip to main content",
-    "testEnvironment": "Test environment"
+    "testEnvironment": "Test environment",
+    "dueDateAlerts": "{count} decision deadline(s) need attention"
   },
   "public": {
     "title": "Public register",
@@ -371,6 +372,15 @@
       "DECLINED": "Declined — withdrawn"
     }
   },
+  "deadlineExtensionPanel": {
+    "title": "Decision deadline",
+    "extendButton": "Extend with justification",
+    "reasonPlaceholder": "Justification for the extension...",
+    "confirmButton": "Confirm extension",
+    "cancelButton": "Cancel",
+    "loading": "Processing...",
+    "extendedLabel": "Decision deadline extended"
+  },
   "permitPanel": {
     "issueTitle": "Issue permit",
     "issueSubtitle": "Positive decision taken. Issue an EHDS data processing permit (D6.4 §9).",
@@ -663,5 +673,349 @@
   "errors": {
     "unexpected": "An unexpected error occurred.",
     "requestFailed": "The request failed. Please try again."
+  },
+  "transitionPanel": {
+    "title": "Available actions",
+    "comment": "Comment",
+    "commentRequiredNegative": "(required for a negative decision)",
+    "commentPlaceholder": "Add a justification or comment...",
+    "loading": "Processing...",
+    "confirmButton": "Confirm: {label}"
+  },
+  "workflowTimeline": {
+    "noHistory": "No history yet."
+  },
+  "applicationStatus": {
+    "DRAFT": "Draft",
+    "SUBMITTED": "Submitted",
+    "PRE_SCREENING": "Pre-screening",
+    "AWAITING_ADDITIONAL_INFORMATION": "Additional information requested",
+    "PROCESSING": "Processing",
+    "DECISION_ISSUED": "Decision issued",
+    "WITHDRAWN": "Withdrawn"
+  },
+  "workflowTransitions": {
+    "submit": {
+      "label": "Submit application",
+      "description": "Submit the application to HDAB-NL. The statutory deadline starts on receipt."
+    },
+    "withdrawDraft": {
+      "label": "Discard draft",
+      "description": "Delete this draft without submitting it."
+    },
+    "startPreScreening": {
+      "label": "Start pre-screening",
+      "description": "Start the completeness check (TEHDAS2 D6.4 Fig. 1/2)."
+    },
+    "withdraw": {
+      "label": "Withdraw application",
+      "description": "The applicant withdraws the application."
+    },
+    "requestAdditionalInfo": {
+      "label": "Request additional information",
+      "description": "HDAB requests additional information. The decision deadline is suspended (D6.4 §8)."
+    },
+    "completePreScreening": {
+      "label": "Complete pre-screening — move to assessment",
+      "description": "HDAB completes pre-screening; the application moves to substantive assessment (D6.4 Fig. 1/2)."
+    },
+    "resumePreScreening": {
+      "label": "Additional information submitted — resume pre-screening",
+      "description": "The applicant has submitted additional information; pre-screening resumes. Deadline recalculated (D6.4 §8)."
+    },
+    "autoNegativeNoResponse": {
+      "label": "Negative decision — no response received",
+      "description": "The applicant did not submit additional information within the deadline (D6.4 Fig. 1/2)."
+    },
+    "positiveDecision": {
+      "label": "Issue positive decision",
+      "description": "HDAB issues a positive decision on the application (D6.4 Fig. 1/2)."
+    },
+    "negativeDecision": {
+      "label": "Issue negative decision",
+      "description": "HDAB issues a negative decision on the application (D6.4 Fig. 1/2)."
+    }
+  },
+  "deadlineBanner": {
+    "daysOverdue": "{days, plural, one {# day overdue} other {# days overdue}}",
+    "daysRemaining": "{days, plural, one {# day remaining} other {# days remaining}}"
+  },
+  "notesList": {
+    "placeholder": "Add a note...",
+    "internal": "Internal (not visible to applicant)",
+    "internalTag": "[internal]",
+    "saving": "Saving...",
+    "addNote": "Add note",
+    "noNotes": "No notes yet."
+  },
+  "applicationCard": {
+    "organisation": "Organisation",
+    "caseHandler": "Case handler:",
+    "decisionDeadline": "Decision deadline:",
+    "daysOverdue": "{count}d overdue",
+    "daysRemaining": "{count}d remaining"
+  },
+  "hdeuImportForm": {
+    "invalidJson": "Invalid JSON — please check the payload.",
+    "modePaste": "Paste JSON",
+    "modeFile": "Upload file",
+    "loadSample": "Load sample payload",
+    "jsonLabel": "NCP JSON payload",
+    "uploadLabel": "Upload .json file",
+    "charactersLoaded": "{count} characters loaded",
+    "requiredFields": "Required payload fields",
+    "fieldHeader": "Field",
+    "descriptionHeader": "Description",
+    "fieldHdeuApplicationId": "Sending DAAMS reference (e.g. FI-HDAB-2025-0042)",
+    "fieldSendingCountry": "ISO 3166-1 alpha-2 country code",
+    "fieldSendingHdab": "Name of the sending HDAB",
+    "fieldTransmissionTimestamp": "ISO 8601 datetime (clock start for Art. 68)",
+    "fieldApplicationType": "DATA_ACCESS_APPLICATION or DATA_REQUEST",
+    "fieldApplicantIdentity": "Researcher identity",
+    "fieldTitle": "Project title",
+    "fieldProjectDescription": "Lay summary",
+    "fieldPurposeCategory": "Art. 53 purpose code",
+    "fieldLegalBasis": "Applicable EHDS legal basis",
+    "fieldRequestedDatasets": "Array of { dataHolderName, datasets: [{ name, url? }] } groups",
+    "fieldRequestedVariables": "Variable-level specification",
+    "fieldStudyPopulation": "Population definition",
+    "fieldDataProcessingCountry": "ISO 3166-1 alpha-2 (must include NL)",
+    "importSuccess": "Application imported successfully",
+    "referenceLabel": "Reference:",
+    "deadlineLabel": "Decision deadline:",
+    "openApplication": "Open application",
+    "importing": "Importing...",
+    "importButton": "Import application"
+  },
+  "ncpFetchForm": {
+    "fetchFailed": "Failed to reach the HealthData@EU NCP",
+    "intro": "Queries the HealthData@EU National Contact Point (NCP) for cross-border applications queued for HDAB-NL by sending Member States (TEHDAS2 D6.4). Two-step fetch against the HDAB-NL test environment: a list of pending applications, then a per-item detail fetch on import.",
+    "querying": "Querying NCP...",
+    "refresh": "Refresh queue",
+    "pendingCount": "{count} pending",
+    "noneQueued": "No applications currently pending at the NCP.",
+    "submitted": "Submitted",
+    "viewJson": "View JSON",
+    "imported": "Imported",
+    "importing": "Importing...",
+    "import": "Import",
+    "importedAs": "Imported as",
+    "openApplication": "Open application",
+    "openFile": "Open {filename}"
+  },
+  "financialLineCategory": {
+    "ADMINISTRATIVE": "Administrative fee",
+    "DATA_PREPARATION": "Data preparation",
+    "DATA_HOLDER": "Data holder fee(s)",
+    "SPE_SETUP": "SPE setup fee",
+    "SPE_USAGE": "SPE usage fee",
+    "ADDITIONAL_SERVICES": "Additional services"
+  },
+  "feeEstimatePanel": {
+    "title": "Cost estimate (Art. 62 EHDS)",
+    "statusPENDING": "Awaiting applicant response",
+    "statusACCEPTED": "Accepted by applicant",
+    "statusREJECTED": "Rejected by applicant",
+    "total": "Total",
+    "sentOn": "Sent on",
+    "provisionalInvoice": "Provisional invoice",
+    "dueOn": "Due",
+    "paidOn": "Paid",
+    "markPaid": "Mark as paid",
+    "cancel": "Cancel",
+    "issueProvisionalInvoice": "Issue provisional invoice",
+    "noProvisionalInvoiceYet": "No provisional invoice issued yet.",
+    "amountPlaceholder": "Amount (EUR)",
+    "descriptionPlaceholder": "Description (optional)",
+    "removeRow": "Remove row",
+    "addRow": "Add cost line",
+    "speOperator": "SPE operator",
+    "noneSelected": "— none selected —",
+    "speType": "SPE type",
+    "speSetupFee": "SPE setup fee (EUR)",
+    "speUsageFee": "SPE usage fee (EUR)",
+    "speFeeDerived": "Derived from the selected SPE type",
+    "notes": "Notes",
+    "loading": "Processing...",
+    "sendEstimate": "Send cost estimate",
+    "edit": "Edit",
+    "markAccepted": "Mark as accepted",
+    "markRejected": "Mark as rejected",
+    "noEstimateYet": "No cost estimate sent yet."
+  },
+  "completenessCheckPanel": {
+    "title": "Completeness check (D6.3 Ch. 5)",
+    "resultPENDING": "Not yet assessed",
+    "resultCOMPLETE": "Complete",
+    "resultINCOMPLETE": "Incomplete",
+    "remarks": "Remarks (optional)",
+    "markComplete": "Mark as complete",
+    "notAllChecked": "Not all items have been checked yet.",
+    "items": {
+      "title": "Project name is a plausible title (not a placeholder)",
+      "applicant": "Applicant/organisation details are complete and plausible",
+      "purpose": "Purpose of use and justification are filled in",
+      "datasets": "Requested datasets and variables are specified",
+      "population": "Study population and inclusion/exclusion criteria are described",
+      "legalBasis": "Legal basis is provided",
+      "processingCountry": "Processing country / cross-border status is provided",
+      "attachments": "Required attachments are present and legible"
+    }
+  },
+  "appealsPanel": {
+    "title": "Appeal & objection (Art. 63)",
+    "register": "Register",
+    "noneRegistered": "No appeal or objection registered.",
+    "handledBy": "Handled by:",
+    "submittedOn": "Submitted on",
+    "submittedByLabel": "Name of appellant/objector",
+    "groundsLabel": "Grounds",
+    "authorityLabel": "Handling authority (optional)",
+    "authorityPlaceholder": "e.g. HDAB-NL (objection) or The Hague District Court",
+    "loading": "Processing...",
+    "cancel": "Cancel"
+  },
+  "appealStatus": {
+    "SUBMITTED": "Submitted",
+    "UNDER_REVIEW": "Under review",
+    "UPHELD": "Upheld",
+    "REJECTED": "Rejected",
+    "WITHDRAWN": "Withdrawn"
+  },
+  "extractionRequestsPanel": {
+    "title": "Extraction requests (Art. 60, 68(7))",
+    "registerRequest": "Register request",
+    "noneRegistered": "No extraction request registered yet.",
+    "requestedOn": "Requested on",
+    "deliveredOn": "Delivered on",
+    "dataHolderLabel": "Data holder",
+    "selectDataHolder": "Select data holder...",
+    "descriptionLabel": "Description of the requested extraction",
+    "loading": "Processing...",
+    "cancel": "Cancel"
+  },
+  "extractionRequestStatus": {
+    "REQUESTED": "Requested",
+    "CONFIRMED": "Confirmed by data holder",
+    "DELIVERED": "Delivered",
+    "DECLINED": "Declined"
+  },
+  "newApplicationForm": {
+    "typeTitle": "Application type",
+    "typeDataAccessLabel": "Data Access Application",
+    "typeDataAccessDesc": "Full access to personal data in a Secure Processing Environment (Art. 67 EHDS)",
+    "typeDataRequestLabel": "Data Request",
+    "typeDataRequestDesc": "Anonymised / aggregated statistical results only (Art. 69 EHDS)",
+    "applicantTitle": "Applicant",
+    "applicantLabel": "Applicant",
+    "selectApplicant": "Select applicant...",
+    "projectInfoTitle": "Project information",
+    "projectTitleLabel": "Project title",
+    "projectDescriptionLabel": "Project description",
+    "purposeLabel": "Purpose (Art. 53)",
+    "selectPurpose": "Select purpose...",
+    "legalBasisLabel": "Legal basis",
+    "legalBasisPlaceholder": "e.g. EHDS Art. 53(1)",
+    "projectStartLabel": "Project start",
+    "projectEndLabel": "Project end",
+    "dataScopeTitle": "Data scope",
+    "requestedDatasetsLabel": "Requested datasets, by data holder",
+    "selectDataHolder": "Select data holder...",
+    "remove": "Remove",
+    "datasetNamePlaceholder": "Dataset name",
+    "catalogueUrlPlaceholder": "Catalogue URL (optional)",
+    "addDataset": "Add dataset",
+    "addDataHolder": "Add data holder",
+    "requestedVariablesLabel": "Requested variables",
+    "dataPeriodStartLabel": "Data period start",
+    "dataPeriodEndLabel": "Data period end",
+    "populationTitle": "Study population",
+    "studyPopulationLabel": "Study population",
+    "inclusionCriteriaLabel": "Inclusion criteria",
+    "exclusionCriteriaLabel": "Exclusion criteria",
+    "cohortFormationTitle": "Cohort formation (Annex 5 §6.1)",
+    "cohortFormationMethodLabel": "How is the cohort formed?",
+    "selectOption": "Select...",
+    "cohortCriteria": "Formed based on the criteria given in this application",
+    "cohortPreviousCohort": "An already-established cohort",
+    "cohortCombined": "Combination of criteria and a previously established cohort",
+    "cohortWholePopulation": "The whole population of the indicated country/countries",
+    "dataSubjectsInformedLabel": "Have data subjects been informed of the data use?",
+    "yes": "Yes",
+    "no": "No",
+    "howInformed": "How were they informed?",
+    "whyNot": "Why not?",
+    "includesControlsLabel": "Controls will be extracted for the cohort (Annex 5 §6.2)",
+    "describeControlGroup": "Describe the control group (matching criteria, size, extraction timing)",
+    "includesRelativesLabel": "Relatives will be extracted for the cohort (Annex 5 §6.3)",
+    "describeRelativesGroup": "Describe the relatives group (relationship, size, extraction timing)",
+    "cohortSizeTitle": "Cohort size & extraction method",
+    "cohortSizeLabel": "Cohort size",
+    "estimate": "Estimate",
+    "exact": "Exact",
+    "cohortSizeJustificationLabel": "Why do you need a cohort of this size?",
+    "extractionMethodLabel": "Extraction method",
+    "randomSample": "Random sample",
+    "allQualifying": "All people fulfilling the criteria",
+    "otherSample": "Other sample",
+    "sampleSizeLabel": "Sample size",
+    "sampleSizePlaceholder": "e.g. 100000 persons or 50%",
+    "samplingMethodLabel": "Describe the sampling method",
+    "extractionFrequencyLabel": "How often does the data need to be extracted?",
+    "once": "Once",
+    "multipleTimes": "Multiple times",
+    "intervalLabel": "Interval",
+    "yearly": "Every year",
+    "halfYearly": "Half a year",
+    "quarterly": "Quarter",
+    "other": "Other",
+    "specifyIntervalLabel": "Specify other interval",
+    "extractionTimingNotesLabel": "More information on the extracting periods/times",
+    "tabulationPlanTitle": "Tabulation plan (Annex 6 §6)",
+    "tabulationPlanDesc": "For each table: register to be used, possible cohort, required variables, formation of derived variables, direction of percentage aggregation, order of table generation, and any other relevant factor.",
+    "otherDataTitle": "Other data to be combined (Annex 5 §7)",
+    "otherDataCheckboxLabel": "This data will be combined with data already held or obtained elsewhere",
+    "otherDataDescriptionLabel": "Describe the other data and the planned combination method",
+    "safeguardsTitle": "Data processing, protection & safeguards (Annex 5 §8)",
+    "speNameLabel": "Name of the secure processing environment (if known)",
+    "dataControllerLabel": "Data controller",
+    "speTechnicalRequirementsLabel": "Technical requirements for the SPE",
+    "dataAccessTimingLabel": "When do you need the data?",
+    "asap": "As soon as possible after processing",
+    "later": "Later",
+    "whenLabel": "When?",
+    "transfersOutsideEuEeaLabel": "Data will be transferred outside the EU/EEA",
+    "transferCountriesLabel": "Country/countries (comma-separated)",
+    "transferLegalBasisLabel": "Legal basis for the transfer",
+    "transferLegalBasisPlaceholder": "e.g. adequacy decision, appropriate safeguards",
+    "lawfulnessLabel": "Lawfulness of processing (GDPR Art. 6(1))",
+    "optOutTitle": "Opt-out exception (Art. 71(4) EHDS)",
+    "optOutCheckboxLabel": "This application requests data from persons who exercised their opt-out right, via the national exception mechanism",
+    "optOutJustificationLabel": "Justification for using the exception",
+    "decisionTimelineTitle": "Decision timeline (Art. 68)",
+    "decisionTrackLabel": "Applicable decision deadline",
+    "standardTrack": "Standard — 3 months, extendable by 3 (general applicants)",
+    "expeditedTrack": "Accelerated — 2 months, extendable by 1 (public-sector body / EU institution under a public-health or policy mandate)",
+    "crossBorderTitle": "Cross-border & processing",
+    "isCrossBorderLabel": "This is a cross-border application (HealthData@EU NCP involvement required)",
+    "creating": "Creating...",
+    "createButton": "Create application (save as draft)",
+    "cancel": "Cancel",
+    "purposeOption": {
+      "PUBLIC_HEALTH": "Public health",
+      "POLICY_MAKING": "Policy-making & regulatory",
+      "STATISTICS": "Statistics",
+      "EDUCATION": "Education & training",
+      "SCIENTIFIC_RESEARCH": "Scientific research",
+      "CARE_IMPROVEMENT": "Care improvement"
+    },
+    "lawfulnessOption": {
+      "CONSENT": "Consent of the data subject",
+      "CONTRACT": "Performance of a contract",
+      "LEGAL_OBLIGATION": "Compliance with a legal obligation",
+      "VITAL_INTERESTS": "Protection of vital interests",
+      "PUBLIC_TASK": "Performance of a task in the public interest",
+      "LEGITIMATE_INTERESTS": "Legitimate interests"
+    }
   }
 }

@@ -8,7 +8,8 @@
     "referenceData": "Données de référence",
     "newApplication": "Nouvelle demande",
     "skipToContent": "Aller au contenu principal",
-    "testEnvironment": "Environnement de test"
+    "testEnvironment": "Environnement de test",
+    "dueDateAlerts": "{count} délai(s) de décision nécessitent votre attention"
   },
   "public": {
     "title": "Registre public",
@@ -371,6 +372,15 @@
       "DECLINED": "Refusé — retiré"
     }
   },
+  "deadlineExtensionPanel": {
+    "title": "Délai de décision",
+    "extendButton": "Prolonger avec justification",
+    "reasonPlaceholder": "Justification de la prolongation...",
+    "confirmButton": "Confirmer la prolongation",
+    "cancelButton": "Annuler",
+    "loading": "En cours...",
+    "extendedLabel": "Délai de décision prolongé"
+  },
   "permitPanel": {
     "issueTitle": "Délivrer une autorisation",
     "issueSubtitle": "Décision positive prise. Délivrez une autorisation de traitement de données EHDS (D6.4 §9).",
@@ -663,5 +673,349 @@
   "errors": {
     "unexpected": "Une erreur inattendue s'est produite.",
     "requestFailed": "La requête a échoué. Veuillez réessayer."
+  },
+  "transitionPanel": {
+    "title": "Actions disponibles",
+    "comment": "Commentaire",
+    "commentRequiredNegative": "(obligatoire en cas de décision négative)",
+    "commentPlaceholder": "Ajoutez une justification ou un commentaire...",
+    "loading": "En cours...",
+    "confirmButton": "Confirmer : {label}"
+  },
+  "workflowTimeline": {
+    "noHistory": "Aucun historique pour le moment."
+  },
+  "applicationStatus": {
+    "DRAFT": "Brouillon",
+    "SUBMITTED": "Soumise",
+    "PRE_SCREENING": "Pré-examen",
+    "AWAITING_ADDITIONAL_INFORMATION": "Informations complémentaires demandées",
+    "PROCESSING": "En cours de traitement",
+    "DECISION_ISSUED": "Décision rendue",
+    "WITHDRAWN": "Retirée"
+  },
+  "workflowTransitions": {
+    "submit": {
+      "label": "Soumettre la demande",
+      "description": "Soumettez la demande à HDAB-NL. Le délai légal débute à la réception."
+    },
+    "withdrawDraft": {
+      "label": "Supprimer le brouillon",
+      "description": "Supprimez ce brouillon sans le soumettre."
+    },
+    "startPreScreening": {
+      "label": "Démarrer le pré-examen",
+      "description": "Démarrer le contrôle d'exhaustivité (TEHDAS2 D6.4 Fig. 1/2)."
+    },
+    "withdraw": {
+      "label": "Retirer la demande",
+      "description": "Le demandeur retire la demande."
+    },
+    "requestAdditionalInfo": {
+      "label": "Demander des informations complémentaires",
+      "description": "Le HDAB demande des informations complémentaires. Le délai de décision est suspendu (D6.4 §8)."
+    },
+    "completePreScreening": {
+      "label": "Terminer le pré-examen — passer à l'évaluation",
+      "description": "Le HDAB termine le pré-examen ; la demande passe à l'évaluation au fond (D6.4 Fig. 1/2)."
+    },
+    "resumePreScreening": {
+      "label": "Informations complémentaires soumises — reprise du pré-examen",
+      "description": "Le demandeur a soumis des informations complémentaires ; le pré-examen reprend. Délai recalculé (D6.4 §8)."
+    },
+    "autoNegativeNoResponse": {
+      "label": "Décision négative — aucune réponse reçue",
+      "description": "Le demandeur n'a pas soumis d'informations complémentaires dans le délai imparti (D6.4 Fig. 1/2)."
+    },
+    "positiveDecision": {
+      "label": "Rendre une décision positive",
+      "description": "Le HDAB rend une décision positive sur la demande (D6.4 Fig. 1/2)."
+    },
+    "negativeDecision": {
+      "label": "Rendre une décision négative",
+      "description": "Le HDAB rend une décision négative sur la demande (D6.4 Fig. 1/2)."
+    }
+  },
+  "deadlineBanner": {
+    "daysOverdue": "{days, plural, one {# jour de retard} other {# jours de retard}}",
+    "daysRemaining": "{days, plural, one {# jour restant} other {# jours restants}}"
+  },
+  "notesList": {
+    "placeholder": "Ajouter une note...",
+    "internal": "Interne (non visible pour le demandeur)",
+    "internalTag": "[interne]",
+    "saving": "En cours...",
+    "addNote": "Ajouter une note",
+    "noNotes": "Aucune note pour le moment."
+  },
+  "applicationCard": {
+    "organisation": "Organisation",
+    "caseHandler": "Gestionnaire :",
+    "decisionDeadline": "Délai de décision :",
+    "daysOverdue": "{count}j de retard",
+    "daysRemaining": "{count}j restants"
+  },
+  "hdeuImportForm": {
+    "invalidJson": "JSON invalide — veuillez vérifier la charge utile.",
+    "modePaste": "Coller le JSON",
+    "modeFile": "Téléverser un fichier",
+    "loadSample": "Charger une charge utile d'exemple",
+    "jsonLabel": "Charge utile JSON du NCP",
+    "uploadLabel": "Téléverser un fichier .json",
+    "charactersLoaded": "{count} caractères chargés",
+    "requiredFields": "Champs obligatoires de la charge utile",
+    "fieldHeader": "Champ",
+    "descriptionHeader": "Description",
+    "fieldHdeuApplicationId": "Référence du DAAMS émetteur (ex. FI-HDAB-2025-0042)",
+    "fieldSendingCountry": "Code pays ISO 3166-1 alpha-2",
+    "fieldSendingHdab": "Nom du HDAB émetteur",
+    "fieldTransmissionTimestamp": "Date/heure ISO 8601 (début du délai pour l'Art. 68)",
+    "fieldApplicationType": "DATA_ACCESS_APPLICATION ou DATA_REQUEST",
+    "fieldApplicantIdentity": "Identité du chercheur",
+    "fieldTitle": "Titre du projet",
+    "fieldProjectDescription": "Résumé en langage simple",
+    "fieldPurposeCategory": "Code de finalité selon l'Art. 53",
+    "fieldLegalBasis": "Base juridique EHDS applicable",
+    "fieldRequestedDatasets": "Tableau de groupes { dataHolderName, datasets: [{ name, url? }] }",
+    "fieldRequestedVariables": "Spécification au niveau des variables",
+    "fieldStudyPopulation": "Définition de la population",
+    "fieldDataProcessingCountry": "ISO 3166-1 alpha-2 (doit inclure NL)",
+    "importSuccess": "Demande importée avec succès",
+    "referenceLabel": "Référence :",
+    "deadlineLabel": "Délai de décision :",
+    "openApplication": "Ouvrir la demande",
+    "importing": "Importation en cours...",
+    "importButton": "Importer la demande"
+  },
+  "ncpFetchForm": {
+    "fetchFailed": "Impossible de contacter le NCP HealthData@EU",
+    "intro": "Interroge le point de contact national (NCP) HealthData@EU pour les demandes transfrontalières mises en attente pour HDAB-NL par les États membres émetteurs (TEHDAS2 D6.4). Récupération en deux étapes sur l'environnement de test HDAB-NL : une liste des demandes en attente, puis une récupération détaillée par élément lors de l'import.",
+    "querying": "Interrogation du NCP...",
+    "refresh": "Actualiser la file d'attente",
+    "pendingCount": "{count} en attente",
+    "noneQueued": "Aucune demande actuellement en attente au NCP.",
+    "submitted": "Soumise",
+    "viewJson": "Voir le JSON",
+    "imported": "Importée",
+    "importing": "Importation en cours...",
+    "import": "Importer",
+    "importedAs": "Importée sous",
+    "openApplication": "Ouvrir la demande",
+    "openFile": "Ouvrir {filename}"
+  },
+  "financialLineCategory": {
+    "ADMINISTRATIVE": "Frais administratifs",
+    "DATA_PREPARATION": "Préparation des données",
+    "DATA_HOLDER": "Frais du/des détenteur(s) de données",
+    "SPE_SETUP": "Frais de mise en service SPE",
+    "SPE_USAGE": "Frais d'utilisation SPE",
+    "ADDITIONAL_SERVICES": "Services complémentaires"
+  },
+  "feeEstimatePanel": {
+    "title": "Estimation des coûts (art. 62 EHDS)",
+    "statusPENDING": "En attente de la réponse du demandeur",
+    "statusACCEPTED": "Acceptée par le demandeur",
+    "statusREJECTED": "Refusée par le demandeur",
+    "total": "Total",
+    "sentOn": "Envoyée le",
+    "provisionalInvoice": "Facture provisoire",
+    "dueOn": "Échéance",
+    "paidOn": "Payée",
+    "markPaid": "Marquer comme payée",
+    "cancel": "Annuler",
+    "issueProvisionalInvoice": "Émettre la facture provisoire",
+    "noProvisionalInvoiceYet": "Aucune facture provisoire émise pour l'instant.",
+    "amountPlaceholder": "Montant (EUR)",
+    "descriptionPlaceholder": "Description (facultatif)",
+    "removeRow": "Supprimer la ligne",
+    "addRow": "Ajouter une ligne de coût",
+    "speOperator": "Opérateur SPE",
+    "noneSelected": "— aucun sélectionné —",
+    "speType": "Type de SPE",
+    "speSetupFee": "Frais de mise en service SPE (EUR)",
+    "speUsageFee": "Frais d'utilisation SPE (EUR)",
+    "speFeeDerived": "Dérivé du type de SPE sélectionné",
+    "notes": "Remarques",
+    "loading": "En cours...",
+    "sendEstimate": "Envoyer l'estimation des coûts",
+    "edit": "Modifier",
+    "markAccepted": "Marquer comme acceptée",
+    "markRejected": "Marquer comme refusée",
+    "noEstimateYet": "Aucune estimation des coûts envoyée pour l'instant."
+  },
+  "completenessCheckPanel": {
+    "title": "Contrôle d'exhaustivité (D6.3 ch. 5)",
+    "resultPENDING": "Pas encore évalué",
+    "resultCOMPLETE": "Complet",
+    "resultINCOMPLETE": "Incomplet",
+    "remarks": "Remarques (facultatif)",
+    "markComplete": "Marquer comme complet",
+    "notAllChecked": "Tous les points n'ont pas encore été cochés.",
+    "items": {
+      "title": "Le nom du projet est un titre plausible (pas un texte d'exemple)",
+      "applicant": "Les données du demandeur/de l'organisation sont complètes et plausibles",
+      "purpose": "L'objectif d'utilisation et sa justification sont renseignés",
+      "datasets": "Les jeux de données et variables demandés sont spécifiés",
+      "population": "La population de l'étude et les critères d'inclusion/exclusion sont décrits",
+      "legalBasis": "La base juridique est indiquée",
+      "processingCountry": "Le pays de traitement / le statut transfrontalier est indiqué",
+      "attachments": "Les pièces jointes requises sont présentes et lisibles"
+    }
+  },
+  "appealsPanel": {
+    "title": "Recours & réclamation (art. 63)",
+    "register": "Enregistrer",
+    "noneRegistered": "Aucun recours ni réclamation enregistré.",
+    "handledBy": "Traité par :",
+    "submittedOn": "Soumis le",
+    "submittedByLabel": "Nom du requérant/réclamant",
+    "groundsLabel": "Motifs",
+    "authorityLabel": "Autorité chargée du dossier (facultatif)",
+    "authorityPlaceholder": "ex. HDAB-NL (réclamation) ou tribunal de La Haye",
+    "loading": "En cours...",
+    "cancel": "Annuler"
+  },
+  "appealStatus": {
+    "SUBMITTED": "Soumis",
+    "UNDER_REVIEW": "En cours de traitement",
+    "UPHELD": "Accueilli",
+    "REJECTED": "Rejeté",
+    "WITHDRAWN": "Retiré"
+  },
+  "extractionRequestsPanel": {
+    "title": "Demandes d'extraction (art. 60, 68(7))",
+    "registerRequest": "Enregistrer une demande",
+    "noneRegistered": "Aucune demande d'extraction enregistrée pour l'instant.",
+    "requestedOn": "Demandée le",
+    "deliveredOn": "Livrée le",
+    "dataHolderLabel": "Détenteur de données",
+    "selectDataHolder": "Sélectionner un détenteur de données...",
+    "descriptionLabel": "Description de l'extraction demandée",
+    "loading": "En cours...",
+    "cancel": "Annuler"
+  },
+  "extractionRequestStatus": {
+    "REQUESTED": "Demandée",
+    "CONFIRMED": "Confirmée par le détenteur de données",
+    "DELIVERED": "Livrée",
+    "DECLINED": "Refusée"
+  },
+  "newApplicationForm": {
+    "typeTitle": "Type de demande",
+    "typeDataAccessLabel": "Demande d'accès aux données",
+    "typeDataAccessDesc": "Accès complet aux données personnelles dans un environnement sécurisé de traitement (art. 67 EHDS)",
+    "typeDataRequestLabel": "Demande de données",
+    "typeDataRequestDesc": "Résultats statistiques anonymisés / agrégés uniquement (art. 69 EHDS)",
+    "applicantTitle": "Demandeur",
+    "applicantLabel": "Demandeur",
+    "selectApplicant": "Sélectionner un demandeur...",
+    "projectInfoTitle": "Informations sur le projet",
+    "projectTitleLabel": "Titre du projet",
+    "projectDescriptionLabel": "Description du projet",
+    "purposeLabel": "Finalité (art. 53)",
+    "selectPurpose": "Sélectionner une finalité...",
+    "legalBasisLabel": "Base juridique",
+    "legalBasisPlaceholder": "ex. EHDS art. 53(1)",
+    "projectStartLabel": "Début du projet",
+    "projectEndLabel": "Fin du projet",
+    "dataScopeTitle": "Périmètre des données",
+    "requestedDatasetsLabel": "Jeux de données demandés, par détenteur de données",
+    "selectDataHolder": "Sélectionner un détenteur de données...",
+    "remove": "Supprimer",
+    "datasetNamePlaceholder": "Nom du jeu de données",
+    "catalogueUrlPlaceholder": "URL du catalogue (facultatif)",
+    "addDataset": "Ajouter un jeu de données",
+    "addDataHolder": "Ajouter un détenteur de données",
+    "requestedVariablesLabel": "Variables demandées",
+    "dataPeriodStartLabel": "Début de la période de données",
+    "dataPeriodEndLabel": "Fin de la période de données",
+    "populationTitle": "Population de l'étude",
+    "studyPopulationLabel": "Population de l'étude",
+    "inclusionCriteriaLabel": "Critères d'inclusion",
+    "exclusionCriteriaLabel": "Critères d'exclusion",
+    "cohortFormationTitle": "Constitution de la cohorte (annexe 5 §6.1)",
+    "cohortFormationMethodLabel": "Comment la cohorte est-elle constituée ?",
+    "selectOption": "Sélectionner...",
+    "cohortCriteria": "Constituée sur la base des critères indiqués dans cette demande",
+    "cohortPreviousCohort": "Une cohorte déjà constituée",
+    "cohortCombined": "Combinaison de critères et d'une cohorte déjà constituée",
+    "cohortWholePopulation": "L'ensemble de la population du/des pays indiqué(s)",
+    "dataSubjectsInformedLabel": "Les personnes concernées ont-elles été informées de l'utilisation des données ?",
+    "yes": "Oui",
+    "no": "Non",
+    "howInformed": "Comment ont-elles été informées ?",
+    "whyNot": "Pourquoi pas ?",
+    "includesControlsLabel": "Des témoins seront extraits pour la cohorte (annexe 5 §6.2)",
+    "describeControlGroup": "Décrivez le groupe témoin (critères d'appariement, taille, calendrier d'extraction)",
+    "includesRelativesLabel": "Des apparentés seront extraits pour la cohorte (annexe 5 §6.3)",
+    "describeRelativesGroup": "Décrivez le groupe d'apparentés (lien de parenté, taille, calendrier d'extraction)",
+    "cohortSizeTitle": "Taille de la cohorte & méthode d'extraction",
+    "cohortSizeLabel": "Taille de la cohorte",
+    "estimate": "Estimation",
+    "exact": "Exacte",
+    "cohortSizeJustificationLabel": "Pourquoi avez-vous besoin d'une cohorte de cette taille ?",
+    "extractionMethodLabel": "Méthode d'extraction",
+    "randomSample": "Échantillon aléatoire",
+    "allQualifying": "Toutes les personnes répondant aux critères",
+    "otherSample": "Autre échantillon",
+    "sampleSizeLabel": "Taille de l'échantillon",
+    "sampleSizePlaceholder": "ex. 100000 personnes ou 50 %",
+    "samplingMethodLabel": "Décrivez la méthode d'échantillonnage",
+    "extractionFrequencyLabel": "À quelle fréquence les données doivent-elles être extraites ?",
+    "once": "Une seule fois",
+    "multipleTimes": "Plusieurs fois",
+    "intervalLabel": "Intervalle",
+    "yearly": "Chaque année",
+    "halfYearly": "Tous les six mois",
+    "quarterly": "Chaque trimestre",
+    "other": "Autre",
+    "specifyIntervalLabel": "Précisez l'autre intervalle",
+    "extractionTimingNotesLabel": "Informations complémentaires sur les périodes/moments d'extraction",
+    "tabulationPlanTitle": "Plan de tabulation (annexe 6 §6)",
+    "tabulationPlanDesc": "Pour chaque tableau : registre à utiliser, cohorte éventuelle, variables requises, constitution des variables dérivées, sens de l’agrégation des pourcentages, ordre de génération des tableaux, et tout autre facteur pertinent.",
+    "otherDataTitle": "Autres données à combiner (annexe 5 §7)",
+    "otherDataCheckboxLabel": "Ces données seront combinées avec des données déjà détenues ou obtenues ailleurs",
+    "otherDataDescriptionLabel": "Décrivez les autres données et la méthode de combinaison envisagée",
+    "safeguardsTitle": "Traitement des données, protection & garanties (annexe 5 §8)",
+    "speNameLabel": "Nom de l'environnement sécurisé de traitement (si connu)",
+    "dataControllerLabel": "Responsable du traitement",
+    "speTechnicalRequirementsLabel": "Exigences techniques pour l'EST",
+    "dataAccessTimingLabel": "Quand avez-vous besoin des données ?",
+    "asap": "Dès que possible après le traitement",
+    "later": "Plus tard",
+    "whenLabel": "Quand ?",
+    "transfersOutsideEuEeaLabel": "Les données seront transférées hors UE/EEE",
+    "transferCountriesLabel": "Pays (séparés par des virgules)",
+    "transferLegalBasisLabel": "Base juridique du transfert",
+    "transferLegalBasisPlaceholder": "ex. décision d'adéquation, garanties appropriées",
+    "lawfulnessLabel": "Licéité du traitement (RGPD art. 6(1))",
+    "optOutTitle": "Exception d'opt-out (art. 71(4) EHDS)",
+    "optOutCheckboxLabel": "Cette demande concerne des données de personnes ayant exercé leur droit d'opt-out, via le mécanisme d'exception national",
+    "optOutJustificationLabel": "Justification du recours à l'exception",
+    "decisionTimelineTitle": "Délai de décision (art. 68)",
+    "decisionTrackLabel": "Délai de décision applicable",
+    "standardTrack": "Standard — 3 mois, prolongeable de 3 (demandeurs généraux)",
+    "expeditedTrack": "Accéléré — 2 mois, prolongeable d'1 (organisme public / institution de l'UE avec mandat de santé publique ou politique)",
+    "crossBorderTitle": "Transfrontalier & traitement",
+    "isCrossBorderLabel": "Il s’agit d’une demande transfrontalière (implication du NCP HealthData@EU requise)",
+    "creating": "Création en cours...",
+    "createButton": "Créer la demande (enregistrer comme brouillon)",
+    "cancel": "Annuler",
+    "purposeOption": {
+      "PUBLIC_HEALTH": "Santé publique",
+      "POLICY_MAKING": "Élaboration de politiques & réglementation",
+      "STATISTICS": "Statistiques",
+      "EDUCATION": "Éducation & formation",
+      "SCIENTIFIC_RESEARCH": "Recherche scientifique",
+      "CARE_IMPROVEMENT": "Amélioration des soins"
+    },
+    "lawfulnessOption": {
+      "CONSENT": "Consentement de la personne concernée",
+      "CONTRACT": "Exécution d'un contrat",
+      "LEGAL_OBLIGATION": "Respect d'une obligation légale",
+      "VITAL_INTERESTS": "Protection des intérêts vitaux",
+      "PUBLIC_TASK": "Exécution d'une mission d'intérêt public",
+      "LEGITIMATE_INTERESTS": "Intérêts légitimes"
+    }
   }
 }

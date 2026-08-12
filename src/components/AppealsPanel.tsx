@@ -14,14 +14,6 @@ type Props = {
   currentUserId: string;
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  SUBMITTED: 'Ingediend',
-  UNDER_REVIEW: 'In behandeling',
-  UPHELD: 'Toegewezen',
-  REJECTED: 'Afgewezen',
-  WITHDRAWN: 'Ingetrokken',
-};
-
 const STATUS_STYLES: Record<string, string> = {
   SUBMITTED: 'bg-amber-100 text-amber-800',
   UNDER_REVIEW: 'bg-blue-100 text-blue-700',
@@ -40,6 +32,8 @@ const NEXT_STATUSES: Record<string, string[]> = {
 
 export function AppealsPanel({ applicationId, appeals, canManage, currentUserId }: Props) {
   const router = useRouter();
+  const t = useTranslations('appealsPanel');
+  const ts = useTranslations('appealStatus');
   const terr = useTranslations('errors');
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -92,16 +86,16 @@ export function AppealsPanel({ applicationId, appeals, canManage, currentUserId 
   return (
     <div className="rounded border border-gray-200 bg-white p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="font-semibold text-gray-900 text-sm">Bezwaar &amp; beroep (Art. 63)</h2>
+        <h2 className="font-semibold text-gray-900 text-sm">{t('title')}</h2>
         {canManage && !showForm && (
           <button onClick={() => setShowForm(true)} className="text-xs text-[#01689b] hover:underline">
-            + Registreren
+            + {t('register')}
           </button>
         )}
       </div>
 
       {appeals.length === 0 && !showForm && (
-        <p className="text-xs text-gray-500">Geen bezwaar of beroep geregistreerd.</p>
+        <p className="text-xs text-gray-500">{t('noneRegistered')}</p>
       )}
 
       {error && <p className="text-xs text-red-600">{error}</p>}
@@ -112,12 +106,12 @@ export function AppealsPanel({ applicationId, appeals, canManage, currentUserId 
             <div className="flex items-center justify-between">
               <span className="font-medium">{appeal.submittedBy}</span>
               <span className={`text-xs font-medium px-2 py-0.5 rounded ${STATUS_STYLES[appeal.status]}`}>
-                {STATUS_LABELS[appeal.status]}
+                {ts(appeal.status)}
               </span>
             </div>
             <p className="text-gray-700 text-xs whitespace-pre-wrap">{appeal.grounds}</p>
-            {appeal.authority && <p className="text-xs text-gray-500">Behandeld door: {appeal.authority}</p>}
-            <p className="text-xs text-gray-400">Ingediend op {formatDate(appeal.submittedAt)}</p>
+            {appeal.authority && <p className="text-xs text-gray-500">{t('handledBy')} {appeal.authority}</p>}
+            <p className="text-xs text-gray-400">{t('submittedOn')} {formatDate(appeal.submittedAt)}</p>
             {appeal.decisionSummary && (
               <p className="text-xs text-gray-700 border-t border-gray-100 pt-1 mt-1">{appeal.decisionSummary}</p>
             )}
@@ -130,7 +124,7 @@ export function AppealsPanel({ applicationId, appeals, canManage, currentUserId 
                     onClick={() => updateStatus(appeal.id, next)}
                     className="text-xs text-[#01689b] hover:underline"
                   >
-                    → {STATUS_LABELS[next]}
+                    → {ts(next)}
                   </button>
                 ))}
               </div>
@@ -142,28 +136,28 @@ export function AppealsPanel({ applicationId, appeals, canManage, currentUserId 
       {canManage && showForm && (
         <div className="space-y-2 border-t border-gray-100 pt-3">
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Naam bezwaarmaker/appellant</label>
+            <label className="block text-xs font-medium text-gray-700 mb-1">{t('submittedByLabel')}</label>
             <input type="text" value={submittedBy} onChange={e => setSubmittedBy(e.target.value)}
               className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Gronden</label>
+            <label className="block text-xs font-medium text-gray-700 mb-1">{t('groundsLabel')}</label>
             <textarea rows={3} value={grounds} onChange={e => setGrounds(e.target.value)}
               className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Behandelende instantie (optioneel)</label>
+            <label className="block text-xs font-medium text-gray-700 mb-1">{t('authorityLabel')}</label>
             <input type="text" value={authority} onChange={e => setAuthority(e.target.value)}
-              placeholder="bijv. HDAB-NL (bezwaar) of Rechtbank Den Haag"
+              placeholder={t('authorityPlaceholder')}
               className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
           </div>
           <div className="flex gap-2">
             <button disabled={loading || !submittedBy.trim() || !grounds.trim()} onClick={submitAppeal}
               className="flex-1 rounded px-3 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors">
-              {loading ? 'Bezig...' : 'Registreren'}
+              {loading ? t('loading') : t('register')}
             </button>
             <button disabled={loading} onClick={() => setShowForm(false)} className="rounded px-3 py-2 text-sm border border-gray-300 hover:bg-gray-50">
-              Annuleren
+              {t('cancel')}
             </button>
           </div>
         </div>

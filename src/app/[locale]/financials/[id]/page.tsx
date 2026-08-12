@@ -7,7 +7,6 @@ import { PermitCard } from '@/components/PermitCard';
 import { formatDate, serializePrisma } from '@/lib/utils';
 import { formatPermitId } from '@/lib/permit';
 import { InvoiceStatus } from '@prisma/client';
-import { LINE_CATEGORY_META } from '@/lib/financial-line-items';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,6 +42,7 @@ export default async function InvoiceDetailPage({
   const { userId: queryUserId } = await searchParams;
 
   const t = await getTranslations({ locale, namespace: 'invoices' });
+  const tc = await getTranslations({ locale, namespace: 'financialLineCategory' });
 
   const [rawInvoice, users] = await Promise.all([
     prisma.invoice.findUnique({
@@ -136,7 +136,7 @@ export default async function InvoiceDetailPage({
             <ul className="text-sm divide-y divide-gray-100">
               {invoice.lineItems.map((item) => (
                 <li key={item.id} className="flex justify-between py-2">
-                  <span className="text-gray-700">{LINE_CATEGORY_META[item.category].label}{item.description ? ` — ${item.description}` : ''}</span>
+                  <span className="text-gray-700">{tc(item.category)}{item.description ? ` — ${item.description}` : ''}</span>
                   <span className="font-medium">{String(item.amount)} {invoice.currency}</span>
                 </li>
               ))}

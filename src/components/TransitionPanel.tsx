@@ -8,10 +8,16 @@ import { getAvailableTransitions, Transition } from '@/lib/workflow';
 import { useRouter } from 'next/navigation';
 import { readErrorMessage } from '@/lib/utils';
 
-type Props = { application: Application & { feeEstimate: Pick<FeeEstimate, 'status'> | null }; currentUser: User };
+type Props = {
+  application: Application & { feeEstimate: Pick<FeeEstimate, 'status'> | null };
+  currentUser: User;
+  children?: React.ReactNode;
+};
 
-export function TransitionPanel({ application, currentUser }: Props) {
+export function TransitionPanel({ application, currentUser, children }: Props) {
   const router = useRouter();
+  const t = useTranslations('transitionPanel');
+  const tw = useTranslations('workflowTransitions');
   const terr = useTranslations('errors');
   const [selected, setSelected] = useState<Transition | null>(null);
   const [comment, setComment] = useState('');
@@ -20,7 +26,7 @@ export function TransitionPanel({ application, currentUser }: Props) {
 
   const feeEstimateAccepted = application.feeEstimate?.status === 'ACCEPTED';
   const transitions = getAvailableTransitions(application.status, application.type, currentUser.role, feeEstimateAccepted);
-  if (transitions.length === 0) return null;
+  if (transitions.length === 0 && !children) return null;
 
   async function submit() {
     if (!selected) return;
@@ -50,7 +56,7 @@ export function TransitionPanel({ application, currentUser }: Props) {
 
   return (
     <div className="rounded border border-gray-200 bg-white p-5">
-      <h2 className="font-semibold text-gray-900 mb-3">Beschikbare acties</h2>
+      <h2 className="font-semibold text-gray-900 mb-3">{t('title')}</h2>
       <div className="space-y-2">
         {transitions.map((t, i) => {
           const isSelected =
@@ -77,25 +83,26 @@ export function TransitionPanel({ application, currentUser }: Props) {
               onClick={() => setSelected(isSelected ? null : t)}
               className={`w-full text-left rounded border px-4 py-3 text-sm transition-colors ${baseStyle}`}
             >
-              <p className="font-medium">{t.label}</p>
-              <p className="text-xs opacity-70 mt-0.5">{t.description}</p>
+              <p className="font-medium">{tw(`${t.key}.label`)}</p>
+              <p className="text-xs opacity-70 mt-0.5">{tw(`${t.key}.description`)}</p>
             </button>
           );
         })}
+        {children}
       </div>
 
       {selected && (
         <div className="mt-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Toelichting
+            {t('comment')}
             {selected.requiresDecisionOutcome === 'NEGATIVE' &&
-              <span className="text-[#d52b1e] ml-1">(verplicht bij negatief besluit)</span>}
+              <span className="text-[#d52b1e] ml-1">{t('commentRequiredNegative')}</span>}
           </label>
           <textarea
             rows={3}
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            placeholder="Voeg een motivering of opmerking toe..."
+            placeholder={t('commentPlaceholder')}
             className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
           />
           {error && (
@@ -106,7 +113,7 @@ export function TransitionPanel({ application, currentUser }: Props) {
             onClick={submit}
             className="mt-2 w-full rounded px-4 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors"
           >
-            {loading ? 'Bezig...' : `Bevestig: ${selected.label}`}
+            {loading ? t('loading') : t('confirmButton', { label: tw(`${selected.key}.label`) })}
           </button>
         </div>
       )}

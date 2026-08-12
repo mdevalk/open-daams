@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { readErrorMessage, formatDate } from '@/lib/utils';
-import { LINE_CATEGORY_META } from '@/lib/financial-line-items';
 import type { FinancialLineCategory } from '@prisma/client';
 
 type InvoiceLineItem = { id: string; category: FinancialLineCategory; description: string | null; amount: string };
@@ -50,6 +49,7 @@ export function InvoicePanel({
 }) {
   const router = useRouter();
   const t = useTranslations('invoices');
+  const tc = useTranslations('financialLineCategory');
   const terr = useTranslations('errors');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -130,7 +130,7 @@ export function InvoicePanel({
                 <ul className="text-xs text-gray-600 space-y-0.5">
                   {invoice.lineItems.map((item) => (
                     <li key={item.id} className="flex justify-between">
-                      <span>{LINE_CATEGORY_META[item.category].label}{item.description ? ` — ${item.description}` : ''}</span>
+                      <span>{tc(item.category)}{item.description ? ` — ${item.description}` : ''}</span>
                       <span>{item.amount} {invoice.currency}</span>
                     </li>
                   ))}

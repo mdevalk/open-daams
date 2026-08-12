@@ -6,24 +6,10 @@ import { useState } from 'react';
 import { User } from '@prisma/client';
 import { useRouter } from 'next/navigation';
 
-const PURPOSE_OPTIONS = [
-  { value: 'PUBLIC_HEALTH', label: 'Public health' },
-  { value: 'POLICY_MAKING', label: 'Policy-making & regulatory' },
-  { value: 'STATISTICS', label: 'Statistics' },
-  { value: 'EDUCATION', label: 'Education & training' },
-  { value: 'SCIENTIFIC_RESEARCH', label: 'Scientific research' },
-  { value: 'CARE_IMPROVEMENT', label: 'Care improvement' },
-];
+const PURPOSE_VALUES = ['PUBLIC_HEALTH', 'POLICY_MAKING', 'STATISTICS', 'EDUCATION', 'SCIENTIFIC_RESEARCH', 'CARE_IMPROVEMENT'] as const;
 
 // TEHDAS2 D6.3 Annex 5 §8 — GDPR Art. 6(1) lawful processing grounds
-const LAWFULNESS_OPTIONS = [
-  { value: 'CONSENT', label: 'Consent of the data subject' },
-  { value: 'CONTRACT', label: 'Performance of a contract' },
-  { value: 'LEGAL_OBLIGATION', label: 'Compliance with a legal obligation' },
-  { value: 'VITAL_INTERESTS', label: 'Protection of vital interests' },
-  { value: 'PUBLIC_TASK', label: 'Performance of a task in the public interest' },
-  { value: 'LEGITIMATE_INTERESTS', label: 'Legitimate interests' },
-];
+const LAWFULNESS_VALUES = ['CONSENT', 'CONTRACT', 'LEGAL_OBLIGATION', 'VITAL_INTERESTS', 'PUBLIC_TASK', 'LEGITIMATE_INTERESTS'] as const;
 
 type AppType = 'DATA_ACCESS_APPLICATION' | 'DATA_REQUEST';
 
@@ -42,6 +28,7 @@ export function NewApplicationForm({
   currentUser: User;
 }) {
   const router = useRouter();
+  const t = useTranslations('newApplicationForm');
   const terr = useTranslations('errors');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -190,7 +177,7 @@ export function NewApplicationForm({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
-      if (!res.ok) throw new Error('Failed to create application');
+      if (!res.ok) throw new Error(terr('requestFailed'));
       const data = await res.json();
       router.push(`/applications/${data.id}`);
     } catch (e: unknown) {
@@ -203,11 +190,11 @@ export function NewApplicationForm({
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Application type */}
       <div className="rounded-xl border border-gray-200 bg-white p-5">
-        <h2 className="font-semibold text-gray-900 mb-4">Application type</h2>
+        <h2 className="font-semibold text-gray-900 mb-4">{t('typeTitle')}</h2>
         <div className="grid grid-cols-2 gap-3">
           {[
-            { value: 'DATA_ACCESS_APPLICATION', label: 'Data Access Application', desc: 'Full access to personal data in a Secure Processing Environment (Art. 67 EHDS)' },
-            { value: 'DATA_REQUEST', label: 'Data Request', desc: 'Anonymised / aggregated statistical results only (Art. 69 EHDS)' },
+            { value: 'DATA_ACCESS_APPLICATION', label: t('typeDataAccessLabel'), desc: t('typeDataAccessDesc') },
+            { value: 'DATA_REQUEST', label: t('typeDataRequestLabel'), desc: t('typeDataRequestDesc') },
           ].map((opt) => (
             <label key={opt.value} className="flex items-start gap-3 rounded-lg border border-gray-200 p-3 cursor-pointer has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
               <input
@@ -230,16 +217,16 @@ export function NewApplicationForm({
 
       {/* Applicant */}
       <div className="rounded-xl border border-gray-200 bg-white p-5">
-        <h2 className="font-semibold text-gray-900 mb-4">Applicant</h2>
+        <h2 className="font-semibold text-gray-900 mb-4">{t('applicantTitle')}</h2>
         <div>
-          <label className={labelCls}>Applicant <span className="text-red-500">*</span></label>
+          <label className={labelCls}>{t('applicantLabel')} <span className="text-red-500">*</span></label>
           {currentUser.role === 'APPLICANT' ? (
             <p className="text-sm text-gray-700 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200">
               {currentUser.name}
             </p>
           ) : (
             <select name="applicantId" required className={inputCls}>
-              <option value="">Select applicant...</option>
+              <option value="">{t('selectApplicant')}</option>
               {applicants.map((u) => (
                 <option key={u.id} value={u.id}>{u.name} — {u.dataUser?.name ?? '—'}</option>
               ))}
@@ -250,35 +237,35 @@ export function NewApplicationForm({
 
       {/* Project info */}
       <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-4">
-        <h2 className="font-semibold text-gray-900">Project information</h2>
+        <h2 className="font-semibold text-gray-900">{t('projectInfoTitle')}</h2>
         <div>
-          <label className={labelCls}>Project title <span className="text-red-500">*</span></label>
+          <label className={labelCls}>{t('projectTitleLabel')} <span className="text-red-500">*</span></label>
           <input name="title" required className={inputCls} />
         </div>
         <div>
-          <label className={labelCls}>Project description <span className="text-red-500">*</span></label>
+          <label className={labelCls}>{t('projectDescriptionLabel')} <span className="text-red-500">*</span></label>
           <textarea name="projectDescription" rows={4} required className={inputCls} />
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className={labelCls}>Purpose (Art. 53) <span className="text-red-500">*</span></label>
+            <label className={labelCls}>{t('purposeLabel')} <span className="text-red-500">*</span></label>
             <select name="purposeCategory" required className={inputCls}>
-              <option value="">Select purpose...</option>
-              {PURPOSE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+              <option value="">{t('selectPurpose')}</option>
+              {PURPOSE_VALUES.map((v) => <option key={v} value={v}>{t(`purposeOption.${v}`)}</option>)}
             </select>
           </div>
           <div>
-            <label className={labelCls}>Legal basis</label>
-            <input name="legalBasis" placeholder="e.g. EHDS Art. 53(1)" className={inputCls} />
+            <label className={labelCls}>{t('legalBasisLabel')}</label>
+            <input name="legalBasis" placeholder={t('legalBasisPlaceholder')} className={inputCls} />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className={labelCls}>Project start</label>
+            <label className={labelCls}>{t('projectStartLabel')}</label>
             <input type="date" name="projectStartDate" className={inputCls} />
           </div>
           <div>
-            <label className={labelCls}>Project end</label>
+            <label className={labelCls}>{t('projectEndLabel')}</label>
             <input type="date" name="projectEndDate" className={inputCls} />
           </div>
         </div>
@@ -286,9 +273,9 @@ export function NewApplicationForm({
 
       {/* Data scope */}
       <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-4">
-        <h2 className="font-semibold text-gray-900">Data scope</h2>
+        <h2 className="font-semibold text-gray-900">{t('dataScopeTitle')}</h2>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Requested datasets, by data holder</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">{t('requestedDatasetsLabel')}</label>
           <div className="space-y-3">
             {dataHolderGroups.map((group) => (
               <div key={group.id} className="rounded-lg border border-gray-200 p-3 space-y-2">
@@ -298,7 +285,7 @@ export function NewApplicationForm({
                     onChange={(e) => updateDataHolderId(group.id, e.target.value)}
                     className={`${inputCls} flex-1`}
                   >
-                    <option value="">Select data holder...</option>
+                    <option value="">{t('selectDataHolder')}</option>
                     {dataHolders.map((dh) => (
                       <option key={dh.id} value={dh.id}>{dh.name}</option>
                     ))}
@@ -309,7 +296,7 @@ export function NewApplicationForm({
                       onClick={() => removeDataHolderGroup(group.id)}
                       className="text-xs text-red-600 hover:underline"
                     >
-                      Remove
+                      {t('remove')}
                     </button>
                   )}
                 </div>
@@ -320,14 +307,14 @@ export function NewApplicationForm({
                         type="text"
                         value={dataset.name}
                         onChange={(e) => updateDatasetField(group.id, dataset.id, 'name', e.target.value)}
-                        placeholder="Dataset name"
+                        placeholder={t('datasetNamePlaceholder')}
                         className={`${inputCls} flex-1`}
                       />
                       <input
                         type="url"
                         value={dataset.url}
                         onChange={(e) => updateDatasetField(group.id, dataset.id, 'url', e.target.value)}
-                        placeholder="Catalogue URL (optional)"
+                        placeholder={t('catalogueUrlPlaceholder')}
                         className={`${inputCls} flex-1`}
                       />
                       {group.datasets.length > 1 && (
@@ -336,7 +323,7 @@ export function NewApplicationForm({
                           onClick={() => removeDatasetFromGroup(group.id, dataset.id)}
                           className="text-xs text-red-600 hover:underline flex-shrink-0"
                         >
-                          Remove
+                          {t('remove')}
                         </button>
                       )}
                     </div>
@@ -346,27 +333,27 @@ export function NewApplicationForm({
                     onClick={() => addDatasetToGroup(group.id)}
                     className="text-xs text-blue-600 hover:underline font-medium"
                   >
-                    + Add dataset
+                    + {t('addDataset')}
                   </button>
                 </div>
               </div>
             ))}
             <button type="button" onClick={addDataHolderGroup} className="text-sm text-blue-600 hover:underline font-medium">
-              + Add data holder
+              + {t('addDataHolder')}
             </button>
           </div>
         </div>
         <div>
-          <label className={labelCls}>Requested variables</label>
+          <label className={labelCls}>{t('requestedVariablesLabel')}</label>
           <textarea name="requestedVariables" rows={2} className={inputCls} />
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className={labelCls}>Data period start</label>
+            <label className={labelCls}>{t('dataPeriodStartLabel')}</label>
             <input type="date" name="dataStartDate" className={inputCls} />
           </div>
           <div>
-            <label className={labelCls}>Data period end</label>
+            <label className={labelCls}>{t('dataPeriodEndLabel')}</label>
             <input type="date" name="dataEndDate" className={inputCls} />
           </div>
         </div>
@@ -374,18 +361,18 @@ export function NewApplicationForm({
 
       {/* Population */}
       <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-4">
-        <h2 className="font-semibold text-gray-900">Study population</h2>
+        <h2 className="font-semibold text-gray-900">{t('populationTitle')}</h2>
         <div>
-          <label className={labelCls}>Study population</label>
+          <label className={labelCls}>{t('studyPopulationLabel')}</label>
           <textarea name="studyPopulation" rows={2} className={inputCls} />
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className={labelCls}>Inclusion criteria</label>
+            <label className={labelCls}>{t('inclusionCriteriaLabel')}</label>
             <textarea name="inclusionCriteria" rows={2} className={inputCls} />
           </div>
           <div>
-            <label className={labelCls}>Exclusion criteria</label>
+            <label className={labelCls}>{t('exclusionCriteriaLabel')}</label>
             <textarea name="exclusionCriteria" rows={2} className={inputCls} />
           </div>
         </div>
@@ -394,48 +381,48 @@ export function NewApplicationForm({
       {/* Cohort formation — data access application only (Annex 5 §6.1) */}
       {type === 'DATA_ACCESS_APPLICATION' && (
         <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-4">
-          <h2 className="font-semibold text-gray-900">Cohort formation (Annex 5 §6.1)</h2>
+          <h2 className="font-semibold text-gray-900">{t('cohortFormationTitle')}</h2>
           <div>
-            <label className={labelCls}>How is the cohort formed?</label>
+            <label className={labelCls}>{t('cohortFormationMethodLabel')}</label>
             <select value={cohortFormationMethod} onChange={(e) => setCohortFormationMethod(e.target.value)} className={inputCls}>
-              <option value="">Select...</option>
-              <option value="CRITERIA">Formed based on the criteria given in this application</option>
-              <option value="PREVIOUS_COHORT">An already-established cohort</option>
-              <option value="COMBINED">Combination of criteria and a previously established cohort</option>
-              <option value="WHOLE_POPULATION">The whole population of the indicated country/countries</option>
+              <option value="">{t('selectOption')}</option>
+              <option value="CRITERIA">{t('cohortCriteria')}</option>
+              <option value="PREVIOUS_COHORT">{t('cohortPreviousCohort')}</option>
+              <option value="COMBINED">{t('cohortCombined')}</option>
+              <option value="WHOLE_POPULATION">{t('cohortWholePopulation')}</option>
             </select>
           </div>
           <div>
-            <label className={labelCls}>Have data subjects been informed of the data use?</label>
+            <label className={labelCls}>{t('dataSubjectsInformedLabel')}</label>
             <select value={dataSubjectsInformed} onChange={(e) => setDataSubjectsInformed(e.target.value)} className={inputCls}>
-              <option value="">Select...</option>
-              <option value="true">Yes</option>
-              <option value="false">No</option>
+              <option value="">{t('selectOption')}</option>
+              <option value="true">{t('yes')}</option>
+              <option value="false">{t('no')}</option>
             </select>
           </div>
           {dataSubjectsInformed && (
             <div>
-              <label className={labelCls}>{dataSubjectsInformed === 'true' ? 'How were they informed?' : 'Why not?'}</label>
+              <label className={labelCls}>{dataSubjectsInformed === 'true' ? t('howInformed') : t('whyNot')}</label>
               <textarea name="dataSubjectsInformedDetail" rows={2} className={inputCls} />
             </div>
           )}
           <div className="flex items-center gap-3">
             <input type="checkbox" id="includesControls" checked={includesControls} onChange={(e) => setIncludesControls(e.target.checked)} className="rounded" />
-            <label htmlFor="includesControls" className="text-sm text-gray-700">Controls will be extracted for the cohort (Annex 5 §6.2)</label>
+            <label htmlFor="includesControls" className="text-sm text-gray-700">{t('includesControlsLabel')}</label>
           </div>
           {includesControls && (
             <div>
-              <label className={labelCls}>Describe the control group (matching criteria, size, extraction timing)</label>
+              <label className={labelCls}>{t('describeControlGroup')}</label>
               <textarea name="controlsDescription" rows={2} className={inputCls} />
             </div>
           )}
           <div className="flex items-center gap-3">
             <input type="checkbox" id="includesRelatives" checked={includesRelatives} onChange={(e) => setIncludesRelatives(e.target.checked)} className="rounded" />
-            <label htmlFor="includesRelatives" className="text-sm text-gray-700">Relatives will be extracted for the cohort (Annex 5 §6.3)</label>
+            <label htmlFor="includesRelatives" className="text-sm text-gray-700">{t('includesRelativesLabel')}</label>
           </div>
           {includesRelatives && (
             <div>
-              <label className={labelCls}>Describe the relatives group (relationship, size, extraction timing)</label>
+              <label className={labelCls}>{t('describeRelativesGroup')}</label>
               <textarea name="relativesDescription" rows={2} className={inputCls} />
             </div>
           )}
@@ -444,77 +431,77 @@ export function NewApplicationForm({
 
       {/* Cohort/dataset size & extraction method — shared (Annex 5 §6.1 / Annex 6 §6.1) */}
       <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-4">
-        <h2 className="font-semibold text-gray-900">Cohort size &amp; extraction method</h2>
+        <h2 className="font-semibold text-gray-900">{t('cohortSizeTitle')}</h2>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className={labelCls}>Cohort size</label>
+            <label className={labelCls}>{t('cohortSizeLabel')}</label>
             <div className="flex gap-2">
               <select value={cohortSizeIsEstimate} onChange={(e) => setCohortSizeIsEstimate(e.target.value)} className="rounded-lg border border-gray-300 px-2 py-2 text-sm">
-                <option value="true">Estimate</option>
-                <option value="false">Exact</option>
+                <option value="true">{t('estimate')}</option>
+                <option value="false">{t('exact')}</option>
               </select>
               <input type="number" name="cohortSize" min={0} className={inputCls} />
             </div>
           </div>
           <div>
-            <label className={labelCls}>Why do you need a cohort of this size?</label>
+            <label className={labelCls}>{t('cohortSizeJustificationLabel')}</label>
             <input name="cohortSizeJustification" className={inputCls} />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className={labelCls}>Extraction method</label>
+            <label className={labelCls}>{t('extractionMethodLabel')}</label>
             <select value={extractionMethod} onChange={(e) => setExtractionMethod(e.target.value)} className={inputCls}>
-              <option value="">Select...</option>
-              <option value="RANDOM_SAMPLE">Random sample</option>
-              <option value="ALL_QUALIFYING">All people fulfilling the criteria</option>
-              <option value="OTHER_SAMPLE">Other sample</option>
+              <option value="">{t('selectOption')}</option>
+              <option value="RANDOM_SAMPLE">{t('randomSample')}</option>
+              <option value="ALL_QUALIFYING">{t('allQualifying')}</option>
+              <option value="OTHER_SAMPLE">{t('otherSample')}</option>
             </select>
           </div>
           {(extractionMethod === 'RANDOM_SAMPLE' || extractionMethod === 'OTHER_SAMPLE') && (
             <div>
-              <label className={labelCls}>Sample size</label>
-              <input name="sampleSize" placeholder="e.g. 100000 persons or 50%" className={inputCls} />
+              <label className={labelCls}>{t('sampleSizeLabel')}</label>
+              <input name="sampleSize" placeholder={t('sampleSizePlaceholder')} className={inputCls} />
             </div>
           )}
         </div>
         {extractionMethod === 'OTHER_SAMPLE' && (
           <div>
-            <label className={labelCls}>Describe the sampling method</label>
+            <label className={labelCls}>{t('samplingMethodLabel')}</label>
             <textarea name="samplingMethodDescription" rows={2} className={inputCls} />
           </div>
         )}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className={labelCls}>How often does the data need to be extracted?</label>
+            <label className={labelCls}>{t('extractionFrequencyLabel')}</label>
             <select value={extractionFrequency} onChange={(e) => setExtractionFrequency(e.target.value)} className={inputCls}>
-              <option value="">Select...</option>
-              <option value="ONCE">Once</option>
-              <option value="MULTIPLE_TIMES">Multiple times</option>
+              <option value="">{t('selectOption')}</option>
+              <option value="ONCE">{t('once')}</option>
+              <option value="MULTIPLE_TIMES">{t('multipleTimes')}</option>
             </select>
           </div>
           {extractionFrequency === 'MULTIPLE_TIMES' && (
             <div>
-              <label className={labelCls}>Interval</label>
+              <label className={labelCls}>{t('intervalLabel')}</label>
               <select value={extractionInterval} onChange={(e) => setExtractionInterval(e.target.value)} className={inputCls}>
-                <option value="">Select...</option>
-                <option value="YEARLY">Every year</option>
-                <option value="HALF_YEARLY">Half a year</option>
-                <option value="QUARTERLY">Quarter</option>
-                <option value="OTHER">Other</option>
+                <option value="">{t('selectOption')}</option>
+                <option value="YEARLY">{t('yearly')}</option>
+                <option value="HALF_YEARLY">{t('halfYearly')}</option>
+                <option value="QUARTERLY">{t('quarterly')}</option>
+                <option value="OTHER">{t('other')}</option>
               </select>
             </div>
           )}
         </div>
         {extractionFrequency === 'MULTIPLE_TIMES' && extractionInterval === 'OTHER' && (
           <div>
-            <label className={labelCls}>Specify other interval</label>
+            <label className={labelCls}>{t('specifyIntervalLabel')}</label>
             <input name="extractionIntervalOther" className={inputCls} />
           </div>
         )}
         {extractionFrequency === 'MULTIPLE_TIMES' && (
           <div>
-            <label className={labelCls}>More information on the extracting periods/times</label>
+            <label className={labelCls}>{t('extractionTimingNotesLabel')}</label>
             <textarea name="extractionTimingNotes" rows={2} className={inputCls} />
           </div>
         )}
@@ -523,12 +510,8 @@ export function NewApplicationForm({
       {/* Tabulation plan — data request only (Annex 6 §6) */}
       {type === 'DATA_REQUEST' && (
         <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-2">
-          <h2 className="font-semibold text-gray-900">Tabulation plan (Annex 6 §6)</h2>
-          <p className="text-xs text-gray-500">
-            For each table: register to be used, possible cohort, required variables, formation of derived
-            variables, direction of percentage aggregation, order of table generation, and any other relevant
-            factor.
-          </p>
+          <h2 className="font-semibold text-gray-900">{t('tabulationPlanTitle')}</h2>
+          <p className="text-xs text-gray-500">{t('tabulationPlanDesc')}</p>
           <textarea name="tabulationPlan" rows={4} className={inputCls} />
         </div>
       )}
@@ -536,16 +519,16 @@ export function NewApplicationForm({
       {/* Other data to combine — data access application only (Annex 5 §7) */}
       {type === 'DATA_ACCESS_APPLICATION' && (
         <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-3">
-          <h2 className="font-semibold text-gray-900">Other data to be combined (Annex 5 §7)</h2>
+          <h2 className="font-semibold text-gray-900">{t('otherDataTitle')}</h2>
           <div className="flex items-center gap-3">
             <input type="checkbox" id="otherDataToCombine" checked={otherDataToCombine} onChange={(e) => setOtherDataToCombine(e.target.checked)} className="rounded" />
             <label htmlFor="otherDataToCombine" className="text-sm text-gray-700">
-              This data will be combined with data already held or obtained elsewhere
+              {t('otherDataCheckboxLabel')}
             </label>
           </div>
           {otherDataToCombine && (
             <div>
-              <label className={labelCls}>Describe the other data and the planned combination method</label>
+              <label className={labelCls}>{t('otherDataDescriptionLabel')}</label>
               <textarea name="otherDataDescription" rows={2} className={inputCls} />
             </div>
           )}
@@ -555,59 +538,59 @@ export function NewApplicationForm({
       {/* Data processing, protection & safeguards — data access application only (Annex 5 §8) */}
       {type === 'DATA_ACCESS_APPLICATION' && (
         <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-4">
-          <h2 className="font-semibold text-gray-900">Data processing, protection &amp; safeguards (Annex 5 §8)</h2>
+          <h2 className="font-semibold text-gray-900">{t('safeguardsTitle')}</h2>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelCls}>Name of the secure processing environment (if known)</label>
+              <label className={labelCls}>{t('speNameLabel')}</label>
               <input name="speName" className={inputCls} />
             </div>
             <div>
-              <label className={labelCls}>Data controller</label>
+              <label className={labelCls}>{t('dataControllerLabel')}</label>
               <input name="dataController" className={inputCls} />
             </div>
           </div>
           <div>
-            <label className={labelCls}>Technical requirements for the SPE</label>
+            <label className={labelCls}>{t('speTechnicalRequirementsLabel')}</label>
             <textarea name="speTechnicalRequirements" rows={2} className={inputCls} />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelCls}>When do you need the data?</label>
+              <label className={labelCls}>{t('dataAccessTimingLabel')}</label>
               <select value={dataAccessTiming} onChange={(e) => setDataAccessTiming(e.target.value)} className={inputCls}>
-                <option value="AS_SOON_AS_POSSIBLE">As soon as possible after processing</option>
-                <option value="LATER">Later</option>
+                <option value="AS_SOON_AS_POSSIBLE">{t('asap')}</option>
+                <option value="LATER">{t('later')}</option>
               </select>
             </div>
             {dataAccessTiming === 'LATER' && (
               <div>
-                <label className={labelCls}>When?</label>
+                <label className={labelCls}>{t('whenLabel')}</label>
                 <input type="date" name="dataAccessLaterDate" className={inputCls} />
               </div>
             )}
           </div>
           <div className="flex items-center gap-3">
             <input type="checkbox" id="transfersOutsideEuEea" checked={transfersOutsideEuEea} onChange={(e) => setTransfersOutsideEuEea(e.target.checked)} className="rounded" />
-            <label htmlFor="transfersOutsideEuEea" className="text-sm text-gray-700">Data will be transferred outside the EU/EEA</label>
+            <label htmlFor="transfersOutsideEuEea" className="text-sm text-gray-700">{t('transfersOutsideEuEeaLabel')}</label>
           </div>
           {transfersOutsideEuEea && (
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className={labelCls}>Country/countries (comma-separated)</label>
+                <label className={labelCls}>{t('transferCountriesLabel')}</label>
                 <input name="transferCountries" className={inputCls} />
               </div>
               <div>
-                <label className={labelCls}>Legal basis for the transfer</label>
-                <input name="transferLegalBasis" placeholder="e.g. adequacy decision, appropriate safeguards" className={inputCls} />
+                <label className={labelCls}>{t('transferLegalBasisLabel')}</label>
+                <input name="transferLegalBasis" placeholder={t('transferLegalBasisPlaceholder')} className={inputCls} />
               </div>
             </div>
           )}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Lawfulness of processing (GDPR Art. 6(1))</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t('lawfulnessLabel')}</label>
             <div className="grid grid-cols-2 gap-2">
-              {LAWFULNESS_OPTIONS.map((o) => (
-                <label key={o.value} className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input type="checkbox" checked={lawfulness.includes(o.value)} onChange={() => toggleLawfulness(o.value)} className="rounded" />
-                  <span className="text-gray-700">{o.label}</span>
+              {LAWFULNESS_VALUES.map((v) => (
+                <label key={v} className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input type="checkbox" checked={lawfulness.includes(v)} onChange={() => toggleLawfulness(v)} className="rounded" />
+                  <span className="text-gray-700">{t(`lawfulnessOption.${v}`)}</span>
                 </label>
               ))}
             </div>
@@ -617,16 +600,16 @@ export function NewApplicationForm({
 
       {/* Opt-out exception — shared (Annex 5 §8 / Annex 6 §6, EHDS Art. 71(4)) */}
       <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-3">
-        <h2 className="font-semibold text-gray-900">Opt-out exception (Art. 71(4) EHDS)</h2>
+        <h2 className="font-semibold text-gray-900">{t('optOutTitle')}</h2>
         <div className="flex items-center gap-3">
           <input type="checkbox" id="usesOptOutException" checked={usesOptOutException} onChange={(e) => setUsesOptOutException(e.target.checked)} className="rounded" />
           <label htmlFor="usesOptOutException" className="text-sm text-gray-700">
-            This application requests data from persons who exercised their opt-out right, via the national exception mechanism
+            {t('optOutCheckboxLabel')}
           </label>
         </div>
         {usesOptOutException && (
           <div>
-            <label className={labelCls}>Justification for using the exception</label>
+            <label className={labelCls}>{t('optOutJustificationLabel')}</label>
             <textarea name="optOutExceptionJustification" rows={2} className={inputCls} />
           </div>
         )}
@@ -634,23 +617,23 @@ export function NewApplicationForm({
 
       {/* Decision timeline — Art. 68 */}
       <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-3">
-        <h2 className="font-semibold text-gray-900">Decision timeline (Art. 68)</h2>
+        <h2 className="font-semibold text-gray-900">{t('decisionTimelineTitle')}</h2>
         <div>
-          <label className={labelCls}>Applicable decision deadline</label>
+          <label className={labelCls}>{t('decisionTrackLabel')}</label>
           <select value={decisionTrack} onChange={(e) => setDecisionTrack(e.target.value)} className={inputCls}>
-            <option value="STANDARD">Standard — 3 months, extendable by 3 (general applicants)</option>
-            <option value="EXPEDITED">Accelerated — 2 months, extendable by 1 (public-sector body / EU institution under a public-health or policy mandate)</option>
+            <option value="STANDARD">{t('standardTrack')}</option>
+            <option value="EXPEDITED">{t('expeditedTrack')}</option>
           </select>
         </div>
       </div>
 
       {/* Cross-border */}
       <div className="rounded-xl border border-gray-200 bg-white p-5">
-        <h2 className="font-semibold text-gray-900 mb-3">Cross-border &amp; processing</h2>
+        <h2 className="font-semibold text-gray-900 mb-3">{t('crossBorderTitle')}</h2>
         <div className="flex items-center gap-3">
           <input type="checkbox" name="isCrossBorder" id="isCrossBorder" className="rounded" />
           <label htmlFor="isCrossBorder" className="text-sm text-gray-700">
-            This is a cross-border application (HealthData@EU NCP involvement required)
+            {t('isCrossBorderLabel')}
           </label>
         </div>
       </div>
@@ -663,10 +646,10 @@ export function NewApplicationForm({
           disabled={saving}
           className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
         >
-          {saving ? 'Creating...' : 'Create application (save as draft)'}
+          {saving ? t('creating') : t('createButton')}
         </button>
         <a href="/applications" className="rounded-lg border border-gray-300 px-6 py-2 text-sm hover:bg-gray-100">
-          Cancel
+          {t('cancel')}
         </a>
       </div>
     </form>

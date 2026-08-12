@@ -16,22 +16,10 @@ type Props = {
 
 // TEHDAS2 D6.3 §5.4 / Annex 7 — representative subset of the plausibility
 // checklist, mapped to the fields this application form actually collects.
-const DEFAULT_ITEMS: CompletenessItem[] = [
-  { key: 'title', label: 'Projectnaam is een plausibele titel (geen placeholder)', passed: false },
-  { key: 'applicant', label: 'Aanvrager-/organisatiegegevens zijn compleet en plausibel', passed: false },
-  { key: 'purpose', label: 'Doel van gebruik en onderbouwing zijn ingevuld', passed: false },
-  { key: 'datasets', label: 'Gevraagde datasets en variabelen zijn gespecificeerd', passed: false },
-  { key: 'population', label: 'Studiepopulatie en in-/exclusiecriteria zijn beschreven', passed: false },
-  { key: 'legalBasis', label: 'Rechtsgrondslag is opgegeven', passed: false },
-  { key: 'processingCountry', label: 'Verwerkingsland / grensoverschrijdende status is opgegeven', passed: false },
-  { key: 'attachments', label: 'Vereiste bijlagen zijn aanwezig en leesbaar', passed: false },
-];
-
-const RESULT_LABELS: Record<string, string> = {
-  PENDING: 'Nog niet beoordeeld',
-  COMPLETE: 'Volledig',
-  INCOMPLETE: 'Onvolledig',
-};
+// `key` doubles as the i18n key in the `completenessCheckPanel.items` namespace.
+const DEFAULT_ITEM_KEYS = [
+  'title', 'applicant', 'purpose', 'datasets', 'population', 'legalBasis', 'processingCountry', 'attachments',
+] as const;
 
 const RESULT_STYLES: Record<string, string> = {
   PENDING: 'bg-amber-100 text-amber-800',
@@ -41,8 +29,14 @@ const RESULT_STYLES: Record<string, string> = {
 
 export function CompletenessCheckPanel({ applicationId, currentUserId, canManage, existing }: Props) {
   const router = useRouter();
+  const t = useTranslations('completenessCheckPanel');
   const terr = useTranslations('errors');
-  const [items, setItems] = useState<CompletenessItem[]>(existing?.items ?? DEFAULT_ITEMS);
+  // `existing.items[].label` is text persisted at check time — like an audit
+  // log entry, it stays as recorded rather than being retranslated per
+  // viewer. A fresh (not yet saved) checklist uses live-translated labels.
+  const [items, setItems] = useState<CompletenessItem[]>(
+    existing?.items ?? DEFAULT_ITEM_KEYS.map((key) => ({ key, label: t(`items.${key}`), passed: false })),
+  );
   const [result, setResult] = useState(existing?.result ?? 'PENDING');
   const [remarks, setRemarks] = useState(existing?.remarks ?? '');
   const [loading, setLoading] = useState(false);
@@ -76,9 +70,9 @@ export function CompletenessCheckPanel({ applicationId, currentUserId, canManage
   return (
     <div className="rounded border border-gray-200 bg-white p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="font-semibold text-gray-900 text-sm">Volledigheidscontrole (D6.3 Ch. 5)</h2>
+        <h2 className="font-semibold text-gray-900 text-sm">{t('title')}</h2>
         <span className={`text-xs font-medium px-2 py-0.5 rounded ${RESULT_STYLES[result]}`}>
-          {RESULT_LABELS[result]}
+          {t(`result${result}`)}
         </span>
       </div>
 
@@ -99,7 +93,7 @@ export function CompletenessCheckPanel({ applicationId, currentUserId, canManage
 
       <div>
         <label className="text-xs text-gray-500" htmlFor="completeness-remarks">
-          Opmerkingen (optioneel)
+          {t('remarks')}
         </label>
         <textarea
           id="completeness-remarks"
@@ -119,11 +113,11 @@ export function CompletenessCheckPanel({ applicationId, currentUserId, canManage
           onClick={markComplete}
           className="w-full rounded px-3 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 transition-colors"
         >
-          Markeer als volledig
+          {t('markComplete')}
         </button>
       )}
       {canManage && !allPassed && result === 'PENDING' && (
-        <p className="text-xs text-gray-400">Nog niet alle punten zijn afgevinkt.</p>
+        <p className="text-xs text-gray-400">{t('notAllChecked')}</p>
       )}
     </div>
   );

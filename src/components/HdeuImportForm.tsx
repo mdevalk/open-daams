@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import pocDemoPayload from '@/lib/poc-demo-hdeu-payload.json';
 
@@ -22,6 +23,7 @@ function buildSamplePayload(): string {
 }
 
 export function HdeuImportForm({ locale, actingUserId }: { locale?: string; actingUserId: string }) {
+  const t = useTranslations('hdeuImportForm');
   const router = useRouter();
   const applicationHref = (id: string) => (locale ? `/${locale}/applications/${id}` : `/applications/${id}`);
   const [mode, setMode] = useState<'paste' | 'file'>('paste');
@@ -50,7 +52,7 @@ export function HdeuImportForm({ locale, actingUserId }: { locale?: string; acti
       try {
         parsed = JSON.parse(json);
       } catch {
-        setResult({ ok: false, error: 'Invalid JSON — please check the payload.' });
+        setResult({ ok: false, error: t('invalidJson') });
         return;
       }
 
@@ -90,14 +92,14 @@ export function HdeuImportForm({ locale, actingUserId }: { locale?: string; acti
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
             }`}
           >
-            {m === 'paste' ? 'Paste JSON' : 'Upload file'}
+            {m === 'paste' ? t('modePaste') : t('modeFile')}
           </button>
         ))}
         <button
           onClick={loadSample}
           className="ml-auto text-sm text-blue-600 hover:underline"
         >
-          Load sample payload
+          {t('loadSample')}
         </button>
       </div>
 
@@ -105,7 +107,7 @@ export function HdeuImportForm({ locale, actingUserId }: { locale?: string; acti
       {mode === 'paste' ? (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            NCP JSON payload
+            {t('jsonLabel')}
           </label>
           <textarea
             rows={16}
@@ -117,7 +119,7 @@ export function HdeuImportForm({ locale, actingUserId }: { locale?: string; acti
         </div>
       ) : (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Upload .json file</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">{t('uploadLabel')}</label>
           <input
             type="file"
             accept=".json,application/json"
@@ -126,43 +128,45 @@ export function HdeuImportForm({ locale, actingUserId }: { locale?: string; acti
           />
           {json && (
             <p className="mt-1 text-xs text-gray-500">
-              {json.length.toLocaleString()} characters loaded
+              {t('charactersLoaded', { count: json.length })}
             </p>
           )}
         </div>
       )}
 
-      {/* Required fields reference */}
+      {/* Required fields reference — field names are literal API/schema
+          identifiers, kept in English regardless of locale; only the
+          descriptions are translated. */}
       <details className="text-sm">
-        <summary className="cursor-pointer text-gray-500 hover:text-gray-800">Required payload fields</summary>
+        <summary className="cursor-pointer text-gray-500 hover:text-gray-800">{t('requiredFields')}</summary>
         <div className="mt-2 rounded-lg bg-gray-50 border border-gray-200 p-3">
           <table className="w-full text-xs">
             <thead>
               <tr className="text-left text-gray-500">
-                <th className="pb-1 pr-4">Field</th>
-                <th className="pb-1">Description</th>
+                <th className="pb-1 pr-4">{t('fieldHeader')}</th>
+                <th className="pb-1">{t('descriptionHeader')}</th>
               </tr>
             </thead>
             <tbody className="text-gray-700 space-y-1">
-              {[
-                ['hdeuApplicationId', 'Sending DAAMS reference (e.g. FI-HDAB-2025-0042)'],
-                ['sendingCountry', 'ISO 3166-1 alpha-2 country code'],
-                ['sendingHdab', 'Name of the sending HDAB'],
-                ['transmissionTimestamp', 'ISO 8601 datetime (clock start for Art. 68)'],
-                ['applicationType', 'DATA_ACCESS_APPLICATION or DATA_REQUEST'],
-                ['applicantName / Email / Organisation', 'Researcher identity'],
-                ['title', 'Project title'],
-                ['projectDescription', 'Lay summary'],
-                ['purposeCategory', 'Art. 53 purpose code'],
-                ['legalBasis', 'Applicable EHDS legal basis'],
-                ['requestedDatasets', 'Array of { dataHolderName, datasets: [{ name, url? }] } groups'],
-                ['requestedVariables', 'Variable-level specification'],
-                ['studyPopulation / inclusionCriteria / exclusionCriteria', 'Population definition'],
-                ['dataProcessingCountry', 'ISO 3166-1 alpha-2 (must include NL)'],
-              ].map(([f, d]) => (
+              {([
+                ['hdeuApplicationId', 'fieldHdeuApplicationId'],
+                ['sendingCountry', 'fieldSendingCountry'],
+                ['sendingHdab', 'fieldSendingHdab'],
+                ['transmissionTimestamp', 'fieldTransmissionTimestamp'],
+                ['applicationType', 'fieldApplicationType'],
+                ['applicantName / Email / Organisation', 'fieldApplicantIdentity'],
+                ['title', 'fieldTitle'],
+                ['projectDescription', 'fieldProjectDescription'],
+                ['purposeCategory', 'fieldPurposeCategory'],
+                ['legalBasis', 'fieldLegalBasis'],
+                ['requestedDatasets', 'fieldRequestedDatasets'],
+                ['requestedVariables', 'fieldRequestedVariables'],
+                ['studyPopulation / inclusionCriteria / exclusionCriteria', 'fieldStudyPopulation'],
+                ['dataProcessingCountry', 'fieldDataProcessingCountry'],
+              ] as const).map(([f, descKey]) => (
                 <tr key={f}>
                   <td className="pr-4 font-mono py-0.5 align-top">{f}</td>
-                  <td className="py-0.5 text-gray-500">{d}</td>
+                  <td className="py-0.5 text-gray-500">{t(descKey)}</td>
                 </tr>
               ))}
             </tbody>
@@ -177,14 +181,14 @@ export function HdeuImportForm({ locale, actingUserId }: { locale?: string; acti
         }`}>
           {result.ok ? (
             <>
-              <p className="font-semibold">✓ Application imported successfully</p>
-              <p className="mt-1">Reference: <strong>{result.ref}</strong></p>
-              <p>Decision deadline: {new Intl.DateTimeFormat('nl-NL', { dateStyle: 'long' }).format(new Date(result.deadline))}</p>
+              <p className="font-semibold">✓ {t('importSuccess')}</p>
+              <p className="mt-1">{t('referenceLabel')} <strong>{result.ref}</strong></p>
+              <p>{t('deadlineLabel')} {new Intl.DateTimeFormat('nl-NL', { dateStyle: 'long' }).format(new Date(result.deadline))}</p>
               <a
                 href={applicationHref(result.id)}
                 className="mt-2 inline-block text-green-700 underline hover:text-green-900"
               >
-                Open application →
+                {t('openApplication')} →
               </a>
             </>
           ) : (
@@ -205,7 +209,7 @@ export function HdeuImportForm({ locale, actingUserId }: { locale?: string; acti
         onClick={submit}
         className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
       >
-        {loading ? 'Importing...' : 'Import application'}
+        {loading ? t('importing') : t('importButton')}
       </button>
     </div>
   );

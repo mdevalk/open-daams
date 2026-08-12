@@ -3,10 +3,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { SPE_STATUS_COLORS, SPE_STATUS_LABELS, SPE_TRANSITIONS } from '@/lib/spe';
+import { SpeProvisioningStatus } from '@prisma/client';
+import { SPE_STATUS_COLORS, SPE_TRANSITIONS } from '@/lib/spe';
 import { readErrorMessage, formatDateTime } from '@/lib/utils';
-
-type SpeProvisioningStatus = keyof typeof SPE_STATUS_LABELS;
 
 type Order = {
   id: string;

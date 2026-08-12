@@ -1,10 +1,13 @@
 import { ApplicationStatus, ApplicationType, UserRole, DecisionTrack } from '@prisma/client';
+import nlMessages from '../../messages/nl.json';
 
 export type Transition = {
   to: ApplicationStatus;
-  label: string;
+  // Key into the `workflowTransitions` message namespace (`<key>.label` /
+  // `<key>.description`) — not literal text, so the UI can render it in the
+  // viewer's locale instead of always Dutch.
+  key: string;
   requiredRole: UserRole[];
-  description: string;
   requiresDecisionOutcome?: 'POSITIVE' | 'NEGATIVE';
   // A positive decision commits HDAB-NL to granting the permit whose cost
   // was estimated — only meaningful alongside requiresDecisionOutcome:
@@ -32,102 +35,89 @@ export const TRANSITIONS: Record<ApplicationStatus, Transition[]> = {
   DRAFT: [
     {
       to: 'SUBMITTED',
-      label: 'Aanvraag indienen',
+      key: 'submit',
       requiredRole: ['APPLICANT'],
-      description: 'Dien de aanvraag in bij HDAB-NL. De wettelijke termijn start bij ontvangst.',
     },
     {
       to: 'WITHDRAWN',
-      label: 'Concept intrekken',
+      key: 'withdrawDraft',
       requiredRole: ['APPLICANT'],
-      description: 'Verwijder dit concept zonder in te dienen.',
     },
   ],
 
   SUBMITTED: [
     {
       to: 'PRE_SCREENING',
-      label: 'Pre-screening starten',
+      key: 'startPreScreening',
       requiredRole: ['CASE_HANDLER', 'ADMIN'],
-      description: 'Start de volledigheidstoets (TEHDAS2 D6.4 Fig. 1/2).',
     },
     {
       to: 'WITHDRAWN',
-      label: 'Aanvraag intrekken',
+      key: 'withdraw',
       requiredRole: ['APPLICANT', 'CASE_HANDLER', 'ADMIN'],
-      description: 'Aanvrager trekt de aanvraag in.',
     },
   ],
 
   PRE_SCREENING: [
     {
       to: 'AWAITING_ADDITIONAL_INFORMATION',
-      label: 'Aanvullende informatie opvragen',
+      key: 'requestAdditionalInfo',
       requiredRole: ['CASE_HANDLER', 'ADMIN'],
       // D6.4 §8: decision deadline is voided when this transition is taken
-      description: 'HDAB vraagt aanvullende informatie. Beslissingstermijn wordt opgeschort (D6.4 §8).',
     },
     {
       to: 'PROCESSING',
-      label: 'Pre-screening afronden — doorzetten naar beoordeling',
+      key: 'completePreScreening',
       requiredRole: ['CASE_HANDLER', 'ADMIN'],
-      description: 'HDAB rondt pre-screening af; aanvraag gaat naar inhoudelijke beoordeling (D6.4 Fig. 1/2).',
     },
     {
       to: 'WITHDRAWN',
-      label: 'Aanvraag intrekken',
+      key: 'withdraw',
       requiredRole: ['APPLICANT', 'CASE_HANDLER', 'ADMIN'],
-      description: 'Aanvrager trekt de aanvraag in.',
     },
   ],
 
   AWAITING_ADDITIONAL_INFORMATION: [
     {
       to: 'PRE_SCREENING',
-      label: 'Aanvullende informatie ingediend — pre-screening hervatten',
+      key: 'resumePreScreening',
       // D6.4 §6: "updated information MUST be transmitted to the HDAB" — the
       // applicant initiates this by submitting their response; CASE_HANDLER/ADMIN
       // can also record receipt on their behalf.
       requiredRole: ['APPLICANT', 'CASE_HANDLER', 'ADMIN'],
       // D6.4 §8: deadline recalculated from timestamp of additional info receipt
-      description: 'Aanvrager heeft aanvullende informatie ingediend; pre-screening hervat. Termijn herberekend (D6.4 §8).',
     },
     {
       to: 'DECISION_ISSUED',
-      label: 'Negatief besluit — geen reactie ontvangen',
+      key: 'autoNegativeNoResponse',
       requiredRole: ['DECISION_MAKER', 'ADMIN'],
-      description: 'Aanvrager heeft geen aanvullende informatie ingediend binnen de termijn (D6.4 Fig. 1/2).',
       requiresDecisionOutcome: 'NEGATIVE',
     },
     {
       to: 'WITHDRAWN',
-      label: 'Aanvraag intrekken',
+      key: 'withdraw',
       requiredRole: ['APPLICANT', 'CASE_HANDLER', 'ADMIN'],
-      description: 'Aanvrager trekt de aanvraag in.',
     },
   ],
 
   PROCESSING: [
     {
       to: 'DECISION_ISSUED',
-      label: 'Positief besluit uitbrengen',
+      key: 'positiveDecision',
       requiredRole: ['DECISION_MAKER', 'ADMIN'],
-      description: 'HDAB neemt een positief besluit op de aanvraag (D6.4 Fig. 1/2).',
       requiresDecisionOutcome: 'POSITIVE',
       requiresFeeEstimateAccepted: true,
     },
     {
       to: 'DECISION_ISSUED',
-      label: 'Negatief besluit uitbrengen',
+      key: 'negativeDecision',
       requiredRole: ['DECISION_MAKER', 'ADMIN'],
-      description: 'HDAB neemt een negatief besluit op de aanvraag (D6.4 Fig. 1/2).',
       requiresDecisionOutcome: 'NEGATIVE',
     },
     {
       to: 'WITHDRAWN',
-      label: 'Aanvraag intrekken',
+      key: 'withdraw',
       requiredRole: ['APPLICANT', 'CASE_HANDLER', 'ADMIN'],
-      description: 'Aanvrager trekt de aanvraag in.',
     },
   ],
 
@@ -136,6 +126,16 @@ export const TRANSITIONS: Record<ApplicationStatus, Transition[]> = {
   DECISION_ISSUED: [],
   WITHDRAWN:       [],
 };
+
+// ApplicationLog.action is a persisted, point-in-time audit record — like
+// permit content and the issued PDF (see CLAUDE.md), it stays in the issuing
+// HDAB's own operating language regardless of the viewer's locale, rather
+// than being retroactively re-rendered per-viewer. This is the one place a
+// transition's label is still needed as literal text server-side.
+export function transitionLogLabel(key: string): string {
+  const entry = (nlMessages.workflowTransitions as Record<string, { label: string }>)[key];
+  return entry?.label ?? key;
+}
 
 export function getAvailableTransitions(
   currentStatus: ApplicationStatus,
@@ -147,16 +147,6 @@ export function getAvailableTransitions(
     (t) => t.requiredRole.includes(userRole) && (!t.requiresFeeEstimateAccepted || feeEstimateAccepted),
   );
 }
-
-export const STATUS_LABELS: Record<ApplicationStatus, string> = {
-  DRAFT:                           'Concept',
-  SUBMITTED:                       'Ingediend',
-  PRE_SCREENING:                   'Pre-screening',
-  AWAITING_ADDITIONAL_INFORMATION: 'Aanvullende informatie gevraagd',
-  PROCESSING:                      'In behandeling',
-  DECISION_ISSUED:                 'Besluit genomen',
-  WITHDRAWN:                       'Ingetrokken',
-};
 
 export const STATUS_COLORS: Record<ApplicationStatus, string> = {
   DRAFT:                           'bg-gray-100 text-gray-700',

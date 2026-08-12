@@ -16,6 +16,8 @@ type NcpQueueEntry = NcpApplicationSummary & {
 
 export function NcpFetchForm({ locale, actingUserId }: { locale?: string; actingUserId: string }) {
   const applicationHref = (id: string) => (locale ? `/${locale}/applications/${id}` : `/applications/${id}`);
+  const t = useTranslations('ncpFetchForm');
+  const ta = useTranslations('applications');
   const terr = useTranslations('errors');
   const [entries, setEntries] = useState<NcpQueueEntry[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -52,7 +54,7 @@ export function NcpFetchForm({ locale, actingUserId }: { locale?: string; acting
         return next;
       });
     } catch {
-      setLoadError('Failed to reach the HealthData@EU NCP');
+      setLoadError(t('fetchFailed'));
     } finally {
       setLoading(false);
     }
@@ -88,9 +90,7 @@ export function NcpFetchForm({ locale, actingUserId }: { locale?: string; acting
   return (
     <div className="space-y-5">
       <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
-        Queries the HealthData@EU National Contact Point (NCP) for cross-border applications queued for
-        HDAB-NL by sending Member States (TEHDAS2 D6.4). Two-step fetch against the HDAB-NL test
-        environment: a list of pending applications, then a per-item detail fetch on import.
+        {t('intro')}
       </div>
 
       <div className="flex items-center gap-3">
@@ -100,9 +100,9 @@ export function NcpFetchForm({ locale, actingUserId }: { locale?: string; acting
           disabled={loading}
           className="rounded-lg border border-gray-300 px-4 py-1.5 text-sm hover:bg-gray-100 disabled:opacity-50"
         >
-          {loading ? 'Querying NCP...' : 'Refresh queue'}
+          {loading ? t('querying') : t('refresh')}
         </button>
-        {entries && <span className="text-sm text-gray-500">{pendingCount} pending</span>}
+        {entries && <span className="text-sm text-gray-500">{t('pendingCount', { count: pendingCount })}</span>}
       </div>
 
       {loadError && (
@@ -111,7 +111,7 @@ export function NcpFetchForm({ locale, actingUserId }: { locale?: string; acting
 
       {entries && pendingCount === 0 && !loadError && (
         <div className="rounded-xl border-2 border-dashed border-gray-200 p-8 text-center text-sm text-gray-500">
-          No applications currently pending at the NCP.
+          {t('noneQueued')}
         </div>
       )}
 
@@ -126,10 +126,10 @@ export function NcpFetchForm({ locale, actingUserId }: { locale?: string; acting
                   <p className="mt-1 text-xs text-gray-500">
                     {entry.applicationId} · v{entry.version} ·{' '}
                     <span className="rounded bg-gray-100 px-1.5 py-0.5 font-medium">{entry.status}</span> ·{' '}
-                    {entry.applicationType === 'DATA_ACCESS_APPLICATION' ? 'Data access application' : 'Data request'}
+                    {entry.applicationType === 'DATA_ACCESS_APPLICATION' ? ta('typeDataAccess') : ta('typeDataRequest')}
                   </p>
                   <p className="mt-1 text-xs text-gray-500">
-                    Submitted {new Date(entry.dateSubmitted).toLocaleString()}
+                    {t('submitted')} {new Date(entry.dateSubmitted).toLocaleString()}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
@@ -139,7 +139,7 @@ export function NcpFetchForm({ locale, actingUserId }: { locale?: string; acting
                     rel="noopener noreferrer"
                     className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100"
                   >
-                    View JSON
+                    {t('viewJson')}
                   </a>
                   <button
                     type="button"
@@ -147,7 +147,7 @@ export function NcpFetchForm({ locale, actingUserId }: { locale?: string; acting
                     disabled={importingId === entry.applicationId || result?.ok === true}
                     className="rounded-lg bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
                   >
-                    {result?.ok ? 'Imported' : importingId === entry.applicationId ? 'Importing...' : 'Import'}
+                    {result?.ok ? t('imported') : importingId === entry.applicationId ? t('importing') : t('import')}
                   </button>
                 </div>
               </div>
@@ -159,9 +159,9 @@ export function NcpFetchForm({ locale, actingUserId }: { locale?: string; acting
                 >
                   {result.ok ? (
                     <>
-                      ✓ Imported as <strong>{result.ref}</strong>.{' '}
+                      ✓ {t('importedAs')} <strong>{result.ref}</strong>.{' '}
                       <a href={applicationHref(result.id)} className="underline hover:text-green-900">
-                        Open application →
+                        {t('openApplication')} →
                       </a>
                     </>
                   ) : (
@@ -179,7 +179,7 @@ export function NcpFetchForm({ locale, actingUserId }: { locale?: string; acting
                               rel="noopener noreferrer"
                               className="rounded border border-red-300 bg-white px-2 py-1 text-xs font-medium text-red-800 hover:bg-red-100"
                             >
-                              Open {filename} →
+                              {t('openFile', { filename })} →
                             </a>
                           ))}
                         </div>

@@ -5,6 +5,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { DeadlineBanner } from '@/components/DeadlineBanner';
 import { WorkflowTimeline } from '@/components/WorkflowTimeline';
 import { TransitionPanel } from '@/components/TransitionPanel';
+import { DeadlineExtensionPanel } from '@/components/DeadlineExtensionPanel';
 import { NotesList } from '@/components/NotesList';
 import { PermitPanel } from '@/components/PermitPanel';
 import { DecisionCardPanel } from '@/components/DecisionCardPanel';
@@ -911,7 +912,9 @@ export default async function ApplicationDetailPage({
             dataHolders={trustedDataHolders}
             currentUser={currentUser}
           />
-          <TransitionPanel application={application} currentUser={currentUser} />
+          <TransitionPanel application={application} currentUser={currentUser}>
+            <DeadlineExtensionPanel application={application} currentUser={currentUser} embedded />
+          </TransitionPanel>
           <FeeEstimatePanel application={application} currentUser={currentUser} speOperators={speOperatorsForClient} />
           <DecisionCardPanel application={application} currentUser={currentUser} />
           <PermitPanel

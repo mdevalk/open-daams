@@ -41,14 +41,6 @@ export const PERMIT_TRANSITIONS: Record<DataPermitStatus, PermitTransition[]> = 
   EXPIRED: [],
 };
 
-export const PERMIT_STATUS_LABELS: Record<DataPermitStatus, string> = {
-  GRANTED:  'Granted',
-  AMENDED:  'Amended',
-  RENEWED:  'Renewed',
-  REVOKED:  'Revoked',
-  EXPIRED:  'Expired',
-};
-
 export const PERMIT_STATUS_COLORS: Record<DataPermitStatus, string> = {
   GRANTED:  'bg-emerald-100 text-emerald-700',
   AMENDED:  'bg-blue-100 text-blue-700',

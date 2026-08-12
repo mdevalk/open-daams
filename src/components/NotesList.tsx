@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Note, User } from '@prisma/client';
+import { useTranslations } from 'next-intl';
 import { formatDateTime } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
@@ -16,6 +17,7 @@ export function NotesList({
   notes: NoteWithAuthor[];
   currentUser: User;
 }) {
+  const t = useTranslations('notesList');
   const router = useRouter();
   const [content, setContent] = useState('');
   const [isInternal, setIsInternal] = useState(false);
@@ -45,7 +47,7 @@ export function NotesList({
           rows={3}
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          placeholder="Add a note..."
+          placeholder={t('placeholder')}
           className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <div className="flex items-center justify-between">
@@ -57,7 +59,7 @@ export function NotesList({
                 onChange={(e) => setIsInternal(e.target.checked)}
                 className="rounded"
               />
-              Internal (not visible to applicant)
+              {t('internal')}
             </label>
           )}
           <button
@@ -65,14 +67,14 @@ export function NotesList({
             onClick={addNote}
             className="ml-auto rounded-lg bg-gray-800 px-3 py-1.5 text-sm text-white hover:bg-gray-700 disabled:opacity-50"
           >
-            {saving ? 'Saving...' : 'Add note'}
+            {saving ? t('saving') : t('addNote')}
           </button>
         </div>
       </div>
 
       {/* Existing notes */}
       {notes.length === 0 ? (
-        <p className="text-sm text-gray-400">No notes yet.</p>
+        <p className="text-sm text-gray-400">{t('noNotes')}</p>
       ) : (
         <div className="space-y-3">
           {notes.map((note) => (
@@ -87,7 +89,7 @@ export function NotesList({
               <p className="text-gray-800 whitespace-pre-wrap">{note.content}</p>
               <p className="text-xs text-gray-400 mt-1.5">
                 {note.author.name}
-                {note.isInternal && <span className="ml-1 text-amber-600 font-medium">[internal]</span>}
+                {note.isInternal && <span className="ml-1 text-amber-600 font-medium">{t('internalTag')}</span>}
                 {' '}&middot; {formatDateTime(note.createdAt)}
               </p>
             </div>
