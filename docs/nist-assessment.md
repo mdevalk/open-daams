@@ -29,8 +29,13 @@ Findings are grounded in the code as it exists at the time of writing; dependenc
   adding a new gap.
 - **SI-11 grew with the new/touched routes**: 53 handlers now return `e.message` to the client
   (was 48). Same existing issue, not a new class of finding. See finding #3.
-- Nothing else regressed: SI-10 (input validation), SC-8/SC-18 (headers), SC-28 (data at rest),
-  IA-5/SC-12 (secrets) are all unchanged from the prior snapshot.
+- **SC-8/SC-18 (finding #7) resolved**: `src/proxy.ts` now generates a per-request nonce and sets
+  a full security-header set (CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy,
+  Permissions-Policy, Strict-Transport-Security) on every response. Verified live in both `next
+  dev` and a production `next build`/`next start` that the CSP's nonce matches what Next attaches
+  to its own hydration scripts. See finding #7.
+- Nothing else regressed: SI-10 (input validation), SC-28 (data at rest), IA-5/SC-12 (secrets)
+  are all unchanged from the prior snapshot.
 
 ## Summary by control family
 
@@ -38,11 +43,11 @@ Findings are grounded in the code as it exists at the time of writing; dependenc
 |---|---|---|---|---|
 | 1 | IA-2, AC-3 | No authentication (root issue); access enforcement on reads/ownership now real | Critical | Not met (AC-3 partial) |
 | 2 | SC-23, SC-5 | Unauthenticated state-changing endpoints; no CSRF token; no rate limiting | High | Not met |
-| 3 | SI-11 | Raw `e.message` (incl. Prisma errors) returned to clients — 48 sites | Medium | Not met |
+| 3 | SI-11 | Raw `e.message` (incl. Prisma errors) returned to clients — 53 sites | Medium | Not met |
 | 4 | SI-10 | No input-validation/schema layer at the API boundary | Medium | Partial |
 | 5 | RA-5, SR-3 | Dependency CVEs resolved; 2 deps still pinned to `"*"` | Medium → Low | Partial |
 | 6 | AU-2, AU-3, AU-9, AU-10 | Audit coverage expanded; only successes logged; actor spoofable; rows mutable at DB | Medium | Partial |
-| 7 | SC-8, SC-18 | No security headers (CSP/HSTS/X-Frame-Options); TLS left to deployment | Medium | Not met |
+| 7 | SC-8, SC-18 | Nonce-based CSP + full header set now set in `src/proxy.ts`; TLS itself still left to deployment | Low | Met |
 | 8 | SC-28 | Health data unencrypted at rest (deployment; test-data-only today) | Low (now) | Partial |
 | 9 | IA-5, SC-12 | Secrets in `.env` (gitignored); prior credential leak scrubbed from history | Low | Partial |
 
@@ -159,12 +164,25 @@ prevents one from being added later.
 site, not one per route) to close the outcome gap. AU-9/AU-10 remain deferred to real
 authentication + production storage controls (WORM/append-only enforcement at the DB level).
 
-### 7. SC-8 / SC-18 — Missing hardening headers
+### 7. SC-8 / SC-18 — Security headers
 
-Unchanged. `next.config.ts` sets no `headers()` block — no Content-Security-Policy, HSTS,
-X-Frame-Options, or X-Content-Type-Options, and TLS is left entirely to the deployment platform.
-**Remediation:** add a `headers()` block (cheap, high value against XSS/clickjacking) and enforce
-HTTPS/HSTS at the platform.
+**Resolved.** `src/proxy.ts` generates a fresh nonce per request and sets `Content-Security-Policy`
+(`script-src`/`style-src` `'self' 'nonce-…' 'strict-dynamic'`, no `'unsafe-eval'`/`'unsafe-inline'`
+in production — dev-only, for React's dev `eval` debugging and Turbopack Fast Refresh),
+`X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`,
+and `Strict-Transport-Security` on every response. A static `next.config.ts` `headers()` block
+(the original suggestion below) can't generate a per-request nonce, so this landed in `proxy.ts`
+instead — the only alternative would have been a nonce-less CSP falling back to `'unsafe-inline'`
+for Next's own inline hydration scripts, which defeats most of the point. Chosen over that
+simpler alternative because its usual cost — nonces require dynamic rendering — doesn't apply
+here: every page under `src/app/[locale]` already reads `searchParams` or sets `force-dynamic`
+(confirmed via `next build`: zero statically-optimized routes). Verified in both `next dev` and a
+production `next build`/`next start` that the CSP nonce matches the `nonce=` attribute Next
+attaches to its own hydration scripts/stylesheets.
+
+**Still open:** TLS termination itself is a deployment concern, not an app-layer one —
+`Strict-Transport-Security` is sent unconditionally but has no effect until HTTPS exists in front
+of the app.
 
 ### 8. SC-28 — Data at rest
 
@@ -182,19 +200,19 @@ was scrubbed from git history. Production needs a real secrets manager / KMS (al
 ## Bottom line
 
 The architecture is sound for hardening — RBAC is (mostly) centralized, the ORM prevents
-injection, dependency hygiene is now clean, and the audit model grew real coverage this round.
-Nearly everything still blocking a NIST-aligned posture traces to **one missing capability:
-authentication**, which cascades into AC-3's remaining gap, SC-23, and AU-10. The one genuinely
-new, cheap finding this round — audit logging only success outcomes — is worth fixing before the
-authentication work, since it doesn't depend on it. None of this is a surprise for a
-self-described demo; the code is honest about its limitations, and it's made real, verifiable
-progress since the last snapshot.
+injection, dependency hygiene is now clean, security headers are now real (nonce-based CSP, not
+just a static allowlist), and the audit model grew real coverage this round. Nearly everything
+still blocking a NIST-aligned posture traces to **one missing capability: authentication**, which
+cascades into AC-3's remaining gap, SC-23, and AU-10. The one genuinely new, cheap finding this
+round — audit logging only success outcomes — is worth fixing before the authentication work,
+since it doesn't depend on it. None of this is a surprise for a self-described demo; the code is
+honest about its limitations, and it's made real, verifiable progress since the last snapshot.
 
 ### Suggested order
 
 1. **Cheap wins (no architecture change):** log failed/rejected attempts (AU-3 outcome, new
-   this round); security headers in `next.config.ts`; generic error responses (SI-11); pin the
-   `"*"` dependencies (SR-3, only supply-chain hygiene left there now).
+   this round); generic error responses (SI-11); pin the `"*"` dependencies (SR-3, only
+   supply-chain hygiene left there now).
 2. **Foundational:** real authentication (IA-2), routing the remaining bypass route
    (`permits/[id]/route.ts` POST) through `requireRole`, then layering CSRF + rate limiting on
    top (SC-23/SC-5).

@@ -21,7 +21,7 @@ are organized differently and are each useful in their own right.
 | **A02 – Cryptographic Failures** | ✅ Clean | Ed25519 signing (`@noble/ed25519`), key never committed, no hardcoded secrets |
 | **A03 – Injection** | ✅ Clean | All DB access via Prisma's typed query builder; zero raw SQL anywhere |
 | **A04 – Insecure Design** | ✅ Improved | No-real-auth is still the accepted baseline design, but the amplifying factors (open user directory, open sensitive reads) are closed |
-| **A05 – Security Misconfiguration** | ⚠️ Open | No CSP/security headers configured; error handling is otherwise disciplined (never leaks stack traces) |
+| **A05 – Security Misconfiguration** | ✅ Fixed | Nonce-based CSP + full security-header set now set in `src/proxy.ts`; error handling remains disciplined |
 | **A06 – Vulnerable Components** | ✅ Fixed | `npm audit`: **0 vulnerabilities** (was 5 at the start of this cycle) — Next.js 16.3.0, next-intl 4.13.5 |
 | **A07 – Identification and Authentication Failures** | ⚠️ Open (root gap) | No real authentication — RBAC trusts a client-supplied user id, by design for this reference implementation |
 | **A08 – Software and Data Integrity Failures** | ℹ️ Note | `verifyPermitSignature` exists but is never called in-app (self-issuer trust, by design); 2 dependencies pinned to `"*"` |
@@ -82,16 +82,28 @@ and several sensitive reads requiring no identity at all — not even a spoofabl
 closed as of the A01 fix. The residual design gap is exactly the accepted one, not an amplified
 one.
 
-### A05 — Security Misconfiguration ⚠️ Open
+### A05 — Security Misconfiguration ✅ Fixed
 
-Unchanged. `next.config.ts` has no `headers()` block — no Content-Security-Policy, HSTS,
-X-Frame-Options, or X-Content-Type-Options; TLS is left entirely to the deployment platform.
-Error handling is disciplined everywhere sampled — every route returns only `.message`, never a
-stack trace or raw error object. `.env.example` ships an obviously-placeholder `changeme`
-password, not a real default credential.
+`src/proxy.ts` now generates a fresh nonce per request and sets a full security-header set on
+every response: `Content-Security-Policy` (`script-src`/`style-src` scoped to `'self' 'nonce-…'
+'strict-dynamic'`, no `'unsafe-eval'`/`'unsafe-inline'` in production — those are dev-only, for
+React's dev-mode `eval` debugging and Turbopack's Fast Refresh), `X-Frame-Options: DENY`,
+`X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`,
+`Permissions-Policy`, and `Strict-Transport-Security`. Verified live in both `next dev` and a
+production `next build`/`next start`: the header's nonce matches the `nonce=` attribute Next
+attaches to its own hydration scripts and stylesheets, so the strict policy doesn't break
+rendering. Note this landed in `proxy.ts`, not a `next.config.ts` `headers()` block as originally
+suggested below — a static config can't generate a per-request nonce, and a nonce-less CSP would
+need `'unsafe-inline'` for Next's own inline hydration scripts, defeating most of the point.
+Deliberately chosen over the simpler static-CSP alternative because it has no real downside here:
+every page under `src/app/[locale]` already reads `searchParams` or sets `force-dynamic`, so the
+"nonces require dynamic rendering" cost doesn't apply — nothing was statically optimized to begin
+with (confirmed via `next build`: zero `○ Static` routes).
 
-**Remediation**: add a `headers()` block in `next.config.ts` — cheap, meaningful defense against
-XSS/clickjacking.
+Error handling remains disciplined — every route returns only `.message`, never a stack trace or
+raw error object (see A09 for the count). `.env.example` ships an obviously-placeholder `changeme`
+password, not a real default credential. HSTS is sent unconditionally; it has no effect until TLS
+terminates in front of the app, which is a deployment concern, not an app-layer gap.
 
 ### A06 — Vulnerable and Outdated Components ✅ Fixed
 
@@ -175,18 +187,18 @@ client-to-this-app's-own-API.
 
 ## Bottom line
 
-Two full categories closed out this cycle (A01, A06), with A04/A07's shared root cause narrowed
-to exactly its documented, accepted scope rather than an amplified one. A09 made real, verifiable
-progress but surfaced a more precise remaining gap in the process (outcome logging) rather than
-being fully closed. The single highest-leverage remaining item, spanning A04/A07/A05's SC-23
-overlap, is still real authentication — everything else on this list is either already
-independent of it (A05 headers, A06's remaining pinned deps, A09's outcome-logging gap) or
-cascades from it once it exists.
+Three full categories closed out this cycle (A01, A05, A06), with A04/A07's shared root cause
+narrowed to exactly its documented, accepted scope rather than an amplified one. A09 made real,
+verifiable progress but surfaced a more precise remaining gap in the process (outcome logging)
+rather than being fully closed. The single highest-leverage remaining item is still real
+authentication — everything else on this list is either already independent of it (A06's
+remaining pinned deps, A09's outcome-logging gap) or cascades from it once it exists (SC-23's
+forgeable-mutation exposure, tracked under A04/A07).
 
 ### Suggested order
 
-1. **Cheap, independent of auth**: log failed/rejected attempts in `authz.ts` (A09); add a
-   `headers()` block (A05); pin the two `"*"` dependencies (A06/A08).
+1. **Cheap, independent of auth**: log failed/rejected attempts in `authz.ts` (A09); pin the two
+   `"*"` dependencies (A06/A08).
 2. **The real fix**: session-based authentication (A04/A07), which also resolves the residual
    CSRF/forgeable-mutation exposure noted under NIST's SC-23.
 3. **Round out A09**: the entity-scoped action log for authorized-persons/appeals/invoices/

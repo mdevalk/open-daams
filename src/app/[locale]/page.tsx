@@ -261,7 +261,7 @@ export default async function DashboardPage({
               kpi.alert ? 'border-[#d52b1e] bg-[#fce8e6]' : 'border-gray-200 bg-white',
             )}
           >
-            <p className="text-3xl font-bold" style={{ color: kpi.alert ? '#7a1711' : '#154273' }}>
+            <p className={cn('text-3xl font-bold', kpi.alert ? 'text-[#7a1711]' : 'text-[#154273]')}>
               {kpi.value}
             </p>
             <p className={`text-xs mt-1 ${kpi.alert ? 'text-[#d52b1e] font-medium' : 'text-gray-500'}`}>

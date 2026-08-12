@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { headers } from 'next/headers';
 import { prisma } from '@/lib/db';
 import { PrintTrigger } from '@/components/PrintTrigger';
 import { getTranslations } from 'next-intl/server';
@@ -15,6 +16,7 @@ export default async function PermitPrintPage({
 }) {
   const { id, locale } = await params;
   const tps = await getTranslations({ locale, namespace: 'permitStatus' });
+  const nonce = (await headers()).get('x-nonce') ?? undefined;
 
   const permit = await prisma.dataPermit.findUnique({
     where: { id },
@@ -42,12 +44,15 @@ export default async function PermitPrintPage({
       <head>
         <meta charSet="utf-8" />
         <title>Vergunning {formatPermitId(permit.permitNumber, permit.version)} — {APP_NAME}</title>
-        <style>{`
+        <style nonce={nonce}>{`
           * { box-sizing: border-box; margin: 0; padding: 0; }
           body { font-family: Arial, Helvetica, sans-serif; font-size: 11pt; color: #000; background: #fff; }
 
           .no-print { margin-bottom: 16px; padding: 12px 16px; background: #e8f4fb; border-left: 4px solid #01689b; display: flex; align-items: center; justify-content: space-between; }
           .no-print button { background: #154273; color: #fff; border: none; padding: 8px 20px; font-size: 11pt; cursor: pointer; border-radius: 4px; }
+          .no-print .save-hint { font-size: 11pt; color: #154273; font-weight: bold; }
+
+          .revocation-reason { font-size: 9.5pt; color: #7a1711; }
 
           .page { max-width: 21cm; margin: 0 auto; padding: 0 1cm; }
 
@@ -91,7 +96,7 @@ export default async function PermitPrintPage({
       <body>
         <PrintTrigger />
         <div className="no-print">
-          <span style={{ fontSize: '11pt', color: '#154273', fontWeight: 'bold' }}>
+          <span className="save-hint">
             Kies ‘Opslaan als PDF’ in het printvenster om te downloaden.
           </span>
           <button onClick={() => window.print()}>Afdrukken / PDF opslaan</button>
@@ -152,7 +157,7 @@ export default async function PermitPrintPage({
           {permit.revocationReason && (
             <div className="section">
               <div className="section-title">Reden intrekking</div>
-              <p style={{ fontSize: '9.5pt', color: '#7a1711' }}>{permit.revocationReason}</p>
+              <p className="revocation-reason">{permit.revocationReason}</p>
             </div>
           )}
 
