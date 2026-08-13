@@ -1,6 +1,6 @@
 # BIO2 assessment: open-daams
 
-_Snapshot date: 2026-08-13._
+_Snapshot date: 2026-08-13 (updated same day: dependency pinning + CI landed)._
 
 This assesses the open-daams codebase against **BIO2**, the Dutch public sector's information
 security baseline built on **ISO/IEC 27002:2022** — a structurally different control set from the
@@ -69,10 +69,10 @@ checkable against a codebase. Stated as a complete theme, not omitted.
 | 5.16 Identity management | ⚠️ Open (root gap) | See below |
 | 5.17 Authentication information | ❌ N/A | No authentication exists, so there's no authentication information to manage |
 | 5.18 Access rights | ✅ Partial | Role-based, correctly enforced; provisioning/de-provisioning is a direct DB write, no process |
-| 5.19 Supplier relationships | ⚠️ Open | Two `"*"`-pinned dependencies |
+| 5.19 Supplier relationships | ✅ Fixed | Both dependencies now pinned to exact versions |
 | 5.20 Supplier agreements | ℹ️ Organizational | No suppliers with contracts — npm dependency tree only |
-| 5.21 ICT supply chain | ⚠️ Open | Same as 5.19 |
-| 5.22 Monitoring/review of supplier services | ⚠️ Open | No automated dependency-update or advisory monitoring |
+| 5.21 ICT supply chain | ✅ Fixed | Same as 5.19 |
+| 5.22 Monitoring/review of supplier services | ✅ Improved | `npm audit` now runs on every push via CI — advisory monitoring on every change, though not on a schedule independent of code changes |
 | 5.23 Cloud services security | ℹ️ N/A | No cloud services used — self-hosted Postgres via `docker-compose.yml` |
 | 5.24 Incident management planning | ⚠️ Open | See below |
 | 5.25 Assessment/decision on security events | ⚠️ Open | No process — nothing is classified as an "event" today |
@@ -115,11 +115,15 @@ authentication step at all. 5.18's access-*rights* are fine (role-scoped, fail c
 missing/invalid id); access *provisioning* is a direct database write, no request/approval
 process — reasonable for a reference implementation, a real gap for a production baseline.
 
-### 5.19/5.21/5.22 — Supplier & ICT supply chain ⚠️ Open
+### 5.19/5.21/5.22 — Supplier & ICT supply chain ✅ Fixed
 
-`@rijkshuisstijl-community/components-react` and `@rijkshuisstijl-community/design-tokens` remain
-pinned to `"*"` (OWASP A06) — non-reproducible builds, auto-pulls any future publish. No automated
-dependency-advisory monitoring exists (no CI, no Dependabot-equivalent configuration found).
+`@rijkshuisstijl-community/components-react` and `@rijkshuisstijl-community/design-tokens` —
+previously pinned to `"*"` (OWASP A06), a non-reproducible-build gap — are now pinned to the exact
+versions already in use (`15.1.2`/`16.1.0`); confirmed a behavioural no-op (`npx tsc --noEmit`
+clean, 55/55 tests before and after). Advisory monitoring also improved: `.github/workflows/ci.yml`
+(new) runs `npm audit` on every push and pull request — not a scheduled/periodic scan (nothing
+catches a newly-disclosed CVE on an otherwise-unchanged dependency until the next push), but a real
+step up from the previous "only if someone runs it by hand" state.
 
 ### 5.24–5.28 — Incident management ⚠️ Open
 
@@ -160,7 +164,7 @@ passes. The obligation is correctly surfaced to staff; nothing currently execute
 | 8.5 Secure authentication | ⚠️ Open (root gap) | ≈ OWASP A07 — see 5.15–5.18 above |
 | 8.6 Capacity management | ℹ️ N/A | Not modeled — reasonable for this scope |
 | 8.7 Malware protection | ⚠️ Partial | See below |
-| 8.8 Management of technical vulnerabilities | ⚠️ Open | `npm audit` clean, but nothing runs it automatically — no CI exists |
+| 8.8 Management of technical vulnerabilities | ✅ Fixed | `npm audit` clean, now enforced on every push via `.github/workflows/ci.yml` |
 | 8.9 Configuration management | ✅ Clean | `.env`/`.env.example`; no infrastructure-as-code, reasonable for this scope |
 | 8.10 Information deletion | ⚠️ Open | Same as 5.33 — application/permit metadata only, not health-data content |
 | 8.11 Data masking | ➖ Out of scope | Health-data content — DAAMS never handles it (WP5 boundary) |
@@ -177,11 +181,11 @@ passes. The obligation is correctly surfaced to staff; nothing currently execute
 | 8.22 Segregation of networks | ➖ Out of scope | Infrastructure/datacenter concern |
 | 8.23 Web filtering | ℹ️ N/A | — |
 | 8.24 Use of cryptography | ✅ Clean | ≈ OWASP A02 |
-| 8.25 Secure development life cycle | ✅ Partial | See below |
+| 8.25 Secure development life cycle | ✅ Clean | See below |
 | 8.26 Application security requirements | ✅ Clean | ≈ OWASP A03 — typed queries, no injection surface |
 | 8.27 Secure system architecture and engineering | ✅ Clean | Same evidence as 8.26 |
 | 8.28 Secure coding | ✅ Clean | Same evidence as 8.26 |
-| 8.29 Security testing in development/acceptance | ⚠️ Open | `npm run test` exists and passes, nothing runs it automatically |
+| 8.29 Security testing in development/acceptance | ✅ Fixed | `npm run test` now runs on every push via `.github/workflows/ci.yml` |
 | 8.30 Outsourced development | ℹ️ N/A | Not outsourced |
 | 8.31 Separation of dev/test/production | ✅ Real | See below |
 | 8.32 Change management | ✅ Partial | Git history is the de facto record; no formal documented process beyond that |
@@ -197,12 +201,12 @@ a ZIP archive — there's no user-facing upload endpoint accepting arbitrary fil
 narrows the practical surface, but doesn't close the underlying gap: nothing would catch a
 malicious file arriving via that import path either.
 
-### 8.25 — Secure development life cycle ✅ Partial
+### 8.25 — Secure development life cycle ✅ Clean
 
 Strong on the static-analysis side (typed Prisma queries throughout, zero raw SQL/`eval`, per
-OWASP A03) and on environment separation (8.31, below) — weak on the automated-testing side: no CI
-runs `npm run test` or `npm audit` on any change, so both exist as manual, easily-skipped steps
-rather than an enforced gate.
+OWASP A03) and on environment separation (8.31, below). The automated-testing gap noted here
+previously — no CI running `npm run test`/`npm audit` on any change — is now closed by
+`.github/workflows/ci.yml`, which runs both on every push and pull request.
 
 ### 8.31 — Separation of development, test and production ✅ Real
 
@@ -223,20 +227,21 @@ entered. It's a stated operating intent, not a technical control.
 The Technological theme's picture closely mirrors the OWASP assessment, because it's largely the
 same underlying facts read through BIO2's finer-grained lens — access control and cryptography are
 genuinely clean, secure coding practices are consistently applied, and the one recurring root gap
-(no real authentication) surfaces across 5.15–5.18 and 8.5 alike. What BIO2's structure adds that
-OWASP's scope didn't cover: **information deletion is recorded as an obligation but never
-enforced** (5.33/8.10), **there is no automated CI gate at all** for either vulnerability scanning
-or the existing test suite (8.8/8.29), and **incident management stops at logging** — nothing
-downstream classifies, responds to, or learns from what's recorded (5.24–5.28/8.16). The two
-controls most people would expect to be gaps for a health-data system — data masking and leakage
-prevention (8.11/8.12) — are correctly out of scope, because DAAMS's back-office role means it
-never holds the health data those controls are about.
+(no real authentication) surfaces across 5.15–5.18 and 8.5 alike. This cycle closed the CI/
+dependency-pinning gap BIO2's structure had surfaced that OWASP's scope hadn't fully covered
+(5.19/5.21/5.22, 8.8, 8.29) — `.github/workflows/ci.yml` now runs `npm audit` and the test suite on
+every push. What's still open: **information deletion is recorded as an obligation but never
+enforced** (5.33/8.10), and **incident management stops at logging** — nothing downstream
+classifies, responds to, or learns from what's recorded (5.24–5.28/8.16). The two controls most
+people would expect to be gaps for a health-data system — data masking and leakage prevention
+(8.11/8.12) — are correctly out of scope, because DAAMS's back-office role means it never holds
+the health data those controls are about.
 
 ### Suggested order
 
-1. **Cheap, independent of auth**: pin the two `"*"` dependencies (5.19/5.21); add a CI workflow
-   running `npm audit` + `npm run test` on every push (8.8/8.29) — currently zero automation
-   exists for either.
+1. ~~**Cheap, independent of auth**: pin the two `"*"` dependencies (5.19/5.21); add a CI workflow
+   running `npm audit` + `npm run test` on every push (8.8/8.29).~~ **Done** — see 5.19/5.21/5.22
+   and 8.8/8.25/8.29 above.
 2. **Write down what already exists as policy**: a data-classification note (5.12), a short
    backup/continuity plan (5.30/8.13), and an operating-procedures doc (5.37) — the technical
    facts already exist in this and the OWASP assessment; what's missing is the document.

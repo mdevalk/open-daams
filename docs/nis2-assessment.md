@@ -1,6 +1,6 @@
 # NIS2 assessment: open-daams
 
-_Snapshot date: 2026-08-13._
+_Snapshot date: 2026-08-13 (updated same day: dependency pinning + CI landed)._
 
 This assesses the open-daams codebase against **NIS2** (Directive (EU) 2022/2555), as transposed
 into Dutch law via the *Cyberbeveiligingswet* (Cbw). It complements `docs/owasp-top10-assessment.md`
@@ -38,9 +38,9 @@ rather than re-deriving their evidence.
 | (a) Risk analysis & security policy | ➖ Out of scope (procedural) | Risk-analysis methodology and policy documents are organizational artifacts, no code slice exists | 5.1, 5.9/5.12 |
 | (b) Incident handling | ⚠️ Partial, code slice only | Logging real for successes (OWASP A09), nothing for rejected attempts — the response process/CSIRT chain is out of scope (procedural) | 5.24–5.28, 8.16 |
 | (c) Business continuity | ⚠️ Open, code slice only | No backup config for the app's own Postgres data in the repo — facility continuity and continuity *planning* are out of scope | 5.30, 8.13 |
-| (d) Supply chain security | ⚠️ Open, code slice only | Two `"*"`-pinned dependencies in `package.json` — vendor-risk process is out of scope (procedural) | 5.19/5.21/5.22 |
-| (e) Secure development, vulnerability handling | ⚠️ Partial | `npm audit` clean, but no CI config in the repo runs it automatically | 8.8, 8.25–8.29 |
-| (f) Effectiveness assessment | ⚠️ Open, code slice only | No CI config runs the existing test suite automatically; broader assessment process is out of scope (procedural) | 5.35/5.36 |
+| (d) Supply chain security | ✅ Fixed, code slice only | Both dependencies now pinned to exact versions; vendor-risk process remains out of scope (procedural) | 5.19/5.21/5.22 |
+| (e) Secure development, vulnerability handling | ✅ Fixed | `npm audit` clean, now enforced on every push via `.github/workflows/ci.yml` | 8.8, 8.25–8.29 |
+| (f) Effectiveness assessment | ✅ Fixed, code slice only | `.github/workflows/ci.yml` runs the test suite on every push; broader assessment process remains out of scope (procedural) | 5.35/5.36 |
 | (g) Cyber hygiene & training | ➖ Out of scope (procedural) | Training program — organizational | 6.3 |
 | (h) Cryptography | ✅ Clean | Ed25519 signing (OWASP A02); TLS termination is a deployment concern | 8.24 |
 | (i) HR security, access control, asset management | ⚠️ Open (root gap), code slice only | Role enforcement real and consistent; no identity behind the role — HR-security aspects out of scope (procedural) | 5.15–5.18, 8.2/8.3 |
@@ -72,26 +72,29 @@ repo-level fact, in scope. **Out of scope**: facility-level continuity (power, p
 redundancy, alternate sites — the same datacenter boundary as `docs/bio2-assessment.md`'s 8.14)
 and continuity *planning* as a document/process (procedural).
 
-### (d) Supply chain security ⚠️ Open — code slice only
+### (d) Supply chain security ✅ Fixed — code slice only
 
-`@rijkshuisstijl-community/components-react` and `@rijkshuisstijl-community/design-tokens` remain
-pinned to `"*"` in `package.json` (OWASP A06) — non-reproducible builds, auto-pulls any future
-publish including a compromised one. **Out of scope**: vendor-risk-assessment process (procedural)
-— the codebase can show *what* is depended on, not whether a supplier was vetted.
+`@rijkshuisstijl-community/components-react` and `@rijkshuisstijl-community/design-tokens` —
+previously pinned to `"*"` in `package.json` (OWASP A06), a non-reproducible-build gap — are now
+pinned to the exact versions already in use (`15.1.2`/`16.1.0`); confirmed a behavioural no-op
+(`npx tsc --noEmit` clean, 55/55 tests before and after). **Still out of scope**:
+vendor-risk-assessment process (procedural) — the codebase can show *what* is depended on, not
+whether a supplier was vetted.
 
-### (e) Secure development & vulnerability handling ⚠️ Partial
+### (e) Secure development & vulnerability handling ✅ Fixed
 
-`npm audit` reports 0 vulnerabilities today (OWASP A06), and the codebase itself is clean on
-injection/secure-coding grounds (OWASP A03, `docs/bio2-assessment.md` 8.25–8.29). No
-`.github/workflows` or any CI configuration exists in this repo, so nothing runs `npm audit`
-automatically — this is a repo-config fact (a missing file), not a procedural gap, so it stays in
-scope: "clean" is only true as of whenever someone last ran the check by hand.
+`npm audit` reports 0 vulnerabilities (OWASP A06), and the codebase itself is clean on
+injection/secure-coding grounds (OWASP A03, `docs/bio2-assessment.md` 8.25–8.29). What was missing
+— automatic enforcement — is now closed: `.github/workflows/ci.yml` (new) runs `npm ci` + `npm
+audit --audit-level=moderate` + `npm run test` on every push and pull request, with no database or
+secrets needed (confirmed the test suite is self-contained before adding the workflow).
 
-### (f) Effectiveness assessment ⚠️ Open — code slice only
+### (f) Effectiveness assessment ✅ Fixed — code slice only
 
-Same repo-config fact as (e): `npm run test` (Vitest) exists and passes, but no CI configuration
-runs it automatically on any change. **Out of scope**: the broader organizational question of who
-reviews results and how often (procedural service management).
+Same fix as (e): `npm run test` (Vitest) now runs automatically on every push via
+`.github/workflows/ci.yml`, not just when someone remembers to run it locally. **Still out of
+scope**: the broader organizational question of who reviews CI results and how often (procedural
+service management).
 
 ### (g) Cyber hygiene & training ➖ Out of scope (procedural)
 
@@ -125,21 +128,21 @@ emergency-communication systems (procedural/operational).
 
 Narrowed to the application code only, this assessment resolves into two clean groups. **In
 scope, checkable, and mostly already covered by the OWASP/BIO2 docs**: no real authentication
-behind an otherwise correctly-enforced role system (i)/(j) — the single highest-leverage item —
-plus three small, concrete repo-level facts: two pinned dependencies (d), no CI configuration for
-either vulnerability scanning or the existing test suite (e)/(f), and no backup configuration for
-the application's own database (c). Cryptography (h) is clean. **Explicitly out of scope, and
-correctly so given this is an application-only review**: risk-analysis/policy documents (a),
-incident-*response* process and the Art. 23 CSIRT-reporting chain (b), training programs (g),
-vendor-risk process (d), HR-security process (i), and emergency-communication systems (j) — none
-of these have an application-code artifact, and a reference implementation with no real
-organization behind it has nowhere to put one even if it tried.
+behind an otherwise correctly-enforced role system (i)/(j) — the single highest-leverage item
+remaining — plus one small, concrete repo-level fact: no backup configuration for the
+application's own database (c). Dependency pinning (d) and CI enforcement of `npm audit`/tests
+(e)/(f) — previously the other items in this group — are now fixed. Cryptography (h) is clean.
+**Explicitly out of scope, and correctly so given this is an application-only review**:
+risk-analysis/policy documents (a), incident-*response* process and the Art. 23 CSIRT-reporting
+chain (b), training programs (g), vendor-risk process (d), HR-security process (i), and
+emergency-communication systems (j) — none of these have an application-code artifact, and a
+reference implementation with no real organization behind it has nowhere to put one even if it
+tried.
 
 ### Suggested order
 
-1. **Cheap, independent of auth**: pin the two `"*"` dependencies (d); add a CI workflow running
-   `npm audit` + `npm run test` on every push (e, f) — currently zero automation exists in the
-   repo for either.
+1. ~~**Cheap, independent of auth**: pin the two `"*"` dependencies (d); add a CI workflow running
+   `npm audit` + `npm run test` on every push (e, f).~~ **Done** — see (d)/(e)/(f) above.
 2. **Small, concrete**: add backup/replication configuration for the application's own Postgres
    data (c) — the one remaining code-level gap besides authentication.
 3. **The real fix, shared with every other assessment this session**: real authentication —

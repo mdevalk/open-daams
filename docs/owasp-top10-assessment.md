@@ -1,6 +1,6 @@
 # OWASP Top 10 (2021) assessment: open-daams
 
-_Snapshot date: 2026-08-12 (previous snapshot: 2026-08-07)._
+_Snapshot date: 2026-08-13 (previous snapshot: 2026-08-12)._
 
 This is a security assessment of the open-daams codebase mapped to the
 **OWASP Top 10 (2021)** categories.
@@ -20,9 +20,9 @@ This is a security assessment of the open-daams codebase mapped to the
 | **A03 – Injection** | ✅ Clean | All DB access via Prisma's typed query builder; zero raw SQL anywhere |
 | **A04 – Insecure Design** | ✅ Improved | No-real-auth is still the accepted baseline design, but the amplifying factors (open user directory, open sensitive reads) are closed |
 | **A05 – Security Misconfiguration** | ✅ Fixed | Nonce-based CSP + full security-header set now set in `src/proxy.ts`; error handling remains disciplined |
-| **A06 – Vulnerable Components** | ✅ Fixed | `npm audit`: **0 vulnerabilities** (was 5 at the start of this cycle) — Next.js 16.3.0, next-intl 4.13.5 |
+| **A06 – Vulnerable Components** | ✅ Fixed | `npm audit`: **0 vulnerabilities**, now enforced on every push via `.github/workflows/ci.yml`; the two previously-`"*"`-pinned dependencies are now pinned to exact versions |
 | **A07 – Identification and Authentication Failures** | ⚠️ Open (root gap) | No real authentication — RBAC trusts a client-supplied user id, by design for this reference implementation |
-| **A08 – Software and Data Integrity Failures** | ℹ️ Note | `verifyPermitSignature` exists but is never called in-app (self-issuer trust, by design); 2 dependencies pinned to `"*"` |
+| **A08 – Software and Data Integrity Failures** | ℹ️ Note | `verifyPermitSignature` exists but is never called in-app (self-issuer trust, by design); dependency pinning gap closed |
 | **A09 – Security Logging and Monitoring Failures** | ⚠️ Open | Audit coverage expanded significantly this cycle, but only successful actions are logged — rejected/unauthorized attempts leave no trace |
 | **A10 – Server-Side Request Forgery** | ✅ Clean | The one outbound integration (NCP client) hardcodes host + protocol; no user-controlled host anywhere |
 
@@ -113,10 +113,13 @@ migration guides before touching anything — most didn't apply to this app: no 
 usage, no parallel routes, no custom webpack config, no sync Request API usage, next-intl's two
 v4-mandatory requirements were already satisfied).
 
-**Still open**: `@rijkshuisstijl-community/components-react` and
-`@rijkshuisstijl-community/design-tokens` remain pinned to `"*"` — a supply-chain hygiene gap
-(non-reproducible builds, auto-pulls any future publish including a compromised one), not a
-known-vulnerability gap.
+**Now fixed**: `@rijkshuisstijl-community/components-react` and
+`@rijkshuisstijl-community/design-tokens` — previously pinned to `"*"` (a supply-chain hygiene
+gap: non-reproducible builds, auto-pulls any future publish including a compromised one) — are now
+pinned to the exact versions already in use (`15.1.2`/`16.1.0`), confirmed a behavioural no-op
+(`npx tsc --noEmit` clean, 55/55 tests passing before and after). `npm audit` is also no longer a
+manual step: `.github/workflows/ci.yml` (new) runs `npm ci` + `npm audit --audit-level=moderate` +
+`npm run test` on every push and pull request.
 
 ### A07 — Identification and Authentication Failures ⚠️ Open (root, by design)
 
@@ -142,9 +145,11 @@ Unchanged. `verifyPermitSignature` exists (`src/lib/permit-signing.ts`) but is n
 anywhere in this app — DAAMS signs its own generated permits/decision cards and displays them
 without self-verifying, which is self-consistent (the signature is for downstream/external
 verifiers, per A01's JWKS discussion) but worth stating plainly rather than assuming it implies
-in-app integrity checking. The two `"*"`-pinned dependencies (A06) are also relevant here as a
-supply-chain integrity concern. No CI/build step downloads and executes anything from an
-unpinned source.
+in-app integrity checking. The dependency-pinning gap noted here previously (A06) is now closed.
+The new CI workflow (`.github/workflows/ci.yml`) itself pins its actions by tag
+(`actions/checkout@v4`, `actions/setup-node@v4`) rather than a floating major version or an
+unpinned commit SHA — reasonable for a public, non-secret-handling workflow, though SHA-pinning
+would be the stricter option for a higher-trust pipeline.
 
 ### A09 — Security Logging and Monitoring Failures ⚠️ Open
 
@@ -186,16 +191,18 @@ client-to-this-app's-own-API.
 Three full categories closed out this cycle (A01, A05, A06), with A04/A07's shared root cause
 narrowed to exactly its documented, accepted scope rather than an amplified one. A09 made real,
 verifiable progress but surfaced a more precise remaining gap in the process (outcome logging)
-rather than being fully closed. The single highest-leverage remaining item is still real
-authentication — everything else on this list is either already independent of it (A06's
-remaining pinned deps, A09's outcome-logging gap) or cascades from it once it exists (SC-23's
-forgeable-mutation exposure, tracked under A04/A07).
+rather than being fully closed. This cycle additionally closed A06's remaining pinned-dependency
+gap and added CI enforcement (`npm audit` + tests on every push) where previously none existed.
+The single highest-leverage remaining item is still real authentication — everything else on this
+list is either already independent of it (A09's outcome-logging gap) or cascades from it once it
+exists (SC-23's forgeable-mutation exposure, tracked under A04/A07).
 
 ### Suggested order
 
-1. **Cheap, independent of auth**: log failed/rejected attempts in `authz.ts` (A09); pin the two
-   `"*"` dependencies (A06/A08).
-2. **The real fix**: session-based authentication (A04/A07), which also resolves the residual
+1. ~~**Cheap, independent of auth**: pin the two `"*"` dependencies (A06/A08); add CI running
+   `npm audit` + tests on every push.~~ **Done** — see A06/A08 above.
+2. **Still cheap, independent of auth**: log failed/rejected attempts in `authz.ts` (A09).
+3. **The real fix**: session-based authentication (A04/A07), which also resolves the residual
    CSRF/forgeable-mutation exposure noted above.
-3. **Round out A09**: the entity-scoped action log for authorized-persons/appeals/invoices/
+4. **Round out A09**: the entity-scoped action log for authorized-persons/appeals/invoices/
    trusted-data-holder — designed, not yet built.
