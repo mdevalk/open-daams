@@ -145,10 +145,9 @@ Run the unit test suite with `npm run test` (or `npm run test:watch` while devel
 
 This app has **no real authentication** — role-based access control trusts a client-supplied
 user id, a documented and deliberate simplification for this reference implementation (see
-[`CLAUDE.md`](./CLAUDE.md)). Two assessments track the resulting gaps and what's been hardened
+[`CLAUDE.md`](./CLAUDE.md)). An assessment tracks the resulting gaps and what's been hardened
 around them:
 
-- [`docs/nist-assessment.md`](./docs/nist-assessment.md) — mapped to NIST SP 800-53r5 control families
 - [`docs/owasp-top10-assessment.md`](./docs/owasp-top10-assessment.md) — mapped to the OWASP Top 10 (2021)
 
 ## References

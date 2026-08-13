@@ -5,8 +5,8 @@ _Snapshot date: 2026-08-10._
 This is an accessibility assessment of the open-daams codebase against **WCAG 2.1, level AA** —
 the bar set by the EU Web Accessibility Directive (2016/2102) and its Dutch implementation
 (Besluit digitale toegankelijkheid overheid), which applies to public-sector digital services
-including a body like HDAB-NL. It complements `docs/owasp-top10-assessment.md` and
-`docs/nist-assessment.md` — same "assessment, not certification" framing, same codebase.
+including a body like HDAB-NL. It complements `docs/owasp-top10-assessment.md` — same
+"assessment, not certification" framing, same codebase.
 
 > **Method.** Live testing via a headless-Chromium Playwright driver
 > (`.claude/skills/run-web/driver.mjs`) against the running dev server — the dashboard, the

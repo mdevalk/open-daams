@@ -51,7 +51,7 @@ Platform. All cross-border requests flow through the National Contact Point (NCP
 | **NEN 7510 / ISO 27001** | Out of scope | Full ISMS, certified hosting |
 | **EHDS Art. 53/67/68/69** | Workflow follows D6.4; no legal validity | Formal designation as HDAB by the Ministry of Health |
 | **WCAG 2.1 AA** | NL Design System tokens present; full audit still required | Accessibility audit by a certified party |
-| **Logging & audit trail** | Multiple append-only log tables (`ApplicationLog`, `DataPermitLog`, `SpeProvisioningLog` for status transitions; a separate `AuditLog` for reference-data changes) — see [`docs/nist-assessment.md`](./nist-assessment.md) and [`docs/owasp-top10-assessment.md`](./owasp-top10-assessment.md) for exactly what is and isn't covered | Tamper-evident storage (e.g. WORM), and logging of rejected/unauthorised attempts, not just successes |
+| **Logging & audit trail** | Multiple append-only log tables (`ApplicationLog`, `DataPermitLog`, `SpeProvisioningLog` for status transitions; a separate `AuditLog` for reference-data changes) — see [`docs/owasp-top10-assessment.md`](./owasp-top10-assessment.md) for exactly what is and isn't covered | Tamper-evident storage (e.g. WORM), and logging of rejected/unauthorised attempts, not just successes |
 | **Key management** | `.env` file / local key file | HSM or KMS (e.g. Azure Key Vault) |
 
 ---

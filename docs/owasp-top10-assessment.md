@@ -3,11 +3,9 @@
 _Snapshot date: 2026-08-12 (previous snapshot: 2026-08-07)._
 
 This is a security assessment of the open-daams codebase mapped to the
-**OWASP Top 10 (2021)** categories. It complements `docs/nist-assessment.md` (NIST SP 800-53r5
-control families) — the two overlap in places (e.g. OWASP A09 ≈ NIST AU-2/AU-3/AU-9/AU-10) but
-are organized differently and are each useful in their own right.
+**OWASP Top 10 (2021)** categories.
 
-> **Framing.** Same as the NIST assessment: `docs/architecture.md` states the app runs on
+> **Framing.** `docs/architecture.md` states the app runs on
 > **test data only** with authentication explicitly stubbed — practical risk is low in the
 > current demo posture. This is written against the bar the project would need to clear before
 > holding real (special-category health) data or being publicly exposed. Not a certification or
@@ -118,7 +116,7 @@ v4-mandatory requirements were already satisfied).
 **Still open**: `@rijkshuisstijl-community/components-react` and
 `@rijkshuisstijl-community/design-tokens` remain pinned to `"*"` — a supply-chain hygiene gap
 (non-reproducible builds, auto-pulls any future publish including a compromised one), not a
-known-vulnerability gap. Tracked in `docs/nist-assessment.md` finding #5 (RA-5/SR-3).
+known-vulnerability gap.
 
 ### A07 — Identification and Authentication Failures ⚠️ Open (root, by design)
 
@@ -135,8 +133,8 @@ new authorization gap, since the effective check is equivalent. (Its sibling GET
 centralized on `requireRole` during the A01 fix; the POST was out of that round's scope.)
 
 **Remediation**: real session-based authentication (Auth.js/OIDC) is the actual fix — this is the
-single highest-leverage remaining item across both this assessment and the NIST one, since SC-23
-(CSRF/forgeable mutations) and AU-10 (non-repudiation) both cascade from it.
+single highest-leverage remaining item in this assessment, since both CSRF/forgeable-mutation
+exposure and non-repudiation of actions cascade from it.
 
 ### A08 — Software and Data Integrity Failures ℹ️ Note
 
@@ -159,9 +157,7 @@ changed (field names for routine edits, explicit outcome phrasing like "marked a
 the two access-control-relevant fields), not just that something did. Three new SPE-type CRUD
 actions (create/update/delete) added this round follow the same logged-by-default pattern.
 
-**The gap that remains, and it's a real one**: checked the design against NIST SP 800-53 AU-3's
-six required audit-record content elements (event type, when, where, source, **outcome**,
-identity) as part of the parallel NIST assessment — **only successful actions are logged**. A
+**The gap that remains, and it's a real one**: **only successful actions are logged** — a
 rejected write (403 from a non-admin, a failed validation) leaves zero trace. This directly fails
 this category's own core concern: you cannot detect a pattern of unauthorized access attempts if
 none of them are ever recorded. It's also cheaper to fix than it might look — one log call added
@@ -200,6 +196,6 @@ forgeable-mutation exposure, tracked under A04/A07).
 1. **Cheap, independent of auth**: log failed/rejected attempts in `authz.ts` (A09); pin the two
    `"*"` dependencies (A06/A08).
 2. **The real fix**: session-based authentication (A04/A07), which also resolves the residual
-   CSRF/forgeable-mutation exposure noted under NIST's SC-23.
+   CSRF/forgeable-mutation exposure noted above.
 3. **Round out A09**: the entity-scoped action log for authorized-persons/appeals/invoices/
    trusted-data-holder — designed, not yet built.
