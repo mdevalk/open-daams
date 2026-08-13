@@ -1,6 +1,7 @@
 # BIO2 assessment: open-daams
 
-_Snapshot date: 2026-08-13 (updated same day: dependency pinning + CI landed)._
+_Snapshot date: 2026-08-13 (updated same day: dependency pinning + CI landed; scope tightened to
+exclude service-management/HDAB-establishment processes)._
 
 This assesses the open-daams codebase against **BIO2**, the Dutch public sector's information
 security baseline built on **ISO/IEC 27002:2022** — a structurally different control set from the
@@ -12,17 +13,25 @@ Technological-theme findings reuse that assessment's evidence directly rather th
 > **Framing.** Same as the other assessments: test data only, authentication stubbed — written
 > against the bar a real deployment would need to clear, not a certification or ENSIA attestation.
 >
-> **Scope boundary.** This assesses the **open-daams application only** — not a datacenter,
-> hosting, or facilities context, which is a separate work package for DAAMS. The entire Physical
-> theme is excluded on this basis, and several Technological controls are narrowed to their
-> application-layer slice only. Separately: **DAAMS never handles the health data itself** — that
-> happens at the data holder or the SPE, both outside this back-office application's boundary
-> (per `CLAUDE.md`'s own scope note that data-holder extraction and the SPE are simulated shells).
-> Controls that are really about protecting health-data *content* (masking, leakage prevention)
-> are out of scope for that reason, distinct from the datacenter exclusion — both are stated
-> plainly below, not silently omitted.
+> **Scope boundary — three things excluded, stated plainly, not silently omitted:**
+> 1. **Datacenter/hosting/facilities** — a separate DAAMS work package. Excludes the entire
+>    Physical theme, and narrows several Technological controls to their application-layer slice.
+> 2. **The health data itself** — DAAMS never handles it; that happens at the data holder or the
+>    SPE, both outside this back-office application's boundary (per `CLAUDE.md`'s scope note that
+>    data-holder extraction and the SPE are simulated shells). Excludes controls about protecting
+>    health-data *content* (masking, leakage prevention).
+> 3. **Service-management / procedural processes** — incident response, business-continuity
+>    *planning*, training, documented operating procedures, change-management process, monitoring
+>    operations, and similar are activities that belong to **establishing the actual HDAB
+>    organization** that would run this system — not to DAAMS application development. Where a
+>    control has both a code-checkable slice and a process slice (e.g. incident management:
+>    logging is code, response process is not), only the code slice is assessed; the process slice
+>    is named and set aside rather than treated as a gap "the codebase should fix."
+>
+> **Legend**: ✅ clean/fixed and in scope · ⚠️ open gap, in scope · ➖ out of scope (reason given) ·
+> ℹ️ not applicable to this kind of application · ❌ clearly absent.
 
-## Physical (7.1–7.14) — out of scope
+## Physical (7.1–7.14) — out of scope (datacenter)
 
 All 14 controls in this theme (physical security perimeters, entry control, securing offices,
 physical security monitoring, protection against environmental threats, working in secure areas,
@@ -31,37 +40,38 @@ supporting utilities, cabling security, equipment maintenance, secure disposal) 
 equipment-scoped. None have an application-code analogue — this is a datacenter/hosting concern,
 a separate work package for DAAMS. No per-control table; excluded wholesale.
 
-## People (6.1–6.8) — out of scope
+## People (6.1–6.8) — out of scope (HDAB establishment)
 
 | Control | Status |
 |---|---|
-| 6.1 Screening | ℹ️ Organizational |
-| 6.2 Terms and conditions of employment | ℹ️ Organizational |
-| 6.3 Security awareness, education and training | ℹ️ Organizational |
-| 6.4 Disciplinary process | ℹ️ Organizational |
-| 6.5 Responsibilities after termination/change of employment | ℹ️ Organizational |
-| 6.6 Confidentiality or non-disclosure agreements | ℹ️ Organizational |
-| 6.7 Remote working | ℹ️ Organizational |
-| 6.8 Information security event reporting | ℹ️ Organizational |
+| 6.1 Screening | ➖ Out of scope |
+| 6.2 Terms and conditions of employment | ➖ Out of scope |
+| 6.3 Security awareness, education and training | ➖ Out of scope |
+| 6.4 Disciplinary process | ➖ Out of scope |
+| 6.5 Responsibilities after termination/change of employment | ➖ Out of scope |
+| 6.6 Confidentiality or non-disclosure agreements | ➖ Out of scope |
+| 6.7 Remote working | ➖ Out of scope |
+| 6.8 Information security event reporting | ➖ Out of scope |
 
-All eight concern the (fictional) organization's employees and HR processes — nothing here is
-checkable against a codebase. Stated as a complete theme, not omitted.
+All eight are HR/people processes for the organization that would operate DAAMS — part of
+establishing that HDAB, not application development. Nothing here is checkable against a
+codebase. Stated as a complete theme, not omitted.
 
 ## Organizational (5.1–5.37)
 
 | Control | Status | Key finding |
 |---|---|---|
-| 5.1 Policies for information security | ℹ️ Organizational | No policy documents in the repo |
-| 5.2 Information security roles and responsibilities | ℹ️ Organizational | No named role-owner (no real organization) |
+| 5.1 Policies for information security | ➖ Out of scope (HDAB establishment) | Policy documents |
+| 5.2 Information security roles and responsibilities | ➖ Out of scope (HDAB establishment) | Named role-owner |
 | 5.3 Segregation of duties | ✅ Real | See below |
-| 5.4 Management responsibilities | ℹ️ Organizational | — |
-| 5.5 Contact with authorities | ℹ️ Organizational | — |
-| 5.6 Contact with special interest groups | ℹ️ Organizational | — |
-| 5.7 Threat intelligence | ℹ️ Organizational | No subscription/process — reasonable for this scope |
-| 5.8 Information security in project management | ℹ️ Organizational | — |
+| 5.4 Management responsibilities | ➖ Out of scope (HDAB establishment) | — |
+| 5.5 Contact with authorities | ➖ Out of scope (HDAB establishment) | — |
+| 5.6 Contact with special interest groups | ➖ Out of scope (HDAB establishment) | — |
+| 5.7 Threat intelligence | ➖ Out of scope (HDAB establishment) | Subscription/process |
+| 5.8 Information security in project management | ➖ Out of scope (HDAB establishment) | — |
 | 5.9 Inventory of information and other assets | ⚠️ Open | No formal asset/data inventory |
-| 5.10 Acceptable use of assets | ℹ️ Organizational | No organizational assets to govern |
-| 5.11 Return of assets | ℹ️ Organizational | — |
+| 5.10 Acceptable use of assets | ➖ Out of scope (HDAB establishment) | No organizational assets to govern |
+| 5.11 Return of assets | ➖ Out of scope (HDAB establishment) | — |
 | 5.12 Classification of information | ⚠️ Open | See below |
 | 5.13 Labelling of information | ⚠️ Open | Follows from 5.12 — no classification, so nothing to label |
 | 5.14 Information transfer | ✅ Clean | Reuses OWASP A10 — hardcoded outbound host, no user-controlled transfer target |
@@ -70,24 +80,24 @@ checkable against a codebase. Stated as a complete theme, not omitted.
 | 5.17 Authentication information | ❌ N/A | No authentication exists, so there's no authentication information to manage |
 | 5.18 Access rights | ✅ Partial | Role-based, correctly enforced; provisioning/de-provisioning is a direct DB write, no process |
 | 5.19 Supplier relationships | ✅ Fixed | Both dependencies now pinned to exact versions |
-| 5.20 Supplier agreements | ℹ️ Organizational | No suppliers with contracts — npm dependency tree only |
+| 5.20 Supplier agreements | ➖ Out of scope (HDAB establishment) | No suppliers with contracts — npm dependency tree only |
 | 5.21 ICT supply chain | ✅ Fixed | Same as 5.19 |
-| 5.22 Monitoring/review of supplier services | ✅ Improved | `npm audit` now runs on every push via CI — advisory monitoring on every change, though not on a schedule independent of code changes |
+| 5.22 Monitoring/review of supplier services | ✅ Improved | `npm audit` now runs on every push via CI |
 | 5.23 Cloud services security | ℹ️ N/A | No cloud services used — self-hosted Postgres via `docker-compose.yml` |
-| 5.24 Incident management planning | ⚠️ Open | See below |
-| 5.25 Assessment/decision on security events | ⚠️ Open | No process — nothing is classified as an "event" today |
-| 5.26 Response to incidents | ⚠️ Open | No response procedure |
-| 5.27 Learning from incidents | ⚠️ Open | No incident record to learn from |
-| 5.28 Collection of evidence | ⚠️ Open | Logging exists for successes only (see A09) |
-| 5.29 Security during disruption | ℹ️ Organizational | — |
-| 5.30 ICT readiness for business continuity | ⚠️ Open | No backup/DR config, no continuity plan |
+| 5.24 Incident management planning | ➖ Out of scope (HDAB establishment) | Planning process |
+| 5.25 Assessment/decision on security events | ➖ Out of scope (HDAB establishment) | Decision process |
+| 5.26 Response to incidents | ➖ Out of scope (HDAB establishment) | Response process |
+| 5.27 Learning from incidents | ➖ Out of scope (HDAB establishment) | Post-incident review process |
+| 5.28 Collection of evidence | ⚠️ Open, code slice only | The evidence source (logging) is code — see 8.15/OWASP A09; the collection *process* is out of scope |
+| 5.29 Security during disruption | ➖ Out of scope (HDAB establishment) | — |
+| 5.30 ICT readiness for business continuity | ⚠️ Open, code slice only | No backup config (repo fact); continuity *planning* is out of scope |
 | 5.31 Legal, statutory, regulatory, contractual requirements | ✅ Partial | See below |
-| 5.32 Intellectual property rights | ℹ️ Organizational | — |
+| 5.32 Intellectual property rights | ➖ Out of scope (HDAB establishment) | — |
 | 5.33 Protection of records | ⚠️ Open | See below |
 | 5.34 Privacy and protection of PII | ✅ Partial | See below |
 | 5.35 Independent review of information security | ✅ Clean | This document family *is* that review |
 | 5.36 Compliance with policies/standards | ✅ Clean | Same as 5.35 |
-| 5.37 Documented operating procedures | ⚠️ Open | No operational runbooks exist — `docs/` covers architecture/compliance, not day-2 operations |
+| 5.37 Documented operating procedures | ➖ Out of scope (HDAB establishment) | Runbooks are an operational artifact of running the org, not building the app |
 
 ### 5.3 — Segregation of duties ✅ Real
 
@@ -102,7 +112,8 @@ their own request. The same split exists for the core decision workflow in `src/
 No field or process classifies data by sensitivity. `Application.purposeCategory`/`legalBasis`
 are the closest things that exist, but they describe the *purpose* of processing, not a
 sensitivity classification of the data itself. A real deployment would want an explicit
-classification scheme, even a simple one.
+classification scheme, even a simple one — this is a data-modeling question for the application
+itself, not an HDAB-establishment process, so it stays in scope.
 
 ### 5.15/5.16/5.17/5.18 — Access control & identity ⚠️ Open (root gap)
 
@@ -125,19 +136,25 @@ clean, 55/55 tests before and after). Advisory monitoring also improved: `.githu
 catches a newly-disclosed CVE on an otherwise-unchanged dependency until the next push), but a real
 step up from the previous "only if someone runs it by hand" state.
 
-### 5.24–5.28 — Incident management ⚠️ Open
+### 5.24–5.27 — Incident management process ➖ Out of scope (HDAB establishment)
 
-Real progress exists on the *recording* side — `ApplicationLog`, `DataPermitLog`,
-`SpeProvisioningLog`, and a separate `AuditLog` for reference-data CRUD (OWASP A09) — but nothing
-above that: no process classifies a logged event as a security incident, no response procedure,
-no post-incident review step, and — the OWASP A09 finding restated in BIO2's terms — only
-*successful* actions are recorded, so a pattern of rejected/unauthorized attempts leaves no trace
-to even trigger 5.25's assessment step.
+Planning, event assessment/decision, response, and post-incident learning are all organizational
+processes an operating HDAB would run — none have an application-code artifact. What *is*
+code-checkable is covered separately: 5.28 (the evidence source) and 8.15/8.16 below.
 
-### 5.30 — ICT readiness for business continuity ⚠️ Open
+### 5.28 — Collection of evidence ⚠️ Open, code slice only
 
-`docker-compose.yml`'s Postgres volume has no backup or replication configuration. No continuity
-plan of any kind exists, documented or otherwise.
+The evidence an incident investigation would draw on is exactly what `docs/owasp-top10-assessment.md`'s
+A09 already assesses: `ApplicationLog`/`DataPermitLog`/`SpeProvisioningLog`/`AuditLog` record
+successful actions, not rejected/unauthorized attempts — a real gap in what evidence *exists* to
+collect. The collection *process* itself (who pulls it, in what format, chain of custody) is out
+of scope, same as 5.24–5.27.
+
+### 5.30 — ICT readiness for business continuity ⚠️ Open, code slice only
+
+`docker-compose.yml`'s Postgres volume has no backup or replication configuration — a concrete
+repo-level fact, in scope. Continuity *planning* as a document/process is out of scope (HDAB
+establishment), same as `docs/nis2-assessment.md`'s treatment of (c).
 
 ### 5.31/5.34 — Legal requirements & PII protection ✅ Partial
 
@@ -151,7 +168,8 @@ full GDPR/AVG-specific assessment was scoped for a separate effort and isn't rep
 The permit detail page shows a "Retention deadline (Art. 68(12))"
 (`src/app/[locale]/permits/[id]/page.tsx:164`) — but it's `addMonths(permit.validUntil, 6)`,
 computed **at display time**, not a stored field, and nothing enforces or acts on it when the date
-passes. The obligation is correctly surfaced to staff; nothing currently executes on it.
+passes. The obligation is correctly surfaced to staff; nothing currently executes on it. This is a
+code fix (a stored, enforced field), not a process question, so it stays in scope.
 
 ## Technological (8.1–8.34)
 
@@ -167,18 +185,18 @@ passes. The obligation is correctly surfaced to staff; nothing currently execute
 | 8.8 Management of technical vulnerabilities | ✅ Fixed | `npm audit` clean, now enforced on every push via `.github/workflows/ci.yml` |
 | 8.9 Configuration management | ✅ Clean | `.env`/`.env.example`; no infrastructure-as-code, reasonable for this scope |
 | 8.10 Information deletion | ⚠️ Open | Same as 5.33 — application/permit metadata only, not health-data content |
-| 8.11 Data masking | ➖ Out of scope | Health-data content — DAAMS never handles it (WP5 boundary) |
+| 8.11 Data masking | ➖ Out of scope | Health-data content — DAAMS never handles it |
 | 8.12 Data leakage prevention | ➖ Out of scope | Same boundary as 8.11 |
-| 8.13 Backup | ⚠️ Open | No backup configuration found |
-| 8.14 Redundancy | ➖ Out of scope | Infrastructure/datacenter concern |
+| 8.13 Backup | ⚠️ Open | No backup configuration found (the code slice of 5.30) |
+| 8.14 Redundancy | ➖ Out of scope | Datacenter concern |
 | 8.15 Logging | ✅ Real, partial | ≈ OWASP A09 — successes only |
-| 8.16 Monitoring activities | ⚠️ Open | Nothing acts on what's logged — no alerting |
+| 8.16 Monitoring activities | ➖ Out of scope (HDAB establishment) | Watching/responding to what's logged is an operational activity, not a code artifact |
 | 8.17 Clock synchronization | ℹ️ N/A | — |
 | 8.18 Use of privileged utility programs | ℹ️ N/A | — |
 | 8.19 Installation of software on operational systems | ℹ️ N/A | Deployment concern |
-| 8.20 Networks security | ✅ Partial | Application-layer slice only — CSP headers (`src/proxy.ts`, OWASP A05); true network topology out of scope |
+| 8.20 Networks security | ✅ Partial | Application-layer slice only — CSP headers (`src/proxy.ts`, OWASP A05); true network topology out of scope (datacenter) |
 | 8.21 Security of network services | ✅ Partial | Hardcoded outbound host (OWASP A10) |
-| 8.22 Segregation of networks | ➖ Out of scope | Infrastructure/datacenter concern |
+| 8.22 Segregation of networks | ➖ Out of scope | Datacenter concern |
 | 8.23 Web filtering | ℹ️ N/A | — |
 | 8.24 Use of cryptography | ✅ Clean | ≈ OWASP A02 |
 | 8.25 Secure development life cycle | ✅ Clean | See below |
@@ -188,7 +206,7 @@ passes. The obligation is correctly surfaced to staff; nothing currently execute
 | 8.29 Security testing in development/acceptance | ✅ Fixed | `npm run test` now runs on every push via `.github/workflows/ci.yml` |
 | 8.30 Outsourced development | ℹ️ N/A | Not outsourced |
 | 8.31 Separation of dev/test/production | ✅ Real | See below |
-| 8.32 Change management | ✅ Partial | Git history is the de facto record; no formal documented process beyond that |
+| 8.32 Change management | ➖ Out of scope (HDAB establishment), code slice clean | Git history is a real, checkable mechanism (in scope, clean); formal approval process is operational |
 | 8.33 Test information | ⚠️ Stated, not enforced | See below |
 | 8.34 Protection of systems during audit testing | ℹ️ N/A | No audit-testing infrastructure exists |
 
@@ -199,7 +217,8 @@ self-reported `mimeType` — no content validation or scanning. The only writer 
 path (`src/app/api/import/ncp-applications/[id]/attachments/[filename]/route.ts`), extracting from
 a ZIP archive — there's no user-facing upload endpoint accepting arbitrary files today, which
 narrows the practical surface, but doesn't close the underlying gap: nothing would catch a
-malicious file arriving via that import path either.
+malicious file arriving via that import path either. This is a code fix (validation logic), so it
+stays in scope, unlike 8.16's operational monitoring.
 
 ### 8.25 — Secure development life cycle ✅ Clean
 
@@ -220,34 +239,39 @@ build`/`next start` (OWASP A05). The security posture actually changes between e
 `docs/architecture.md`'s compliance table states the app runs on "test data only," and this
 assessment's own framing repeats that. Checked directly: there is no code-level enforcement of
 this — no environment guard, no data-validation step preventing real personal data from being
-entered. It's a stated operating intent, not a technical control.
+entered. It's a stated operating intent, not a technical control — but unlike the process items
+above, an enforcement mechanism (were one built) would be application code, so this stays in scope
+rather than moving to HDAB-establishment.
 
 ## Bottom line
 
-The Technological theme's picture closely mirrors the OWASP assessment, because it's largely the
-same underlying facts read through BIO2's finer-grained lens — access control and cryptography are
-genuinely clean, secure coding practices are consistently applied, and the one recurring root gap
-(no real authentication) surfaces across 5.15–5.18 and 8.5 alike. This cycle closed the CI/
-dependency-pinning gap BIO2's structure had surfaced that OWASP's scope hadn't fully covered
-(5.19/5.21/5.22, 8.8, 8.29) — `.github/workflows/ci.yml` now runs `npm audit` and the test suite on
-every push. What's still open: **information deletion is recorded as an obligation but never
-enforced** (5.33/8.10), and **incident management stops at logging** — nothing downstream
-classifies, responds to, or learns from what's recorded (5.24–5.28/8.16). The two controls most
-people would expect to be gaps for a health-data system — data masking and leakage prevention
-(8.11/8.12) — are correctly out of scope, because DAAMS's back-office role means it never holds
-the health data those controls are about.
+Tightened to application code plus its three explicit exclusions (datacenter, health-data
+content, HDAB-establishment process), this assessment resolves cleanly. **In scope and mostly
+already covered by the OWASP doc**: no real authentication behind an otherwise correctly-enforced
+role system (5.15–5.18/8.5) — the single highest-leverage item remaining — plus a handful of small,
+concrete repo-level facts: no data-classification scheme (5.9/5.12/5.13), no backup configuration
+(5.30/8.13), unvalidated attachment content (8.7), and the retention-deadline-computed-not-enforced
+finding (5.33/8.10). Dependency pinning and CI (5.19/5.21/5.22, 8.8, 8.29) are now fixed.
+Cryptography, injection-safety, and environment separation are clean. **Everything else this
+document names is out of scope, and correctly so**: an operating HDAB's incident-response process,
+training, documented procedures, change-approval process, and monitoring operations
+(5.1/5.2/5.4–5.8/5.10/5.11/5.20/5.24–5.27/5.29/5.32/5.37, all of People, 8.16, the process half of
+8.32) belong to *establishing that organization*, not to building this application — a distinction
+worth keeping sharp, since conflating the two is exactly what would make a future real assessment
+overstate what a codebase review can actually tell you.
 
 ### Suggested order
 
 1. ~~**Cheap, independent of auth**: pin the two `"*"` dependencies (5.19/5.21); add a CI workflow
    running `npm audit` + `npm run test` on every push (8.8/8.29).~~ **Done** — see 5.19/5.21/5.22
    and 8.8/8.25/8.29 above.
-2. **Write down what already exists as policy**: a data-classification note (5.12), a short
-   backup/continuity plan (5.30/8.13), and an operating-procedures doc (5.37) — the technical
-   facts already exist in this and the OWASP assessment; what's missing is the document.
+2. **Small, concrete, code-level**: a lightweight data-classification field (5.9/5.12/5.13);
+   backup/replication configuration for the application's own Postgres data (5.30/8.13); content
+   validation on the `Attachment` import path (8.7).
 3. **The real fix, shared with every other assessment this session**: real authentication —
    resolves 5.15–5.18 and 8.5.
 4. **Close the loop on deletion**: make the retention deadline a stored, enforced field rather
    than a display-time computation (5.33/8.10).
-5. **Build the process layer**: incident classification/response procedure beyond logging
-   (5.24–5.28/8.16) — genuinely new work, not a code fix.
+
+Everything named "out of scope (HDAB establishment)" above is a separate, organizational
+workstream for whoever stands up a real HDAB on top of this codebase — not a follow-up item here.
