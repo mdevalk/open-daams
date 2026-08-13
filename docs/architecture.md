@@ -119,7 +119,7 @@ Applications from foreign researchers arrive via the NCP channel:
 4. The statutory deadline starts from the `transmissionTimestamp` in the payload
 5. The rest of the workflow is identical to national applications
 
-See `docs/hdeu-payload-sample.json` for a sample payload (Finland → NL).
+See `docs/hdeu-payload-sample.md` for a sample payload.
 
 ---
 
