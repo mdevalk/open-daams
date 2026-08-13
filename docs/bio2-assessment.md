@@ -1,7 +1,8 @@
 # BIO2 assessment: open-daams
 
 _Snapshot date: 2026-08-13 (updated same day: dependency pinning + CI landed; scope tightened to
-exclude service-management/HDAB-establishment processes)._
+exclude service-management/HDAB-establishment processes; rejected/unauthorized attempts now
+logged)._
 
 This assesses the open-daams codebase against **BIO2**, the Dutch public sector's information
 security baseline built on **ISO/IEC 27002:2022** — a structurally different control set from the
@@ -88,7 +89,7 @@ codebase. Stated as a complete theme, not omitted.
 | 5.25 Assessment/decision on security events | ➖ Out of scope (HDAB establishment) | Decision process |
 | 5.26 Response to incidents | ➖ Out of scope (HDAB establishment) | Response process |
 | 5.27 Learning from incidents | ➖ Out of scope (HDAB establishment) | Post-incident review process |
-| 5.28 Collection of evidence | ⚠️ Open, code slice only | The evidence source (logging) is code — see 8.15/OWASP A09; the collection *process* is out of scope |
+| 5.28 Collection of evidence | ✅ Fixed, code slice only | The evidence source (logging) now covers rejections too — see 8.15/OWASP A09; the collection *process* remains out of scope |
 | 5.29 Security during disruption | ➖ Out of scope (HDAB establishment) | — |
 | 5.30 ICT readiness for business continuity | ⚠️ Open, code slice only | No backup config (repo fact); continuity *planning* is out of scope |
 | 5.31 Legal, statutory, regulatory, contractual requirements | ✅ Partial | See below |
@@ -140,15 +141,16 @@ step up from the previous "only if someone runs it by hand" state.
 
 Planning, event assessment/decision, response, and post-incident learning are all organizational
 processes an operating HDAB would run — none have an application-code artifact. What *is*
-code-checkable is covered separately: 5.28 (the evidence source) and 8.15/8.16 below.
+code-checkable is covered separately: 5.28 (the evidence source) and 8.15 below.
 
-### 5.28 — Collection of evidence ⚠️ Open, code slice only
+### 5.28 — Collection of evidence ✅ Fixed, code slice only
 
 The evidence an incident investigation would draw on is exactly what `docs/owasp-top10-assessment.md`'s
-A09 already assesses: `ApplicationLog`/`DataPermitLog`/`SpeProvisioningLog`/`AuditLog` record
-successful actions, not rejected/unauthorized attempts — a real gap in what evidence *exists* to
-collect. The collection *process* itself (who pulls it, in what format, chain of custody) is out
-of scope, same as 5.24–5.27.
+A09 already assesses: `ApplicationLog`/`DataPermitLog`/`SpeProvisioningLog`/`AuditLog` recorded
+successful actions only — now closed by a new `AuthzFailureLog`, which records every rejection
+from `src/lib/authz.ts` (missing/invalid user id, unknown user, role-not-permitted), verified live
+via real rejected requests. The collection *process* itself (who pulls it, in what format, chain
+of custody) remains out of scope, same as 5.24–5.27.
 
 ### 5.30 — ICT readiness for business continuity ⚠️ Open, code slice only
 
@@ -189,7 +191,7 @@ code fix (a stored, enforced field), not a process question, so it stays in scop
 | 8.12 Data leakage prevention | ➖ Out of scope | Same boundary as 8.11 |
 | 8.13 Backup | ⚠️ Open | No backup configuration found (the code slice of 5.30) |
 | 8.14 Redundancy | ➖ Out of scope | Datacenter concern |
-| 8.15 Logging | ✅ Real, partial | ≈ OWASP A09 — successes only |
+| 8.15 Logging | ✅ Fixed | ≈ OWASP A09 — now covers successes and rejected/unauthorized attempts; see 5.28 |
 | 8.16 Monitoring activities | ➖ Out of scope (HDAB establishment) | Watching/responding to what's logged is an operational activity, not a code artifact |
 | 8.17 Clock synchronization | ℹ️ N/A | — |
 | 8.18 Use of privileged utility programs | ℹ️ N/A | — |
@@ -251,8 +253,10 @@ already covered by the OWASP doc**: no real authentication behind an otherwise c
 role system (5.15–5.18/8.5) — the single highest-leverage item remaining — plus a handful of small,
 concrete repo-level facts: no data-classification scheme (5.9/5.12/5.13), no backup configuration
 (5.30/8.13), unvalidated attachment content (8.7), and the retention-deadline-computed-not-enforced
-finding (5.33/8.10). Dependency pinning and CI (5.19/5.21/5.22, 8.8, 8.29) are now fixed.
-Cryptography, injection-safety, and environment separation are clean. **Everything else this
+finding (5.33/8.10). Dependency pinning and CI (5.19/5.21/5.22, 8.8, 8.29) are now fixed, and so is
+the evidence-source half of incident management: rejected/unauthorized attempts are now logged
+(5.28/8.15), not just successes. Cryptography, injection-safety, and environment separation are
+clean. **Everything else this
 document names is out of scope, and correctly so**: an operating HDAB's incident-response process,
 training, documented procedures, change-approval process, and monitoring operations
 (5.1/5.2/5.4–5.8/5.10/5.11/5.20/5.24–5.27/5.29/5.32/5.37, all of People, 8.16, the process half of

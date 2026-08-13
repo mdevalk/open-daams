@@ -1,6 +1,6 @@
 # OWASP Top 10 (2021) assessment: open-daams
 
-_Snapshot date: 2026-08-13 (previous snapshot: 2026-08-12)._
+_Snapshot date: 2026-08-13 (updated same day: rejected/unauthorized attempts now logged)._
 
 This is a security assessment of the open-daams codebase mapped to the
 **OWASP Top 10 (2021)** categories.
@@ -23,7 +23,7 @@ This is a security assessment of the open-daams codebase mapped to the
 | **A06 – Vulnerable Components** | ✅ Fixed | `npm audit`: **0 vulnerabilities**, now enforced on every push via `.github/workflows/ci.yml`; the two previously-`"*"`-pinned dependencies are now pinned to exact versions |
 | **A07 – Identification and Authentication Failures** | ⚠️ Open (root gap) | No real authentication — RBAC trusts a client-supplied user id, by design for this reference implementation |
 | **A08 – Software and Data Integrity Failures** | ℹ️ Note | `verifyPermitSignature` exists but is never called in-app (self-issuer trust, by design); dependency pinning gap closed |
-| **A09 – Security Logging and Monitoring Failures** | ⚠️ Open | Audit coverage expanded significantly this cycle, but only successful actions are logged — rejected/unauthorized attempts leave no trace |
+| **A09 – Security Logging and Monitoring Failures** | ⚠️ Open (narrowed) | Rejected/unauthorized attempts are now logged (`AuthzFailureLog`); the remaining gap is the entity-scoped action log for 4 case-workflow actions |
 | **A10 – Server-Side Request Forgery** | ✅ Clean | The one outbound integration (NCP client) hardcodes host + protocol; no user-controlled host anywhere |
 
 ## Findings
@@ -151,7 +151,7 @@ The new CI workflow (`.github/workflows/ci.yml`) itself pins its actions by tag
 unpinned commit SHA — reasonable for a public, non-secret-handling workflow, though SHA-pinning
 would be the stricter option for a higher-trust pipeline.
 
-### A09 — Security Logging and Monitoring Failures ⚠️ Open
+### A09 — Security Logging and Monitoring Failures ⚠️ Open (narrowed)
 
 **Real progress this cycle**: the audit trail was restructured and materially expanded.
 `AuditLog` (application-status-transition log) was renamed to `ApplicationLog` for consistency
@@ -162,21 +162,26 @@ changed (field names for routine edits, explicit outcome phrasing like "marked a
 the two access-control-relevant fields), not just that something did. Three new SPE-type CRUD
 actions (create/update/delete) added this round follow the same logged-by-default pattern.
 
-**The gap that remains, and it's a real one**: **only successful actions are logged** — a
-rejected write (403 from a non-admin, a failed validation) leaves zero trace. This directly fails
-this category's own core concern: you cannot detect a pattern of unauthorized access attempts if
-none of them are ever recorded. It's also cheaper to fix than it might look — one log call added
-to the shared `authz.ts` rejection path (`requireRole`/`findActingUser`/`requireRoleOrOwner`),
-not one per route, and it doesn't depend on the A07 authentication gap being resolved first.
+**Now fixed**: rejected/unauthorized attempts no longer leave zero trace. A new
+`AuthzFailureLog` table records every rejection from the shared `src/lib/authz.ts` path
+(`findActingUser`/`requireRole`/`requireRoleOrOwner`) — missing/invalid user id, unknown user, and
+role-not-permitted — with the reason, the (possibly invalid) attempted user id, and the existing
+human-readable error text, via one shared `logAuthzFailure` helper rather than a change to any of
+the ~40 individual call sites. Verified live: triggered all three rejection cases via real `curl`
+calls, confirmed each landed a row, confirmed the new `/security-log` page
+(`src/app/[locale]/security-log/page.tsx`) renders them, then cleaned up the disposable rows.
+Deliberately doesn't capture *which* route was hit — none of these functions receive request
+context today, and threading it through 40 call sites would contradict the fix's own
+"cheap, one shared change" framing; a real enhancement, not part of this fix.
 
-Also still open, unchanged from the prior review: several entity-scoped actions
-(authorized-persons add/remove, appeal decisions, invoice issue/mark-paid/cancel,
-trusted-data-holder changes) still have no audit trail — designed but not yet built (would need
-its own table, kept separate from `ApplicationLog`/`DataPermitLog` so those stay pure
-status-transition logs, not extended with fabricated non-transition entries).
+**Still open, unchanged**: several entity-scoped actions (authorized-persons add/remove, appeal
+decisions, invoice issue/mark-paid/cancel, trusted-data-holder changes) still have no audit trail
+— designed but not yet built (would need its own table, kept separate from
+`ApplicationLog`/`DataPermitLog` so those stay pure status-transition logs, not extended with
+fabricated non-transition entries).
 
-**Remediation**: log failed-authorization outcomes in `authz.ts` (cheap, high value, no
-dependencies); build the entity-scoped action log for the remaining 4 case-workflow actions.
+**Remediation**: build the entity-scoped action log for the remaining 4 case-workflow actions —
+the only piece of this category still open.
 
 ### A10 — Server-Side Request Forgery ✅ Clean
 
@@ -189,20 +194,22 @@ client-to-this-app's-own-API.
 ## Bottom line
 
 Three full categories closed out this cycle (A01, A05, A06), with A04/A07's shared root cause
-narrowed to exactly its documented, accepted scope rather than an amplified one. A09 made real,
-verifiable progress but surfaced a more precise remaining gap in the process (outcome logging)
-rather than being fully closed. This cycle additionally closed A06's remaining pinned-dependency
-gap and added CI enforcement (`npm audit` + tests on every push) where previously none existed.
-The single highest-leverage remaining item is still real authentication — everything else on this
-list is either already independent of it (A09's outcome-logging gap) or cascades from it once it
-exists (SC-23's forgeable-mutation exposure, tracked under A04/A07).
+narrowed to exactly its documented, accepted scope rather than an amplified one. A09's
+outcome-logging gap — the one piece that didn't depend on authentication being fixed first — is
+now closed too; what remains of A09 is narrower and independent of everything else (the
+entity-scoped action log for four case-workflow actions). This cycle additionally closed A06's
+remaining pinned-dependency gap and added CI enforcement (`npm audit` + tests on every push) where
+previously none existed. The single highest-leverage remaining item is still real authentication —
+everything else on this list either cascades from it (SC-23's forgeable-mutation exposure, tracked
+under A04/A07) or is already fully independent of it (A09's remaining entity-scoped-log item).
 
 ### Suggested order
 
 1. ~~**Cheap, independent of auth**: pin the two `"*"` dependencies (A06/A08); add CI running
    `npm audit` + tests on every push.~~ **Done** — see A06/A08 above.
-2. **Still cheap, independent of auth**: log failed/rejected attempts in `authz.ts` (A09).
+2. ~~**Still cheap, independent of auth**: log failed/rejected attempts in `authz.ts` (A09).~~
+   **Done** — see A09 above.
 3. **The real fix**: session-based authentication (A04/A07), which also resolves the residual
    CSRF/forgeable-mutation exposure noted above.
 4. **Round out A09**: the entity-scoped action log for authorized-persons/appeals/invoices/
-   trusted-data-holder — designed, not yet built.
+   trusted-data-holder — designed, not yet built. The only remaining open item in this category.
