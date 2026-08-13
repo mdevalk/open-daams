@@ -78,10 +78,9 @@ and continuity *planning* as a document/process (procedural).
 
 ### (d) Supply chain security ✅ Fixed — code slice only
 
-`@rijkshuisstijl-community/components-react` and `@rijkshuisstijl-community/design-tokens` —
-previously pinned to `"*"` in `package.json` (OWASP A06), a non-reproducible-build gap — are now
-pinned to the exact versions already in use (`15.1.2`/`16.1.0`); confirmed a behavioural no-op
-(`npx tsc --noEmit` clean, 55/55 tests before and after). **Still out of scope**:
+Two dependencies previously pinned to `"*"` in `package.json` (OWASP A06), a non-reproducible-build
+gap, are now pinned to exact versions; confirmed a behavioural no-op (`npx tsc --noEmit` clean,
+55/55 tests before and after). **Still out of scope**:
 vendor-risk-assessment process (procedural) — the codebase can show *what* is depended on, not
 whether a supplier was vetted.
 

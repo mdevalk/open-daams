@@ -80,10 +80,10 @@ codebase. Stated as a complete theme, not omitted.
 | 5.16 Identity management | ⚠️ Open (root gap) | See below |
 | 5.17 Authentication information | ❌ N/A | No authentication exists, so there's no authentication information to manage |
 | 5.18 Access rights | ✅ Partial | Role-based, correctly enforced; provisioning/de-provisioning is a direct DB write, no process |
-| 5.19 Supplier relationships | ✅ Fixed | Both dependencies now pinned to exact versions |
+| 5.19 Supplier relationships | ➖ Out of scope (HDAB establishment) | No suppliers with contracts — npm dependency tree only, same reasoning as 5.20 |
 | 5.20 Supplier agreements | ➖ Out of scope (HDAB establishment) | No suppliers with contracts — npm dependency tree only |
-| 5.21 ICT supply chain | ✅ Fixed | Same as 5.19 |
-| 5.22 Monitoring/review of supplier services | ✅ Improved | `npm audit` now runs on every push via CI |
+| 5.21 ICT supply chain | ✅ Fixed | Dependency pinning + `npm audit` now enforced on every push via CI |
+| 5.22 Monitoring/review of supplier services | ➖ Out of scope (HDAB establishment) | No contracted supplier services to monitor, same reasoning as 5.20 |
 | 5.23 Cloud services security | ℹ️ N/A | No cloud services used — self-hosted Postgres via `docker-compose.yml` |
 | 5.24 Incident management planning | ➖ Out of scope (HDAB establishment) | Planning process |
 | 5.25 Assessment/decision on security events | ➖ Out of scope (HDAB establishment) | Decision process |
@@ -127,15 +127,24 @@ authentication step at all. 5.18's access-*rights* are fine (role-scoped, fail c
 missing/invalid id); access *provisioning* is a direct database write, no request/approval
 process — reasonable for a reference implementation, a real gap for a production baseline.
 
-### 5.19/5.21/5.22 — Supplier & ICT supply chain ✅ Fixed
+### 5.19/5.20/5.22 — Supplier relationships ➖ Out of scope (HDAB establishment)
 
-`@rijkshuisstijl-community/components-react` and `@rijkshuisstijl-community/design-tokens` —
-previously pinned to `"*"` (OWASP A06), a non-reproducible-build gap — are now pinned to the exact
-versions already in use (`15.1.2`/`16.1.0`); confirmed a behavioural no-op (`npx tsc --noEmit`
-clean, 55/55 tests before and after). Advisory monitoring also improved: `.github/workflows/ci.yml`
-(new) runs `npm audit` on every push and pull request — not a scheduled/periodic scan (nothing
-catches a newly-disclosed CVE on an otherwise-unchanged dependency until the next push), but a real
-step up from the previous "only if someone runs it by hand" state.
+These three controls govern *contracted* third-party suppliers — agreements, SLAs, monitored
+services. There are none here: dependencies are fetched anonymously from the public npm registry,
+with no relationship or contract to manage or monitor. Treating the dependency tree as a "supplier"
+would be the same category error 5.20 already avoids; 5.19 and 5.22 get the same treatment for
+consistency.
+
+### 5.21 — ICT supply chain ✅ Fixed
+
+Unlike 5.19/5.20/5.22, this control does extend naturally to software-component risk regardless of
+contractual relationship (ISO/IEC 27002:2022's guidance for 5.21 explicitly covers ICT products and
+services, including software supply chain). Two dependencies previously pinned to `"*"` (OWASP
+A06, a non-reproducible-build gap) are now pinned to exact versions, confirmed a behavioural no-op
+(`npx tsc --noEmit` clean, 55/55 tests before and after). Advisory monitoring also improved:
+`.github/workflows/ci.yml` (new) runs `npm audit` on every push and pull request — not a
+scheduled/periodic scan (nothing catches a newly-disclosed CVE on an otherwise-unchanged dependency
+until the next push), but a real step up from the previous "only if someone runs it by hand" state.
 
 ### 5.24–5.27 — Incident management process ➖ Out of scope (HDAB establishment)
 
@@ -256,21 +265,21 @@ already covered by the OWASP doc**: no real authentication behind an otherwise c
 role system (5.15–5.18/8.5) — the single highest-leverage item remaining — plus a handful of small,
 concrete repo-level facts: no data-classification scheme (5.9/5.12/5.13), no backup configuration
 (5.30/8.13), unvalidated attachment content (8.7), and the retention-deadline-computed-not-enforced
-finding (5.33/8.10). Dependency pinning and CI (5.19/5.21/5.22, 8.8, 8.29) are now fixed, and so is
+finding (5.33/8.10). Dependency pinning and CI (5.21, 8.8, 8.29) are now fixed, and so is
 the evidence-source half of incident management: every mutation now leaves a trace — status
 transitions, other successful case-workflow actions, and rejected/unauthorized attempts alike
 (5.28/8.15). Cryptography, injection-safety, and environment separation are clean. **Everything else this
 document names is out of scope, and correctly so**: an operating HDAB's incident-response process,
 training, documented procedures, change-approval process, and monitoring operations
-(5.1/5.2/5.4–5.8/5.10/5.11/5.20/5.24–5.27/5.29/5.32/5.37, all of People, 8.16, the process half of
+(5.1/5.2/5.4–5.8/5.10/5.11/5.19/5.20/5.22/5.24–5.27/5.29/5.32/5.37, all of People, 8.16, the process half of
 8.32) belong to *establishing that organization*, not to building this application — a distinction
 worth keeping sharp, since conflating the two is exactly what would make a future real assessment
 overstate what a codebase review can actually tell you.
 
 ### Suggested order
 
-1. ~~**Cheap, independent of auth**: pin the two `"*"` dependencies (5.19/5.21); add a CI workflow
-   running `npm audit` + `npm run test` on every push (8.8/8.29).~~ **Done** — see 5.19/5.21/5.22
+1. ~~**Cheap, independent of auth**: pin the two `"*"` dependencies (5.21); add a CI workflow
+   running `npm audit` + `npm run test` on every push (8.8/8.29).~~ **Done** — see 5.21
    and 8.8/8.25/8.29 above.
 2. **Small, concrete, code-level**: a lightweight data-classification field (5.9/5.12/5.13);
    backup/replication configuration for the application's own Postgres data (5.30/8.13); content
