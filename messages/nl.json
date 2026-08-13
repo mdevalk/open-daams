@@ -790,7 +790,7 @@
     "fieldProjectDescription": "Samenvatting in gewone taal",
     "fieldPurposeCategory": "Doelcode conform Art. 53",
     "fieldLegalBasis": "Toepasselijke EHDS-rechtsgrondslag",
-    "fieldRequestedDatasets": "Array van { dataHolderName, datasets: [{ name, url? }] }-groepen",
+    "fieldRequestedDatasets": "Array van '{ dataHolderName, datasets: [{ name, url? }] }'-groepen",
     "fieldRequestedVariables": "Specificatie op variabelenniveau",
     "fieldStudyPopulation": "Populatiedefinitie",
     "fieldDataProcessingCountry": "ISO 3166-1 alpha-2 (moet NL bevatten)",

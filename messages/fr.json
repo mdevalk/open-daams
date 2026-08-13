@@ -790,7 +790,7 @@
     "fieldProjectDescription": "Résumé en langage simple",
     "fieldPurposeCategory": "Code de finalité selon l'Art. 53",
     "fieldLegalBasis": "Base juridique EHDS applicable",
-    "fieldRequestedDatasets": "Tableau de groupes { dataHolderName, datasets: [{ name, url? }] }",
+    "fieldRequestedDatasets": "Tableau de groupes '{ dataHolderName, datasets: [{ name, url? }] }'",
     "fieldRequestedVariables": "Spécification au niveau des variables",
     "fieldStudyPopulation": "Définition de la population",
     "fieldDataProcessingCountry": "ISO 3166-1 alpha-2 (doit inclure NL)",

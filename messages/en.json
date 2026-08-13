@@ -790,7 +790,7 @@
     "fieldProjectDescription": "Lay summary",
     "fieldPurposeCategory": "Art. 53 purpose code",
     "fieldLegalBasis": "Applicable EHDS legal basis",
-    "fieldRequestedDatasets": "Array of { dataHolderName, datasets: [{ name, url? }] } groups",
+    "fieldRequestedDatasets": "Array of '{ dataHolderName, datasets: [{ name, url? }] }' groups",
     "fieldRequestedVariables": "Variable-level specification",
     "fieldStudyPopulation": "Population definition",
     "fieldDataProcessingCountry": "ISO 3166-1 alpha-2 (must include NL)",
