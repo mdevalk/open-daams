@@ -2,7 +2,7 @@
 
 _Snapshot date: 2026-08-13 (updated same day: dependency pinning + CI landed; scope tightened to
 exclude service-management/HDAB-establishment processes; rejected/unauthorized attempts and the
-remaining case-workflow actions now logged)._
+remaining case-workflow actions now logged; database backup/restore now exists)._
 
 This assesses the open-daams codebase against **BIO2**, the Dutch public sector's information
 security baseline built on **ISO/IEC 27002:2022** — a structurally different control set from the
@@ -91,7 +91,7 @@ codebase. Stated as a complete theme, not omitted.
 | 5.27 Learning from incidents | ➖ Out of scope (HDAB establishment) | Post-incident review process |
 | 5.28 Collection of evidence | ✅ Fixed, code slice only | The evidence source (logging) now covers rejections too — see 8.15/OWASP A09; the collection *process* remains out of scope |
 | 5.29 Security during disruption | ➖ Out of scope (HDAB establishment) | — |
-| 5.30 ICT readiness for business continuity | ⚠️ Open, code slice only | No backup config (repo fact); continuity *planning* is out of scope |
+| 5.30 ICT readiness for business continuity | ✅ Fixed, code slice only | `npm run db:backup`/`db:restore` now exist, verified live; continuity *planning* and replication/HA remain out of scope |
 | 5.31 Legal, statutory, regulatory, contractual requirements | ✅ Partial | See below |
 | 5.32 Intellectual property rights | ➖ Out of scope (HDAB establishment) | — |
 | 5.33 Protection of records | ⚠️ Open | See below |
@@ -164,11 +164,17 @@ Verified live via real requests for both the rejection cases and a representativ
 case-workflow actions. The collection *process* itself (who pulls it, in what format, chain of
 custody) remains out of scope, same as 5.24–5.27.
 
-### 5.30 — ICT readiness for business continuity ⚠️ Open, code slice only
+### 5.30 — ICT readiness for business continuity ✅ Fixed, code slice only
 
-`docker-compose.yml`'s Postgres volume has no backup or replication configuration — a concrete
-repo-level fact, in scope. Continuity *planning* as a document/process is out of scope (HDAB
-establishment), same as `docs/nis2-assessment.md`'s treatment of (c).
+`docker-compose.yml`'s Postgres volume had no backup configuration — a concrete repo-level fact, in
+scope, now closed: `scripts/backup-db.sh`/`restore-db.sh` (`npm run db:backup` / `npm run
+db:restore -- <file>`) take/restore a `pg_dump`, resolving the running container by the port
+`DATABASE_URL` points at. Verified live with a full backup-and-restore round trip against
+disposable containers (`Bytea`/`Decimal`-equivalent data and sequences confirmed intact) plus a
+second restore over the same target confirming the dump's `--clean --if-exists` idempotency.
+Continuity *planning* as a document/process remains out of scope (HDAB establishment), and so does
+replication/HA — a different Postgres topology, not applicable to this single-node setup — same as
+`docs/nis2-assessment.md`'s treatment of (c).
 
 ### 5.31/5.34 — Legal requirements & PII protection ✅ Partial
 
@@ -201,7 +207,7 @@ code fix (a stored, enforced field), not a process question, so it stays in scop
 | 8.10 Information deletion | ⚠️ Open | Same as 5.33 — application/permit metadata only, not health-data content |
 | 8.11 Data masking | ➖ Out of scope | Health-data content — DAAMS never handles it |
 | 8.12 Data leakage prevention | ➖ Out of scope | Same boundary as 8.11 |
-| 8.13 Backup | ⚠️ Open | No backup configuration found (the code slice of 5.30) |
+| 8.13 Backup | ✅ Fixed | `npm run db:backup`/`db:restore`, verified live (see 5.30) |
 | 8.14 Redundancy | ➖ Out of scope | Datacenter concern |
 | 8.15 Logging | ✅ Fixed | ≈ OWASP A09, now fully closed — every mutation (status transitions, other successful actions, rejected/unauthorized attempts) leaves a trace; see 5.28 |
 | 8.16 Monitoring activities | ➖ Out of scope (HDAB establishment) | Watching/responding to what's logged is an operational activity, not a code artifact |
@@ -263,12 +269,12 @@ Tightened to application code plus its three explicit exclusions (datacenter, he
 content, HDAB-establishment process), this assessment resolves cleanly. **In scope and mostly
 already covered by the OWASP doc**: no real authentication behind an otherwise correctly-enforced
 role system (5.15–5.18/8.5) — the single highest-leverage item remaining — plus a handful of small,
-concrete repo-level facts: no data-classification scheme (5.9/5.12/5.13), no backup configuration
-(5.30/8.13), unvalidated attachment content (8.7), and the retention-deadline-computed-not-enforced
-finding (5.33/8.10). Dependency pinning and CI (5.21, 8.8, 8.29) are now fixed, and so is
-the evidence-source half of incident management: every mutation now leaves a trace — status
-transitions, other successful case-workflow actions, and rejected/unauthorized attempts alike
-(5.28/8.15). Cryptography, injection-safety, and environment separation are clean. **Everything else this
+concrete repo-level facts: no data-classification scheme (5.9/5.12/5.13), unvalidated attachment
+content (8.7), and the retention-deadline-computed-not-enforced finding (5.33/8.10). Dependency
+pinning and CI (5.21, 8.8, 8.29), backup/restore (5.30/8.13), and the evidence-source half of
+incident management are now fixed: every mutation now leaves a trace — status transitions, other
+successful case-workflow actions, and rejected/unauthorized attempts alike (5.28/8.15).
+Cryptography, injection-safety, and environment separation are clean. **Everything else this
 document names is out of scope, and correctly so**: an operating HDAB's incident-response process,
 training, documented procedures, change-approval process, and monitoring operations
 (5.1/5.2/5.4–5.8/5.10/5.11/5.19/5.20/5.22/5.24–5.27/5.29/5.32/5.37, all of People, 8.16, the process half of
@@ -281,12 +287,13 @@ overstate what a codebase review can actually tell you.
 1. ~~**Cheap, independent of auth**: pin the two `"*"` dependencies (5.21); add a CI workflow
    running `npm audit` + `npm run test` on every push (8.8/8.29).~~ **Done** — see 5.21
    and 8.8/8.25/8.29 above.
-2. **Small, concrete, code-level**: a lightweight data-classification field (5.9/5.12/5.13);
-   backup/replication configuration for the application's own Postgres data (5.30/8.13); content
-   validation on the `Attachment` import path (8.7).
-3. **The real fix, shared with every other assessment this session**: real authentication —
+2. ~~**Small, concrete, code-level**: backup/restore for the application's own Postgres data
+   (5.30/8.13).~~ **Done** — see 5.30/8.13 above.
+3. **Small, concrete, code-level, still open**: a lightweight data-classification field
+   (5.9/5.12/5.13); content validation on the `Attachment` import path (8.7).
+4. **The real fix, shared with every other assessment this session**: real authentication —
    resolves 5.15–5.18 and 8.5.
-4. **Close the loop on deletion**: make the retention deadline a stored, enforced field rather
+5. **Close the loop on deletion**: make the retention deadline a stored, enforced field rather
    than a display-time computation (5.33/8.10).
 
 Everything named "out of scope (HDAB establishment)" above is a separate, organizational

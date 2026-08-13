@@ -141,6 +141,13 @@ Open [http://localhost:3000](http://localhost:3000).
 
 Run the unit test suite with `npm run test` (or `npm run test:watch` while developing).
 
+### Backups
+
+`npm run db:backup` takes a `pg_dump` of the running database into `backups/` (git-ignored).
+`npm run db:restore -- <file>` restores from one. Both resolve the running Postgres container by
+the port it publishes, so they work regardless of how `docker compose` named it. This is a manual,
+on-demand mechanism — no scheduling, retention, or offsite copy.
+
 ## Security
 
 This app has **no real authentication** — role-based access control trusts a client-supplied

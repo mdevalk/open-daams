@@ -15,6 +15,8 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
+    "db:backup": "sh scripts/backup-db.sh",
+    "db:restore": "sh scripts/restore-db.sh",
     "generate-signing-key": "tsx scripts/generate-signing-key.ts"
   },
   "dependencies": {

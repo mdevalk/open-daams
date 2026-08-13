@@ -1,7 +1,8 @@
 # NIS2 assessment: open-daams
 
 _Snapshot date: 2026-08-13 (updated same day: dependency pinning + CI landed; rejected/
-unauthorized attempts and the remaining case-workflow actions now logged)._
+unauthorized attempts and the remaining case-workflow actions now logged; database backup/restore
+now exists)._
 
 This assesses the open-daams codebase against **NIS2** (Directive (EU) 2022/2555), as transposed
 into Dutch law via the *Cyberbeveiligingswet* (Cbw). It complements `docs/owasp-top10-assessment.md`
@@ -38,7 +39,7 @@ rather than re-deriving their evidence.
 |---|---|---|---|
 | (a) Risk analysis & security policy | ➖ Out of scope (procedural) | Risk-analysis methodology and policy documents are organizational artifacts, no code slice exists | 5.1, 5.9/5.12 |
 | (b) Incident handling | ✅ Fixed, code slice only | Logging now covers every mutation — status transitions, other successful actions, and rejected/unauthorized attempts (OWASP A09, fully closed) — the response process/CSIRT chain remains out of scope (procedural) | 5.24–5.28 |
-| (c) Business continuity | ⚠️ Open, code slice only | No backup config for the app's own Postgres data in the repo — facility continuity and continuity *planning* are out of scope | 5.30, 8.13 |
+| (c) Business continuity | ✅ Fixed, code slice only | `npm run db:backup`/`db:restore` now exist and were verified via a real dump-and-restore round trip; facility continuity, continuity *planning*, and replication/HA are out of scope | 5.30, 8.13 |
 | (d) Supply chain security | ✅ Fixed, code slice only | Both dependencies now pinned to exact versions; vendor-risk process remains out of scope (procedural) | 5.19/5.21/5.22 |
 | (e) Secure development, vulnerability handling | ✅ Fixed | `npm audit` clean, now enforced on every push via `.github/workflows/ci.yml` | 8.8, 8.25–8.29 |
 | (f) Effectiveness assessment | ✅ Fixed, code slice only | `.github/workflows/ci.yml` runs the test suite on every push; broader assessment process remains out of scope (procedural) | 5.35/5.36 |
@@ -69,12 +70,20 @@ and the NIS2 Art. 23 reporting chain (24-hour early warning, 72-hour notificatio
 report to the CSIRT/competent authority) are procedural — logging existing is necessary but not
 sufficient for either, and neither has a code artifact to check.
 
-### (c) Business continuity ⚠️ Open — code slice only
+### (c) Business continuity ✅ Fixed — code slice only
 
-`docker-compose.yml`'s Postgres volume has no backup or replication configuration — a concrete,
-repo-level fact, in scope. **Out of scope**: facility-level continuity (power, physical
-redundancy, alternate sites — the same datacenter boundary as `docs/bio2-assessment.md`'s 8.14)
-and continuity *planning* as a document/process (procedural).
+`docker-compose.yml`'s Postgres volume had no backup configuration — a concrete, repo-level fact,
+in scope, now closed: `scripts/backup-db.sh`/`restore-db.sh` (`npm run db:backup` / `npm run
+db:restore -- <file>`) take/restore a `pg_dump` of the running database, resolving the container by
+the port `DATABASE_URL` points at (robust to however `docker compose` happened to name it, verified
+against actual drift on the dev machine). Verified live: a full backup-and-restore round trip
+against disposable containers, confirming `Bytea`/`Decimal`-equivalent data and sequences come back
+correctly, plus a second restore over the same target to confirm the dump's `--clean --if-exists`
+self-cleaning makes it idempotent. **Still out of scope**: facility-level continuity (power,
+physical redundancy, alternate sites — the same datacenter boundary as
+`docs/bio2-assessment.md`'s 8.14), continuity *planning* as a document/process (procedural), and
+replication/HA — a different Postgres topology (a standby instance), not applicable to this
+single-node docker-compose reference setup, named explicitly rather than left implied by "backup."
 
 ### (d) Supply chain security ✅ Fixed — code slice only
 
@@ -131,10 +140,10 @@ emergency-communication systems (procedural/operational).
 
 Narrowed to the application code only, this assessment resolves into two clean groups. **In
 scope, checkable, and mostly already covered by the OWASP/BIO2 docs**: no real authentication
-behind an otherwise correctly-enforced role system (i)/(j) — the single highest-leverage item
-remaining — plus one small, concrete repo-level fact: no backup configuration for the
-application's own database (c). Dependency pinning (d) and CI enforcement of `npm audit`/tests
-(e)/(f) — previously the other items in this group — are now fixed. Cryptography (h) is clean.
+behind an otherwise correctly-enforced role system (i)/(j) — the single remaining highest-leverage
+item. Dependency pinning (d), CI enforcement of `npm audit`/tests (e)/(f), and backup/restore for
+the application's own database (c) — previously the other items in this group — are all now fixed.
+Cryptography (h) is clean.
 **Explicitly out of scope, and correctly so given this is an application-only review**:
 risk-analysis/policy documents (a), incident-*response* process and the Art. 23 CSIRT-reporting
 chain (b), training programs (g), vendor-risk process (d), HR-security process (i), and
@@ -146,10 +155,10 @@ tried.
 
 1. ~~**Cheap, independent of auth**: pin the two `"*"` dependencies (d); add a CI workflow running
    `npm audit` + `npm run test` on every push (e, f).~~ **Done** — see (d)/(e)/(f) above.
-2. **Small, concrete**: add backup/replication configuration for the application's own Postgres
-   data (c) — the one remaining code-level gap besides authentication.
+2. ~~**Small, concrete**: add backup/restore for the application's own Postgres data (c).~~
+   **Done** — see (c) above.
 3. **The real fix, shared with every other assessment this session**: real authentication —
-   resolves (i) and unblocks (j).
+   resolves (i) and unblocks (j). The only remaining item on this list.
 
 Everything else this document names as out of scope (a, the procedural half of b, g, the
 procedural half of d, the procedural half of i, the procedural half of j) is a separate,
