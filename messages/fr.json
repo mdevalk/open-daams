@@ -6,7 +6,9 @@
     "import": "Importer JSON",
     "public": "Registre public",
     "referenceData": "Données de référence",
+    "auditLog": "Journal d'audit",
     "securityLog": "Journal de sécurité",
+    "manage": "Gérer",
     "newApplication": "Nouvelle demande",
     "skipToContent": "Aller au contenu principal",
     "testEnvironment": "Environnement de test",
@@ -616,6 +618,16 @@
     "tabDataUsers": "Utilisateurs de données",
     "recentChanges": "Modifications récentes",
     "noRecentChanges": "Aucune modification pour l'instant."
+  },
+  "auditLog": {
+    "title": "Journal d'audit",
+    "description": "Chaque action réussie qui n'est pas une transition de statut — modifications des données de référence et actions de dossier telles que personnes autorisées, recours et factures. Les transitions de statut elles-mêmes sont enregistrées sur l'enregistrement concerné (historique de la demande/autorisation/provisionnement SPE).",
+    "empty": "Aucune entrée de journal d'audit enregistrée.",
+    "colWhen": "Quand",
+    "colUser": "Utilisateur",
+    "colEntity": "Entité",
+    "colAction": "Action",
+    "colComment": "Commentaire"
   },
   "securityLog": {
     "title": "Journal de sécurité",

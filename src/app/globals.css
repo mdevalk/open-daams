@@ -37,6 +37,13 @@ body {
   text-decoration: none;
 }
 
+/* AdminMenu's dropdown panel has a light background, unlike the header itself
+   — its links need the header's forced-white link color overridden back to
+   dark text, same reason hdab-btn-primary above exists. */
+.hdab-page-header #admin-menu-panel a {
+  color: #374151;
+}
+
 .hdab-breadcrumb {
   font-size: 0.875rem;
   color: var(--rvo-color-text-subtle, #595959);

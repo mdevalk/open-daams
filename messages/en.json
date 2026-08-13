@@ -6,7 +6,9 @@
     "import": "Import JSON",
     "public": "Public register",
     "referenceData": "Reference data",
+    "auditLog": "Audit log",
     "securityLog": "Security log",
+    "manage": "Manage",
     "newApplication": "New application",
     "skipToContent": "Skip to main content",
     "testEnvironment": "Test environment",
@@ -616,6 +618,16 @@
     "tabDataUsers": "Data users",
     "recentChanges": "Recent changes",
     "noRecentChanges": "No changes yet."
+  },
+  "auditLog": {
+    "title": "Audit log",
+    "description": "Every successful action that isn't a status transition — reference-data changes and case-workflow actions like authorized persons, appeals, and invoices. Status transitions themselves are recorded on the record they acted on (application/permit/SPE-provisioning history).",
+    "empty": "No audit log entries recorded.",
+    "colWhen": "When",
+    "colUser": "User",
+    "colEntity": "Entity",
+    "colAction": "Action",
+    "colComment": "Comment"
   },
   "securityLog": {
     "title": "Security log",

@@ -6,7 +6,9 @@
     "import": "JSON importeren",
     "public": "Openbaar register",
     "referenceData": "Referentiegegevens",
+    "auditLog": "Auditlog",
     "securityLog": "Beveiligingslog",
+    "manage": "Beheren",
     "newApplication": "Nieuwe aanvraag",
     "skipToContent": "Ga naar hoofdinhoud",
     "testEnvironment": "Testomgeving",
@@ -616,6 +618,16 @@
     "tabDataUsers": "Datagebruikers",
     "recentChanges": "Recente wijzigingen",
     "noRecentChanges": "Nog geen wijzigingen."
+  },
+  "auditLog": {
+    "title": "Auditlog",
+    "description": "Elke geslaagde actie die geen statusovergang is — wijzigingen in referentiegegevens en dossierhandelingen zoals geautoriseerde personen, bezwaren en facturen. Statusovergangen zelf worden vastgelegd op het record waarop ze zijn uitgevoerd (aanvraag-/vergunning-/SPE-provisioninggeschiedenis).",
+    "empty": "Geen auditlogregels geregistreerd.",
+    "colWhen": "Wanneer",
+    "colUser": "Gebruiker",
+    "colEntity": "Entiteit",
+    "colAction": "Actie",
+    "colComment": "Toelichting"
   },
   "securityLog": {
     "title": "Beveiligingslog",

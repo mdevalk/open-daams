@@ -4,6 +4,7 @@ import { getMessages, getTranslations } from 'next-intl/server';
 import '../globals.css';
 import { APP_NAME } from '@/lib/branding';
 import { prisma } from '@/lib/db';
+import { AdminMenu } from '@/components/AdminMenu';
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -72,8 +73,6 @@ export default async function LocaleLayout({
                       { href: `/${locale}/applications`, label: t('applications') },
                       { href: `/${locale}/permits`, label: t('permits') },
                       { href: `/${locale}/financials`, label: t('financials') },
-                      { href: `/${locale}/reference-data`, label: t('referenceData') },
-                      { href: `/${locale}/security-log`, label: t('securityLog') },
                     ].map((item) => (
                       <a
                         key={item.href}
@@ -122,6 +121,7 @@ export default async function LocaleLayout({
                       </a>
                     ))}
                   </div>
+                  <AdminMenu locale={locale} />
                 </div>
               </div>
             </div>
