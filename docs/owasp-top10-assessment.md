@@ -1,6 +1,6 @@
 # OWASP Top 10 (2021) assessment: open-daams
 
-_Snapshot date: 2026-08-13 (updated same day: rejected/unauthorized attempts now logged)._
+_Snapshot date: 2026-08-13 (updated same day: entity-scoped case-workflow actions now logged too — A09 fully closed)._
 
 This is a security assessment of the open-daams codebase mapped to the
 **OWASP Top 10 (2021)** categories.
@@ -23,7 +23,7 @@ This is a security assessment of the open-daams codebase mapped to the
 | **A06 – Vulnerable Components** | ✅ Fixed | `npm audit`: **0 vulnerabilities**, now enforced on every push via `.github/workflows/ci.yml`; the two previously-`"*"`-pinned dependencies are now pinned to exact versions |
 | **A07 – Identification and Authentication Failures** | ⚠️ Open (root gap) | No real authentication — RBAC trusts a client-supplied user id, by design for this reference implementation |
 | **A08 – Software and Data Integrity Failures** | ℹ️ Note | `verifyPermitSignature` exists but is never called in-app (self-issuer trust, by design); dependency pinning gap closed |
-| **A09 – Security Logging and Monitoring Failures** | ⚠️ Open (narrowed) | Rejected/unauthorized attempts are now logged (`AuthzFailureLog`); the remaining gap is the entity-scoped action log for 4 case-workflow actions |
+| **A09 – Security Logging and Monitoring Failures** | ✅ Fixed | Rejected/unauthorized attempts (`AuthzFailureLog`) and all case-workflow actions (`AuditLog`) are now logged; no more unlogged mutation paths found |
 | **A10 – Server-Side Request Forgery** | ✅ Clean | The one outbound integration (NCP client) hardcodes host + protocol; no user-controlled host anywhere |
 
 ## Findings
@@ -151,7 +151,7 @@ The new CI workflow (`.github/workflows/ci.yml`) itself pins its actions by tag
 unpinned commit SHA — reasonable for a public, non-secret-handling workflow, though SHA-pinning
 would be the stricter option for a higher-trust pipeline.
 
-### A09 — Security Logging and Monitoring Failures ⚠️ Open (narrowed)
+### A09 — Security Logging and Monitoring Failures ✅ Fixed
 
 **Real progress this cycle**: the audit trail was restructured and materially expanded.
 `AuditLog` (application-status-transition log) was renamed to `ApplicationLog` for consistency
@@ -174,14 +174,17 @@ Deliberately doesn't capture *which* route was hit — none of these functions r
 context today, and threading it through 40 call sites would contradict the fix's own
 "cheap, one shared change" framing; a real enhancement, not part of this fix.
 
-**Still open, unchanged**: several entity-scoped actions (authorized-persons add/remove, appeal
-decisions, invoice issue/mark-paid/cancel, trusted-data-holder changes) still have no audit trail
-— designed but not yet built (would need its own table, kept separate from
-`ApplicationLog`/`DataPermitLog` so those stay pure status-transition logs, not extended with
-fabricated non-transition entries).
+**Now also fixed**: the remaining entity-scoped actions (authorized-persons add/remove, appeal
+submit/decide, invoice issue/mark-paid/cancel across both invoice route variants, provisional
+invoice issue, trusted-data-holder set/clear — 9 endpoints in all) now write an `AuditLog` entry
+each, following the same taxonomy: `ApplicationLog`/`DataPermitLog`/`SpeProvisioningLog` stay pure
+status-transition logs (never a fabricated entry), and everything else — reference-data CRUD plus
+these case-workflow actions — lands in `AuditLog`. Verified live for 5 of the 9 (authorized-person
+add/remove, appeal submit/decide, invoice mark-paid) via real requests against disposable/reverted
+data, confirming correct `entityType`/`entityId`/`userId`/`action` rows; the other 4 follow the
+identical mechanical pattern and were confirmed by direct code review.
 
-**Remediation**: build the entity-scoped action log for the remaining 4 case-workflow actions —
-the only piece of this category still open.
+No further remediation open in this category.
 
 ### A10 — Server-Side Request Forgery ✅ Clean
 
@@ -193,15 +196,15 @@ client-to-this-app's-own-API.
 
 ## Bottom line
 
-Three full categories closed out this cycle (A01, A05, A06), with A04/A07's shared root cause
-narrowed to exactly its documented, accepted scope rather than an amplified one. A09's
-outcome-logging gap — the one piece that didn't depend on authentication being fixed first — is
-now closed too; what remains of A09 is narrower and independent of everything else (the
-entity-scoped action log for four case-workflow actions). This cycle additionally closed A06's
-remaining pinned-dependency gap and added CI enforcement (`npm audit` + tests on every push) where
-previously none existed. The single highest-leverage remaining item is still real authentication —
-everything else on this list either cascades from it (SC-23's forgeable-mutation exposure, tracked
-under A04/A07) or is already fully independent of it (A09's remaining entity-scoped-log item).
+Four full categories are now closed out (A01, A05, A06, A09), with A04/A07's shared root cause
+narrowed to exactly its documented, accepted scope rather than an amplified one. A09 is fully
+closed this cycle — both the rejected/unauthorized-attempt logging (`AuthzFailureLog`) and the
+last unlogged case-workflow actions (`AuditLog`) are done, so every mutation path in the app now
+leaves a trace, success or failure. This cycle additionally closed A06's remaining
+pinned-dependency gap and added CI enforcement (`npm audit` + tests on every push) where previously
+none existed. The single highest-leverage remaining item is real authentication — everything else
+on this list either cascades from it (SC-23's forgeable-mutation exposure, tracked under A04/A07)
+or is already fully independent of it and closed (A09).
 
 ### Suggested order
 
@@ -209,7 +212,7 @@ under A04/A07) or is already fully independent of it (A09's remaining entity-sco
    `npm audit` + tests on every push.~~ **Done** — see A06/A08 above.
 2. ~~**Still cheap, independent of auth**: log failed/rejected attempts in `authz.ts` (A09).~~
    **Done** — see A09 above.
-3. **The real fix**: session-based authentication (A04/A07), which also resolves the residual
-   CSRF/forgeable-mutation exposure noted above.
-4. **Round out A09**: the entity-scoped action log for authorized-persons/appeals/invoices/
-   trusted-data-holder — designed, not yet built. The only remaining open item in this category.
+3. ~~**Round out A09**: the entity-scoped action log for authorized-persons/appeals/invoices/
+   trusted-data-holder.~~ **Done** — see A09 above. A09 is now fully closed.
+4. **The real fix**: session-based authentication (A04/A07), which also resolves the residual
+   CSRF/forgeable-mutation exposure noted above. The only remaining open item on this list.

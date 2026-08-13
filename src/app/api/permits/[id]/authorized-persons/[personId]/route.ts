@@ -26,6 +26,16 @@ export async function DELETE(
 
     await prisma.authorizedPerson.delete({ where: { id: personId } });
 
+    await prisma.auditLog.create({
+      data: {
+        userId: auth.user.id,
+        entityType: 'AuthorizedPerson',
+        entityId: personId,
+        action: `Authorized person removed: ${person.name}`,
+        comment: null,
+      },
+    });
+
     // §6.8 of the permit document lists authorised persons — regenerate.
     await regenerateStoredPermitPdf(id, prisma);
 

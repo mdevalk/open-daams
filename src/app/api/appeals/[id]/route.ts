@@ -35,6 +35,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       },
     });
 
+    await prisma.auditLog.create({
+      data: {
+        userId: auth.user.id,
+        entityType: 'Appeal',
+        entityId: id,
+        action: `Appeal decided: ${status}`,
+        comment: body.decisionSummary ?? null,
+      },
+    });
+
     return NextResponse.json(updated);
   } catch (e) {
     console.error('Failed to update appeal', e);

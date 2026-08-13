@@ -61,6 +61,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       include: { lineItems: true },
     });
 
+    await prisma.auditLog.create({
+      data: {
+        userId: authz.user.id,
+        entityType: 'Invoice',
+        entityId: invoice.id,
+        action: `Invoice issued: ${invoice.invoiceNumber} (${invoice.currency} ${totalAmount})`,
+        comment: null,
+      },
+    });
+
     return NextResponse.json(invoice, { status: 201 });
   } catch (e) {
     console.error('Failed to issue invoice', e);

@@ -18,8 +18,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const trustedDataHolderId: string | null = body.trustedDataHolderId || null;
+    let dataHolder = null;
     if (trustedDataHolderId) {
-      const dataHolder = await prisma.dataHolder.findUnique({ where: { id: trustedDataHolderId } });
+      dataHolder = await prisma.dataHolder.findUnique({ where: { id: trustedDataHolderId } });
       if (!dataHolder || !dataHolder.isTrusted) {
         return NextResponse.json({ error: 'That data holder is not marked as trusted' }, { status: 422 });
       }
@@ -28,6 +29,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const application = await prisma.application.update({
       where: { id },
       data: { trustedDataHolderId },
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        userId: auth.user.id,
+        entityType: 'Application',
+        entityId: id,
+        action: dataHolder ? `Trusted data holder set: ${dataHolder.name}` : 'Trusted data holder cleared',
+        comment: null,
+      },
     });
 
     return NextResponse.json(application);

@@ -1149,11 +1149,15 @@ model ApplicationLog {
   createdAt     DateTime           @default(now())
 }
 
-// General-purpose audit trail (D6.4 R15.4) for actions not scoped to a
-// specific Application/DataPermit — currently reference-data (masterdata)
-// CRUD. Deliberately no live FK to the audited entity: it must keep
-// recording "X was deleted by Y" after X is gone, which a cascading or
-// SetNull FK would break or make useless.
+// General-purpose audit trail (D6.4 R15.4). The rule: ApplicationLog/
+// DataPermitLog/SpeProvisioningLog are reserved for status transitions only
+// (fromStatus/toStatus are real enum columns, never fabricated) — everything
+// else lands here instead, whether or not it's scoped to a specific
+// Application/DataPermit. Covers reference-data (masterdata) CRUD and
+// non-transition case-workflow events (authorized persons, appeals,
+// invoices, trusted-data-holder). Deliberately no live FK to the audited
+// entity: it must keep recording "X was deleted by Y" after X is gone,
+// which a cascading or SetNull FK would break or make useless.
 model AuditLog {
   id         String   @id @default(cuid())
   userId     String

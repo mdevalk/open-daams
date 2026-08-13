@@ -33,6 +33,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       },
     });
 
+    await prisma.auditLog.create({
+      data: {
+        userId: auth.user.id,
+        entityType: 'AuthorizedPerson',
+        entityId: person.id,
+        action: `Authorized person added: ${person.name}`,
+        comment: null,
+      },
+    });
+
     // §6.8 of the permit document lists authorised persons — regenerate.
     await regenerateStoredPermitPdf(id, prisma);
 

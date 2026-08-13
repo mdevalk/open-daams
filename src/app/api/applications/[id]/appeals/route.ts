@@ -32,6 +32,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       },
     });
 
+    await prisma.auditLog.create({
+      data: {
+        userId: auth.user.id,
+        entityType: 'Appeal',
+        entityId: appeal.id,
+        action: `Appeal submitted by: ${appeal.submittedBy}`,
+        comment: null,
+      },
+    });
+
     return NextResponse.json(appeal, { status: 201 });
   } catch (e) {
     console.error('Failed to register appeal', e);

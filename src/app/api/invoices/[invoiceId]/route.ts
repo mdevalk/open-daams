@@ -28,6 +28,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ in
         where: { id: invoiceId },
         data: { status: 'PAID', paidAt: new Date() },
       });
+      await prisma.auditLog.create({
+        data: {
+          userId: authz.user.id,
+          entityType: 'Invoice',
+          entityId: invoiceId,
+          action: `Invoice marked paid: ${invoice.invoiceNumber}`,
+          comment: null,
+        },
+      });
       return NextResponse.json(updated);
     }
 
@@ -40,6 +49,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ in
       const updated = await prisma.invoice.update({
         where: { id: invoiceId },
         data: { status: 'CANCELLED' },
+      });
+      await prisma.auditLog.create({
+        data: {
+          userId: authz.user.id,
+          entityType: 'Invoice',
+          entityId: invoiceId,
+          action: `Invoice cancelled: ${invoice.invoiceNumber}`,
+          comment: null,
+        },
       });
       return NextResponse.json(updated);
     }

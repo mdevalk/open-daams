@@ -1,7 +1,7 @@
 # NIS2 assessment: open-daams
 
 _Snapshot date: 2026-08-13 (updated same day: dependency pinning + CI landed; rejected/
-unauthorized attempts now logged)._
+unauthorized attempts and the remaining case-workflow actions now logged)._
 
 This assesses the open-daams codebase against **NIS2** (Directive (EU) 2022/2555), as transposed
 into Dutch law via the *Cyberbeveiligingswet* (Cbw). It complements `docs/owasp-top10-assessment.md`
@@ -37,7 +37,7 @@ rather than re-deriving their evidence.
 | NIS2 Art. 21(2) | Status | Key finding | → BIO2 controls |
 |---|---|---|---|
 | (a) Risk analysis & security policy | ➖ Out of scope (procedural) | Risk-analysis methodology and policy documents are organizational artifacts, no code slice exists | 5.1, 5.9/5.12 |
-| (b) Incident handling | ✅ Fixed, code slice only | Logging now covers both successes and rejected/unauthorized attempts (OWASP A09) — the response process/CSIRT chain remains out of scope (procedural) | 5.24–5.28 |
+| (b) Incident handling | ✅ Fixed, code slice only | Logging now covers every mutation — status transitions, other successful actions, and rejected/unauthorized attempts (OWASP A09, fully closed) — the response process/CSIRT chain remains out of scope (procedural) | 5.24–5.28 |
 | (c) Business continuity | ⚠️ Open, code slice only | No backup config for the app's own Postgres data in the repo — facility continuity and continuity *planning* are out of scope | 5.30, 8.13 |
 | (d) Supply chain security | ✅ Fixed, code slice only | Both dependencies now pinned to exact versions; vendor-risk process remains out of scope (procedural) | 5.19/5.21/5.22 |
 | (e) Secure development, vulnerability handling | ✅ Fixed | `npm audit` clean, now enforced on every push via `.github/workflows/ci.yml` | 8.8, 8.25–8.29 |
@@ -57,15 +57,17 @@ analysis. Not assessed as a gap; named so the boundary is explicit rather than s
 
 ### (b) Incident handling ✅ Fixed — code slice only
 
-The code-checkable slice: `ApplicationLog`/`DataPermitLog`/`SpeProvisioningLog`/`AuditLog` give
-real internal recording for successful actions, and a new `AuthzFailureLog`
-(`src/lib/authz.ts`/`docs/owasp-top10-assessment.md` A09) now records rejected/unauthorized
-attempts too — missing/invalid user id, unknown user, and role-not-permitted, each via one shared
-logging path rather than per-route changes. Verified live via real rejected requests. **Still out
-of scope**: the incident-*response* process (triage, containment) and the NIS2 Art. 23 reporting
-chain (24-hour early warning, 72-hour notification, 1-month final report to the CSIRT/competent
-authority) are procedural — logging existing is necessary but not sufficient for either, and
-neither has a code artifact to check.
+The code-checkable slice, now fully closed (`docs/owasp-top10-assessment.md` A09):
+`ApplicationLog`/`DataPermitLog`/`SpeProvisioningLog` record status transitions; `AuditLog` records
+every other successful mutation, including the case-workflow actions (authorized persons, appeals,
+invoices, trusted-data-holder) that were the last unlogged gap; and `AuthzFailureLog`
+(`src/lib/authz.ts`) records rejected/unauthorized attempts — missing/invalid user id, unknown
+user, and role-not-permitted, each via one shared logging path rather than per-route changes.
+Verified live via real requests for both the rejection cases and a representative sample of the
+case-workflow actions. **Still out of scope**: the incident-*response* process (triage, containment)
+and the NIS2 Art. 23 reporting chain (24-hour early warning, 72-hour notification, 1-month final
+report to the CSIRT/competent authority) are procedural — logging existing is necessary but not
+sufficient for either, and neither has a code artifact to check.
 
 ### (c) Business continuity ⚠️ Open — code slice only
 
