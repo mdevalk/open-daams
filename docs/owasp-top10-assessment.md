@@ -22,7 +22,7 @@ This is a security assessment of the open-daams codebase mapped to the
 | **A05 – Security Misconfiguration** | ✅ Fixed | Nonce-based CSP + full security-header set now set in `src/proxy.ts`; error handling remains disciplined |
 | **A06 – Vulnerable Components** | ✅ Fixed | `npm audit`: **0 vulnerabilities**, now enforced on every push via `.github/workflows/ci.yml`; the two previously-`"*"`-pinned dependencies are now pinned to exact versions |
 | **A07 – Identification and Authentication Failures** | ⚠️ Open (root gap) | No real authentication — RBAC trusts a client-supplied user id, by design for this reference implementation |
-| **A08 – Software and Data Integrity Failures** | ℹ️ Note | `verifyPermitSignature` exists but is never called in-app (self-issuer trust, by design); dependency pinning gap closed |
+| **A08 – Software and Data Integrity Failures** | ℹ️ Note | `verifyPermitSignature` exists but is never called in-app — verification happens in the separate external permit-validator app (by design); dependency pinning gap closed |
 | **A09 – Security Logging and Monitoring Failures** | ✅ Fixed | Rejected/unauthorized attempts (`AuthzFailureLog`) and all case-workflow actions (`AuditLog`) are now logged; no more unlogged mutation paths found |
 | **A10 – Server-Side Request Forgery** | ✅ Clean | The one outbound integration (NCP client) hardcodes host + protocol; no user-controlled host anywhere |
 
@@ -145,7 +145,10 @@ Unchanged. `verifyPermitSignature` exists (`src/lib/permit-signing.ts`) but is n
 anywhere in this app — DAAMS signs its own generated permits/decision cards and displays them
 without self-verifying, which is self-consistent (the signature is for downstream/external
 verifiers, per A01's JWKS discussion) but worth stating plainly rather than assuming it implies
-in-app integrity checking. The dependency-pinning gap noted here previously (A06) is now closed.
+in-app integrity checking. Concretely, that verification is performed by the separate, external
+permit-validator application — a different codebase from this one — via the published JWKS key,
+not by anything inside open-daams. The dependency-pinning gap noted here previously (A06) is now
+closed.
 The new CI workflow (`.github/workflows/ci.yml`) itself pins its actions by tag
 (`actions/checkout@v4`, `actions/setup-node@v4`) rather than a floating major version or an
 unpinned commit SHA — reasonable for a public, non-secret-handling workflow, though SHA-pinning
