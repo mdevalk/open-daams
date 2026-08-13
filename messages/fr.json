@@ -6,6 +6,7 @@
     "import": "Importer JSON",
     "public": "Registre public",
     "referenceData": "Données de référence",
+    "securityLog": "Journal de sécurité",
     "newApplication": "Nouvelle demande",
     "skipToContent": "Aller au contenu principal",
     "testEnvironment": "Environnement de test",
@@ -615,6 +616,19 @@
     "tabDataUsers": "Utilisateurs de données",
     "recentChanges": "Modifications récentes",
     "noRecentChanges": "Aucune modification pour l'instant."
+  },
+  "securityLog": {
+    "title": "Journal de sécurité",
+    "description": "Tentatives d'accès rejetées et non autorisées (OWASP A09) — les actions réussies sont enregistrées ailleurs, sur l'enregistrement concerné.",
+    "empty": "Aucune tentative d'accès rejetée enregistrée.",
+    "colWhen": "Quand",
+    "colReason": "Raison",
+    "colAttemptedUserId": "ID utilisateur tenté",
+    "colDetail": "Détail",
+    "reasonMissingUserId": "ID utilisateur manquant/invalide",
+    "reasonUnknownUser": "Utilisateur inconnu",
+    "reasonRoleNotPermitted": "Rôle non autorisé",
+    "reasonUnknown": "Raison inconnue"
   },
   "dataHolders": {
     "name": "Nom",

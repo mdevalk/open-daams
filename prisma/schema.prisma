@@ -1165,6 +1165,20 @@ model AuditLog {
   createdAt  DateTime @default(now())
 }
 
+// Records a rejected requireRole/requireRoleOrOwner/findActingUser call (see
+// src/lib/authz.ts) — the counterpart to the success-only logs above
+// (ApplicationLog etc.), closing the OWASP A09 "only successful actions are
+// logged" gap. attemptedUserId is deliberately NOT an FK: the whole point is
+// capturing attempts where the supplied id doesn't correspond to any real
+// user, so it can't be constrained to reference one.
+model AuthzFailureLog {
+  id              String   @id @default(cuid())
+  attemptedUserId String?
+  reason          String // "missing_user_id" | "unknown_user" | "role_not_permitted"
+  detail          String   @db.Text
+  createdAt       DateTime @default(now())
+}
+
 model Note {
   id            String      @id @default(cuid())
   applicationId String

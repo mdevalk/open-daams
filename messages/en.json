@@ -6,6 +6,7 @@
     "import": "Import JSON",
     "public": "Public register",
     "referenceData": "Reference data",
+    "securityLog": "Security log",
     "newApplication": "New application",
     "skipToContent": "Skip to main content",
     "testEnvironment": "Test environment",
@@ -615,6 +616,19 @@
     "tabDataUsers": "Data users",
     "recentChanges": "Recent changes",
     "noRecentChanges": "No changes yet."
+  },
+  "securityLog": {
+    "title": "Security log",
+    "description": "Rejected and unauthorized access attempts (OWASP A09) — successful actions are logged elsewhere, on the record they acted on.",
+    "empty": "No rejected access attempts recorded.",
+    "colWhen": "When",
+    "colReason": "Reason",
+    "colAttemptedUserId": "Attempted user id",
+    "colDetail": "Detail",
+    "reasonMissingUserId": "Missing/invalid user id",
+    "reasonUnknownUser": "Unknown user",
+    "reasonRoleNotPermitted": "Role not permitted",
+    "reasonUnknown": "Unknown reason"
   },
   "dataHolders": {
     "name": "Name",

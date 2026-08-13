@@ -6,6 +6,7 @@
     "import": "JSON importeren",
     "public": "Openbaar register",
     "referenceData": "Referentiegegevens",
+    "securityLog": "Beveiligingslog",
     "newApplication": "Nieuwe aanvraag",
     "skipToContent": "Ga naar hoofdinhoud",
     "testEnvironment": "Testomgeving",
@@ -615,6 +616,19 @@
     "tabDataUsers": "Datagebruikers",
     "recentChanges": "Recente wijzigingen",
     "noRecentChanges": "Nog geen wijzigingen."
+  },
+  "securityLog": {
+    "title": "Beveiligingslog",
+    "description": "Geweigerde en ongeautoriseerde toegangspogingen (OWASP A09) — geslaagde acties worden elders gelogd, op het record waarop ze zijn uitgevoerd.",
+    "empty": "Geen geweigerde toegangspogingen geregistreerd.",
+    "colWhen": "Wanneer",
+    "colReason": "Reden",
+    "colAttemptedUserId": "Gebruikte gebruikers-ID",
+    "colDetail": "Detail",
+    "reasonMissingUserId": "Ontbrekende/ongeldige gebruikers-ID",
+    "reasonUnknownUser": "Onbekende gebruiker",
+    "reasonRoleNotPermitted": "Rol niet toegestaan",
+    "reasonUnknown": "Onbekende reden"
   },
   "dataHolders": {
     "name": "Naam",
