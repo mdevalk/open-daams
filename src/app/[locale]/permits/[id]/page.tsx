@@ -424,9 +424,9 @@ export default async function PermitDetailPage({
           />
           <InvoicePanel
             permitId={permit.id}
+            locale={locale}
             invoices={permit.invoices as unknown as ComponentProps<typeof InvoicePanel>['invoices']}
             canIssue={['DECISION_MAKER', 'ADMIN'].includes(currentUser.role)}
-            canManage={['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(currentUser.role)}
             currentUserId={currentUser.id}
             hasInvoiceableAmounts={
               determineOutstandingInvoiceGroups({

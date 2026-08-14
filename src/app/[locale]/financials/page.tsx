@@ -39,10 +39,10 @@ export default async function FinancialsPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ tab?: string; status?: string; overdue?: string }>;
+  searchParams: Promise<{ tab?: string; status?: string; overdue?: string; permitId?: string }>;
 }) {
   const { locale } = await params;
-  const { tab: rawTab, status, overdue } = await searchParams;
+  const { tab: rawTab, status, overdue, permitId } = await searchParams;
   const tab = rawTab === 'invoices' ? 'invoices' : 'estimates';
   const t = await getTranslations({ locale, namespace: 'invoices' });
 
@@ -130,6 +130,7 @@ export default async function FinancialsPage({
     where: {
       ...(status ? { status: status as InvoiceStatus } : {}),
       ...(overdue ? { status: 'ISSUED', dueAt: { lt: new Date() } } : {}),
+      ...(permitId ? { permitId } : {}),
     },
     include: {
       permit: {
@@ -189,6 +190,15 @@ export default async function FinancialsPage({
         <p className="text-sm text-gray-500 mt-1">{t('subtitle')}</p>
       </div>
       {tabs}
+
+      {permitId && (
+        <div className="flex items-center justify-between rounded-lg border border-[#154273]/20 bg-[#e8f4fb] px-4 py-2 text-sm text-[#154273]">
+          <span>{t('filteredByPermit')}</span>
+          <a href={`/${locale}/financials?tab=invoices`} className="text-xs font-medium hover:underline">
+            {t('showAllInvoices')}
+          </a>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <a
