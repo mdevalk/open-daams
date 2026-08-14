@@ -139,6 +139,8 @@ export async function POST(req: NextRequest) {
                 description: item.description,
                 amount: item.amount,
                 currency: item.currency,
+                applicationId: body.applicationId,
+                dataHolderId: item.dataHolderId,
               })),
             },
             speOperatorId,

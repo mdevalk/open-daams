@@ -915,7 +915,7 @@ export default async function ApplicationDetailPage({
           <TransitionPanel application={application} currentUser={currentUser}>
             <DeadlineExtensionPanel application={application} currentUser={currentUser} embedded />
           </TransitionPanel>
-          <FeeEstimatePanel application={application} currentUser={currentUser} speOperators={speOperatorsForClient} />
+          <FeeEstimatePanel application={application} currentUser={currentUser} speOperators={speOperatorsForClient} dataHolders={dataHolders} />
           <DecisionCardPanel application={application} currentUser={currentUser} />
           <PermitPanel
             application={{ ...application, dataPermit: currentPermit }}

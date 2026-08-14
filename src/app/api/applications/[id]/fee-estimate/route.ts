@@ -6,9 +6,14 @@ import { LINE_CATEGORY_META } from '@/lib/financial-line-items';
 
 const MANAGE_ROLES = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'] as const;
 
-type LineItemInput = { category: FinancialLineCategory; amount: number | string; description?: string | null };
+type LineItemInput = {
+  category: FinancialLineCategory;
+  amount: number | string;
+  description?: string | null;
+  dataHolderId?: string | null;
+};
 
-function buildLineItemsCreate(items: LineItemInput[]) {
+function buildLineItemsCreate(items: LineItemInput[], applicationId: string) {
   return items
     .filter((item) => item.amount !== undefined && item.amount !== null && item.amount !== '')
     .map((item) => ({
@@ -16,6 +21,8 @@ function buildLineItemsCreate(items: LineItemInput[]) {
       glCode: LINE_CATEGORY_META[item.category].glCode,
       description: item.description || null,
       amount: Number(item.amount),
+      applicationId,
+      dataHolderId: item.category === 'DATA_HOLDER' ? item.dataHolderId || null : null,
     }));
 }
 
@@ -37,7 +44,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const application = await prisma.application.findUnique({ where: { id } });
     if (!application) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-    const lineItems = buildLineItemsCreate(body.lineItems ?? []);
+    const lineItems = buildLineItemsCreate(body.lineItems ?? [], id);
     const totalAmount = lineItems.reduce((sum, item) => sum + item.amount, 0);
 
     const feeEstimate = await prisma.feeEstimate.upsert({

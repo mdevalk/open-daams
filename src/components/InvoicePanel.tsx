@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { readErrorMessage, formatDate } from '@/lib/utils';
-import type { FinancialLineCategory } from '@prisma/client';
+import type { FinancialLineCategory, InvoiceRecipientType } from '@prisma/client';
 
 type InvoiceLineItem = { id: string; category: FinancialLineCategory; description: string | null; amount: string };
 
@@ -15,6 +15,8 @@ type Invoice = {
   lineItems: InvoiceLineItem[];
   totalAmount: string;
   status: 'DRAFT' | 'ISSUED' | 'PAID' | 'CANCELLED';
+  recipientType: InvoiceRecipientType;
+  recipientName: string | null;
   issuedAt: string;
   dueAt: string;
   paidAt: string | null;
@@ -32,20 +34,29 @@ function isOverdue(invoice: Invoice): boolean {
   return invoice.status === 'ISSUED' && new Date(invoice.dueAt) < new Date();
 }
 
+function recipientLabel(
+  invoice: Pick<Invoice, 'recipientType' | 'recipientName'>,
+  t: (key: string, values?: Record<string, string>) => string,
+): string {
+  if (invoice.recipientType === 'DATA_HOLDER') return t('recipientDataHolder', { name: invoice.recipientName ?? '—' });
+  if (invoice.recipientType === 'SPE_OPERATOR') return t('recipientSpeOperator', { name: invoice.recipientName ?? '—' });
+  return t('recipientApplicant');
+}
+
 export function InvoicePanel({
   permitId,
   invoices,
   canIssue,
   canManage,
   currentUserId,
-  hasFeesRecorded,
+  hasInvoiceableAmounts,
 }: {
   permitId: string;
   invoices: Invoice[];
   canIssue: boolean;
   canManage: boolean;
   currentUserId: string;
-  hasFeesRecorded: boolean;
+  hasInvoiceableAmounts: boolean;
 }) {
   const router = useRouter();
   const t = useTranslations('invoices');
@@ -54,7 +65,7 @@ export function InvoicePanel({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function issueInvoice() {
+  async function issueInvoices() {
     setLoading(true);
     setError(null);
     try {
@@ -96,9 +107,9 @@ export function InvoicePanel({
         <h2 className="font-semibold text-gray-900 text-sm">{t('panelTitle')}</h2>
         {canIssue && (
           <button
-            disabled={loading || !hasFeesRecorded}
-            onClick={issueInvoice}
-            title={hasFeesRecorded ? undefined : t('issueDisabled')}
+            disabled={loading || !hasInvoiceableAmounts}
+            onClick={issueInvoices}
+            title={hasInvoiceableAmounts ? undefined : t('issueDisabled')}
             className="text-xs text-[#01689b] hover:underline disabled:opacity-40 disabled:no-underline"
           >
             {t('issue')}
@@ -125,6 +136,15 @@ export function InvoicePanel({
                   >
                     {overdue ? t('overdue') : t(`status${invoice.status}`)}
                   </span>
+                </div>
+
+                <div className="flex items-center gap-2 text-xs text-gray-600">
+                  <span>{recipientLabel(invoice, t)}</span>
+                  {invoice.recipientType !== 'APPLICANT' && (
+                    <span className="rounded-full bg-purple-100 text-purple-700 px-2 py-0.5 font-medium">
+                      {t('selfBilled')}
+                    </span>
+                  )}
                 </div>
 
                 <ul className="text-xs text-gray-600 space-y-0.5">

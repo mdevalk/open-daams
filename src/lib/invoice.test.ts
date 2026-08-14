@@ -1,21 +1,52 @@
 import { describe, it, expect } from 'vitest';
-import { snapshotLineItems, sumLineItems, calculateDueDate, nextInvoiceNumber, type SourceLineItem } from '@/lib/invoice';
+import {
+  snapshotLineItems,
+  sumLineItems,
+  calculateDueDate,
+  nextInvoiceNumber,
+  groupByDataHolder,
+  type SourceLineItem,
+} from '@/lib/invoice';
 
 describe('snapshotLineItems', () => {
-  it('copies category/glCode/description/amount/currency, dropping identity fields', () => {
+  it('copies category/glCode/description/amount/currency/applicationId/dataHolderId, dropping identity fields', () => {
     const source = [
-      { category: 'ADMINISTRATIVE', glCode: '4010', description: null, amount: 100, currency: 'EUR' },
-      { category: 'SPE_SETUP', glCode: '4040', description: null, amount: 250.5, currency: 'EUR' },
+      { category: 'ADMINISTRATIVE', glCode: '4010', description: null, amount: 100, currency: 'EUR', applicationId: 'app1', dataHolderId: null },
+      { category: 'DATA_HOLDER', glCode: '4030', description: null, amount: 250.5, currency: 'EUR', applicationId: 'app1', dataHolderId: 'dh1' },
     ] as unknown as SourceLineItem[];
 
     expect(snapshotLineItems(source)).toEqual([
-      { category: 'ADMINISTRATIVE', glCode: '4010', description: null, amount: 100, currency: 'EUR' },
-      { category: 'SPE_SETUP', glCode: '4040', description: null, amount: 250.5, currency: 'EUR' },
+      { category: 'ADMINISTRATIVE', glCode: '4010', description: null, amount: 100, currency: 'EUR', applicationId: 'app1', dataHolderId: null },
+      { category: 'DATA_HOLDER', glCode: '4030', description: null, amount: 250.5, currency: 'EUR', applicationId: 'app1', dataHolderId: 'dh1' },
     ]);
   });
 
   it('returns an empty array for no source items', () => {
     expect(snapshotLineItems([])).toEqual([]);
+  });
+});
+
+describe('groupByDataHolder', () => {
+  it('groups DATA_HOLDER-category items by dataHolderId', () => {
+    const items = [
+      { category: 'DATA_HOLDER', dataHolderId: 'dh1', amount: 100 },
+      { category: 'DATA_HOLDER', dataHolderId: 'dh2', amount: 50 },
+      { category: 'DATA_HOLDER', dataHolderId: 'dh1', amount: 25 },
+    ] as unknown as SourceLineItem[];
+
+    const groups = groupByDataHolder(items);
+    expect(groups.size).toBe(2);
+    expect(groups.get('dh1')).toHaveLength(2);
+    expect(groups.get('dh2')).toHaveLength(1);
+  });
+
+  it('drops non-DATA_HOLDER items and items with no dataHolderId', () => {
+    const items = [
+      { category: 'ADMINISTRATIVE', dataHolderId: null, amount: 100 },
+      { category: 'DATA_HOLDER', dataHolderId: null, amount: 50 },
+    ] as unknown as SourceLineItem[];
+
+    expect(groupByDataHolder(items).size).toBe(0);
   });
 });
 
@@ -49,5 +80,10 @@ describe('nextInvoiceNumber', () => {
     const year = new Date().getFullYear();
     expect(nextInvoiceNumber(7)).toBe(`INV-NL-${year}-0007`);
     expect(nextInvoiceNumber(1234)).toBe(`INV-NL-${year}-1234`);
+  });
+
+  it('accepts a custom prefix, for self-billing invoices', () => {
+    const year = new Date().getFullYear();
+    expect(nextInvoiceNumber(7, 'SBI-NL')).toBe(`SBI-NL-${year}-0007`);
   });
 });

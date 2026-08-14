@@ -513,6 +513,7 @@ model Application {
   attachments        Attachment[]
   relatedDataPermits RelatedDataPermit[]
   tabulationPlans    TabulationPlan[]
+  lineItems          FinancialLineItem[]
 
   @@index([status])
   @@index([decisionDeadline])
@@ -1007,10 +1008,26 @@ enum InvoiceStatus {
   CANCELLED
 }
 
+// Who the invoice bills. APPLICANT is the total-cost invoice sent to the
+// applicant (unchanged, all categories) — DATA_HOLDER/SPE_OPERATOR are
+// self-billing invoices HDAB issues on their behalf for their own cost share
+// (DATA_HOLDER / SPE_SETUP+SPE_USAGE category line items respectively). These
+// are additional accounting, not a subset carved out of the applicant total.
+enum InvoiceRecipientType {
+  APPLICANT
+  DATA_HOLDER
+  SPE_OPERATOR
+}
+
 model Invoice {
-  id            String  @id @default(cuid())
-  invoiceNumber String  @unique // e.g. INV-NL-2026-0001
-  provisional   Boolean @default(false)
+  id            String               @id @default(cuid())
+  invoiceNumber String               @unique // e.g. INV-NL-2026-0001 / SBI-NL-2026-0001
+  provisional   Boolean              @default(false)
+  recipientType InvoiceRecipientType @default(APPLICANT)
+  // Frozen at issuance for DATA_HOLDER/SPE_OPERATOR invoices, same rationale
+  // as GrantedDataset.dataHolderName — must never retroactively change if the
+  // data holder/operator is later renamed in the reference-data registry.
+  recipientName String?
 
   // Set once a permit exists (final invoice)
   permitId String?
@@ -1022,6 +1039,14 @@ model Invoice {
   application   Application? @relation(fields: [applicationId], references: [id])
   feeEstimateId String?      @unique
   feeEstimate   FeeEstimate? @relation(fields: [feeEstimateId], references: [id])
+
+  // Set only for DATA_HOLDER/SPE_OPERATOR self-billing invoices — live FK,
+  // informational only, same as GrantedDataset.dataHolderId (recipientName
+  // above is what's authoritative once issued).
+  dataHolderId String?
+  dataHolder   DataHolder?  @relation(fields: [dataHolderId], references: [id])
+  speOperatorId String?
+  speOperator   SpeOperator? @relation(fields: [speOperatorId], references: [id])
 
   currency    String              @default("EUR")
   lineItems   FinancialLineItem[]
@@ -1066,6 +1091,19 @@ model FinancialLineItem {
   amount      Decimal               @db.Decimal(10, 2)
   currency    String                @default("EUR")
 
+  // Direct link to the application this cost belongs to, independent of
+  // which record (FeeEstimate/DataPermit/Invoice) currently owns this
+  // snapshot copy — lets "everything ever costed for this application" be
+  // queried without joining through whichever owner happens to be set.
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  // Set only on DATA_HOLDER-category rows, to say which data holder this
+  // cost belongs to (a permit can have more than one) — live FK,
+  // informational only, same as GrantedDataset.dataHolderId.
+  dataHolderId String?
+  dataHolder   DataHolder? @relation(fields: [dataHolderId], references: [id])
+
   feeEstimateId String?
   feeEstimate   FeeEstimate? @relation(fields: [feeEstimateId], references: [id], onDelete: Cascade)
   dataPermitId  String?
@@ -1075,6 +1113,8 @@ model FinancialLineItem {
 
   createdAt DateTime @default(now())
 
+  @@index([applicationId])
+  @@index([dataHolderId])
   @@index([feeEstimateId])
   @@index([dataPermitId])
   @@index([invoiceId])
@@ -1225,6 +1265,8 @@ model DataHolder {
   grantedDatasets        GrantedDataset[]
   extractionRequests     DataExtractionRequest[]
   trustedForApplications Application[]
+  lineItems              FinancialLineItem[]
+  invoices               Invoice[]
 }
 
 // The party actually providing/hosting the SPE technology. Distinct from
@@ -1256,6 +1298,7 @@ model SpeOperator {
   permits            DataPermit[]
   feeEstimates       FeeEstimate[]
   types              SpeType[]
+  invoices           Invoice[]
 }
 
 // A tier/product an SPE operator offers (e.g. "Standard", "High-security"),

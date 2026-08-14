@@ -157,6 +157,8 @@ export async function PATCH(
               description: item.description,
               amount: item.amount,
               currency: item.currency,
+              applicationId: permit.applicationId,
+              dataHolderId: item.dataHolderId,
             })),
           },
           speOperatorId,

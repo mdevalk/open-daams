@@ -21,6 +21,7 @@ type Props = {
   };
   currentUser: User;
   speOperators: { id: string; name: string; types: SpeType[] }[];
+  dataHolders: { id: string; name: string }[];
 };
 
 const INVOICE_STATUS_STYLES: Record<string, string> = {
@@ -41,14 +42,14 @@ const STATUS_STYLES: Record<string, string> = {
 // derived from the chosen SpeType, not typed in freely.
 const MANUAL_CATEGORIES: FinancialLineCategory[] = ['ADMINISTRATIVE', 'DATA_PREPARATION', 'DATA_HOLDER', 'ADDITIONAL_SERVICES'];
 
-type Row = { key: string; category: FinancialLineCategory; amount: string; description: string };
+type Row = { key: string; category: FinancialLineCategory; amount: string; description: string; dataHolderId: string };
 
 function fmtAmount(v: unknown, currency: string): string {
   if (v === null || v === undefined) return '—';
   return new Intl.NumberFormat('nl-NL', { style: 'currency', currency }).format(Number(v));
 }
 
-export function FeeEstimatePanel({ application, currentUser, speOperators }: Props) {
+export function FeeEstimatePanel({ application, currentUser, speOperators, dataHolders }: Props) {
   const router = useRouter();
   const t = useTranslations('feeEstimatePanel');
   const tc = useTranslations('financialLineCategory');
@@ -63,7 +64,13 @@ export function FeeEstimatePanel({ application, currentUser, speOperators }: Pro
   const [rows, setRows] = useState<Row[]>(() =>
     (estimate?.lineItems ?? [])
       .filter((li) => li.category !== 'SPE_SETUP' && li.category !== 'SPE_USAGE')
-      .map((li) => ({ key: li.id, category: li.category, amount: li.amount.toString(), description: li.description ?? '' })),
+      .map((li) => ({
+        key: li.id,
+        category: li.category,
+        amount: li.amount.toString(),
+        description: li.description ?? '',
+        dataHolderId: li.dataHolderId ?? '',
+      })),
   );
   const [notes, setNotes] = useState(estimate?.notes ?? '');
   const [speOperatorId, setSpeOperatorId] = useState(estimate?.speOperatorId ?? '');
@@ -92,7 +99,7 @@ export function FeeEstimatePanel({ application, currentUser, speOperators }: Pro
   }
 
   function addRow() {
-    setRows((r) => [...r, { key: crypto.randomUUID(), category: 'ADMINISTRATIVE', amount: '', description: '' }]);
+    setRows((r) => [...r, { key: crypto.randomUUID(), category: 'ADMINISTRATIVE', amount: '', description: '', dataHolderId: '' }]);
   }
 
   function updateRow(key: string, patch: Partial<Row>) {
@@ -154,7 +161,12 @@ export function FeeEstimatePanel({ application, currentUser, speOperators }: Pro
     setError(null);
     try {
       const lineItems = [
-        ...rows.filter((r) => r.amount.trim() !== '').map((r) => ({ category: r.category, amount: r.amount, description: r.description || undefined })),
+        ...rows.filter((r) => r.amount.trim() !== '').map((r) => ({
+          category: r.category,
+          amount: r.amount,
+          description: r.description || undefined,
+          dataHolderId: r.category === 'DATA_HOLDER' && r.dataHolderId ? r.dataHolderId : undefined,
+        })),
         ...(speSetupFee.trim() !== '' ? [{ category: 'SPE_SETUP' as const, amount: speSetupFee }] : []),
         ...(speUsageFee.trim() !== '' ? [{ category: 'SPE_USAGE' as const, amount: speUsageFee }] : []),
       ];
@@ -219,6 +231,7 @@ export function FeeEstimatePanel({ application, currentUser, speOperators }: Pro
                 {tc(item.category)}
                 {(item.category === 'SPE_SETUP' || item.category === 'SPE_USAGE') && estimate.speType && ` — ${estimate.speType.name}`}
                 {(item.category === 'SPE_SETUP' || item.category === 'SPE_USAGE') && estimate.speOperator && ` (${estimate.speOperator.name})`}
+                {item.category === 'DATA_HOLDER' && item.dataHolderId && ` — ${dataHolders.find((dh) => dh.id === item.dataHolderId)?.name ?? item.dataHolderId}`}
               </span>
               <span>{fmtAmount(item.amount, item.currency)}</span>
             </div>
@@ -289,6 +302,18 @@ export function FeeEstimatePanel({ application, currentUser, speOperators }: Pro
                   <option key={cat} value={cat}>{tc(cat)}</option>
                 ))}
               </select>
+              {row.category === 'DATA_HOLDER' && (
+                <select
+                  value={row.dataHolderId}
+                  onChange={(e) => updateRow(row.key, { dataHolderId: e.target.value })}
+                  className="rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
+                >
+                  <option value="">{t('noneSelected')}</option>
+                  {dataHolders.map((dh) => (
+                    <option key={dh.id} value={dh.id}>{dh.name}</option>
+                  ))}
+                </select>
+              )}
               <input
                 type="number" step="0.01" placeholder={t('amountPlaceholder')} value={row.amount}
                 onChange={(e) => updateRow(row.key, { amount: e.target.value })}

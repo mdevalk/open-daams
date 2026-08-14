@@ -9,6 +9,7 @@ import { PermitChangeRequestPanel } from '@/components/PermitChangeRequestPanel'
 import { PermitLifecyclePanel } from '@/components/PermitLifecyclePanel';
 import { PERMIT_STATUS_COLORS, formatPermitId } from '@/lib/permit';
 import { groupDatasetsByHolder } from '@/lib/permit-signing';
+import { determineOutstandingInvoiceGroups } from '@/lib/invoice';
 import { formatDate, formatDateTime, purposeLabel, serializePrisma } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
@@ -426,7 +427,13 @@ export default async function PermitDetailPage({
             canIssue={['DECISION_MAKER', 'ADMIN'].includes(currentUser.role)}
             canManage={['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(currentUser.role)}
             currentUserId={currentUser.id}
-            hasFeesRecorded={permit.lineItems.length > 0}
+            hasInvoiceableAmounts={
+              determineOutstandingInvoiceGroups({
+                lineItems: permit.lineItems,
+                existingInvoices: permit.invoices,
+                speOperatorId: permit.speOperatorId,
+              }).length > 0
+            }
           />
           {permit.application?.type === 'DATA_ACCESS_APPLICATION' && (
             <SpeProvisioningPanel
