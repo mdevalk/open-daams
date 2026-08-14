@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { prisma } from '@/lib/db';
-import { InvoiceStatus, FeeEstimateStatus } from '@prisma/client';
-import { formatDate, formatDateTime } from '@/lib/utils';
+import { InvoiceStatus, FeeEstimateStatus, InvoiceRecipientType } from '@prisma/client';
+import { formatDateTime } from '@/lib/utils';
 import { formatPermitId } from '@/lib/permit';
 
 export const dynamic = 'force-dynamic';
@@ -23,6 +23,15 @@ const STATUSES: InvoiceStatus[] = ['ISSUED', 'PAID', 'DRAFT', 'CANCELLED'];
 
 function isOverdue(invoice: { status: InvoiceStatus; dueAt: Date }): boolean {
   return invoice.status === 'ISSUED' && invoice.dueAt < new Date();
+}
+
+function recipientLabel(
+  invoice: { recipientType: InvoiceRecipientType; recipientName: string | null },
+  t: (key: string, values?: Record<string, string>) => string,
+): string {
+  if (invoice.recipientType === 'DATA_HOLDER') return t('recipientDataHolder', { name: invoice.recipientName ?? '—' });
+  if (invoice.recipientType === 'SPE_OPERATOR') return t('recipientSpeOperator', { name: invoice.recipientName ?? '—' });
+  return t('recipientApplicant');
 }
 
 export default async function FinancialsPage({
@@ -139,6 +148,30 @@ export default async function FinancialsPage({
     orderBy: { createdAt: 'desc' },
   });
 
+  // Group invoices issued together — a permit's "Issue invoices" click can
+  // produce one applicant invoice plus one self-billing invoice per data
+  // holder/SPE operator, and those belong together visually. Grouped by
+  // permitId when set, falling back to applicationId for provisional
+  // (pre-permit) invoices, which are always solo. Iterating the
+  // already createdAt-desc-sorted list and using a Map preserves "most
+  // recently active permit first" group ordering for free.
+  type InvoiceRow = (typeof invoices)[number];
+  const groupsMap = new Map<string, { key: string; permit: InvoiceRow['permit']; reference: string; invoices: InvoiceRow[] }>();
+  for (const invoice of invoices) {
+    const key = invoice.permit ? `permit-${invoice.permit.id}` : `application-${invoice.application?.id}`;
+    let group = groupsMap.get(key);
+    if (!group) {
+      const applicant = invoice.permit?.application?.applicant ?? invoice.application?.applicant;
+      const reference = invoice.permit
+        ? `${invoice.permit.application?.referenceNumber} — ${invoice.permit.application?.title}`
+        : `${invoice.application?.referenceNumber} — ${invoice.application?.title}`;
+      group = { key, permit: invoice.permit, reference: `${applicant?.name ?? '—'} — ${reference}`, invoices: [] };
+      groupsMap.set(key, group);
+    }
+    group.invoices.push(invoice);
+  }
+  const invoiceGroups = [...groupsMap.values()];
+
   const counts = await prisma.invoice.groupBy({ by: ['status'], _count: true });
   const countMap: Record<string, number> = {};
   counts.forEach((c) => { countMap[c.status] = c._count; });
@@ -208,59 +241,53 @@ export default async function FinancialsPage({
         </div>
       ) : (
         <div className="space-y-4">
-          {invoices.map((invoice) => {
-            const overdueRow = isOverdue(invoice);
-            const applicant = invoice.permit?.application?.applicant ?? invoice.application?.applicant;
-            const reference = invoice.permit
-              ? `${formatPermitId(invoice.permit.permitNumber, invoice.permit.version)} — ${invoice.permit.application?.referenceNumber} — ${invoice.permit.application?.title}`
-              : `${invoice.application?.referenceNumber} — ${invoice.application?.title}`;
-            const href = `/${locale}/financials/${invoice.id}`;
-            return (
-              <a
-                key={invoice.id}
-                href={href}
-                className="block rounded-lg border border-gray-200 bg-white p-4 hover:border-[#01689b] transition-colors"
-              >
-                <div className="flex items-start justify-between gap-4 mb-3">
-                  <div>
-                    <span className="font-mono text-sm font-bold text-gray-900">{invoice.invoiceNumber}</span>
-                    {invoice.provisional && (
-                      <span className="ml-2 inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium bg-purple-100 text-purple-700">
-                        {t('provisional')}
-                      </span>
-                    )}
-                    <p className="text-xs text-gray-500 mt-0.5">{reference}</p>
-                  </div>
-                  <span
-                    className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold ${
-                      overdueRow ? 'bg-amber-100 text-amber-700' : STATUS_COLORS[invoice.status]
-                    }`}
-                  >
-                    {overdueRow ? t('overdue') : t(`status${invoice.status}`)}
-                  </span>
-                </div>
-                <div className="grid grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <p className="text-xs text-gray-500">{t('applicant')}</p>
-                    <p className="font-medium">{applicant?.name ?? '—'}</p>
-                    <p className="text-xs text-gray-400">{applicant?.dataUser?.name}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">{t('amount')}</p>
-                    <p className="font-medium">{invoice.totalAmount.toString()} {invoice.currency}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">{t('dueDate')}</p>
-                    <p className="font-medium">{formatDate(invoice.dueAt)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">{t('issuedBy')}</p>
-                    <p className="font-medium">{invoice.createdBy.name}</p>
-                  </div>
-                </div>
-              </a>
-            );
-          })}
+          {invoiceGroups.map((group) => (
+            <div key={group.key} className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+              <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50">
+                {group.permit ? (
+                  <a href={`/${locale}/permits/${group.permit.id}`} className="font-mono text-sm font-bold text-gray-900 hover:underline">
+                    {formatPermitId(group.permit.permitNumber, group.permit.version)}
+                  </a>
+                ) : (
+                  <span className="font-mono text-sm font-bold text-gray-900">{t('provisional')}</span>
+                )}
+                <span className="text-xs text-gray-500 ml-2">{group.reference}</span>
+              </div>
+              <ul className="divide-y divide-gray-100">
+                {group.invoices.map((invoice) => {
+                  const overdueRow = isOverdue(invoice);
+                  return (
+                    <li key={invoice.id}>
+                      <a
+                        href={`/${locale}/financials/${invoice.id}`}
+                        className="flex items-center justify-between gap-4 px-4 py-2.5 hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="font-mono text-xs font-medium text-gray-700 flex-shrink-0">{invoice.invoiceNumber}</span>
+                          <span className="text-xs text-gray-500 truncate">{recipientLabel(invoice, t)}</span>
+                          {invoice.recipientType !== 'APPLICANT' && (
+                            <span className="flex-shrink-0 inline-flex items-center rounded-full bg-purple-100 text-purple-700 px-2 py-0.5 text-xs font-medium">
+                              {t('selfBilled')}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 flex-shrink-0">
+                          <span className="text-sm font-medium text-gray-900">{invoice.totalAmount.toString()} {invoice.currency}</span>
+                          <span
+                            className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold ${
+                              overdueRow ? 'bg-amber-100 text-amber-700' : STATUS_COLORS[invoice.status]
+                            }`}
+                          >
+                            {overdueRow ? t('overdue') : t(`status${invoice.status}`)}
+                          </span>
+                        </div>
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
         </div>
       )}
     </div>
