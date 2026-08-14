@@ -106,6 +106,11 @@ export type PermitPdfData = {
   speOperatorProviderName?: string | null;
   speTypeId?: string | null;
   speTypeName?: string | null;
+  // Frozen at issuance (D6.4 R7.3.2/R7.4.2) — read these, not
+  // application.purposeCategory below, which can drift after issuance.
+  purposeCategory?: string | null;
+  purposeCategories?: string[] | null;
+  electronicHealthDataFormat?: string | null;
   application: {
     referenceNumber: string;
     title: string;
@@ -335,7 +340,7 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
     doc.field('Naam organisatie', app.applicant.organisation);
     doc.field('Vertegenwoordiger (naam)', app.applicant.name);
     doc.field('E-mail', app.applicant.email);
-    if (app.purposeCategory === 'SCIENTIFIC_RESEARCH') {
+    if (permit.purposeCategory === 'SCIENTIFIC_RESEARCH') {
       doc.field('Hoofdonderzoeker', app.applicant.name);
     }
     doc.field('Verwerkingsverantwoordelijke', app.applicant.organisation);
@@ -448,8 +453,8 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
   doc.spacer(6);
 
   doc.subheading('6.3  Beschrijving van het doel van gebruik');
-  const purposeText = app?.purposeCategory
-    ? (PURPOSE_LABELS[app.purposeCategory] ?? app.purposeCategory)
+  const purposeText = permit.purposeCategory
+    ? (PURPOSE_LABELS[permit.purposeCategory] ?? permit.purposeCategory)
     : '—';
   doc.paragraph(`HDAB-NL verleent ${isDataRequest ? 'de goedkeuring' : 'de vergunning'} voor het volgende doeleinde: ${purposeText}.`);
   if (app?.legalBasis) {
@@ -635,6 +640,9 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
       revocationAt: permit.revocationAt ?? null,
       signature: permit.signature,
       signingKeyId: permit.signingKeyId,
+      purposeCategory: permit.purposeCategory ?? null,
+      purposeCategories: permit.purposeCategories ?? [],
+      electronicHealthDataFormat: permit.electronicHealthDataFormat ?? null,
       speOperator: permit.speOperatorId
         ? {
             id: permit.speOperatorId,

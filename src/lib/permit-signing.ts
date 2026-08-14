@@ -294,14 +294,24 @@ export type DigitalPermitDocument = ReturnType<typeof canonicalPermitPayload> & 
   signature: string | null;
   signingKeyId: string | null;
   algorithm: string;
+  // Frozen at issuance (D6.4 R7.3.2/R7.4.2 — structured decision elements
+  // for future reporting/publication), but deliberately kept OUTSIDE the
+  // signed canonical payload above: adding them there would change what
+  // every already-issued permit's stored signature was computed over,
+  // breaking verification for historical permits. Unsigned/display fields,
+  // same treatment as status/revocation below.
+  purposeCategory: string | null;
+  purposeCategories: string[];
+  electronicHealthDataFormat: string | null;
 };
 
 /**
  * Assembles the full exportable "digital permit" document: the signed
  * canonical fields (now including speOperator/speType — R13.0.1),
- * plus unsigned/live display fields (status, revocation). Used by both the
- * JSON export route and the PDF's embedded attachment, so there's a single
- * definition of what the digital permit document contains.
+ * plus unsigned/live display fields (status, revocation, purpose/data
+ * format). Used by both the JSON export route and the PDF's embedded
+ * attachment, so there's a single definition of what the digital permit
+ * document contains.
  */
 export function buildDigitalPermitDocument(permit: SignablePermit & {
   status: DataPermitStatus;
@@ -309,6 +319,9 @@ export function buildDigitalPermitDocument(permit: SignablePermit & {
   revocationAt: Date | null;
   signature: string | null;
   signingKeyId: string | null;
+  purposeCategory: string | null;
+  purposeCategories: string[];
+  electronicHealthDataFormat: string | null;
 }): DigitalPermitDocument {
   const payload = canonicalPermitPayload(permit, permit.signingKeyId ?? '');
   return {
@@ -320,5 +333,8 @@ export function buildDigitalPermitDocument(permit: SignablePermit & {
     signature: permit.signature,
     signingKeyId: permit.signingKeyId,
     algorithm: SIGNING_ALGORITHM,
+    purposeCategory: permit.purposeCategory,
+    purposeCategories: permit.purposeCategories,
+    electronicHealthDataFormat: permit.electronicHealthDataFormat,
   };
 }

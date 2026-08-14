@@ -166,6 +166,10 @@ export async function PATCH(
           speOperatorName,
           speOperatorProviderName,
           speTypeName,
+          // Frozen at issuance (D6.4 R7.3.2/R7.4.2), carried forward unchanged.
+          purposeCategory: permit.purposeCategory,
+          purposeCategories: permit.purposeCategories,
+          electronicHealthDataFormat: permit.electronicHealthDataFormat,
         },
       });
 

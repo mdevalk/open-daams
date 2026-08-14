@@ -940,6 +940,15 @@ model DataPermit {
   speOperatorProviderName String?
   speTypeName             String?
 
+  // Frozen snapshot of the application's purpose/data-format at issuance —
+  // same rationale as speOperatorName above (D6.4 R7.3.2/R7.4.2: the
+  // decision's structured elements, for future reporting/publication under
+  // Art. 58(1)/57(1)(j), must be part of the signed document, not a live
+  // join to a record that could later change).
+  purposeCategory            String?
+  purposeCategories          String[]
+  electronicHealthDataFormat String?
+
   issuedAt  DateTime @default(now())
   updatedAt DateTime @updatedAt
 

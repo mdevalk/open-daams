@@ -268,7 +268,8 @@ export default async function PermitDetailPage({
           <section className="rounded-xl border border-gray-200 bg-white p-5">
             <h2 className="font-semibold text-gray-900 mb-4">{t('scopeTitle')} (§6.2–6.4)</h2>
             <dl className="grid grid-cols-2 gap-4 text-sm">
-              <Field label={t('purpose')} value={app?.purposeCategory ? purposeLabel(app.purposeCategory) : null} wide />
+              <Field label={t('purpose')} value={permit.purposeCategory ? purposeLabel(permit.purposeCategory) : null} wide />
+              <Field label={t('anonymisationLevel')} value={permit.electronicHealthDataFormat} />
               <Field label={t('legalBasis')} value={app?.legalBasis} wide />
               <Field
                 label={t('datasets')}

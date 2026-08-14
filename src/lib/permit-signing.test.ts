@@ -160,6 +160,9 @@ describe('buildDigitalPermitDocument', () => {
       revocationAt: new Date('2026-06-01T00:00:00Z'),
       signature: 'sig',
       signingKeyId: 'kid-1',
+      purposeCategory: null,
+      purposeCategories: [],
+      electronicHealthDataFormat: null,
     });
 
     expect(doc.permitId).toBe('DP-NL-2025-0001-v2');
@@ -185,6 +188,9 @@ describe('buildDigitalPermitDocument', () => {
       revocationAt: null,
       signature: null,
       signingKeyId: null,
+      purposeCategory: null,
+      purposeCategories: [],
+      electronicHealthDataFormat: null,
     });
 
     expect(doc.issuerKid).toBe('');

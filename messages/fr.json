@@ -320,6 +320,7 @@
     "projectTitle": "Titre du projet",
     "projectDescription": "Description du projet",
     "purpose": "Finalité d'utilisation",
+    "anonymisationLevel": "Niveau d'anonymisation",
     "legalBasis": "Base juridique",
     "datasets": "Jeux de données",
     "datasetId": "ID du jeu de données",

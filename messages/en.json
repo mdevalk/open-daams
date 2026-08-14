@@ -320,6 +320,7 @@
     "projectTitle": "Project title",
     "projectDescription": "Project description",
     "purpose": "Purpose of use",
+    "anonymisationLevel": "Anonymisation level",
     "legalBasis": "Legal basis",
     "datasets": "Datasets",
     "datasetId": "Dataset ID",

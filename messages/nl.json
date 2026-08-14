@@ -320,6 +320,7 @@
     "projectTitle": "Projecttitel",
     "projectDescription": "Projectomschrijving",
     "purpose": "Doel van gebruik",
+    "anonymisationLevel": "Anonimiseringsniveau",
     "legalBasis": "Rechtsgrondslag",
     "datasets": "Datasets",
     "datasetId": "Dataset-ID",

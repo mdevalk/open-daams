@@ -148,6 +148,10 @@ export async function POST(req: NextRequest) {
             speOperatorName: speOperator ? speOperator.name : null,
             speOperatorProviderName: speOperator ? speOperator.providerName : null,
             speTypeName: speType ? speType.name : null,
+            // Frozen at issuance (D6.4 R7.3.2/R7.4.2) — see the schema comment.
+            purposeCategory: application.purposeCategory,
+            purposeCategories: application.purposeCategories,
+            electronicHealthDataFormat: application.electronicHealthDataFormat,
           },
         });
         break;
