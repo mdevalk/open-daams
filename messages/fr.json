@@ -904,7 +904,9 @@
     "authorityLabel": "Autorité chargée du dossier (facultatif)",
     "authorityPlaceholder": "ex. HDAB-NL (réclamation) ou tribunal de La Haye",
     "loading": "En cours...",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "downloadDecisionPdf": "Télécharger la décision signée (PDF)",
+    "attachFile": "+ Joindre une correspondance/un document"
   },
   "appealStatus": {
     "SUBMITTED": "Soumis",

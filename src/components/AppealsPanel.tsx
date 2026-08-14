@@ -3,13 +3,27 @@
 import { useTranslations } from 'next-intl';
 
 import { useState } from 'react';
-import { Appeal } from '@prisma/client';
+import { AppealStatus } from '@prisma/client';
 import { useRouter } from 'next/navigation';
 import { formatDate, readErrorMessage } from '@/lib/utils';
 
+type AppealAttachment = { id: string; filename: string; mimeType: string | null };
+
+type AppealSummary = {
+  id: string;
+  submittedAt: Date | string;
+  submittedBy: string;
+  grounds: string;
+  authority: string | null;
+  status: AppealStatus;
+  decisionSummary: string | null;
+  signedAt: Date | string | null; // proxy for "has a decision PDF" — the raw pdf Bytes are never sent to the client
+  attachments: AppealAttachment[];
+};
+
 type Props = {
   applicationId: string;
-  appeals: Appeal[];
+  appeals: AppealSummary[];
   canManage: boolean;
   currentUserId: string;
 };
@@ -83,6 +97,28 @@ export function AppealsPanel({ applicationId, appeals, canManage, currentUserId 
     }
   }
 
+  async function attachFile(appealId: string, file: File) {
+    setLoading(true);
+    setError(null);
+    try {
+      const buf = await file.arrayBuffer();
+      let binary = '';
+      new Uint8Array(buf).forEach((b) => { binary += String.fromCharCode(b); });
+      const content = btoa(binary);
+      const res = await fetch(`/api/appeals/${appealId}/attachments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: file.name, mimeType: file.type || undefined, content, actingUserId: currentUserId }),
+      });
+      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
+      router.refresh();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : terr('unexpected'));
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="rounded border border-gray-200 bg-white p-4 space-y-3">
       <div className="flex items-center justify-between">
@@ -115,6 +151,49 @@ export function AppealsPanel({ applicationId, appeals, canManage, currentUserId 
             {appeal.decisionSummary && (
               <p className="text-xs text-gray-700 border-t border-gray-100 pt-1 mt-1">{appeal.decisionSummary}</p>
             )}
+            {appeal.signedAt && (
+              <a
+                href={`/api/appeals/${appeal.id}/pdf?userId=${currentUserId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-[#01689b] hover:underline inline-block"
+              >
+                {t('downloadDecisionPdf')}
+              </a>
+            )}
+
+            {appeal.attachments.length > 0 && (
+              <ul className="text-xs text-gray-600 space-y-0.5 border-t border-gray-100 pt-1 mt-1">
+                {appeal.attachments.map((a) => (
+                  <li key={a.id}>
+                    <a
+                      href={`/api/attachments/${a.id}?userId=${currentUserId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#01689b] hover:underline"
+                    >
+                      📎 {a.filename}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {canManage && (
+              <label className="text-xs text-[#01689b] hover:underline cursor-pointer inline-block pt-1">
+                {t('attachFile')}
+                <input
+                  type="file"
+                  className="hidden"
+                  disabled={loading}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    e.target.value = '';
+                    if (file) attachFile(appeal.id, file);
+                  }}
+                />
+              </label>
+            )}
+
             {canManage && NEXT_STATUSES[appeal.status]?.length > 0 && (
               <div className="flex gap-2 pt-1">
                 {NEXT_STATUSES[appeal.status].map((next) => (

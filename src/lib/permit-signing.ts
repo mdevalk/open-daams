@@ -3,7 +3,7 @@ import { sha512 } from '@noble/hashes/sha512';
 import { concatBytes } from '@noble/hashes/utils';
 import { readFileSync } from 'fs';
 import path from 'path';
-import { DataPermitStatus, DecisionOutcome } from '@prisma/client';
+import { AppealStatus, DataPermitStatus, DecisionOutcome } from '@prisma/client';
 import { formatPermitId } from './permit';
 
 // Required by @noble/ed25519 v2's sync sign/verify (no Web Crypto dependency).
@@ -245,6 +245,42 @@ export async function signDecisionCard(
   const { d, kid } = loadPrivateKeyJwk();
   const privateKeyBytes = fromBase64Url(d);
   const payload = canonicalDecisionCardPayload(card, kid);
+  const encoded = new TextEncoder().encode(stableStringify(payload));
+  const sigBytes = ed.sign(encoded, privateKeyBytes);
+  return { signature: toBase64Url(sigBytes), signedAt: new Date(), signingKeyId: kid };
+}
+
+export type SignableAppealDecision = {
+  appealId: string;
+  applicationId: string;
+  status: AppealStatus;
+  decisionAt: Date;
+};
+
+/**
+ * The signed subset of a terminal appeal decision (D6.4 R10.0.6 — the
+ * formal decision on an appeal must be a signed document). Both UPHELD and
+ * REJECTED are equally final outcomes for an appeal — unlike the decision
+ * card's positive/negative asymmetry, there's no "pending further action"
+ * state for either, so both get signed. WITHDRAWN isn't a decision on the
+ * merits, so it's never passed here.
+ */
+export function canonicalAppealDecisionPayload(appeal: SignableAppealDecision, issuerKid: string) {
+  return {
+    appealId: appeal.appealId,
+    applicationId: appeal.applicationId,
+    status: appeal.status,
+    decisionAt: appeal.decisionAt.toISOString(),
+    issuerKid,
+  };
+}
+
+export async function signAppealDecision(
+  appeal: SignableAppealDecision,
+): Promise<{ signature: string; signedAt: Date; signingKeyId: string }> {
+  const { d, kid } = loadPrivateKeyJwk();
+  const privateKeyBytes = fromBase64Url(d);
+  const payload = canonicalAppealDecisionPayload(appeal, kid);
   const encoded = new TextEncoder().encode(stableStringify(payload));
   const sigBytes = ed.sign(encoded, privateKeyBytes);
   return { signature: toBase64Url(sigBytes), signedAt: new Date(), signingKeyId: kid };

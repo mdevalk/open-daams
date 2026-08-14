@@ -1,4 +1,5 @@
 import { DecisionOutcome } from '@prisma/client';
+import { addWeeks } from 'date-fns';
 import { Doc, C, fmt } from './generate-permit-pdf';
 import { APP_NAME } from './branding';
 
@@ -89,6 +90,8 @@ export async function generateDecisionPdf(decision: DecisionPdfData): Promise<Ui
     'Tegen dit besluit kan bezwaar worden gemaakt en, aansluitend, beroep worden ingesteld bij de ' +
     'bevoegde Nederlandse bestuursrechter, overeenkomstig de Algemene wet bestuursrecht.',
   );
+  doc.field('Termijn', `${fmt(addWeeks(decision.decisionAt, 6))} (6 weken na dagtekening, Awb art. 6:7)`);
+  doc.field('Indienen bij', 'HDAB-NL, info@hdab.nl');
   doc.spacer(4);
 
   if (decision.decisionCardSignature && decision.decisionCardSigningKeyId && decision.decisionCardSignedAt) {

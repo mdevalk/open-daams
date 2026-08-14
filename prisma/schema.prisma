@@ -650,6 +650,14 @@ model Attachment {
   applicationId String
   application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 
+  // Set for correspondence/documentation attached to a specific appeal
+  // (R10.0.5) — applicationId above stays set too (the appeal's own
+  // application), so "everything for this application" queries still work
+  // regardless of which owner this row belongs to, same pattern as
+  // FinancialLineItem.applicationId.
+  appealId String?
+  appeal   Appeal? @relation(fields: [appealId], references: [id], onDelete: Cascade)
+
   field       String // which form field this supports, e.g. "section5.summaryOfPlanForUsingTheData"
   filename    String
   sizeBytes   Int?
@@ -808,6 +816,18 @@ model Appeal {
   status          AppealStatus @default(SUBMITTED)
   decisionAt      DateTime?
   decisionSummary String?      @db.Text
+
+  // The formal, signed decision on this appeal (R10.0.6) — set together,
+  // once, when the appeal reaches a terminal decision (UPHELD/REJECTED;
+  // WITHDRAWN isn't a decision on the merits, stays unsigned). Same
+  // signature/pdf field shape as DataPermit, no "decision"-prefixed naming
+  // needed on a model this small and single-purpose.
+  signature    String?   @db.Text
+  signedAt     DateTime?
+  signingKeyId String?
+  pdf          Bytes?
+
+  attachments Attachment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

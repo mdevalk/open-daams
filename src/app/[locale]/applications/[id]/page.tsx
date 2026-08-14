@@ -62,7 +62,24 @@ export default async function ApplicationDetailPage({
           orderBy: { createdAt: 'desc' },
         },
         documents: { orderBy: { uploadedAt: 'desc' } },
-        appeals: { orderBy: { submittedAt: 'desc' } },
+        appeals: {
+          select: {
+            id: true,
+            applicationId: true,
+            submittedAt: true,
+            submittedBy: true,
+            grounds: true,
+            authority: true,
+            status: true,
+            decisionAt: true,
+            decisionSummary: true,
+            signedAt: true, // proxy for "has a decision PDF" — never select pdf/signature (Bytes/large, and can't cross the RSC boundary)
+            createdAt: true,
+            updatedAt: true,
+            attachments: { select: { id: true, filename: true, mimeType: true } },
+          },
+          orderBy: { submittedAt: 'desc' },
+        },
         completenessCheck: true,
         trustedDataHolder: { select: { name: true } },
         extractionRequests: {

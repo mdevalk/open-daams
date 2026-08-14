@@ -904,7 +904,9 @@
     "authorityLabel": "Behandelende instantie (optioneel)",
     "authorityPlaceholder": "bijv. HDAB-NL (bezwaar) of Rechtbank Den Haag",
     "loading": "Bezig...",
-    "cancel": "Annuleren"
+    "cancel": "Annuleren",
+    "downloadDecisionPdf": "Ondertekende beslissing downloaden (PDF)",
+    "attachFile": "+ Correspondentie/document bijvoegen"
   },
   "appealStatus": {
     "SUBMITTED": "Ingediend",

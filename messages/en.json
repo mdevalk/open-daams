@@ -904,7 +904,9 @@
     "authorityLabel": "Handling authority (optional)",
     "authorityPlaceholder": "e.g. HDAB-NL (objection) or The Hague District Court",
     "loading": "Processing...",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "downloadDecisionPdf": "Download signed decision (PDF)",
+    "attachFile": "+ Attach correspondence/document"
   },
   "appealStatus": {
     "SUBMITTED": "Submitted",
