@@ -382,7 +382,8 @@
     "confirmButton": "Confirmer la prolongation",
     "cancelButton": "Annuler",
     "loading": "En cours...",
-    "extendedLabel": "Délai de décision prolongé"
+    "extendedLabel": "Délai de décision prolongé",
+    "transmittedToApplicant": "Justification transmise au demandeur"
   },
   "permitPanel": {
     "issueTitle": "Délivrer une autorisation",

@@ -434,10 +434,12 @@ export type CreateApplicationResult =
 
 /**
  * Registers a parsed HdeuPayload as a new cross-border application in
- * SUBMITTED state (clock starts immediately — the application was already
- * assessed for completeness by the sending Member State's HDAB before
- * transmission). Shared by both NCP intake paths: the direct JSON import
- * (`/api/import/hdeu`) and the two-step NCP fetch
+ * SUBMITTED state. The decision clock starts from this national DAAMS's own
+ * import time (R8.0.7 — "DAAMS MUST calculate due dates based on the
+ * timestamp received by the national DAAMS"), not the sending country's own
+ * transmissionTimestamp, which is preserved separately on
+ * hdeuTransmittedAt for traceability. Shared by both NCP intake paths: the
+ * direct JSON import (`/api/import/hdeu`) and the two-step NCP fetch
  * (`/api/import/ncp-applications/[id]`, list-then-detail) — one place for
  * the find-or-create/creation logic so the two don't drift apart.
  */
@@ -486,7 +488,8 @@ export async function createApplicationFromHdeuPayload(
     };
   }
 
-  const now = new Date(p.transmissionTimestamp);
+  const transmittedAt = new Date(p.transmissionTimestamp);
+  const receivedAt = new Date();
   const count = await prisma.application.count();
   const referenceNumber = `HDAB-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`;
 
@@ -510,7 +513,8 @@ export async function createApplicationFromHdeuPayload(
 
       hdeuApplicationId: p.hdeuApplicationId,
       hdeuSendingCountry: p.sendingCountry,
-      hdeuReceivedAt: now,
+      hdeuTransmittedAt: transmittedAt,
+      hdeuReceivedAt: receivedAt,
       hdeuRawPayload: JSON.stringify(rawPayload),
 
       applicantId: applicant.id,
@@ -683,8 +687,8 @@ export async function createApplicationFromHdeuPayload(
       consentNoAccessToUnderlyingData: p.consentNoAccessToUnderlyingData,
       consentAcceptHealthDataBody: p.consentAcceptHealthDataBody,
 
-      submittedAt: now,
-      decisionDeadline: calculateDecisionDeadline(now),
+      submittedAt: receivedAt,
+      decisionDeadline: calculateDecisionDeadline(receivedAt),
     },
   });
 

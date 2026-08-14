@@ -259,6 +259,10 @@ model Application {
   // HD@EU cross-border fields
   hdeuApplicationId  String?
   hdeuSendingCountry String?
+  // The sending country's own transmission timestamp, as transmitted in the
+  // payload — preserved separately from hdeuReceivedAt below (R8.0.7: due
+  // dates must anchor to this national DAAMS's receipt, not the sender's).
+  hdeuTransmittedAt  DateTime?
   hdeuReceivedAt     DateTime?
   hdeuRawPayload     String?   @db.Text
 

@@ -50,6 +50,7 @@ export function DeadlineExtensionPanel({ application, currentUser, embedded }: P
     <div className={embedded ? 'rounded border border-gray-200 bg-gray-50 px-4 py-3 text-sm' : 'text-sm space-y-1'}>
       <p className="text-xs text-emerald-700 font-medium">{t('extendedLabel')}</p>
       <p className="text-xs text-gray-500 mt-0.5">{application.deadlineExtensionReason}</p>
+      <p className="text-xs text-gray-400 mt-1">{t('transmittedToApplicant')}</p>
     </div>
   ) : canManage ? (
     editing ? (

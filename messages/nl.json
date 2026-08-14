@@ -382,7 +382,8 @@
     "confirmButton": "Verlenging bevestigen",
     "cancelButton": "Annuleren",
     "loading": "Bezig...",
-    "extendedLabel": "Beslistermijn verlengd"
+    "extendedLabel": "Beslistermijn verlengd",
+    "transmittedToApplicant": "Motivering verzonden naar aanvrager"
   },
   "permitPanel": {
     "issueTitle": "Vergunning uitschrijven",

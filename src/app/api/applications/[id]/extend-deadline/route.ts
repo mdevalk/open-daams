@@ -24,7 +24,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const reason = typeof body.reason === 'string' ? body.reason.trim() : '';
     if (!reason) return NextResponse.json({ error: 'A written justification is required' }, { status: 422 });
 
-    const application = await prisma.application.findUnique({ where: { id } });
+    const application = await prisma.application.findUnique({
+      where: { id },
+      include: { applicant: { select: { email: true } } },
+    });
     if (!application) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     if (['DECISION_ISSUED', 'WITHDRAWN'].includes(application.status)) {
@@ -51,6 +54,22 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           fromStatus: application.status,
           toStatus: application.status,
           action: 'Beslistermijn verlengd',
+          comment: reason,
+        },
+      });
+      // R8.0.9 — DAAMS MUST enable transmission of the extension
+      // justification to the applicant. No notification infrastructure
+      // exists in this back-office reference app (applicant-facing
+      // notifications are §6/front-office territory, out of scope), so this
+      // records the transmission the same way HD@EU/NCP integrations are
+      // already simulated shells rather than real ones — no email is
+      // actually sent.
+      await tx.auditLog.create({
+        data: {
+          userId: auth.user.id,
+          entityType: 'Application',
+          entityId: id,
+          action: `Deadline-extension justification transmitted to applicant (simulated): ${application.applicant.email}`,
           comment: reason,
         },
       });

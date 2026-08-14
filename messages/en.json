@@ -382,7 +382,8 @@
     "confirmButton": "Confirm extension",
     "cancelButton": "Cancel",
     "loading": "Processing...",
-    "extendedLabel": "Decision deadline extended"
+    "extendedLabel": "Decision deadline extended",
+    "transmittedToApplicant": "Justification transmitted to applicant"
   },
   "permitPanel": {
     "issueTitle": "Issue permit",
