@@ -36,6 +36,7 @@ export function AdminMenu({ locale }: { locale: string }) {
     { href: `/${locale}/reference-data`, label: t('referenceData') },
     { href: `/${locale}/audit-log`, label: t('auditLog') },
     { href: `/${locale}/security-log`, label: t('securityLog') },
+    { href: `/${locale}/integration-log`, label: t('integrationLog') },
   ];
 
   return (

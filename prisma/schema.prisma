@@ -219,6 +219,7 @@ model User {
   speProvisioningActions      SpeProvisioningLog[]
   permitChangeRequestsMade    PermitChangeRequest[]   @relation("PermitChangeRequested")
   permitChangeRequestsDecided PermitChangeRequest[]   @relation("PermitChangeDecided")
+  ncpIntegrationLogs          NcpIntegrationLog[]
 }
 
 model Application {
@@ -518,6 +519,7 @@ model Application {
   relatedDataPermits RelatedDataPermit[]
   tabulationPlans    TabulationPlan[]
   lineItems          FinancialLineItem[]
+  ncpIntegrationLogs NcpIntegrationLog[]
 
   @@index([status])
   @@index([decisionDeadline])
@@ -1254,6 +1256,49 @@ model AuthzFailureLog {
   reason          String // "missing_user_id" | "unknown_user" | "role_not_permitted"
   detail          String   @db.Text
   createdAt       DateTime @default(now())
+}
+
+// Who initiated the HTTP connection, not which way the business data flows —
+// DAAMS MUST NOT be called into by the Central Platform/NCP (D6.4 R14.0.1),
+// so every call DAAMS itself makes (fetching the queue, fetching a detail
+// ZIP, sending a decision card) is OUTBOUND even though a GET "fetches"
+// data. INBOUND is reserved for a hypothetical future callback/webhook the
+// NCP calls into — nothing populates it today.
+enum NcpCallDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum NcpCallOutcome {
+  SUCCESS
+  FAILURE
+}
+
+// Records every real call to the HealthData@EU National Contact Point (see
+// src/lib/ncp-client.ts) — success or failure — closing the "no logging of
+// failed exchanges" gap (D6.4 R14.0.4). Doesn't fit AuditLog's entity-centric
+// shape (a queue-list fetch, or a failed detail-fetch, has no local entity
+// yet), same reasoning that already split out AuthzFailureLog above.
+// Every operation today (queue fetch, detail fetch) is OUTBOUND; sending a
+// decision card (sendDecisionCardToNcp, currently unwired) will be too, once
+// it's wired up — this table's shape doesn't need to change for that.
+model NcpIntegrationLog {
+  id        String           @id @default(cuid())
+  direction NcpCallDirection
+  // Short stable label, e.g. "applications.list", "applications.detail".
+  operation    String
+  outcome      NcpCallOutcome
+  errorMessage String?        @db.Text
+
+  applicationId String?
+  application   Application? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+
+  initiatedById String?
+  initiatedBy   User?    @relation(fields: [initiatedById], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
 }
 
 model Note {

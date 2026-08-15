@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getNcpApplicationList } from '@/lib/ncp-client';
+import { logNcpCall } from '@/lib/ncp-log';
 
 /**
  * GET /api/import/ncp-queue
@@ -16,9 +17,18 @@ import { getNcpApplicationList } from '@/lib/ncp-client';
  * in createApplicationFromHdeuPayload(); this is purely a display concern.
  */
 export async function GET() {
+  let entries;
   try {
-    const entries = await getNcpApplicationList();
+    entries = await getNcpApplicationList();
+  } catch (e) {
+    console.error('Failed to fetch NCP applications list', e);
+    const message = e instanceof Error ? e.message : 'Failed to fetch NCP applications list';
+    await logNcpCall({ direction: 'OUTBOUND', operation: 'applications.list', outcome: 'FAILURE', errorMessage: message });
+    return NextResponse.json({ error: message }, { status: 502 });
+  }
+  await logNcpCall({ direction: 'OUTBOUND', operation: 'applications.list', outcome: 'SUCCESS' });
 
+  try {
     const imported = await prisma.application.findMany({
       where: { hdeuApplicationId: { in: entries.map((e) => e.applicationId) } },
       select: { hdeuApplicationId: true, id: true, referenceNumber: true },
