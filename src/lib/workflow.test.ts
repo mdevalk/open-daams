@@ -6,7 +6,9 @@ import {
   calculateAdditionalInfoDeadline,
   calculatePermitAcceptanceDeadline,
   deadlineStatus,
+  transitionLogLabel,
 } from '@/lib/workflow';
+import nlMessages from '../../messages/nl.json';
 
 describe('getAvailableTransitions', () => {
   it('only returns transitions the given role is allowed to take', () => {
@@ -104,5 +106,15 @@ describe('deadlineStatus', () => {
 
   it('returns ok with more than 14 days remaining', () => {
     expect(deadlineStatus(new Date('2026-02-01T00:00:00Z'))).toBe('ok');
+  });
+});
+
+describe('transitionLogLabel', () => {
+  it('returns the message-file label for a known transition key', () => {
+    expect(transitionLogLabel('submit')).toBe(nlMessages.workflowTransitions.submit.label);
+  });
+
+  it('falls back to the key itself when it has no entry', () => {
+    expect(transitionLogLabel('not_a_real_key')).toBe('not_a_real_key');
   });
 });

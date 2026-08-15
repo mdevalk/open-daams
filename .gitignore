@@ -5,6 +5,7 @@ keys/
 backups/
 .next/
 node_modules/
+coverage/
 next-env.d.ts
 npm-debug.log*
 *.tsbuildinfo

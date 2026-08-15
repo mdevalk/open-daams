@@ -1,16 +1,24 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
+  cn,
   formatDate,
   formatDateNumeric,
   formatDateTime,
   daysUntil,
   serializePrisma,
+  readErrorMessage,
   purposeLabel,
   cohortFormationLabel,
   extractionMethodLabel,
   extractionFrequencyLabel,
   extractionIntervalLabel,
 } from '@/lib/utils';
+
+describe('cn', () => {
+  it('joins class names and drops falsy values', () => {
+    expect(cn('a', false, 'b', undefined, null, 'c')).toBe('a b c');
+  });
+});
 
 describe('formatDate', () => {
   it('formats a date in the short nl-NL form', () => {
@@ -81,6 +89,23 @@ describe('serializePrisma', () => {
   });
 });
 
+describe('readErrorMessage', () => {
+  it('returns the error field from a JSON body', async () => {
+    const res = { json: () => Promise.resolve({ error: 'Something broke' }) } as Response;
+    expect(await readErrorMessage(res, 'fallback')).toBe('Something broke');
+  });
+
+  it('returns the fallback when the body has no error field', async () => {
+    const res = { json: () => Promise.resolve({}) } as Response;
+    expect(await readErrorMessage(res, 'fallback')).toBe('fallback');
+  });
+
+  it('returns the fallback when the body is not valid JSON', async () => {
+    const res = { json: () => Promise.reject(new Error('not json')) } as Response;
+    expect(await readErrorMessage(res, 'fallback')).toBe('fallback');
+  });
+});
+
 describe('label lookups', () => {
   it('purposeLabel maps a known code and falls back to the raw code otherwise', () => {
     expect(purposeLabel('SCIENTIFIC_RESEARCH')).toBe('Scientific research');
@@ -92,15 +117,21 @@ describe('label lookups', () => {
     expect(cohortFormationLabel('CRITERIA')).toBe('Formed based on the given criteria');
   });
 
-  it('extractionMethodLabel maps known codes', () => {
+  it('extractionMethodLabel maps a known code, falls back to the raw code, and returns undefined for a missing code', () => {
     expect(extractionMethodLabel('RANDOM_SAMPLE')).toBe('Random sample');
+    expect(extractionMethodLabel('UNKNOWN_CODE')).toBe('UNKNOWN_CODE');
+    expect(extractionMethodLabel(null)).toBeUndefined();
   });
 
-  it('extractionFrequencyLabel maps known codes', () => {
+  it('extractionFrequencyLabel maps a known code, falls back to the raw code, and returns undefined for a missing code', () => {
     expect(extractionFrequencyLabel('ONCE')).toBe('Once');
+    expect(extractionFrequencyLabel('UNKNOWN_CODE')).toBe('UNKNOWN_CODE');
+    expect(extractionFrequencyLabel(null)).toBeUndefined();
   });
 
-  it('extractionIntervalLabel maps known codes', () => {
+  it('extractionIntervalLabel maps a known code, falls back to the raw code, and returns undefined for a missing code', () => {
     expect(extractionIntervalLabel('QUARTERLY')).toBe('Quarterly');
+    expect(extractionIntervalLabel('UNKNOWN_CODE')).toBe('UNKNOWN_CODE');
+    expect(extractionIntervalLabel(null)).toBeUndefined();
   });
 });

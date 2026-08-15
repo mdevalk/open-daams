@@ -1,10 +1,61 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeAll } from 'vitest';
+import { readFileSync } from 'fs';
+import * as ed from '@noble/ed25519';
+import { sha512 } from '@noble/hashes/sha512';
+import { concatBytes } from '@noble/hashes/utils';
 import {
   groupDatasetsByHolder,
   canonicalPermitPayload,
   canonicalDecisionCardPayload,
+  canonicalAppealDecisionPayload,
   buildDigitalPermitDocument,
+  signPermit,
+  verifyPermitSignature,
+  getPublicJwk,
+  signDecisionCard,
+  signAppealDecision,
+  type SignablePermit,
 } from '@/lib/permit-signing';
+
+// Same sha512Sync wiring permit-signing.ts itself does at module load, needed
+// here to generate a disposable test keypair with @noble/ed25519 directly.
+ed.etc.sha512Sync = (...m) => sha512(m.length === 1 ? m[0] : concatBytes(...m));
+
+function toBase64Url(bytes: Uint8Array): string {
+  return Buffer.from(bytes).toString('base64url');
+}
+
+vi.mock('fs', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('fs')>();
+  return { ...actual, readFileSync: vi.fn() };
+});
+
+// A real, disposable Ed25519 keypair generated at test time — never the
+// developer's actual (gitignored) keys/permit-signing-key.private.json, and
+// never committed. loadPrivateKeyJwk() reads this via the mocked fs.readFileSync
+// instead, so these tests exercise genuine sign/verify without touching disk
+// or depending on a key file existing (CI never generates one before `npm test`).
+const TEST_KID = 'test-key-1';
+let testPublicKeyBase64Url: string;
+
+beforeAll(() => {
+  const privateKeyBytes = ed.utils.randomPrivateKey();
+  const publicKeyBytes = ed.getPublicKey(privateKeyBytes);
+  testPublicKeyBase64Url = toBase64Url(publicKeyBytes);
+  const jwk = { d: toBase64Url(privateKeyBytes), x: testPublicKeyBase64Url, kid: TEST_KID };
+  vi.mocked(readFileSync).mockReturnValue(JSON.stringify(jwk));
+});
+
+const BASE_PERMIT: SignablePermit = {
+  permitNumber: 'DP-NL-2025-0001',
+  version: 1,
+  applicationId: 'app-1',
+  issuedAt: new Date('2026-01-01T00:00:00Z'),
+  validFrom: new Date('2026-01-01T00:00:00Z'),
+  validUntil: new Date('2027-01-01T00:00:00Z'),
+  grantedDatasets: [],
+  speOperator: null,
+};
 
 describe('groupDatasetsByHolder', () => {
   it('groups flat rows by data holder, preserving row order within a group', () => {
@@ -195,5 +246,134 @@ describe('buildDigitalPermitDocument', () => {
 
     expect(doc.issuerKid).toBe('');
     expect(doc.revocationAt).toBeNull();
+  });
+});
+
+describe('canonicalAppealDecisionPayload', () => {
+  it('serialises dates to ISO strings and carries the issuer kid', () => {
+    const payload = canonicalAppealDecisionPayload(
+      {
+        appealId: 'appeal-1',
+        applicationId: 'app-1',
+        status: 'UPHELD',
+        decisionAt: new Date('2026-01-01T00:00:00Z'),
+      },
+      'kid-1',
+    );
+
+    expect(payload).toEqual({
+      appealId: 'appeal-1',
+      applicationId: 'app-1',
+      status: 'UPHELD',
+      decisionAt: '2026-01-01T00:00:00.000Z',
+      issuerKid: 'kid-1',
+    });
+  });
+});
+
+describe('signPermit / verifyPermitSignature', () => {
+  it('round-trips: a freshly signed permit verifies successfully', async () => {
+    const { signature, signedAt, signingKeyId } = await signPermit(BASE_PERMIT);
+
+    expect(signingKeyId).toBe(TEST_KID);
+    expect(signedAt).toBeInstanceOf(Date);
+
+    const valid = await verifyPermitSignature({ ...BASE_PERMIT, signature, signingKeyId });
+    expect(valid).toBe(true);
+  });
+
+  it('rejects a signature if the verified payload was tampered with', async () => {
+    const { signature, signingKeyId } = await signPermit(BASE_PERMIT);
+
+    const tampered: SignablePermit = { ...BASE_PERMIT, validUntil: new Date('2099-01-01T00:00:00Z') };
+    const valid = await verifyPermitSignature({ ...tampered, signature, signingKeyId });
+    expect(valid).toBe(false);
+  });
+
+  it('rejects a signingKeyId that does not match the currently loaded key', async () => {
+    const { signature } = await signPermit(BASE_PERMIT);
+
+    const valid = await verifyPermitSignature({
+      ...BASE_PERMIT,
+      signature,
+      signingKeyId: 'some-other-key',
+    });
+    expect(valid).toBe(false);
+  });
+
+  it('rejects when signature or signingKeyId is missing', async () => {
+    expect(await verifyPermitSignature({ ...BASE_PERMIT, signature: null, signingKeyId: TEST_KID })).toBe(false);
+    expect(await verifyPermitSignature({ ...BASE_PERMIT, signature: 'sig', signingKeyId: null })).toBe(false);
+  });
+
+  it('produces an identical signature regardless of nested object key order (stableStringify)', async () => {
+    const speOperatorInOneOrder = {
+      id: 'op-1',
+      name: 'RIVM SPE Operations',
+      providerName: 'Acme Cloud',
+      type: { id: 'type-1', name: 'Enterprise' },
+    };
+    // Same values, keys inserted in the reverse order.
+    const speOperatorInReverseOrder = {
+      type: { name: 'Enterprise', id: 'type-1' },
+      providerName: 'Acme Cloud',
+      name: 'RIVM SPE Operations',
+      id: 'op-1',
+    };
+
+    const first = await signPermit({ ...BASE_PERMIT, speOperator: speOperatorInOneOrder });
+    const second = await signPermit({ ...BASE_PERMIT, speOperator: speOperatorInReverseOrder });
+
+    expect(first.signature).toBe(second.signature);
+  });
+});
+
+describe('getPublicJwk', () => {
+  it('exposes the public key and kid, and never the private key material', () => {
+    const jwk = getPublicJwk();
+
+    expect(jwk).toEqual({
+      kty: 'OKP',
+      crv: 'Ed25519',
+      kid: TEST_KID,
+      use: 'sig',
+      alg: 'EdDSA',
+      x: testPublicKeyBase64Url,
+    });
+    expect(jwk).not.toHaveProperty('d');
+  });
+});
+
+describe('signDecisionCard', () => {
+  it('produces a deterministic Ed25519 signature (same input signs identically every time)', async () => {
+    const card = {
+      decisionId: 'DEC-NL-2026-0001',
+      applicationId: 'app-1',
+      decisionOutcome: 'NEGATIVE' as const,
+      decisionAt: new Date('2026-01-01T00:00:00Z'),
+    };
+
+    const first = await signDecisionCard(card);
+    const second = await signDecisionCard(card);
+
+    expect(first.signingKeyId).toBe(TEST_KID);
+    expect(first.signature).toBe(second.signature);
+  });
+});
+
+describe('signAppealDecision', () => {
+  it('produces a deterministic Ed25519 signature (same input signs identically every time)', async () => {
+    const appeal = {
+      appealId: 'appeal-1',
+      applicationId: 'app-1',
+      status: 'UPHELD' as const,
+      decisionAt: new Date('2026-01-01T00:00:00Z'),
+    };
+
+    const first = await signAppealDecision(appeal);
+    const second = await signAppealDecision(appeal);
+
+    expect(first.signingKeyId).toBe(TEST_KID);
+    expect(first.signature).toBe(second.signature);
   });
 });

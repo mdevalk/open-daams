@@ -5,6 +5,7 @@ import {
   calculateDueDate,
   nextInvoiceNumber,
   groupByDataHolder,
+  determineOutstandingInvoiceGroups,
   type SourceLineItem,
 } from '@/lib/invoice';
 
@@ -47,6 +48,77 @@ describe('groupByDataHolder', () => {
     ] as unknown as SourceLineItem[];
 
     expect(groupByDataHolder(items).size).toBe(0);
+  });
+});
+
+describe('determineOutstandingInvoiceGroups', () => {
+  const applicantItem = { category: 'ADMINISTRATIVE', dataHolderId: null } as unknown as SourceLineItem;
+  const holder1Item = { category: 'DATA_HOLDER', dataHolderId: 'dh1' } as unknown as SourceLineItem;
+  const holder2Item = { category: 'DATA_HOLDER', dataHolderId: 'dh2' } as unknown as SourceLineItem;
+  const speItem = { category: 'SPE_SETUP', dataHolderId: null } as unknown as SourceLineItem;
+
+  it('returns an applicant, one group per data holder, and an SPE group when nothing is billed yet', () => {
+    const groups = determineOutstandingInvoiceGroups({
+      lineItems: [applicantItem, holder1Item, holder2Item, speItem],
+      existingInvoices: [],
+      speOperatorId: 'op1',
+    });
+
+    expect(groups).toEqual([
+      { recipientType: 'APPLICANT', items: [applicantItem, holder1Item, holder2Item, speItem] },
+      { recipientType: 'DATA_HOLDER', dataHolderId: 'dh1', items: [holder1Item] },
+      { recipientType: 'DATA_HOLDER', dataHolderId: 'dh2', items: [holder2Item] },
+      { recipientType: 'SPE_OPERATOR', speOperatorId: 'op1', items: [speItem] },
+    ]);
+  });
+
+  it('excludes the applicant group once an applicant invoice already exists', () => {
+    const groups = determineOutstandingInvoiceGroups({
+      lineItems: [applicantItem, holder1Item],
+      existingInvoices: [{ recipientType: 'APPLICANT', dataHolderId: null }],
+      speOperatorId: null,
+    });
+
+    expect(groups.map((g) => g.recipientType)).toEqual(['DATA_HOLDER']);
+  });
+
+  it('excludes only the data holder that already has an invoice', () => {
+    const groups = determineOutstandingInvoiceGroups({
+      lineItems: [holder1Item, holder2Item],
+      existingInvoices: [{ recipientType: 'DATA_HOLDER', dataHolderId: 'dh1' }],
+      speOperatorId: null,
+    });
+
+    expect(groups).toEqual([
+      { recipientType: 'APPLICANT', items: [holder1Item, holder2Item] },
+      { recipientType: 'DATA_HOLDER', dataHolderId: 'dh2', items: [holder2Item] },
+    ]);
+  });
+
+  it('does not create an SPE group when no SPE operator is designated', () => {
+    const groups = determineOutstandingInvoiceGroups({
+      lineItems: [speItem],
+      existingInvoices: [],
+      speOperatorId: null,
+    });
+
+    expect(groups.some((g) => g.recipientType === 'SPE_OPERATOR')).toBe(false);
+  });
+
+  it('excludes the SPE group once an SPE invoice already exists', () => {
+    const groups = determineOutstandingInvoiceGroups({
+      lineItems: [speItem],
+      existingInvoices: [{ recipientType: 'SPE_OPERATOR', dataHolderId: null }],
+      speOperatorId: 'op1',
+    });
+
+    expect(groups.some((g) => g.recipientType === 'SPE_OPERATOR')).toBe(false);
+  });
+
+  it('returns nothing for an empty line-item list', () => {
+    expect(
+      determineOutstandingInvoiceGroups({ lineItems: [], existingInvoices: [], speOperatorId: 'op1' }),
+    ).toEqual([]);
   });
 });
 
