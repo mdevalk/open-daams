@@ -5,7 +5,7 @@
     "financials": "Financiën",
     "import": "JSON importeren",
     "public": "Openbaar register",
-    "referenceData": "Referentiegegevens",
+    "masterdata": "Basisgegevens",
     "auditLog": "Auditlog",
     "securityLog": "Beveiligingslog",
     "integrationLog": "Integratielog",
@@ -619,8 +619,8 @@
     "expire": "Markeren als verlopen",
     "expireDesc": "De vergunning heeft de geldigheidsdatum overschreden (D6.4 §9.3)."
   },
-  "referenceData": {
-    "title": "Referentiegegevens",
+  "masterdata": {
+    "title": "Basisgegevens",
     "subtitle": "Basisregistraties voor gegevenshouders, SPE-operators/-providers en datagebruikers, gebruikt in aanvragen en vergunningen.",
     "tabDataHolders": "Gegevenshouders",
     "tabSpeOperators": "SPE-operators",
@@ -631,7 +631,7 @@
   },
   "auditLog": {
     "title": "Auditlog",
-    "description": "Elke geslaagde actie die geen statusovergang is — wijzigingen in referentiegegevens en dossierhandelingen zoals geautoriseerde personen, bezwaren en facturen. Statusovergangen zelf worden vastgelegd op het record waarop ze zijn uitgevoerd (aanvraag-/vergunning-/SPE-provisioninggeschiedenis).",
+    "description": "Elke geslaagde actie die geen statusovergang is — wijzigingen in basisgegevens en dossierhandelingen zoals geautoriseerde personen, bezwaren en facturen. Statusovergangen zelf worden vastgelegd op het record waarop ze zijn uitgevoerd (aanvraag-/vergunning-/SPE-provisioninggeschiedenis).",
     "empty": "Geen auditlogregels geregistreerd.",
     "colWhen": "Wanneer",
     "colUser": "Gebruiker",

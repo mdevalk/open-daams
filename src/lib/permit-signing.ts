@@ -107,7 +107,7 @@ export function groupDatasetsByHolder(
 
 // Frozen snapshots, not live FK references — same rationale as
 // GrantedDataset.dataHolderName: renaming an SpeOperator/SpeType in
-// the reference-data registry after a permit references it must not change
+// the masterdata registry after a permit references it must not change
 // what that permit's signature attests to. Resolved once, at the moment a
 // permit version is created (issuance, or a version-creating amendment that
 // changes the operator/type), and carried forward unchanged on versions

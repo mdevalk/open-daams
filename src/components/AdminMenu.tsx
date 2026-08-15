@@ -33,7 +33,7 @@ export function AdminMenu({ locale }: { locale: string }) {
   }, [open]);
 
   const items = [
-    { href: `/${locale}/reference-data`, label: t('referenceData') },
+    { href: `/${locale}/masterdata`, label: t('masterdata') },
     { href: `/${locale}/audit-log`, label: t('auditLog') },
     { href: `/${locale}/security-log`, label: t('securityLog') },
     { href: `/${locale}/integration-log`, label: t('integrationLog') },

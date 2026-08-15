@@ -31,7 +31,7 @@ type Props = {
 const inputCls =
   'w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]';
 
-export function ReferenceDataManager({ apiBasePath, namespace, entities, relationOptions, hasTrustedFlag, hasSpeTypes, isAdmin, currentUserId }: Props) {
+export function MasterdataManager({ apiBasePath, namespace, entities, relationOptions, hasTrustedFlag, hasSpeTypes, isAdmin, currentUserId }: Props) {
   const router = useRouter();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const t = useTranslations(namespace as any);

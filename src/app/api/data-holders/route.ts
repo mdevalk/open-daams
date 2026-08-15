@@ -16,7 +16,7 @@ export async function GET() {
 
 /**
  * POST /api/data-holders
- * Register a new data holder (Reference data masterdata, ADMIN-only).
+ * Register a new data holder (Masterdata, ADMIN-only).
  * body: { name, contactEmail?, contactPhone?, isTrusted?, actingUserId }
  */
 export async function POST(req: NextRequest) {

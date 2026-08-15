@@ -5,7 +5,7 @@
     "financials": "Financials",
     "import": "Import JSON",
     "public": "Public register",
-    "referenceData": "Reference data",
+    "masterdata": "Masterdata",
     "auditLog": "Audit log",
     "securityLog": "Security log",
     "integrationLog": "Integration log",
@@ -619,8 +619,8 @@
     "expire": "Mark as expired",
     "expireDesc": "Permit has passed its validity date (D6.4 §9.3)."
   },
-  "referenceData": {
-    "title": "Reference data",
+  "masterdata": {
+    "title": "Masterdata",
     "subtitle": "Masterdata registries for data holders, SPE operators/providers, and data users, referenced across applications and permits.",
     "tabDataHolders": "Data holders",
     "tabSpeOperators": "SPE operators",
@@ -631,7 +631,7 @@
   },
   "auditLog": {
     "title": "Audit log",
-    "description": "Every successful action that isn't a status transition — reference-data changes and case-workflow actions like authorized persons, appeals, and invoices. Status transitions themselves are recorded on the record they acted on (application/permit/SPE-provisioning history).",
+    "description": "Every successful action that isn't a status transition — masterdata changes and case-workflow actions like authorized persons, appeals, and invoices. Status transitions themselves are recorded on the record they acted on (application/permit/SPE-provisioning history).",
     "empty": "No audit log entries recorded.",
     "colWhen": "When",
     "colUser": "User",

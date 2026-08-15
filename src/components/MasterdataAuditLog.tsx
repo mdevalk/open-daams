@@ -4,8 +4,8 @@ import { formatDateTime } from '@/lib/utils';
 
 type Entry = AuditLog & { user: Pick<User, 'name'> };
 
-export async function ReferenceDataAuditLog({ entries, locale }: { entries: Entry[]; locale: string }) {
-  const t = await getTranslations({ locale, namespace: 'referenceData' });
+export async function MasterdataAuditLog({ entries, locale }: { entries: Entry[]; locale: string }) {
+  const t = await getTranslations({ locale, namespace: 'masterdata' });
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-4">

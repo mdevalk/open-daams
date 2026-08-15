@@ -5,7 +5,7 @@
     "financials": "Finances",
     "import": "Importer JSON",
     "public": "Registre public",
-    "referenceData": "Données de référence",
+    "masterdata": "Données de base",
     "auditLog": "Journal d'audit",
     "securityLog": "Journal de sécurité",
     "integrationLog": "Journal d'intégration",
@@ -619,8 +619,8 @@
     "expire": "Marquer comme expirée",
     "expireDesc": "L'autorisation a dépassé sa date de validité (D6.4 §9.3)."
   },
-  "referenceData": {
-    "title": "Données de référence",
+  "masterdata": {
+    "title": "Données de base",
     "subtitle": "Registres de référence pour les détenteurs de données, les opérateurs/fournisseurs SPE et les utilisateurs de données, utilisés dans les demandes et autorisations.",
     "tabDataHolders": "Détenteurs de données",
     "tabSpeOperators": "Opérateurs SPE",
@@ -631,7 +631,7 @@
   },
   "auditLog": {
     "title": "Journal d'audit",
-    "description": "Chaque action réussie qui n'est pas une transition de statut — modifications des données de référence et actions de dossier telles que personnes autorisées, recours et factures. Les transitions de statut elles-mêmes sont enregistrées sur l'enregistrement concerné (historique de la demande/autorisation/provisionnement SPE).",
+    "description": "Chaque action réussie qui n'est pas une transition de statut — modifications des données de base et actions de dossier telles que personnes autorisées, recours et factures. Les transitions de statut elles-mêmes sont enregistrées sur l'enregistrement concerné (historique de la demande/autorisation/provisionnement SPE).",
     "empty": "Aucune entrée de journal d'audit enregistrée.",
     "colWhen": "Quand",
     "colUser": "Utilisateur",

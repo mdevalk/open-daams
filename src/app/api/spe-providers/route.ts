@@ -15,7 +15,7 @@ export async function GET() {
 
 /**
  * POST /api/spe-providers
- * Register a new SPE provider (Reference data masterdata, ADMIN-only).
+ * Register a new SPE provider (Masterdata, ADMIN-only).
  * body: { name, contactEmail?, contactPhone?, actingUserId }
  */
 export async function POST(req: NextRequest) {

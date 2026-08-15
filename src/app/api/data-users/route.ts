@@ -15,7 +15,7 @@ export async function GET() {
 
 /**
  * POST /api/data-users
- * Register a new data user organisation (Reference data masterdata, ADMIN-only).
+ * Register a new data user organisation (Masterdata, ADMIN-only).
  * body: { name, contactEmail?, contactPhone?, actingUserId }
  */
 export async function POST(req: NextRequest) {

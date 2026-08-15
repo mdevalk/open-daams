@@ -6,8 +6,8 @@ import { requireRole } from '@/lib/authz';
 /**
  * POST /api/spe-operators/[id]/types
  * Register a new SPE type (tier/product) offered by this operator, e.g.
- * "Standard" with its own setup and monthly fee (Reference data masterdata,
- * ADMIN-only). Selected per permit at issuance to pre-fill the SPE fee fields.
+ * "Standard" with its own setup and monthly fee (Masterdata, ADMIN-only).
+ * Selected per permit at issuance to pre-fill the SPE fee fields.
  * body: { name, setupFee, monthlyFee, actingUserId }
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

@@ -1,15 +1,15 @@
 import { getTranslations } from 'next-intl/server';
 import { prisma } from '@/lib/db';
 import { UserSwitcher } from '@/components/UserSwitcher';
-import { ReferenceDataManager } from '@/components/ReferenceDataManager';
-import { ReferenceDataAuditLog } from '@/components/ReferenceDataAuditLog';
+import { MasterdataManager } from '@/components/MasterdataManager';
+import { MasterdataAuditLog } from '@/components/MasterdataAuditLog';
 
 export const dynamic = 'force-dynamic';
 
 type Tab = 'data-holders' | 'spe-operators' | 'spe-providers' | 'data-users';
 const TABS: Tab[] = ['data-users', 'data-holders', 'spe-operators', 'spe-providers'];
 
-export default async function ReferenceDataPage({
+export default async function MasterdataPage({
   params,
   searchParams,
 }: {
@@ -20,7 +20,7 @@ export default async function ReferenceDataPage({
   const { tab: queryTab, userId: queryUserId } = await searchParams;
   const tab: Tab = TABS.includes(queryTab as Tab) ? (queryTab as Tab) : 'data-holders';
 
-  const t = await getTranslations({ locale, namespace: 'referenceData' });
+  const t = await getTranslations({ locale, namespace: 'masterdata' });
 
   const [users, dataHolders, speOperators, speProviders, dataUsers, auditLogEntries] = await Promise.all([
     prisma.user.findMany({ orderBy: { name: 'asc' } }),
@@ -49,7 +49,7 @@ export default async function ReferenceDataPage({
 
   // Decimal is a class instance, not a plain object — React's server->client
   // prop serialization rejects it outright, so convert before it crosses
-  // that boundary (ReferenceDataManager is a client component).
+  // that boundary (MasterdataManager is a client component).
   const speOperatorsForClient = speOperators.map((op) => ({
     ...op,
     types: op.types.map((t) => ({ ...t, setupFee: t.setupFee.toString(), monthlyFee: t.monthlyFee.toString() })),
@@ -82,7 +82,7 @@ export default async function ReferenceDataPage({
             {TABS.map((tabKey) => (
               <a
                 key={tabKey}
-                href={`/${locale}/reference-data?tab=${tabKey}${queryUserId ? `&userId=${queryUserId}` : ''}`}
+                href={`/${locale}/masterdata?tab=${tabKey}${queryUserId ? `&userId=${queryUserId}` : ''}`}
                 aria-current={tab === tabKey ? 'page' : undefined}
                 className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
                   tab === tabKey
@@ -95,7 +95,7 @@ export default async function ReferenceDataPage({
             ))}
           </div>
 
-          <ReferenceDataManager
+          <MasterdataManager
             key={tab}
             apiBasePath={tabConfig[tab].apiBasePath}
             namespace={tabConfig[tab].namespace}
@@ -110,7 +110,7 @@ export default async function ReferenceDataPage({
 
         <div className="space-y-4">
           <UserSwitcher users={users} currentUserId={currentUser.id} />
-          {isAdmin && <ReferenceDataAuditLog entries={auditLogEntries} locale={locale} />}
+          {isAdmin && <MasterdataAuditLog entries={auditLogEntries} locale={locale} />}
         </div>
       </div>
     </div>

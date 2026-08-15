@@ -18,7 +18,7 @@ export async function GET() {
 
 /**
  * POST /api/spe-operators
- * Register a new SPE operator (Reference data masterdata, ADMIN-only).
+ * Register a new SPE operator (Masterdata, ADMIN-only).
  * body: { name, contactEmail?, contactPhone?, speProviderId?, actingUserId }
  */
 export async function POST(req: NextRequest) {
