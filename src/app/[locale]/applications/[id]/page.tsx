@@ -91,7 +91,7 @@ export default async function ApplicationDetailPage({
           orderBy: { createdAt: 'asc' },
         },
         studyCohorts: { orderBy: { countryId: 'asc' } },
-        invoicingDetails: true,
+        billingDetails: true,
         attachments: { orderBy: { field: 'asc' } },
         datasetVariables: { orderBy: { name: 'asc' } },
         relatedDataPermits: { orderBy: { createdAt: 'asc' } },
@@ -443,52 +443,52 @@ export default async function ApplicationDetailPage({
             </dl>
           </section>
 
-          {application.invoicingDetails && (
+          {application.billingDetails && (
             <section className="rounded-xl border border-gray-200 bg-white p-5">
               <h2 className="font-semibold text-gray-900 mb-3">{t('section4Title')}</h2>
               <dl className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-3 text-sm">
-                {application.invoicingDetails.fullName && (
+                {application.billingDetails.fullName && (
                   <div>
                     <dt className="text-gray-500">{t('applicant')}</dt>
-                    <dd className="font-medium">{application.invoicingDetails.fullName}</dd>
+                    <dd className="font-medium">{application.billingDetails.fullName}</dd>
                   </div>
                 )}
-                {application.invoicingDetails.email && (
+                {application.billingDetails.email && (
                   <div>
                     <dt className="text-gray-500">{t('contactEmail')}</dt>
-                    <dd className="font-medium">{application.invoicingDetails.email}</dd>
+                    <dd className="font-medium">{application.billingDetails.email}</dd>
                   </div>
                 )}
-                {application.invoicingDetails.organisationName && (
+                {application.billingDetails.organisationName && (
                   <div>
                     <dt className="text-gray-500">{t('organisation')}</dt>
-                    <dd className="font-medium">{application.invoicingDetails.organisationName}</dd>
+                    <dd className="font-medium">{application.billingDetails.organisationName}</dd>
                   </div>
                 )}
-                {application.invoicingDetails.invoiceType && (
+                {application.billingDetails.invoiceType && (
                   <div>
                     <dt className="text-gray-500">{t('invoiceType')}</dt>
-                    <dd className="font-medium">{application.invoicingDetails.invoiceType}</dd>
+                    <dd className="font-medium">{application.billingDetails.invoiceType}</dd>
                   </div>
                 )}
-                {application.invoicingDetails.vatNumber && (
+                {application.billingDetails.vatNumber && (
                   <div>
                     <dt className="text-gray-500">{t('vatNumber')}</dt>
-                    <dd className="font-medium">{application.invoicingDetails.vatNumber}</dd>
+                    <dd className="font-medium">{application.billingDetails.vatNumber}</dd>
                   </div>
                 )}
-                {application.invoicingDetails.isProjectFinanciallyCovered !== null && (
+                {application.billingDetails.isProjectFinanciallyCovered !== null && (
                   <div>
                     <dt className="text-gray-500">{t('financiallyCovered')}</dt>
                     <dd className="font-medium">
-                      {application.invoicingDetails.isProjectFinanciallyCovered ? t('yes') : t('no')}
+                      {application.billingDetails.isProjectFinanciallyCovered ? t('yes') : t('no')}
                     </dd>
                   </div>
                 )}
-                {application.invoicingDetails.financingAmountRange && (
+                {application.billingDetails.financingAmountRange && (
                   <div>
                     <dt className="text-gray-500">{t('financingAmountRange')}</dt>
-                    <dd className="font-medium">{application.invoicingDetails.financingAmountRange}</dd>
+                    <dd className="font-medium">{application.billingDetails.financingAmountRange}</dd>
                   </div>
                 )}
               </dl>

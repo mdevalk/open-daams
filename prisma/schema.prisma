@@ -514,7 +514,7 @@ model Application {
   requestedDatasets  RequestedDataset[]
   datasetVariables   DatasetVariable[]
   studyCohorts       StudyCohort[]
-  invoicingDetails   ApplicantInvoicingDetails?
+  billingDetails     ApplicantBillingDetails?
   attachments        Attachment[]
   relatedDataPermits RelatedDataPermit[]
   tabulationPlans    TabulationPlan[]
@@ -617,7 +617,7 @@ model StudyCohort {
 // TEHDAS2 D6.3 Annex 5/6 §4 — the applicant's own billing details, as
 // submitted on the form. Distinct from Invoice/FeeEstimate, which are
 // HDAB-generated billing documents.
-model ApplicantInvoicingDetails {
+model ApplicantBillingDetails {
   id            String      @id @default(cuid())
   applicationId String      @unique
   application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
@@ -1323,10 +1323,15 @@ model Document {
   description   String?
 }
 
-// Reference data / masterdata registries, maintained via /reference-data
-// (ADMIN-only create/edit/delete, visible to everyone). Same minimal shape
-// across all four — name is the natural business key (unique), used for
-// find-or-create matching during backfill and HD@EU import.
+// Masterdata registries, maintained via /masterdata (ADMIN-only
+// create/edit/delete, visible to everyone). Same minimal shape across all
+// four — name is the natural business key (unique), used for find-or-create
+// matching during backfill and HD@EU import.
+
+enum InvoiceDeliveryType {
+  PAPER
+  ELECTRONIC
+}
 
 model DataHolder {
   id           String   @id @default(cuid())
@@ -1338,6 +1343,17 @@ model DataHolder {
   isTrusted    Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  // Billing details, entered manually — used for self-billing invoices HDAB
+  // issues to this data holder for its own cost share (InvoiceRecipientType.DATA_HOLDER).
+  address                String?              @db.Text
+  businessId             String?
+  vatNumber              String?
+  invoiceType            InvoiceDeliveryType?
+  invoiceReferenceNumber String?
+  eInvoiceAddress        String? // EDI or IBAN
+  operatorId             String?
+  peppolCode             String?
 
   requestedDatasets      RequestedDataset[]
   grantedDatasets        GrantedDataset[]
@@ -1371,6 +1387,17 @@ model SpeOperator {
 
   speProviderId String?
   speProvider   SpeProvider? @relation(fields: [speProviderId], references: [id])
+
+  // Billing details, entered manually — used for self-billing invoices HDAB
+  // issues to this SPE operator for its own cost share (InvoiceRecipientType.SPE_OPERATOR).
+  address                String?              @db.Text
+  businessId             String?
+  vatNumber              String?
+  invoiceType            InvoiceDeliveryType?
+  invoiceReferenceNumber String?
+  eInvoiceAddress        String? // EDI or IBAN
+  operatorId             String?
+  peppolCode             String?
 
   provisioningOrders SpeProvisioningOrder[]
   permits            DataPermit[]

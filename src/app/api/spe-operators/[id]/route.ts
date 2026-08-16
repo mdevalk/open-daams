@@ -7,7 +7,9 @@ import { requireRole } from '@/lib/authz';
  * PATCH /api/spe-operators/[id]
  * Update an SPE operator's masterdata, including which provider it
  * contracts with (ADMIN-only).
- * body: { name?, contactEmail?, contactPhone?, speProviderId?, actingUserId }
+ * body: { name?, contactEmail?, contactPhone?, speProviderId?, address?, businessId?,
+ *         vatNumber?, invoiceType?, invoiceReferenceNumber?, eInvoiceAddress?, operatorId?,
+ *         peppolCode?, actingUserId }
  */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -24,6 +26,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         ...(body.contactEmail !== undefined ? { contactEmail: body.contactEmail || null } : {}),
         ...(body.contactPhone !== undefined ? { contactPhone: body.contactPhone || null } : {}),
         ...(body.speProviderId !== undefined ? { speProviderId: body.speProviderId || null } : {}),
+        ...(body.address !== undefined ? { address: body.address || null } : {}),
+        ...(body.businessId !== undefined ? { businessId: body.businessId || null } : {}),
+        ...(body.vatNumber !== undefined ? { vatNumber: body.vatNumber || null } : {}),
+        ...(body.invoiceType !== undefined ? { invoiceType: body.invoiceType || null } : {}),
+        ...(body.invoiceReferenceNumber !== undefined ? { invoiceReferenceNumber: body.invoiceReferenceNumber || null } : {}),
+        ...(body.eInvoiceAddress !== undefined ? { eInvoiceAddress: body.eInvoiceAddress || null } : {}),
+        ...(body.operatorId !== undefined ? { operatorId: body.operatorId || null } : {}),
+        ...(body.peppolCode !== undefined ? { peppolCode: body.peppolCode || null } : {}),
       },
       include: { speProvider: { select: { name: true } } },
     });
@@ -35,6 +45,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (body.speProviderId !== undefined) {
       changes.push(speOperator.speProvider ? `SPE provider set to ${speOperator.speProvider.name}` : 'SPE provider cleared');
     }
+    if (body.address !== undefined) changes.push('address');
+    if (body.businessId !== undefined) changes.push('business ID');
+    if (body.vatNumber !== undefined) changes.push('VAT number');
+    if (body.invoiceType !== undefined) changes.push('invoice type');
+    if (body.invoiceReferenceNumber !== undefined) changes.push('invoice reference number');
+    if (body.eInvoiceAddress !== undefined) changes.push('e-invoice address');
+    if (body.operatorId !== undefined) changes.push('operator ID');
+    if (body.peppolCode !== undefined) changes.push('Peppol code');
 
     await prisma.auditLog.create({
       data: {

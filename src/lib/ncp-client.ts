@@ -996,6 +996,7 @@ function mapMetadataToHdeuPayload(meta: NcpMetadata): HdeuPayload {
         peppolCode: section4.peppolCode,
         isProjectFinanciallyCovered: yesNo(section4.isTheProjectFinanciallyCovered),
         financingAmountRange: rawText(section4.rangeOfAmountOfFinancing),
+        section4ProfileDataDate: section4.section4ProfileDataDate,
       }
     : undefined;
 

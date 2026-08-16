@@ -17,7 +17,9 @@ export async function GET() {
 /**
  * POST /api/data-holders
  * Register a new data holder (Masterdata, ADMIN-only).
- * body: { name, contactEmail?, contactPhone?, isTrusted?, actingUserId }
+ * body: { name, contactEmail?, contactPhone?, isTrusted?, address?, businessId?, vatNumber?,
+ *         invoiceType?, invoiceReferenceNumber?, eInvoiceAddress?, operatorId?, peppolCode?,
+ *         actingUserId }
  */
 export async function POST(req: NextRequest) {
   try {
@@ -36,6 +38,14 @@ export async function POST(req: NextRequest) {
         contactEmail: body.contactEmail || null,
         contactPhone: body.contactPhone || null,
         isTrusted: Boolean(body.isTrusted),
+        address: body.address || null,
+        businessId: body.businessId || null,
+        vatNumber: body.vatNumber || null,
+        invoiceType: body.invoiceType || null,
+        invoiceReferenceNumber: body.invoiceReferenceNumber || null,
+        eInvoiceAddress: body.eInvoiceAddress || null,
+        operatorId: body.operatorId || null,
+        peppolCode: body.peppolCode || null,
       },
     });
 

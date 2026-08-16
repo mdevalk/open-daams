@@ -6,7 +6,9 @@ import { requireRole } from '@/lib/authz';
 /**
  * PATCH /api/data-holders/[id]
  * Update a data holder's masterdata (ADMIN-only).
- * body: { name?, contactEmail?, contactPhone?, isTrusted?, actingUserId }
+ * body: { name?, contactEmail?, contactPhone?, isTrusted?, address?, businessId?, vatNumber?,
+ *         invoiceType?, invoiceReferenceNumber?, eInvoiceAddress?, operatorId?, peppolCode?,
+ *         actingUserId }
  */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -23,6 +25,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         ...(body.contactEmail !== undefined ? { contactEmail: body.contactEmail || null } : {}),
         ...(body.contactPhone !== undefined ? { contactPhone: body.contactPhone || null } : {}),
         ...(body.isTrusted !== undefined ? { isTrusted: Boolean(body.isTrusted) } : {}),
+        ...(body.address !== undefined ? { address: body.address || null } : {}),
+        ...(body.businessId !== undefined ? { businessId: body.businessId || null } : {}),
+        ...(body.vatNumber !== undefined ? { vatNumber: body.vatNumber || null } : {}),
+        ...(body.invoiceType !== undefined ? { invoiceType: body.invoiceType || null } : {}),
+        ...(body.invoiceReferenceNumber !== undefined ? { invoiceReferenceNumber: body.invoiceReferenceNumber || null } : {}),
+        ...(body.eInvoiceAddress !== undefined ? { eInvoiceAddress: body.eInvoiceAddress || null } : {}),
+        ...(body.operatorId !== undefined ? { operatorId: body.operatorId || null } : {}),
+        ...(body.peppolCode !== undefined ? { peppolCode: body.peppolCode || null } : {}),
       },
     });
 
@@ -31,6 +41,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (body.contactEmail !== undefined) changes.push('contact email');
     if (body.contactPhone !== undefined) changes.push('contact phone');
     if (body.isTrusted !== undefined) changes.push(body.isTrusted ? 'marked as trusted' : 'un-marked as trusted');
+    if (body.address !== undefined) changes.push('address');
+    if (body.businessId !== undefined) changes.push('business ID');
+    if (body.vatNumber !== undefined) changes.push('VAT number');
+    if (body.invoiceType !== undefined) changes.push('invoice type');
+    if (body.invoiceReferenceNumber !== undefined) changes.push('invoice reference number');
+    if (body.eInvoiceAddress !== undefined) changes.push('e-invoice address');
+    if (body.operatorId !== undefined) changes.push('operator ID');
+    if (body.peppolCode !== undefined) changes.push('Peppol code');
 
     await prisma.auditLog.create({
       data: {

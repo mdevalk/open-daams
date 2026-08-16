@@ -694,7 +694,7 @@ export async function createApplicationFromHdeuPayload(
 
   if (p.invoicingDetails) {
     const { section4ProfileDataDate, ...invoicingData } = p.invoicingDetails;
-    await prisma.applicantInvoicingDetails.create({
+    await prisma.applicantBillingDetails.create({
       data: { applicationId: application.id, ...invoicingData, section4ProfileDataDate: toDate(section4ProfileDataDate) },
     });
   }

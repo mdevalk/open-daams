@@ -3,8 +3,30 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { readErrorMessage } from '@/lib/utils';
+import { readErrorMessage, formatDate } from '@/lib/utils';
 import { SpeTypeList, SpeType } from './SpeTypeList';
+
+// The full ApplicantBillingDetails shape (minus id/applicationId/createdAt),
+// shown by reference on a Data User row — not stored there, just the most
+// recent one among that organisation's applications (see masterdata/page.tsx).
+type ApplicantBillingDetails = {
+  sameAsContactPerson: boolean | null;
+  fullName: string | null;
+  email: string | null;
+  phone: string | null;
+  organisationName: string | null;
+  address: string | null;
+  businessId: string | null;
+  vatNumber: string | null;
+  invoiceType: string | null;
+  invoiceReferenceNumber: string | null;
+  eInvoiceAddress: string | null;
+  operatorId: string | null;
+  peppolCode: string | null;
+  isProjectFinanciallyCovered: boolean | null;
+  financingAmountRange: string | null;
+  section4ProfileDataDate: string | Date | null;
+};
 
 type Entity = {
   id: string;
@@ -15,6 +37,15 @@ type Entity = {
   speProviderId?: string | null;
   isTrusted?: boolean;
   types?: SpeType[];
+  address?: string | null;
+  businessId?: string | null;
+  vatNumber?: string | null;
+  invoiceType?: string | null;
+  invoiceReferenceNumber?: string | null;
+  eInvoiceAddress?: string | null;
+  operatorId?: string | null;
+  peppolCode?: string | null;
+  billingDetails?: ApplicantBillingDetails | null;
 };
 
 type Props = {
@@ -24,14 +55,90 @@ type Props = {
   relationOptions?: { id: string; name: string }[];
   hasTrustedFlag?: boolean;
   hasSpeTypes?: boolean;
+  hasBillingDetails?: boolean;
+  hasBillingDetailsDisplay?: boolean;
   isAdmin: boolean;
   currentUserId: string;
 };
 
+type BillingFields = {
+  address: string;
+  businessId: string;
+  vatNumber: string;
+  invoiceType: string; // '' | 'PAPER' | 'ELECTRONIC'
+  invoiceReferenceNumber: string;
+  eInvoiceAddress: string;
+  operatorId: string;
+  peppolCode: string;
+};
+
+const EMPTY_BILLING: BillingFields = {
+  address: '',
+  businessId: '',
+  vatNumber: '',
+  invoiceType: '',
+  invoiceReferenceNumber: '',
+  eInvoiceAddress: '',
+  operatorId: '',
+  peppolCode: '',
+};
+
+function billingFieldsFromEntity(entity: Entity): BillingFields {
+  return {
+    address: entity.address ?? '',
+    businessId: entity.businessId ?? '',
+    vatNumber: entity.vatNumber ?? '',
+    invoiceType: entity.invoiceType ?? '',
+    invoiceReferenceNumber: entity.invoiceReferenceNumber ?? '',
+    eInvoiceAddress: entity.eInvoiceAddress ?? '',
+    operatorId: entity.operatorId ?? '',
+    peppolCode: entity.peppolCode ?? '',
+  };
+}
+
+function billingFieldsToPayload(billing: BillingFields) {
+  return {
+    address: billing.address || null,
+    businessId: billing.businessId || null,
+    vatNumber: billing.vatNumber || null,
+    invoiceType: billing.invoiceType || null,
+    invoiceReferenceNumber: billing.invoiceReferenceNumber || null,
+    eInvoiceAddress: billing.eInvoiceAddress || null,
+    operatorId: billing.operatorId || null,
+    peppolCode: billing.peppolCode || null,
+  };
+}
+
+// Full field list for the read-only, by-reference display on a Data User
+// row (see ApplicantBillingDetails above) — every field that model has,
+// not just the 8-field subset Data Holder/SPE Operator edit manually.
+const APPLICANT_BILLING_DISPLAY_FIELDS: { key: keyof ApplicantBillingDetails; labelKey: string; type?: 'boolean' | 'date' }[] = [
+  { key: 'fullName', labelKey: 'billingContactName' },
+  { key: 'email', labelKey: 'billingContactEmail' },
+  { key: 'phone', labelKey: 'billingContactPhone' },
+  { key: 'sameAsContactPerson', labelKey: 'sameAsContactPerson', type: 'boolean' },
+  { key: 'organisationName', labelKey: 'organisationName' },
+  { key: 'address', labelKey: 'address' },
+  { key: 'businessId', labelKey: 'businessId' },
+  { key: 'vatNumber', labelKey: 'vatNumber' },
+  { key: 'invoiceType', labelKey: 'invoiceType' },
+  { key: 'invoiceReferenceNumber', labelKey: 'invoiceReferenceNumber' },
+  { key: 'eInvoiceAddress', labelKey: 'eInvoiceAddress' },
+  { key: 'operatorId', labelKey: 'operatorId' },
+  { key: 'peppolCode', labelKey: 'peppolCode' },
+  { key: 'isProjectFinanciallyCovered', labelKey: 'financiallyCovered', type: 'boolean' },
+  { key: 'financingAmountRange', labelKey: 'financingAmountRange' },
+  { key: 'section4ProfileDataDate', labelKey: 'section4ProfileDataDate', type: 'date' },
+];
+
+function hasFieldValue(value: unknown, type?: 'boolean' | 'date'): boolean {
+  return type === 'boolean' ? value !== null && value !== undefined : Boolean(value);
+}
+
 const inputCls =
   'w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]';
 
-export function MasterdataManager({ apiBasePath, namespace, entities, relationOptions, hasTrustedFlag, hasSpeTypes, isAdmin, currentUserId }: Props) {
+export function MasterdataManager({ apiBasePath, namespace, entities, relationOptions, hasTrustedFlag, hasSpeTypes, hasBillingDetails, hasBillingDetailsDisplay, isAdmin, currentUserId }: Props) {
   const router = useRouter();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const t = useTranslations(namespace as any);
@@ -45,6 +152,7 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
   const [editPhone, setEditPhone] = useState('');
   const [editProviderId, setEditProviderId] = useState('');
   const [editTrusted, setEditTrusted] = useState(false);
+  const [editBilling, setEditBilling] = useState<BillingFields>(EMPTY_BILLING);
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [newName, setNewName] = useState('');
@@ -52,6 +160,7 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
   const [newPhone, setNewPhone] = useState('');
   const [newProviderId, setNewProviderId] = useState('');
   const [newTrusted, setNewTrusted] = useState(false);
+  const [newBilling, setNewBilling] = useState<BillingFields>(EMPTY_BILLING);
 
   function startEdit(entity: Entity) {
     setEditingId(entity.id);
@@ -60,7 +169,54 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
     setEditPhone(entity.contactPhone ?? '');
     setEditProviderId(entity.speProviderId ?? '');
     setEditTrusted(entity.isTrusted ?? false);
+    setEditBilling(billingFieldsFromEntity(entity));
     setError(null);
+  }
+
+  function renderBillingFields(billing: BillingFields, setBilling: (b: BillingFields) => void) {
+    return (
+      <div className="space-y-2 border-t border-gray-100 pt-2">
+        <p className="text-xs font-semibold text-gray-700">{t('billingDetailsTitle')}</p>
+        <textarea
+          value={billing.address}
+          onChange={(e) => setBilling({ ...billing, address: e.target.value })}
+          placeholder={t('address')}
+          rows={2}
+          className={inputCls}
+        />
+        <div className="grid grid-cols-2 gap-2">
+          <input value={billing.businessId} onChange={(e) => setBilling({ ...billing, businessId: e.target.value })} placeholder={t('businessId')} className={inputCls} />
+          <input value={billing.vatNumber} onChange={(e) => setBilling({ ...billing, vatNumber: e.target.value })} placeholder={t('vatNumber')} className={inputCls} />
+        </div>
+        <div>
+          <p className="text-xs text-gray-500 mb-1">{t('invoiceType')}</p>
+          <div className="inline-flex rounded border border-gray-300 overflow-hidden text-xs">
+            <button
+              type="button"
+              onClick={() => setBilling({ ...billing, invoiceType: billing.invoiceType === 'PAPER' ? '' : 'PAPER' })}
+              className={`px-3 py-1 ${billing.invoiceType === 'PAPER' ? 'bg-[#154273] text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+            >
+              {t('invoiceTypePaper')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setBilling({ ...billing, invoiceType: billing.invoiceType === 'ELECTRONIC' ? '' : 'ELECTRONIC' })}
+              className={`px-3 py-1 border-l border-gray-300 ${billing.invoiceType === 'ELECTRONIC' ? 'bg-[#154273] text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+            >
+              {t('invoiceTypeElectronic')}
+            </button>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <input value={billing.invoiceReferenceNumber} onChange={(e) => setBilling({ ...billing, invoiceReferenceNumber: e.target.value })} placeholder={t('invoiceReferenceNumber')} className={inputCls} />
+          <input value={billing.eInvoiceAddress} onChange={(e) => setBilling({ ...billing, eInvoiceAddress: e.target.value })} placeholder={t('eInvoiceAddress')} className={inputCls} />
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <input value={billing.operatorId} onChange={(e) => setBilling({ ...billing, operatorId: e.target.value })} placeholder={t('operatorId')} className={inputCls} />
+          <input value={billing.peppolCode} onChange={(e) => setBilling({ ...billing, peppolCode: e.target.value })} placeholder={t('peppolCode')} className={inputCls} />
+        </div>
+      </div>
+    );
   }
 
   async function saveEdit(id: string) {
@@ -76,6 +232,7 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
           contactPhone: editPhone || null,
           ...(relationOptions ? { speProviderId: editProviderId || null } : {}),
           ...(hasTrustedFlag ? { isTrusted: editTrusted } : {}),
+          ...(hasBillingDetails ? billingFieldsToPayload(editBilling) : {}),
           actingUserId: currentUserId,
         }),
       });
@@ -120,6 +277,7 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
           contactPhone: newPhone || null,
           ...(relationOptions ? { speProviderId: newProviderId || null } : {}),
           ...(hasTrustedFlag ? { isTrusted: newTrusted } : {}),
+          ...(hasBillingDetails ? billingFieldsToPayload(newBilling) : {}),
           actingUserId: currentUserId,
         }),
       });
@@ -129,6 +287,7 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
       setNewPhone('');
       setNewProviderId('');
       setNewTrusted(false);
+      setNewBilling(EMPTY_BILLING);
       setShowAddForm(false);
       router.refresh();
     } catch (e: unknown) {
@@ -170,6 +329,7 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
                     {t('trustedCheckbox')}
                   </label>
                 )}
+                {hasBillingDetails && renderBillingFields(editBilling, setEditBilling)}
                 <div className="flex gap-2">
                   <button disabled={loading || !editName.trim()} onClick={() => saveEdit(entity.id)}
                     className="rounded px-3 py-1.5 text-xs font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50">
@@ -199,6 +359,24 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
                   )}
                   {relationOptions && (
                     <p className="text-xs text-gray-400">{t('providerLabel')}: {entity.speProvider?.name ?? '—'}</p>
+                  )}
+                  {hasBillingDetailsDisplay && entity.billingDetails && (
+                    <div className="mt-2 pt-2 border-t border-gray-100">
+                      <p className="text-xs font-semibold text-gray-700 mb-1">{t('billingDetailsTitle')}</p>
+                      <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                        {APPLICANT_BILLING_DISPLAY_FIELDS.map(({ key, labelKey, type }) => {
+                          const value = entity.billingDetails![key];
+                          if (!hasFieldValue(value, type)) return null;
+                          const display = type === 'boolean' ? t(value ? 'yes' : 'no') : type === 'date' ? formatDate(value as string) : (value as string);
+                          return (
+                            <div key={key}>
+                              <dt className="text-gray-400">{t(labelKey)}</dt>
+                              <dd className="text-gray-700">{display}</dd>
+                            </div>
+                          );
+                        })}
+                      </dl>
+                    </div>
                   )}
                 </div>
                 {isAdmin && (
@@ -244,6 +422,7 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
                 {t('trustedCheckbox')}
               </label>
             )}
+            {hasBillingDetails && renderBillingFields(newBilling, setNewBilling)}
             <div className="flex gap-2">
               <button disabled={loading || !newName.trim()} onClick={submitNew}
                 className="rounded px-3 py-1.5 text-xs font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50">

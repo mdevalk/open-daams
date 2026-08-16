@@ -22,21 +22,40 @@ export default async function MasterdataPage({
 
   const t = await getTranslations({ locale, namespace: 'masterdata' });
 
-  const [users, dataHolders, speOperators, speProviders, dataUsers, auditLogEntries] = await Promise.all([
-    prisma.user.findMany({ orderBy: { name: 'asc' } }),
-    prisma.dataHolder.findMany({ orderBy: { name: 'asc' } }),
-    prisma.speOperator.findMany({
-      include: { speProvider: { select: { name: true } }, types: { orderBy: { name: 'asc' } } },
-      orderBy: { name: 'asc' },
-    }),
-    prisma.speProvider.findMany({ orderBy: { name: 'asc' } }),
-    prisma.dataUser.findMany({ orderBy: { name: 'asc' } }),
-    prisma.auditLog.findMany({
-      include: { user: { select: { name: true } } },
-      orderBy: { createdAt: 'desc' },
-      take: 20,
-    }),
-  ]);
+  const [users, dataHolders, speOperators, speProviders, dataUsers, applicantBillingDetailsList, auditLogEntries] =
+    await Promise.all([
+      prisma.user.findMany({ orderBy: { name: 'asc' } }),
+      prisma.dataHolder.findMany({ orderBy: { name: 'asc' } }),
+      prisma.speOperator.findMany({
+        include: { speProvider: { select: { name: true } }, types: { orderBy: { name: 'asc' } } },
+        orderBy: { name: 'asc' },
+      }),
+      prisma.speProvider.findMany({ orderBy: { name: 'asc' } }),
+      prisma.dataUser.findMany({ orderBy: { name: 'asc' } }),
+      // Not stored on DataUser — shown by reference: the most recent
+      // ApplicantBillingDetails among all applications from any user
+      // belonging to that organisation (first per dataUserId wins, since
+      // ordered newest-first below).
+      prisma.applicantBillingDetails.findMany({
+        include: { application: { select: { applicant: { select: { dataUserId: true } } } } },
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.auditLog.findMany({
+        include: { user: { select: { name: true } } },
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+      }),
+    ]);
+
+  const billingDetailsByDataUserId = new Map<string, (typeof applicantBillingDetailsList)[number]>();
+  for (const bd of applicantBillingDetailsList) {
+    const dataUserId = bd.application.applicant.dataUserId;
+    if (!billingDetailsByDataUserId.has(dataUserId)) billingDetailsByDataUserId.set(dataUserId, bd);
+  }
+  const dataUsersForClient = dataUsers.map((du) => ({
+    ...du,
+    billingDetails: billingDetailsByDataUserId.get(du.id) ?? null,
+  }));
 
   const currentUser =
     (queryUserId ? users.find((u) => u.id === queryUserId) : null) ??
@@ -55,8 +74,8 @@ export default async function MasterdataPage({
     types: op.types.map((t) => ({ ...t, setupFee: t.setupFee.toString(), monthlyFee: t.monthlyFee.toString() })),
   }));
 
-  const tabConfig: Record<Tab, { label: string; apiBasePath: string; namespace: string; entities: unknown[]; relationOptions?: { id: string; name: string }[]; hasTrustedFlag?: boolean; hasSpeTypes?: boolean }> = {
-    'data-holders': { label: t('tabDataHolders'), apiBasePath: '/api/data-holders', namespace: 'dataHolders', entities: dataHolders, hasTrustedFlag: true },
+  const tabConfig: Record<Tab, { label: string; apiBasePath: string; namespace: string; entities: unknown[]; relationOptions?: { id: string; name: string }[]; hasTrustedFlag?: boolean; hasSpeTypes?: boolean; hasBillingDetails?: boolean; hasBillingDetailsDisplay?: boolean }> = {
+    'data-holders': { label: t('tabDataHolders'), apiBasePath: '/api/data-holders', namespace: 'dataHolders', entities: dataHolders, hasTrustedFlag: true, hasBillingDetails: true },
     'spe-operators': {
       label: t('tabSpeOperators'),
       apiBasePath: '/api/spe-operators',
@@ -64,9 +83,10 @@ export default async function MasterdataPage({
       entities: speOperatorsForClient,
       relationOptions: speProviders,
       hasSpeTypes: true,
+      hasBillingDetails: true,
     },
     'spe-providers': { label: t('tabSpeProviders'), apiBasePath: '/api/spe-providers', namespace: 'speProviders', entities: speProviders },
-    'data-users': { label: t('tabDataUsers'), apiBasePath: '/api/data-users', namespace: 'dataUsers', entities: dataUsers },
+    'data-users': { label: t('tabDataUsers'), apiBasePath: '/api/data-users', namespace: 'dataUsers', entities: dataUsersForClient, hasBillingDetailsDisplay: true },
   };
 
   return (
@@ -103,6 +123,8 @@ export default async function MasterdataPage({
             relationOptions={tabConfig[tab].relationOptions}
             hasTrustedFlag={tabConfig[tab].hasTrustedFlag}
             hasSpeTypes={tabConfig[tab].hasSpeTypes}
+            hasBillingDetails={tabConfig[tab].hasBillingDetails}
+            hasBillingDetailsDisplay={tabConfig[tab].hasBillingDetailsDisplay}
             isAdmin={isAdmin}
             currentUserId={currentUser.id}
           />
