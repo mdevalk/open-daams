@@ -9,3 +9,6 @@ coverage/
 next-env.d.ts
 npm-debug.log*
 *.tsbuildinfo
+.venv/
+.vscode/
+.claude/settings.local.json
