@@ -42,13 +42,13 @@ fit together in code.
 | Data permit document (10-section template) | D6.3 Annex 9; mandatory content per Art. 68(10) |
 | Permit validity, amendment, renewal (once) | Art. 68(12) |
 | Permit revocation for non-compliance | Art. 63(1) |
-| List of persons authorised to process data in the SPE | D6.3 Annex 9 §6.8, Art. 73 |
+| List of persons authorised to process data in the SPE — role-differentiated (researcher, auto-derived from the application; output controller, HDAB-selected per D6.3's four-eyes principle), each with a sample DID identity; each granted dataset also carries a signed storage-location write instruction for the data holder | D6.3 Annex 9 §6.8, Art. 73 |
 | SPE operator selection at permit issuance/amendment (provider derived from operator) | Art. 73 |
 | Extraction requests to health data holders | Art. 60, Art. 68(7) |
 | Appeal (bezwaar/beroep) tracking against a decision | Art. 63 / national administrative law |
 | Public transparency register (applications & decisions) | Art. 57(1)(j)(ii), Art. 58, Art. 61(4) |
 | Cross-border application import via HealthData@EU | Art. 75 |
-| Role-based access control, enforced server-side on reads and writes (no real authentication — see [security assessments](#security)) | Art. 57 (HDAB responsibilities), implemented as internal RBAC |
+| Role-based access control, enforced server-side on reads and writes (no real authentication — see [assessments](#assessments)) | Art. 57 (HDAB responsibilities), implemented as internal RBAC |
 | Audit trail of application/permit/SPE-provisioning transitions and reference-data changes | supports record-keeping under Art. 57(1) |
 | Trusted data holder flag (registry) + selector on an application | Art. 72 — partial, see below |
 
@@ -148,14 +148,21 @@ Run the unit test suite with `npm run test` (or `npm run test:watch` while devel
 the port it publishes, so they work regardless of how `docker compose` named it. This is a manual,
 on-demand mechanism — no scheduling, retention, or offsite copy.
 
-## Security
+## Assessments
 
 This app has **no real authentication** — role-based access control trusts a client-supplied
 user id, a documented and deliberate simplification for this reference implementation (see
-[`CLAUDE.md`](./CLAUDE.md)). An assessment tracks the resulting gaps and what's been hardened
-around them:
+[`CLAUDE.md`](./CLAUDE.md)). Each assessment below is written against the bar a real deployment
+would need to clear, not a certification — see each document's own framing note.
 
-- [`docs/owasp-top10-assessment.md`](./docs/owasp-top10-assessment.md) — mapped to the OWASP Top 10 (2021)
+- [`docs/owasp-top10-assessment.md`](./docs/owasp-top10-assessment.md) — OWASP Top 10 (2021)
+- [`docs/nis2-assessment.md`](./docs/nis2-assessment.md) — NIS2 (Directive (EU) 2022/2555 /
+  Cyberbeveiligingswet)
+- [`docs/bio2-assessment.md`](./docs/bio2-assessment.md) — BIO2 (Dutch public-sector baseline,
+  ISO/IEC 27002:2022)
+- [`docs/wcag-2.1-assessment.md`](./docs/wcag-2.1-assessment.md) — WCAG 2.1 AA (accessibility)
+- [`docs/comply-or-explain-assessment.md`](./docs/comply-or-explain-assessment.md) — Forum
+  Standaardisatie's "pas toe of leg uit" open-standards list
 
 ## References
 
