@@ -46,7 +46,7 @@ export default async function ApplicationDetailPage({
 
   const t = await getTranslations({ locale, namespace: 'applicationDetail' });
 
-  const [rawApplication, users, dataHolders, speOperators] = await Promise.all([
+  const [rawApplication, users, dataHolders, speOperators, dataUsers] = await Promise.all([
     prisma.application.findUnique({
       where: { id },
       include: {
@@ -101,6 +101,10 @@ export default async function ApplicationDetailPage({
     prisma.user.findMany({ orderBy: { name: 'asc' } }),
     prisma.dataHolder.findMany({ orderBy: { name: 'asc' } }),
     prisma.speOperator.findMany({ include: { types: { orderBy: { name: 'asc' } } }, orderBy: { name: 'asc' } }),
+    // Output-controller affiliation can also be a data user (applicant)
+    // organisation, not just a data holder — restricted to DataUser records
+    // that actually have an applicant, filtering out HDAB's own internal ones.
+    prisma.dataUser.findMany({ where: { users: { some: { role: 'APPLICANT' } } }, orderBy: { name: 'asc' } }),
   ]);
 
   // Decimal is a class instance, not a plain object — React's server->client
@@ -937,6 +941,8 @@ export default async function ApplicationDetailPage({
           <PermitPanel
             application={{ ...application, dataPermit: currentPermit }}
             currentUser={currentUser}
+            dataHolders={dataHolders}
+            dataUsers={dataUsers}
           />
           {application.decisionOutcome === 'POSITIVE' && (
             <ExtractionRequestsPanel

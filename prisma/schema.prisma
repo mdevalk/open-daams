@@ -220,6 +220,7 @@ model User {
   permitChangeRequestsMade    PermitChangeRequest[]   @relation("PermitChangeRequested")
   permitChangeRequestsDecided PermitChangeRequest[]   @relation("PermitChangeDecided")
   ncpIntegrationLogs          NcpIntegrationLog[]
+  authorizedStorageLocations  StorageLocation[]
 }
 
 model Application {
@@ -1157,14 +1158,33 @@ model FinancialLineItem {
 
 // Annex 9 §6.8 — persons entitled to process the data granted under this
 // permit within the secure processing environment (SPE)
+// RESEARCHER/OUTPUT_CONTROLLER are created at issuance (sourced from the
+// application's personResearch*/personResponsible* fields, and from HDAB's
+// own selection respectively — see src/app/api/permits/route.ts) and are
+// signed into the permit payload; other AuthorizedPerson rows added later
+// via this model's own POST/DELETE routes stay roleless and unsigned, same
+// as before this enum existed.
+enum AuthorizedPersonRole {
+  RESEARCHER
+  OUTPUT_CONTROLLER
+}
+
 model AuthorizedPerson {
-  id          String     @id @default(cuid())
+  id          String                @id @default(cuid())
   permitId    String
-  permit      DataPermit @relation(fields: [permitId], references: [id])
+  permit      DataPermit            @relation(fields: [permitId], references: [id])
   name        String
+  // Free text, but UI-constrained to existing DataHolder/DataUser names for
+  // now — no FK, so this stays simple to relax later (HDAB itself, external
+  // experts) without a schema change.
   affiliation String
-  email       String
-  addedAt     DateTime   @default(now())
+  role        AuthorizedPersonRole?
+  // Sample/placeholder identity string (src/lib/did.ts) — not backed by a
+  // real keypair; see StorageLocation.writerDid for the same convention.
+  // Not unique: an unchanged researcher/output controller is carried
+  // forward into a fresh row (same did) on every new permit version.
+  did         String?
+  addedAt     DateTime              @default(now())
 }
 
 // A dataset granted from a specific data holder, fixed for the life of this
@@ -1195,6 +1215,30 @@ model GrantedDataset {
   catalogId      String?
   distributions  Json?
   createdAt      DateTime    @default(now())
+
+  storageLocation StorageLocation?
+}
+
+// Where the data holder should upload this dataset's data, and the sample
+// identity (src/lib/did.ts) it authenticates that upload with — created
+// alongside its GrantedDataset at permit issuance and, like GrantedDataset,
+// frozen into the signed permit payload (lib/permit-signing.ts). Not tied to
+// a named person: any of the data holder's staff can use writerDid.
+model StorageLocation {
+  id               String         @id @default(cuid())
+  grantedDatasetId String         @unique
+  grantedDataset   GrantedDataset @relation(fields: [grantedDatasetId], references: [id], onDelete: Cascade)
+
+  reference String // urn:objectstore:bucket:<slug>
+  // Not unique: an unchanged storage location is carried forward into a
+  // fresh row (same reference/writerDid) on every new permit version.
+  writerDid String
+
+  authorizedAt   DateTime @default(now())
+  authorizedById String
+  authorizedBy   User     @relation(fields: [authorizedById], references: [id])
+
+  createdAt DateTime @default(now())
 }
 
 // Immutable audit log for the permit lifecycle

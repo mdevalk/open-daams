@@ -327,6 +327,8 @@
     "datasetId": "ID du jeu de données",
     "catalogId": "ID du catalogue",
     "distributions": "Distributions",
+    "storageLocation": "Emplacement de stockage",
+    "writerDid": "Identité d'accès en écriture",
     "variables": "Variables demandées",
     "studyPopulation": "Population étudiée",
     "inclusionCriteria": "Critères d'inclusion",
@@ -356,8 +358,7 @@
     "signatureAlgorithm": "Algorithme",
     "signatureKeyId": "ID de clé",
     "signedAt": "Signé le",
-    "signature": "Signature",
-    "downloadDigitalPermit": "Télécharger le permis numérique (JSON)"
+    "signature": "Signature"
   },
   "decisionCardPanel": {
     "title": "Acceptation de la pré-autorisation",
@@ -392,6 +393,9 @@
     "issueSubtitle": "Décision positive prise. Délivrez une autorisation de traitement de données EHDS (D6.4 §9).",
     "validFrom": "Valable du",
     "validUntil": "Valable jusqu'au",
+    "outputControllerTitle": "Contrôleur de sortie (contrôle à quatre yeux sur la sortie du SPE)",
+    "outputControllerName": "Nom",
+    "outputControllerAffiliation": "Affiliation",
     "issueButton": "Délivrer l'autorisation",
     "noPermission": "Seul un DECISION_MAKER ou ADMIN peut délivrer une autorisation.",
     "loading": "En cours...",
@@ -535,6 +539,10 @@
     "effectiveDateHint": "Laisser vide pour une application immédiate. Une date future reporte l'activation jusqu'à ce qu'un membre du personnel la complète (D6.4 R9.3.9).",
     "speOperator": "Opérateur SPE",
     "speOperatorUnchanged": "— laisser inchangé —",
+    "outputController": "Contrôleur de sortie",
+    "outputControllerNameUnchanged": "Nom (laisser vide pour ne pas changer)",
+    "outputControllerAffiliationUnchanged": "— laisser inchangé —",
+    "outputControllerHint": "Uniquement re-sélectionnable lors de l'approbation d'une modification. Les deux champs doivent être renseignés ensemble pour changer le contrôleur de sortie.",
     "pendingActivation": "Modification approuvée — en attente d'activation (v{version})",
     "pendingActivationDate": "Entre en vigueur le {date}",
     "activateNow": "Activer maintenant",
@@ -567,15 +575,10 @@
   },
   "authorizedPersons": {
     "title": "Personnes autorisées (Annexe 9 §6.8)",
-    "add": "+ Ajouter",
     "empty": "Aucune personne autorisée à traiter dans le SPE.",
-    "remove": "Supprimer",
-    "name": "Nom",
-    "affiliation": "Affiliation",
-    "email": "E-mail",
-    "addButton": "Ajouter",
-    "cancel": "Annuler",
-    "saving": "En cours…"
+    "roleResearcher": "Chercheur",
+    "roleOutputController": "Contrôleur de sortie",
+    "did": "Identité"
   },
   "speProvisioning": {
     "title": "Environnement de traitement sécurisé (art. 73)",

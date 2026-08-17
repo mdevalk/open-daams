@@ -37,6 +37,8 @@ type Props = {
   pendingVersion?: PendingVersion | null;
   isDataRequest: boolean;
   speOperators: { id: string; name: string }[];
+  dataHolders: { id: string; name: string }[];
+  dataUsers: { id: string; name: string }[];
 };
 
 const inputCls =
@@ -52,6 +54,8 @@ export function PermitChangeRequestPanel({
   pendingVersion,
   isDataRequest,
   speOperators,
+  dataHolders,
+  dataUsers,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -82,6 +86,10 @@ export function PermitChangeRequestPanel({
     }
   }
 
+  // Output controller affiliation can be a data holder or a data user
+  // (applicant) organisation — merged into one alphabetical option list.
+  const affiliationOptions = [...dataHolders, ...dataUsers].sort((a, b) => a.name.localeCompare(b.name));
+
   const available = requestableTypes(permitStatus);
   const [newType, setNewType] = useState<PermitChangeType | ''>('');
   const [justification, setJustification] = useState('');
@@ -92,6 +100,11 @@ export function PermitChangeRequestPanel({
   const [newValidUntil, setNewValidUntil] = useState('');
   const [effectiveDate, setEffectiveDate] = useState('');
   const [speOperatorId, setSpeOperatorId] = useState('');
+  // Re-selecting the output controller is only possible when approving an
+  // amendment (see AuthorizedPersonsPanel's read-only framing) — blank
+  // means "keep the current version's output controller unchanged."
+  const [outputControllerName, setOutputControllerName] = useState('');
+  const [outputControllerAffiliation, setOutputControllerAffiliation] = useState('');
 
   async function submitRequest() {
     if (!newType) return;
@@ -131,6 +144,10 @@ export function PermitChangeRequestPanel({
             decision === 'APPROVED' && request.type === 'AMENDMENT' ? effectiveDate || undefined : undefined,
           speOperatorId:
             decision === 'APPROVED' && request.type === 'AMENDMENT' ? speOperatorId || undefined : undefined,
+          outputControllerName:
+            decision === 'APPROVED' && request.type === 'AMENDMENT' ? outputControllerName || undefined : undefined,
+          outputControllerAffiliation:
+            decision === 'APPROVED' && request.type === 'AMENDMENT' ? outputControllerAffiliation || undefined : undefined,
         }),
       });
       if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
@@ -140,6 +157,8 @@ export function PermitChangeRequestPanel({
       setNewValidUntil('');
       setEffectiveDate('');
       setSpeOperatorId('');
+      setOutputControllerName('');
+      setOutputControllerAffiliation('');
       // Immediate approval issues a new CURRENT permit version — navigate to
       // it. A deferred (pending-activation) approval stays on this page,
       // since the old version is still the operative one.
@@ -231,6 +250,29 @@ export function PermitChangeRequestPanel({
                       </select>
                     </div>
                   )}
+                  {r.type === 'AMENDMENT' && (
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">{t('outputController')}</label>
+                      <input
+                        type="text"
+                        value={outputControllerName}
+                        onChange={(e) => setOutputControllerName(e.target.value)}
+                        placeholder={t('outputControllerNameUnchanged')}
+                        className={inputCls}
+                      />
+                      <select
+                        value={outputControllerAffiliation}
+                        onChange={(e) => setOutputControllerAffiliation(e.target.value)}
+                        className={`${inputCls} mt-1`}
+                      >
+                        <option value="">{t('outputControllerAffiliationUnchanged')}</option>
+                        {affiliationOptions.map((o) => (
+                          <option key={o.id} value={o.name}>{o.name}</option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-gray-400 mt-1">{t('outputControllerHint')}</p>
+                    </div>
+                  )}
                   <textarea
                     rows={2}
                     value={decisionComment}
@@ -270,6 +312,8 @@ export function PermitChangeRequestPanel({
                     setNewValidUntil('');
                     setEffectiveDate('');
                     setSpeOperatorId('');
+                    setOutputControllerName('');
+                    setOutputControllerAffiliation('');
                   }}
                   className="text-xs text-[#01689b] hover:underline"
                 >

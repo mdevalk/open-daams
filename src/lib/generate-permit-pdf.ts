@@ -90,7 +90,7 @@ export type PermitPdfData = {
   signingKeyId?: string | null;
   currency?: string | null;
   lineItems?: Array<{ category: FinancialLineCategory; description?: string | null; amount: unknown }> | null;
-  authorizedPersons?: Array<{ name: string; affiliation: string; email: string }> | null;
+  authorizedPersons?: Array<{ name: string; affiliation: string; role?: string | null; did?: string | null }> | null;
   grantedDatasets?: Array<{
     dataHolderName: string;
     name: string;
@@ -100,6 +100,7 @@ export type PermitPdfData = {
     // Prisma.JsonValue at the call site (a raw query result) — see
     // groupDatasetsByHolder's own comment on why this stays untyped here.
     distributions?: unknown;
+    storageLocation?: { reference: string; writerDid: string } | null;
   }> | null;
   speOperatorId?: string | null;
   speOperatorName?: string | null;
@@ -480,6 +481,10 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
         .filter(Boolean)
         .join(' | ');
       doc.bullet(idBits ? `${label} (${idBits})` : label);
+      if (dataset.storageLocation) {
+        doc.field('Opslaglocatie', dataset.storageLocation.reference);
+        doc.field('Identiteit voor schrijftoegang', dataset.storageLocation.writerDid);
+      }
     }
   }
   if (app?.requestedVariables) {
@@ -541,8 +546,19 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
 
   doc.subheading('6.8  Personen die gemachtigd zijn de gegevens te verwerken');
   if (permit.authorizedPersons && permit.authorizedPersons.length > 0) {
+    const ROLE_NL: Record<string, string> = { RESEARCHER: 'Onderzoeker', OUTPUT_CONTROLLER: 'Uitvoercontroleur' };
     for (const person of permit.authorizedPersons) {
-      doc.bullet(`${person.name} — ${person.affiliation} (${person.email})`);
+      if (person.role) {
+        // Fixed at issuance, signed into the permit — organisation, role and
+        // identity only, never the individual's name (see
+        // SignableAuthorizedPerson in permit-signing.ts).
+        const roleLabel = ROLE_NL[person.role] ?? person.role;
+        doc.bullet(`${person.affiliation} (${roleLabel})`);
+        if (person.did) doc.field('Identiteit', person.did);
+      } else {
+        doc.bullet(`${person.name} — ${person.affiliation}`);
+        if (person.did) doc.field('Identiteit', person.did);
+      }
     }
   } else {
     doc.placeholder('Lijst van gemachtigde personen (naam, affiliatie, e-mailadres) — nog niet geregistreerd in DAAMS');
@@ -627,6 +643,9 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
       { size: 8, color: C.gray },
     );
 
+    const researcherRow = (permit.authorizedPersons ?? []).find((p) => p.role === 'RESEARCHER');
+    const outputControllerRow = (permit.authorizedPersons ?? []).find((p) => p.role === 'OUTPUT_CONTROLLER');
+
     const digitalPermit = buildDigitalPermitDocument({
       permitNumber: permit.permitNumber,
       version: permit.version,
@@ -651,6 +670,10 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
             type: permit.speTypeId ? { id: permit.speTypeId, name: permit.speTypeName ?? '' } : null,
           }
         : null,
+      researcher: researcherRow?.did ? { affiliation: researcherRow.affiliation, did: researcherRow.did } : null,
+      outputController: outputControllerRow?.did
+        ? { affiliation: outputControllerRow.affiliation, did: outputControllerRow.did }
+        : { affiliation: '', did: '' },
     });
     await doc.pdfDoc.attach(
       new TextEncoder().encode(JSON.stringify(digitalPermit, null, 2)),

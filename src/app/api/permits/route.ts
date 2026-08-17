@@ -4,6 +4,13 @@ import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
 import { signPermit, groupDatasetsByHolder } from '@/lib/permit-signing';
 import { regenerateStoredPermitPdf } from '@/lib/permit-pdf-store';
+import { generateSampleDid } from '@/lib/did';
+
+// urn:objectstore:bucket:<slug> — lowercase, non-alphanumerics collapsed to
+// single hyphens, trimmed.
+function slugify(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'dataset';
+}
 
 /**
  * Derives the next sequential base permit number for the given year from the
@@ -41,6 +48,13 @@ export async function POST(req: NextRequest) {
     const auth = await requireRole(body.issuedByUserId, ['DECISION_MAKER', 'ADMIN']);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
+    if (!body.outputControllerName || !body.outputControllerAffiliation) {
+      return NextResponse.json(
+        { error: 'Output controller name and affiliation are required to issue a permit' },
+        { status: 422 },
+      );
+    }
+
     const application = await prisma.application.findUnique({
       where: { id: body.applicationId },
       include: {
@@ -64,6 +78,20 @@ export async function POST(req: NextRequest) {
     const issuedAt = new Date();
     const validFrom = new Date(body.validFrom);
     const validUntil = new Date(body.validUntil);
+    // One storage location per requested dataset, generated once here so the
+    // exact reference/writerDid signed below (via grantedDatasets) is what
+    // actually gets persisted afterward (see the GrantedDataset creation
+    // loop) — not regenerated and potentially drifting from the signature.
+    const storageLocationsByDataset = new Map(
+      application.requestedDatasets.map((rd) => [
+        rd.id,
+        {
+          reference: `urn:objectstore:bucket:${slugify(rd.dataHolder?.name ?? 'holder')}-${slugify(rd.name)}-${rd.id.slice(-8)}`,
+          writerDid: generateSampleDid(),
+        },
+      ]),
+    );
+
     // Reshape to the flat {dataHolderName,name,url} shape groupDatasetsByHolder
     // expects — keeps signPermit()'s input byte-for-byte identical regardless
     // of the dataHolder relation added alongside the frozen dataHolderName.
@@ -75,8 +103,32 @@ export async function POST(req: NextRequest) {
         datasetId: rd.datasetId,
         catalogId: rd.catalogId,
         distributions: rd.distributions,
+        storageLocation: storageLocationsByDataset.get(rd.id) ?? null,
       })),
     );
+
+    // The researcher — sourced from the application's own Section 5 fields,
+    // mirroring the form's own alternation between "person responsible for
+    // the research" and "person responsible for data use."
+    const researcherName = application.personResearchName ?? application.personResponsibleName;
+    const researcherAffiliation = application.personResearchAffiliation ?? application.personResponsibleAffiliation;
+    const researcher = researcherName
+      ? {
+          name: researcherName,
+          affiliation: researcherAffiliation ?? '',
+          did: generateSampleDid(),
+        }
+      : null;
+
+    // Selected by HDAB at the moment of issuance — can be HDAB staff, a data
+    // holder's employee, or an external expert, so this is always
+    // freshly-entered on the issuance form, never derived from a User.
+    // Affiliation is UI-constrained to existing data holders for now.
+    const outputController = {
+      name: String(body.outputControllerName).trim(),
+      affiliation: String(body.outputControllerAffiliation).trim(),
+      did: generateSampleDid(),
+    };
 
     const speOperatorId = application.feeEstimate?.speOperatorId ?? null;
     const speTypeId = application.feeEstimate?.speTypeId ?? null;
@@ -118,6 +170,10 @@ export async function POST(req: NextRequest) {
         validUntil,
         grantedDatasets,
         speOperator: speOperator || null,
+        // Name/email stay in the AuthorizedPerson DB row only (below) — the
+        // signed/printed permit itself carries just organisation + identity.
+        researcher: researcher ? { affiliation: researcher.affiliation, did: researcher.did } : null,
+        outputController: { affiliation: outputController.affiliation, did: outputController.did },
       });
       try {
         permit = await prisma.dataPermit.create({
@@ -165,9 +221,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    if (application.requestedDatasets.length > 0) {
-      await prisma.grantedDataset.createMany({
-        data: application.requestedDatasets.map((rd) => ({
+    // Individual creates (not createMany) so each GrantedDataset can nest its
+    // own StorageLocation — the same reference/writerDid already signed above.
+    for (const rd of application.requestedDatasets) {
+      const storageLocation = storageLocationsByDataset.get(rd.id);
+      await prisma.grantedDataset.create({
+        data: {
           permitId: permit.id,
           // Frozen at issuance — never re-derived from the registry later.
           dataHolderName: rd.dataHolder?.name ?? 'Unknown',
@@ -177,9 +236,35 @@ export async function POST(req: NextRequest) {
           datasetId: rd.datasetId,
           catalogId: rd.catalogId,
           distributions: rd.distributions ?? undefined,
-        })),
+          ...(storageLocation
+            ? {
+                storageLocation: {
+                  create: {
+                    reference: storageLocation.reference,
+                    writerDid: storageLocation.writerDid,
+                    authorizedById: body.issuedByUserId,
+                  },
+                },
+              }
+            : {}),
+        },
       });
     }
+
+    await prisma.authorizedPerson.createMany({
+      data: [
+        ...(researcher
+          ? [{ permitId: permit.id, name: researcher.name, affiliation: researcher.affiliation, role: 'RESEARCHER' as const, did: researcher.did }]
+          : []),
+        {
+          permitId: permit.id,
+          name: outputController.name,
+          affiliation: outputController.affiliation,
+          role: 'OUTPUT_CONTROLLER' as const,
+          did: outputController.did,
+        },
+      ],
+    });
 
     await prisma.dataPermitLog.create({
       data: {

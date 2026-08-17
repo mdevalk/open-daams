@@ -327,6 +327,8 @@
     "datasetId": "Dataset-ID",
     "catalogId": "Catalogus-ID",
     "distributions": "Distributies",
+    "storageLocation": "Opslaglocatie",
+    "writerDid": "Identiteit voor schrijftoegang",
     "variables": "Gevraagde variabelen",
     "studyPopulation": "Studiepopulatie",
     "inclusionCriteria": "Inclusiecriteria",
@@ -356,8 +358,7 @@
     "signatureAlgorithm": "Algoritme",
     "signatureKeyId": "Sleutel-ID",
     "signedAt": "Ondertekend op",
-    "signature": "Handtekening",
-    "downloadDigitalPermit": "Digitale vergunning downloaden (JSON)"
+    "signature": "Handtekening"
   },
   "decisionCardPanel": {
     "title": "Acceptatie pre-vergunning",
@@ -392,6 +393,9 @@
     "issueSubtitle": "Positief besluit genomen. Schrijf een EHDS-dataverwerkingsvergunning uit (D6.4 §9).",
     "validFrom": "Geldig vanaf",
     "validUntil": "Geldig tot",
+    "outputControllerTitle": "Uitvoercontroleur (vier-ogen-controle op SPE-uitvoer)",
+    "outputControllerName": "Naam",
+    "outputControllerAffiliation": "Affiliatie",
     "issueButton": "Vergunning uitschrijven",
     "noPermission": "Alleen DECISION_MAKER of ADMIN kan een vergunning uitschrijven.",
     "loading": "Bezig...",
@@ -535,6 +539,10 @@
     "effectiveDateHint": "Leeg laten om direct toe te passen. Een toekomstige datum stelt activering uit totdat een medewerker deze voltooit (D6.4 R9.3.9).",
     "speOperator": "SPE-operator",
     "speOperatorUnchanged": "— ongewijzigd laten —",
+    "outputController": "Uitvoercontroleur",
+    "outputControllerNameUnchanged": "Naam (leeg laten om ongewijzigd te houden)",
+    "outputControllerAffiliationUnchanged": "— ongewijzigd laten —",
+    "outputControllerHint": "Alleen opnieuw te selecteren bij het goedkeuren van een wijziging. Beide velden moeten samen worden ingevuld om de uitvoercontroleur te wijzigen.",
     "pendingActivation": "Wijziging goedgekeurd — wacht op activering (v{version})",
     "pendingActivationDate": "Wordt van kracht op {date}",
     "activateNow": "Nu activeren",
@@ -567,15 +575,10 @@
   },
   "authorizedPersons": {
     "title": "Gemachtigde personen (Annex 9 §6.8)",
-    "add": "+ Toevoegen",
     "empty": "Nog geen personen gemachtigd tot verwerking in de SPE.",
-    "remove": "Verwijderen",
-    "name": "Naam",
-    "affiliation": "Affiliatie",
-    "email": "E-mail",
-    "addButton": "Toevoegen",
-    "cancel": "Annuleren",
-    "saving": "Bezig..."
+    "roleResearcher": "Onderzoeker",
+    "roleOutputController": "Uitvoercontroleur",
+    "did": "Identiteit"
   },
   "speProvisioning": {
     "title": "Beveiligde verwerkingsomgeving (Art. 73)",

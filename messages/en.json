@@ -327,6 +327,8 @@
     "datasetId": "Dataset ID",
     "catalogId": "Catalogue ID",
     "distributions": "Distributions",
+    "storageLocation": "Storage location",
+    "writerDid": "Write-access identity",
     "variables": "Requested variables",
     "studyPopulation": "Study population",
     "inclusionCriteria": "Inclusion criteria",
@@ -356,8 +358,7 @@
     "signatureAlgorithm": "Algorithm",
     "signatureKeyId": "Key ID",
     "signedAt": "Signed at",
-    "signature": "Signature",
-    "downloadDigitalPermit": "Download digital permit (JSON)"
+    "signature": "Signature"
   },
   "decisionCardPanel": {
     "title": "Pre-permit acceptance",
@@ -392,6 +393,9 @@
     "issueSubtitle": "Positive decision taken. Issue an EHDS data processing permit (D6.4 §9).",
     "validFrom": "Valid from",
     "validUntil": "Valid until",
+    "outputControllerTitle": "Output controller (four-eyes check on SPE output)",
+    "outputControllerName": "Name",
+    "outputControllerAffiliation": "Affiliation",
     "issueButton": "Issue permit",
     "noPermission": "Only DECISION_MAKER or ADMIN can issue a permit.",
     "loading": "Processing...",
@@ -535,6 +539,10 @@
     "effectiveDateHint": "Leave blank to apply immediately. A future date defers activation until staff completes it (D6.4 R9.3.9).",
     "speOperator": "SPE operator",
     "speOperatorUnchanged": "— leave unchanged —",
+    "outputController": "Output controller",
+    "outputControllerNameUnchanged": "Name (leave blank to keep unchanged)",
+    "outputControllerAffiliationUnchanged": "— leave unchanged —",
+    "outputControllerHint": "Only re-selectable when approving an amendment. Both fields must be given together to change the output controller.",
     "pendingActivation": "Amendment approved — pending activation (v{version})",
     "pendingActivationDate": "Becomes effective {date}",
     "activateNow": "Activate now",
@@ -567,15 +575,10 @@
   },
   "authorizedPersons": {
     "title": "Authorised persons (Annex 9 §6.8)",
-    "add": "+ Add",
     "empty": "No persons authorised to process in the SPE yet.",
-    "remove": "Remove",
-    "name": "Name",
-    "affiliation": "Affiliation",
-    "email": "Email",
-    "addButton": "Add",
-    "cancel": "Cancel",
-    "saving": "Working…"
+    "roleResearcher": "Researcher",
+    "roleOutputController": "Output controller",
+    "did": "Identity"
   },
   "speProvisioning": {
     "title": "Secure processing environment (Art. 73)",

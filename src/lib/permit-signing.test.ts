@@ -46,6 +46,8 @@ beforeAll(() => {
   vi.mocked(readFileSync).mockReturnValue(JSON.stringify(jwk));
 });
 
+const TEST_OUTPUT_CONTROLLER = { affiliation: 'HDAB-NL', did: 'did:key:ztest-oc' };
+
 const BASE_PERMIT: SignablePermit = {
   permitNumber: 'DP-NL-2025-0001',
   version: 1,
@@ -55,6 +57,8 @@ const BASE_PERMIT: SignablePermit = {
   validUntil: new Date('2027-01-01T00:00:00Z'),
   grantedDatasets: [],
   speOperator: null,
+  researcher: null,
+  outputController: TEST_OUTPUT_CONTROLLER,
 };
 
 describe('groupDatasetsByHolder', () => {
@@ -69,14 +73,14 @@ describe('groupDatasetsByHolder', () => {
       {
         dataHolderName: 'Hospital A',
         datasets: [
-          { name: 'Dataset 1', url: null, datasetId: null, catalogId: null, distributions: [] },
-          { name: 'Dataset 3', url: null, datasetId: null, catalogId: null, distributions: [] },
+          { name: 'Dataset 1', url: null, datasetId: null, catalogId: null, distributions: [], storageLocation: null },
+          { name: 'Dataset 3', url: null, datasetId: null, catalogId: null, distributions: [], storageLocation: null },
         ],
       },
       {
         dataHolderName: 'Hospital B',
         datasets: [
-          { name: 'Dataset 2', url: 'https://example.com', datasetId: null, catalogId: null, distributions: [] },
+          { name: 'Dataset 2', url: 'https://example.com', datasetId: null, catalogId: null, distributions: [], storageLocation: null },
         ],
       },
     ]);
@@ -108,6 +112,7 @@ describe('groupDatasetsByHolder', () => {
             datasetId: '24b6a9b2-4519-4f94-8c0f-c4c85f295806',
             catalogId: '6be71aaf-abd3-464f-a417-708b780d4bef',
             distributions: [{ distributionId: '58501e07-7717-497c-869a-c52826e3bb24', title: null }],
+            storageLocation: null,
           },
         ],
       },
@@ -127,6 +132,8 @@ describe('canonicalPermitPayload', () => {
         validUntil: new Date('2027-01-01T00:00:00Z'),
         grantedDatasets: [],
         speOperator: null,
+        researcher: null,
+        outputController: TEST_OUTPUT_CONTROLLER,
       },
       'kid-1',
     );
@@ -140,6 +147,8 @@ describe('canonicalPermitPayload', () => {
       validUntil: '2027-01-01T00:00:00.000Z',
       grantedDatasets: [],
       speOperator: null,
+      researcher: null,
+      outputController: TEST_OUTPUT_CONTROLLER,
       issuerKid: 'kid-1',
     });
   });
@@ -160,6 +169,8 @@ describe('canonicalPermitPayload', () => {
           providerName: 'Acme Cloud',
           type: { id: 'type-1', name: 'Enterprise' },
         },
+        researcher: null,
+        outputController: TEST_OUTPUT_CONTROLLER,
       },
       'kid-1',
     );
@@ -170,6 +181,28 @@ describe('canonicalPermitPayload', () => {
       providerName: 'Acme Cloud',
       type: { id: 'type-1', name: 'Enterprise' },
     });
+  });
+
+  it('carries the researcher and output controller into the signed payload', () => {
+    const researcher = { affiliation: 'UMC Utrecht', did: 'did:key:ztest-researcher' };
+    const payload = canonicalPermitPayload(
+      {
+        permitNumber: 'DP-NL-2025-0001',
+        version: 1,
+        applicationId: 'app-1',
+        issuedAt: new Date('2026-01-01T00:00:00Z'),
+        validFrom: new Date('2026-01-01T00:00:00Z'),
+        validUntil: new Date('2027-01-01T00:00:00Z'),
+        grantedDatasets: [],
+        speOperator: null,
+        researcher,
+        outputController: TEST_OUTPUT_CONTROLLER,
+      },
+      'kid-1',
+    );
+
+    expect(payload.researcher).toEqual(researcher);
+    expect(payload.outputController).toEqual(TEST_OUTPUT_CONTROLLER);
   });
 });
 
@@ -206,6 +239,8 @@ describe('buildDigitalPermitDocument', () => {
       validUntil: new Date('2027-01-01T00:00:00Z'),
       grantedDatasets: [],
       speOperator: null,
+      researcher: null,
+      outputController: TEST_OUTPUT_CONTROLLER,
       status: 'REVOKED',
       revocationReason: 'No longer needed',
       revocationAt: new Date('2026-06-01T00:00:00Z'),
@@ -234,6 +269,8 @@ describe('buildDigitalPermitDocument', () => {
       validUntil: new Date('2027-01-01T00:00:00Z'),
       grantedDatasets: [],
       speOperator: null,
+      researcher: null,
+      outputController: TEST_OUTPUT_CONTROLLER,
       status: 'GRANTED',
       revocationReason: null,
       revocationAt: null,

@@ -44,7 +44,7 @@ export default async function PermitDetailPage({
   const tps = await getTranslations({ locale, namespace: 'permitStatus' });
   const ta = await getTranslations({ locale, namespace: 'applications' });
 
-  const [rawPermit, users, speOperators] = await Promise.all([
+  const [rawPermit, users, speOperators, dataHolders, dataUsers] = await Promise.all([
     prisma.dataPermit.findUnique({
       where: { id },
       include: {
@@ -87,7 +87,7 @@ export default async function PermitDetailPage({
         // included here for display and future SPE-provider API configuration.
         speOperator: { include: { speProvider: true } },
         authorizedPersons: { orderBy: { addedAt: 'asc' } },
-        grantedDatasets: { orderBy: { createdAt: 'asc' } },
+        grantedDatasets: { orderBy: { createdAt: 'asc' }, include: { storageLocation: true } },
         changeRequests: {
           include: {
             requestedBy: { select: { name: true } },
@@ -112,6 +112,8 @@ export default async function PermitDetailPage({
     }),
     prisma.user.findMany({ orderBy: { name: 'asc' } }),
     prisma.speOperator.findMany({ orderBy: { name: 'asc' } }),
+    prisma.dataHolder.findMany({ orderBy: { name: 'asc' } }),
+    prisma.dataUser.findMany({ where: { users: { some: { role: 'APPLICANT' } } }, orderBy: { name: 'asc' } }),
   ]);
 
   if (!rawPermit) notFound();
@@ -300,6 +302,12 @@ export default async function PermitDetailPage({
                                     )}
                                   </div>
                                 )}
+                                {dataset.storageLocation && (
+                                  <div className="text-xs text-gray-500 font-mono">
+                                    <div>{t('storageLocation')}: {dataset.storageLocation.reference}</div>
+                                    <div>{t('writerDid')}: {dataset.storageLocation.writerDid}</div>
+                                  </div>
+                                )}
                               </li>
                             ))}
                           </ul>
@@ -415,13 +423,10 @@ export default async function PermitDetailPage({
             pendingVersion={pendingVersion}
             isDataRequest={isDataRequest}
             speOperators={speOperators}
+            dataHolders={dataHolders}
+            dataUsers={dataUsers}
           />
-          <AuthorizedPersonsPanel
-            permitId={permit.id}
-            persons={permit.authorizedPersons}
-            canManage={['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(currentUser.role)}
-            currentUserId={currentUser.id}
-          />
+          <AuthorizedPersonsPanel persons={permit.authorizedPersons} locale={locale} />
           <InvoicePanel
             permitId={permit.id}
             locale={locale}
@@ -471,15 +476,6 @@ export default async function PermitDetailPage({
                 </svg>
                 PDF downloaden
               </a>
-              {permit.signature && (
-                <a
-                  href={`/api/permits/${permit.id}/json`}
-                  download
-                  className="inline-flex items-center gap-1.5 rounded border border-[#154273] px-3 py-1.5 text-sm font-medium text-[#154273] hover:bg-[#e8f4fb] transition-colors"
-                >
-                  {t('downloadDigitalPermit')}
-                </a>
-              )}
             </div>
           </section>
 

@@ -60,6 +60,12 @@ function stableStringify(value: unknown): string {
 // + title), not modelled beyond that (open-daams doesn't own the catalogue).
 export type Distribution = { distributionId: string; title: string | null };
 
+// The instruction to the data holder for this specific dataset — created
+// alongside its GrantedDataset at issuance (src/app/api/permits/route.ts),
+// frozen and signed the same way the rest of DatasetEntry is. See
+// StorageLocation in schema.prisma.
+export type SignableStorageLocation = { reference: string; writerDid: string };
+
 export type DatasetEntry = {
   name: string;
   url: string | null;
@@ -68,6 +74,7 @@ export type DatasetEntry = {
   datasetId: string | null;
   catalogId: string | null;
   distributions: Distribution[];
+  storageLocation: SignableStorageLocation | null;
 };
 export type GrantedDatasetGroup = { dataHolderName: string; datasets: DatasetEntry[] };
 
@@ -87,6 +94,7 @@ export function groupDatasetsByHolder(
     datasetId?: string | null;
     catalogId?: string | null;
     distributions?: unknown;
+    storageLocation?: SignableStorageLocation | null;
   }[],
 ): GrantedDatasetGroup[] {
   const byHolder = new Map<string, DatasetEntry[]>();
@@ -97,6 +105,15 @@ export function groupDatasetsByHolder(
       datasetId: row.datasetId ?? null,
       catalogId: row.catalogId ?? null,
       distributions: (row.distributions as Distribution[] | null) ?? [],
+      // Narrowed explicitly: callers that fetch a full Prisma StorageLocation
+      // row (id/grantedDatasetId/authorizedAt/etc.) would otherwise have
+      // those extra fields silently pass through at runtime — TS structural
+      // typing doesn't strip them — producing a payload that differs from
+      // what was actually signed (see the issuance route, which already
+      // passes the narrow shape) and breaking signature verification.
+      storageLocation: row.storageLocation
+        ? { reference: row.storageLocation.reference, writerDid: row.storageLocation.writerDid }
+        : null,
     };
     const existing = byHolder.get(row.dataHolderName);
     if (existing) existing.push(entry);
@@ -121,6 +138,17 @@ export type SignableSpeOperator = {
   type: SignableSpeType | null;
 };
 
+// The researcher/output-controller AuthorizedPerson rows — set at issuance
+// (src/app/api/permits/route.ts) and re-selectable only when an amendment
+// is approved (.../change-requests/[requestId]/route.ts), never added or
+// changed ad hoc on an existing version, so every AuthorizedPerson row that
+// exists is always part of some version's signature. Deliberately
+// name-free: the permit document itself carries only organisation +
+// identity, never the individual's name — that stays in AuthorizedPerson's
+// own DB row for HDAB's internal case management, never on the
+// signed/printed permit.
+export type SignableAuthorizedPerson = { affiliation: string; did: string };
+
 export type SignablePermit = {
   permitNumber: string;
   version: number;
@@ -130,27 +158,31 @@ export type SignablePermit = {
   validUntil: Date;
   grantedDatasets: GrantedDatasetGroup[];
   speOperator: SignableSpeOperator | null;
+  researcher: SignableAuthorizedPerson | null;
+  outputController: SignableAuthorizedPerson;
 };
 
 /**
  * The fixed subset of a permit version that gets signed. Deliberately
  * excludes `status`/`revocationReason`/`revocationAt` (they mutate in place
  * on the same row via REVOKE/EXPIRE — signing them would invalidate the
- * signature the moment a permit is legitimately revoked) and
- * `authorizedPersons` (managed via separate endpoints, not fixed at
- * issuance). `grantedDatasets` IS included — unlike those, it's fixed for
- * the life of a permit version (copied from the application's
- * RequestedDataset rows at issuance, carried forward unchanged on later
- * versions — see GrantedDataset in schema.prisma), and it's the substantive
- * answer to "what does this permit actually grant access to, from which
- * data holder," which the signature should attest to. Mirrors the same
+ * signature the moment a permit is legitimately revoked). `grantedDatasets`
+ * IS included — it's fixed for the life of a permit version (copied from the
+ * application's RequestedDataset rows at issuance, carried forward
+ * unchanged on later versions — see GrantedDataset in schema.prisma, and
+ * its nested `storageLocation`, StorageLocation in schema.prisma, created
+ * alongside it), and it's the substantive answer to "what does this permit
+ * actually grant access to, from which data holder, and where should that
+ * data land," which the signature should attest to. Mirrors the same
  * exclusion/inclusion principle used by the reference
  * hdab-nl-permit-generator/validator pair (whose canonical payload signs
  * `datasets` alongside identity fields). `speOperator` (with its `type`
  * nested inside) is signed for the same reason (R13.0.1 — the designated
- * SPE/operator is part of what the permit grants); fees are deliberately
- * excluded — those stay on the human-readable PDF only, not this signed
- * structured document.
+ * SPE/operator is part of what the permit grants); so are `researcher` and
+ * `outputController` — both are created and fixed in the same issuance
+ * transaction as everything else here, unlike ordinary AuthorizedPerson
+ * additions. Fees are deliberately excluded — those stay on the
+ * human-readable PDF only, not this signed structured document.
  *
  * `issuerKid` is passed explicitly rather than always read from the
  * currently-loaded key file — after a key rotation (`generate-signing-key
@@ -167,6 +199,8 @@ export function canonicalPermitPayload(permit: SignablePermit, issuerKid: string
     validUntil: permit.validUntil.toISOString(),
     grantedDatasets: permit.grantedDatasets,
     speOperator: permit.speOperator,
+    researcher: permit.researcher,
+    outputController: permit.outputController,
     issuerKid,
   };
 }

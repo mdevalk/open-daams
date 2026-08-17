@@ -4,6 +4,7 @@ import { requireRole } from '@/lib/authz';
 import { DECIDE_ROLES, APPROVAL_EFFECT } from '@/lib/permit-change';
 import { signPermit, groupDatasetsByHolder } from '@/lib/permit-signing';
 import { regenerateStoredPermitPdf } from '@/lib/permit-pdf-store';
+import { generateSampleDid } from '@/lib/did';
 
 /**
  * PATCH /api/permits/[id]/change-requests/[requestId]
@@ -17,12 +18,17 @@ import { regenerateStoredPermitPdf } from '@/lib/permit-pdf-store';
  * (with effectiveAt set) and the old version keeps operating until a staff
  * member activates it via POST /api/permits/[id]/activate once the date is
  * due. Renewals and revocation appeals always stay immediate, per spec.
- * body: { decision: 'APPROVED' | 'REJECTED', actingUserId, comment?, newValidUntil?, effectiveDate?, speOperatorId?, speTypeId? }
+ * body: { decision: 'APPROVED' | 'REJECTED', actingUserId, comment?, newValidUntil?, effectiveDate?,
+ *         speOperatorId?, speTypeId?, outputControllerName?, outputControllerAffiliation? }
  *
  * speOperatorId/speTypeId carry forward from the current version
  * onto the new one by default (same as the fee fields) — pass them
  * explicitly (a real id, or ''/null to clear) only to change them, which is
- * only meaningful for AMENDMENT.
+ * only meaningful for AMENDMENT. outputControllerName/Affiliation work the
+ * same way, also AMENDMENT-only — the one point besides issuance where the
+ * output controller can be re-selected (see AuthorizedPersonsPanel, which
+ * is read-only). Both must be given together to change it; a fresh identity
+ * is generated when they are.
  */
 export async function PATCH(
   req: NextRequest,
@@ -42,7 +48,16 @@ export async function PATCH(
 
     const request = await prisma.permitChangeRequest.findUnique({
       where: { id: requestId },
-      include: { permit: { include: { authorizedPersons: true, speProvisioning: true, grantedDatasets: true, lineItems: true } } },
+      include: {
+        permit: {
+          include: {
+            authorizedPersons: true,
+            speProvisioning: true,
+            grantedDatasets: { include: { storageLocation: true } },
+            lineItems: true,
+          },
+        },
+      },
     });
     if (!request || request.permitId !== id) {
       return NextResponse.json({ error: 'Change request not found' }, { status: 404 });
@@ -106,6 +121,33 @@ export async function PATCH(
       : permit.speOperatorProviderName;
     const speTypeName = speTypeChanged ? (speTypeRow?.name ?? null) : permit.speTypeName;
 
+    // Researcher is never re-selected via amendment — it's derived from the
+    // application, which doesn't change after decision — so it's always
+    // carried forward unchanged. The output controller CAN be re-selected,
+    // AMENDMENT-only, same "blank means unchanged" convention as speOperatorId.
+    const researcherRow = permit.authorizedPersons.find((p) => p.role === 'RESEARCHER');
+    const outputControllerRow = permit.authorizedPersons.find((p) => p.role === 'OUTPUT_CONTROLLER');
+    if (!outputControllerRow?.did) {
+      return NextResponse.json({ error: 'Permit has no output controller to carry forward' }, { status: 500 });
+    }
+
+    const outputControllerNameInput =
+      request.type === 'AMENDMENT' && body.outputControllerName ? String(body.outputControllerName).trim() : '';
+    const outputControllerAffiliationInput =
+      request.type === 'AMENDMENT' && body.outputControllerAffiliation
+        ? String(body.outputControllerAffiliation).trim()
+        : '';
+    if (Boolean(outputControllerNameInput) !== Boolean(outputControllerAffiliationInput)) {
+      return NextResponse.json(
+        { error: 'Both outputControllerName and outputControllerAffiliation are required to change the output controller' },
+        { status: 422 },
+      );
+    }
+    const outputControllerChanged = Boolean(outputControllerNameInput);
+    const newOutputController = outputControllerChanged
+      ? { name: outputControllerNameInput, affiliation: outputControllerAffiliationInput, did: generateSampleDid() }
+      : { name: outputControllerRow.name, affiliation: outputControllerRow.affiliation, did: outputControllerRow.did };
+
     const { signature, signedAt, signingKeyId } = await signPermit({
       permitNumber: permit.permitNumber,
       version: newVersion,
@@ -122,6 +164,10 @@ export async function PATCH(
             type: speTypeId ? { id: speTypeId, name: speTypeName ?? '' } : null,
           }
         : null,
+      researcher: researcherRow?.did
+        ? { affiliation: researcherRow.affiliation, did: researcherRow.did }
+        : null,
+      outputController: { affiliation: newOutputController.affiliation, did: newOutputController.did },
     });
 
     const newPermitId = await prisma.$transaction(async (tx) => {
@@ -173,22 +219,39 @@ export async function PATCH(
         },
       });
 
-      // 3. Carry the authorised-persons snapshot forward to the new version.
-      if (permit.authorizedPersons.length > 0) {
-        await tx.authorizedPerson.createMany({
-          data: permit.authorizedPersons.map((p) => ({
+      // 3. Carry the researcher forward unchanged (a fresh row per version,
+      //    like grantedDatasets below — same did, since it's the same
+      //    identity carried forward, not regenerated) and create the
+      //    output controller's row — either carried forward unchanged, or
+      //    the newly re-selected one from newOutputController above.
+      if (researcherRow?.did) {
+        await tx.authorizedPerson.create({
+          data: {
             permitId: newPermit.id,
-            name: p.name,
-            affiliation: p.affiliation,
-            email: p.email,
-          })),
+            name: researcherRow.name,
+            affiliation: researcherRow.affiliation,
+            role: 'RESEARCHER',
+            did: researcherRow.did,
+          },
         });
       }
+      await tx.authorizedPerson.create({
+        data: {
+          permitId: newPermit.id,
+          name: newOutputController.name,
+          affiliation: newOutputController.affiliation,
+          role: 'OUTPUT_CONTROLLER',
+          did: newOutputController.did,
+        },
+      });
 
-      // 3b. Carry the granted-datasets snapshot forward to the new version.
-      if (permit.grantedDatasets.length > 0) {
-        await tx.grantedDataset.createMany({
-          data: permit.grantedDatasets.map((gd) => ({
+      // 3b. Carry the granted-datasets snapshot forward to the new version,
+      //     each with its own fresh StorageLocation row (grantedDatasetId is
+      //     unique per row, so the old StorageLocation can't be re-pointed) —
+      //     same reference/writerDid as before, carried forward unchanged.
+      for (const gd of permit.grantedDatasets) {
+        await tx.grantedDataset.create({
+          data: {
             permitId: newPermit.id,
             dataHolderName: gd.dataHolderName,
             dataHolderId: gd.dataHolderId,
@@ -197,7 +260,18 @@ export async function PATCH(
             datasetId: gd.datasetId,
             catalogId: gd.catalogId,
             distributions: gd.distributions ?? undefined,
-          })),
+            ...(gd.storageLocation
+              ? {
+                  storageLocation: {
+                    create: {
+                      reference: gd.storageLocation.reference,
+                      writerDid: gd.storageLocation.writerDid,
+                      authorizedById: auth.user.id,
+                    },
+                  },
+                }
+              : {}),
+          },
         });
       }
 
