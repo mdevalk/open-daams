@@ -6,5 +6,20 @@
       "mcp__github__get_file_contents",
       "mcp__mcp-registry__list_connectors"
     ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(git push*)",
+            "command": "echo '{\"systemMessage\": \"Security-review reminder: this push has not been checked. Run the security-review skill (or /code-review with a security focus) on the diff first, especially if it touches API routes, auth/RBAC, or permit signing (src/lib/permit-signing.ts).\", \"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"additionalContext\": \"Reminder before completing this push: if the diff touches API routes, auth/RBAC, or permit signing, run the security-review skill on it first.\"}}'",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
   }
 }

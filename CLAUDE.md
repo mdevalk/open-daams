@@ -86,6 +86,18 @@ specifications. Always use the **final** Regulation numbering, not the draft-pro
   `npm run db:seed`. There is **no real authentication** — RBAC trusts a client-supplied
   `userId` (documented gap, do not silently "fix").
 - Verify non-trivial changes with `npx tsc --noEmit` (baseline is 0 errors).
+- **Security review before pushing:** a `.claude/settings.json` `PreToolUse` hook reminds
+  (non-blocking) before every `git push` to run the `security-review` skill on the diff —
+  especially for changes touching API routes, auth/RBAC, or permit signing
+  (`src/lib/permit-signing.ts`). For anything release-shaped, `/code-review ultra` is the
+  heavier, billed option. Beyond `security-review`'s own OWASP-style checks (injection,
+  authz bypass, crypto, data exposure), also watch for regressions a real HDAB's NIS2/BIO
+  obligations would care about: new/changed routes bypassing the `requireRole`/
+  `requireRoleOrOwner` RBAC pattern, anything touching the signing key or `keys/`, a mutating
+  action with no corresponding `*Log` entry, and health data (GDPR Art. 9) leaking into logs,
+  error messages, or client payloads beyond what's needed. Not a compliance claim for the
+  project as a whole (see the gap-analysis docs' own disclaimer) — just sharper per-diff
+  review criteria.
 
 ## Project state (handoff)
 
