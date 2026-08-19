@@ -2,10 +2,13 @@
 
 This is the exact JSON the **"Load sample"** button loads on the New Application → HD@EU import
 page (`src/components/HdeuImportForm.tsx`'s `buildSamplePayload()`, sourced from
-`src/lib/poc-demo-hdeu-payload.json`). It's derived from a real NCP application
-(`6a70b4d104db074a00fd905d`, mapped through `mapNcpDetailZipToHdeuPayload`), with the title
-overridden so it reads as a demo rather than a duplicate of the real case — see
-`src/components/HdeuImportForm.tsx`'s own comment for that rationale.
+`src/lib/poc-demo-hdeu-payload.json`). It's structurally modelled on a real NCP application record
+(mapped through `mapNcpDetailZipToHdeuPayload`), but every identifying detail below — applicant
+name, organisation, address, contact details, business/VAT/bank identifiers, and internal record
+ids — has been replaced with **synthetic data**; nothing here traces back to a real applicant,
+organisation, or source record. The dataset/variable definitions (CBS OData variable names and
+`propertyUrl`s) are left as-is since they're genuinely public reference data from CBS's open data
+catalogue, not personal or identifying information.
 
 Two fields are **not** static — `buildSamplePayload()` overrides them fresh on every load, so
 they won't match the values below when you actually click the button:
@@ -24,14 +27,14 @@ Everything else below is exactly what's loaded.
   "applicationType": "DATA_ACCESS_APPLICATION",
   "datasetVariables": [
     {
-      "sourceDatasetId": "24b6a9b2-4519-4f94-8c0f-c4c85f295806",
+      "sourceDatasetId": "3f8e2c71-9a4d-4b62-8e15-d7a9c3f6b204",
       "name": "Overledenen_1",
       "title": "Overledenen",
       "description": "Overledenen",
       "datatype": "long"
     },
     {
-      "sourceDatasetId": "24b6a9b2-4519-4f94-8c0f-c4c85f295806",
+      "sourceDatasetId": "3f8e2c71-9a4d-4b62-8e15-d7a9c3f6b204",
       "name": "Perioden",
       "title": "Perioden",
       "description": "Perioden",
@@ -39,7 +42,7 @@ Everything else below is exactly what's loaded.
       "propertyUrl": "https://opendata.cbs.nl/ODataApi/OData/7233/Perioden"
     },
     {
-      "sourceDatasetId": "24b6a9b2-4519-4f94-8c0f-c4c85f295806",
+      "sourceDatasetId": "3f8e2c71-9a4d-4b62-8e15-d7a9c3f6b204",
       "name": "DoodsoorzakenUitgebreideLijst",
       "title": "Doodsoorzaken (uitgebreide lijst)",
       "description": "Doodsoorzaken (uitgebreide lijst)",
@@ -47,7 +50,7 @@ Everything else below is exactly what's loaded.
       "propertyUrl": "https://opendata.cbs.nl/ODataApi/OData/7233/DoodsoorzakenUitgebreideLijst"
     },
     {
-      "sourceDatasetId": "24b6a9b2-4519-4f94-8c0f-c4c85f295806",
+      "sourceDatasetId": "3f8e2c71-9a4d-4b62-8e15-d7a9c3f6b204",
       "name": "Leeftijd",
       "title": "Leeftijd",
       "description": "Leeftijd",
@@ -55,7 +58,7 @@ Everything else below is exactly what's loaded.
       "propertyUrl": "https://opendata.cbs.nl/ODataApi/OData/7233/Leeftijd"
     },
     {
-      "sourceDatasetId": "24b6a9b2-4519-4f94-8c0f-c4c85f295806",
+      "sourceDatasetId": "3f8e2c71-9a4d-4b62-8e15-d7a9c3f6b204",
       "name": "Geslacht",
       "title": "Geslacht",
       "description": "Geslacht",
@@ -63,9 +66,9 @@ Everything else below is exactly what's loaded.
       "propertyUrl": "https://opendata.cbs.nl/ODataApi/OData/7233/Geslacht"
     }
   ],
-  "applicantName": "Sophie Jansen",
-  "applicantEmail": "sophie.jansen@testorganisatie.example",
-  "applicantOrganisation": "ZorgData Innovatie B.V.",
+  "applicantName": "Marieke de Groot",
+  "applicantEmail": "marieke.degroot@testorganisatie.example",
+  "applicantOrganisation": "Noordzee Data Diensten B.V.",
   "title": "Test Data Access Application for PoC demo",
   "projectDescription": "Het doel van het project is het ontwikkelen en valideren van analysemethoden voor het evalueren van zorgprocessen en kwaliteitsindicatoren binnen de gezondheidszorg. Het project onderzoekt hoe secundair gebruik van gezondheidsgegevens kan bijdragen aan betere inzichten in zorgverlening, zorguitkomsten en mogelijkheden voor procesverbetering. De resultaten worden gebruikt voor onderzoek, beleidsontwikkeling en innovatie binnen de zorgsector.\n\nsamenvatting van het project\n\na. het algemeen belang op het gebied van de volksgezondheid of de gezondheid op het werk, zoals activiteiten ter bescherming tegen ernstige grensoverschrijdende bedreigingen van de gezondheid, bewaking van de volksgezondheid of activiteiten ter waarborging van een hoog kwaliteits- en veiligheidsniveau van de gezondheidszorg, met inbegrip van patiëntveiligheid, en van geneesmiddelen of medische hulpmiddelen.\n\nb. activiteiten op het gebied van beleidsvorming en regelgeving ter ondersteuning van openbare lichamen of instellingen, organen of instanties van de Unie, met inbegrip van regelgevende autoriteiten, in de gezondheids- of zorgsector bij de uitvoering van de in hun mandaat omschreven taken.\n\nc. statistieken zoals gedefinieerd in artikel 3, punt 1, van Verordening (EG) nr. 223/2009, zoals officiële statistieken op nationaal, multinationaal en Unieniveau met betrekking tot de gezondheids- of zorgsector.\n\nd. het ontvangen of geven van onderwijs in de gezondheids- of zorgsector op het niveau van het beroepsonderwijs of het hoger onderwijs.\n\ne. wetenschappelijk onderzoek in verband met de gezondheids- of zorgsector waarmee een bijdrage wordt geleverd aan de volksgezondheid of de evaluatie van gezondheidstechnologie, of waarmee een hoog kwaliteits- en veiligheidsniveau van gezondheidszorg, geneesmiddelen of medische hulpmiddelen wordt gewaarborgd ten behoeve van de eindgebruikers, zoals patiënten, gezondheidswerkers en gezondheidsbeheerders, met inbegrip van:\ni) ontwikkelings- en innovatieactiviteiten voor producten of diensten;\nii) het trainen, testen en evalueren van algoritmen, onder meer in medische hulpmiddelen, medische hulpmiddelen voor in-vitrodiagnostiek, AI-systemen en digitalegezondheidsapps.\n",
   "purposeCategory": "PUBLIC_HEALTH",
@@ -101,29 +104,29 @@ Everything else below is exactly what's loaded.
   "dataProcessingCountry": "NL",
   "applyingOnBehalfOfPublicSector": false,
   "legalOrNaturalPerson": "Rechtspersoon,",
-  "legalPersonAddress": "Laan van de Toekomst 125",
-  "legalPersonZipCode": "3528 AB",
-  "legalPersonCity": "Utrecht",
+  "legalPersonAddress": "Watermolenweg 48",
+  "legalPersonZipCode": "5611 CD",
+  "legalPersonCity": "Eindhoven",
   "legalPersonCountry": "Nederland",
-  "contactPersonAffiliation": "ZorgData Innovatie B.V.",
-  "contactPersonRelationship": "Sophie Jansen is Data Governance Manager bij de verzoekende organisatie en fungeert als primair aanspreekpunt voor deze aanvraag.",
-  "contactPersonBusinessId": "KVK:12345678",
-  "contactPersonPhone": "+31 6 23456789",
-  "contactPersonOrganisationName": "ZorgData Innovatie B.V.",
+  "contactPersonAffiliation": "Noordzee Data Diensten B.V.",
+  "contactPersonRelationship": "Marieke de Groot is Data Governance Manager bij de verzoekende organisatie en fungeert als primair aanspreekpunt voor deze aanvraag.",
+  "contactPersonBusinessId": "KVK:87654321",
+  "contactPersonPhone": "+31 6 98765432",
+  "contactPersonOrganisationName": "Noordzee Data Diensten B.V.",
   "invoicingDetails": {
     "sameAsContactPerson": true,
-    "fullName": "ZorgData Innovatie B.V.",
-    "email": "sophie.jansen@testorganisatie.example",
-    "phone": "+31 6 23456789",
-    "organisationName": "ZorgData Innovatie B.V.",
-    "address": "Laan van de Toekomst 125",
-    "businessId": "KVK:12345678",
-    "vatNumber": "NL123456789B01",
+    "fullName": "Noordzee Data Diensten B.V.",
+    "email": "marieke.degroot@testorganisatie.example",
+    "phone": "+31 6 98765432",
+    "organisationName": "Noordzee Data Diensten B.V.",
+    "address": "Watermolenweg 48",
+    "businessId": "KVK:87654321",
+    "vatNumber": "NL987654321B01",
     "invoiceType": "Elektronisch",
-    "invoiceReferenceNumber": "ZDIG-2026-001",
+    "invoiceReferenceNumber": "NDD-2026-002",
     "eInvoiceAddress": "NL91ABNA0417164300",
-    "operatorId": "OP-987654321",
-    "peppolCode": "0190:12345678",
+    "operatorId": "OP-123456789",
+    "peppolCode": "0190:87654321",
     "isProjectFinanciallyCovered": true,
     "financingAmountRange": "10 000-50 000 EUR"
   },
@@ -134,9 +137,9 @@ Everything else below is exactly what's loaded.
   "applicantQualifications": "De aanvrager beschikt over ervaring op het gebied van gezondheidsgegevens, datamanagement, informatievoorziening en data-analyse binnen de zorgsector. Het projectteam bestaat uit professionals met expertise in gezondheidsinformatica, gegevensanalyse, gegevensbescherming en projectmanagement. Daarnaast beschikt het team over kennis van relevante regelgeving, gegevensgovernance en het verantwoord gebruik van gezondheidsgegevens voor onderzoeks- en innovatieactiviteiten.",
   "linkToTheSupportingLegalBasis": "https://eur-lex.europa.eu/eli/reg/2025/327/oj/eng",
   "personResponsibleSameAsContactPerson": true,
-  "personResponsibleName": "ZorgData Innovatie B.V.",
+  "personResponsibleName": "Noordzee Data Diensten B.V.",
   "personResearchSameAsContactPerson": true,
-  "personResearchName": "ZorgData Innovatie B.V.",
+  "personResearchName": "Noordzee Data Diensten B.V.",
   "electronicHealthDataFormat": "Geanonimiseerd",
   "studyCohorts": [
     {
@@ -149,7 +152,7 @@ Everything else below is exactly what's loaded.
       "sizeIsEstimate": true,
       "sizeJustification": "Voor de analyse van doodsoorzaken naar leeftijd en geslacht is een landelijke dataset nodig die voldoende omvang heeft om betrouwbare en representatieve statistische analyses uit te voeren. Het gebruik van de volledige beschikbare populatie voorkomt vertekening als gevolg van steekproeftrekking en maakt het mogelijk om ook minder voorkomende doodsoorzaken en subgroepen naar leeftijd en geslacht adequaat te analyseren. De omvang van het cohort is daarom noodzakelijk om de onderzoeksdoelstellingen te behalen en statistisch valide resultaten te verkrijgen.",
       "variablesAttachmentRef": "Samenvatting plan.docx",
-      "variablesAttachmentId": "6a70b95e164b1a3858b83f0c",
+      "variablesAttachmentId": "6b81ca6f275c2b4969c94a1d",
       "timePeriod": "01-01-2019 t/m 31-12-2024",
       "dataStartDate": "2019-01-01",
       "dataEndDate": "2024-12-31",
@@ -179,7 +182,7 @@ Everything else below is exactly what's loaded.
   "inactiveStoragePeriodEnd": "2034-12-31",
   "usesOptOutException": false,
   "transfersOutsideEuEea": false,
-  "dataController": "ZorgData Innovatie B.V.  Verwerkingsverantwoordelijke: ZorgData Innovatie B.V. Laan van de Toekomst 125 3528 AB Utrecht Nederland  Contactpersoon: Sophie Jansen Data Governance Manager sophie.jansen@testorganisatie.example",
+  "dataController": "Noordzee Data Diensten B.V.  Verwerkingsverantwoordelijke: Noordzee Data Diensten B.V. Watermolenweg 48 5611 CD Eindhoven Nederland  Contactpersoon: Marieke de Groot Data Governance Manager marieke.degroot@testorganisatie.example",
   "dataMinimisationCompliance": "De organisatie verwerkt uitsluitend de gegevens die noodzakelijk zijn voor het beantwoorden van de onderzoeksvragen. Alleen variabelen die direct relevant zijn voor de analyse van doodsoorzaken, leeftijd en geslacht worden opgevraagd. Er worden geen direct identificerende persoonsgegevens verwerkt. De gegevens worden uitsluitend gebruikt voor de in deze aanvraag beschreven doeleinden en uitsluitend gedurende de noodzakelijke verwerkingsperiode bewaard.",
   "protectionStatement1": true,
   "protectionStatement2": true,
@@ -187,7 +190,7 @@ Everything else below is exactly what's loaded.
   "protectionStatement4": true,
   "protectionStatement5": true,
   "dataProcessingPersonnel": [
-    "Sophie Jansen <sophie.jansen@testorganisatie.example>"
+    "Marieke de Groot <marieke.degroot@testorganisatie.example>"
   ],
   "lawfulnessOfProcessing": [
     "1. e) de verwerking noodzakelijk is voor de vervulling van een taak van algemeen belang of in het kader van de uitoefening van het openbaar gezag dat aan de verwerkingsverantwoordelijke is verleend;"
