@@ -1,0 +1,548 @@
+openapi: 3.0.3
+info:
+  title: open-daams — Permit Verification API
+  version: "0.1.0"
+  description: |
+    The public, unauthenticated subset of open-daams's API: the four endpoints that let any
+    external party — a data holder, an SPE operator, an auditor, or the sibling
+    `hdab-nl-permit-validator` project — independently verify that a data permit is real,
+    current, and unrevoked, without trusting open-daams's own UI.
+
+    This is deliberately **not** a spec for the rest of the application. Every other route in
+    open-daams is an internal, role-gated endpoint called only by open-daams's own staff UI — see
+    [`CLAUDE.md`](../CLAUDE.md) and [`docs/owasp-top10-assessment.md`](./owasp-top10-assessment.md)
+    for that RBAC model (which has **no real authentication** — it trusts a client-supplied user
+    id). The four endpoints documented here are the exception: intentionally public by design.
+
+    open-daams is an independent, community-built reference implementation — not an official
+    product of, or affiliated with, the European Commission, TEHDAS2, HealthData@EU, or any real
+    Health Data Access Body. See the repository [README](../README.md) for the full disclaimer.
+  license:
+    name: MIT
+    url: https://github.com/mdevalk/open-daams/blob/main/LICENSE
+servers:
+  - url: http://localhost:3000
+    description: Local development — no public deployment exists yet.
+security: []
+tags:
+  - name: Permit Verification
+    description: Independently verify a data permit's signature, content, and current status.
+paths:
+  /.well-known/jwks.json:
+    get:
+      operationId: getJwks
+      tags: [Permit Verification]
+      summary: Fetch the HDAB's public signing key(s) (RFC 7517 JWKS)
+      description: |
+        Publishes the Ed25519 public key used to sign every issued data permit, in standard JSON
+        Web Key Set format. A verifier fetches this, matches `kid` against the `signingKeyId` on a
+        digital permit document, and uses `x` (the base64url-encoded public key) to verify the
+        permit's `signature`. No key-rotation history is published yet — only the currently
+        active key.
+      responses:
+        '200':
+          description: The current JWKS document.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JwksResponse'
+              example:
+                keys:
+                  - kty: OKP
+                    crv: Ed25519
+                    kid: open-daams-nl-signing-key-2026-v1
+                    use: sig
+                    alg: EdDSA
+                    x: JOu9hHNvuFFi0kwtgrPCXQ1OzqUMF8KwQPHO93uvVXs
+
+  /api/permits/{id}/json:
+    get:
+      operationId: getDigitalPermitJson
+      tags: [Permit Verification]
+      summary: Fetch the signed digital permit document as structured JSON
+      description: |
+        The signed, structured record for one permit version — the canonical payload
+        (`permitNumber`, `version`, `applicationId`, dates, `grantedDatasets`, `speOperator`,
+        `researcher`, `outputController`, `issuerKid`) plus signature/status/revocation fields,
+        verifiable against `GET /.well-known/jwks.json`. This is the artifact a verifier actually
+        checks the signature against; the PDF (`GET /api/permits/{id}/pdf`) is the human-readable
+        rendering of the same content, with this JSON embedded inside it as an attachment.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: >-
+            Internal id of this specific permit version — not the public permit number (see
+            `permitId` in the response body for that).
+      responses:
+        '200':
+          description: The digital permit document.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DigitalPermitDocument'
+              example:
+                permitNumber: DP-NL-2026-0012
+                version: 1
+                applicationId: cieqh524yng5by1a2rogubbb8
+                issuedAt: '2026-08-17T08:05:37.774Z'
+                validFrom: '2026-08-17T00:00:00.000Z'
+                validUntil: '2028-08-16T00:00:00.000Z'
+                grantedDatasets:
+                  - dataHolderName: Toekomstig Autoriteit Digitale Gezondheid (ADG)
+                    datasets:
+                      - name: >-
+                          Overleden inwoners van Nederland naar doodsoorzaak (uitgebreide lijst
+                          van 'drie-teken categorieën'), leeftijd en geslacht
+                        url: null
+                        datasetId: null
+                        catalogId: null
+                        distributions: []
+                        storageLocation:
+                          reference: >-
+                            urn:objectstore:bucket:toekomstig-autoriteit-digitale-gezondheid-adg-overleden-inwoners-van-nederland-naar-doodsoorzaak-uitgebreide-lijst-van-drie-teken-categorie-n-leeftijd-en-geslacht-5m7q5mnb
+                          writerDid: 'did:key:zLNhGNtCqZXv1ChxbjGKAeaVgx2ojeNMC'
+                speOperator:
+                  id: cayn1b7o259owoo3sb09glshv
+                  name: RIVM SPE Operations
+                  providerName: SURF Research Cloud
+                  type:
+                    id: c616mts56zc4pz0lx9xf26gk7
+                    name: General Analytics SPE
+                researcher:
+                  affiliation: ''
+                  did: 'did:key:z4RZQtDMLZjkjRBA7KXvi2GNZYmbB7h7P'
+                outputController:
+                  affiliation: CBS
+                  did: 'did:key:zDmMhpHDirxYLgx4Hzyp8kzj4x4naN5MQ'
+                issuerKid: open-daams-nl-signing-key-2026-v1
+                permitId: DP-NL-2026-0012
+                status: GRANTED
+                revocationReason: null
+                revocationAt: null
+                signature: >-
+                  HC4ruFadgGwSUdzJvuOJEg667qPC2FRaeHYMWqZYRbhd5NS6tbnkUszsf_qO_7Xo7LPp-XGmVYn1npvQn2r6uw
+                signingKeyId: open-daams-nl-signing-key-2026-v1
+                algorithm: Ed25519
+                purposeCategory: PUBLIC_HEALTH
+                purposeCategories:
+                  - PUBLIC_HEALTH
+                  - POLICY_MAKING
+                  - STATISTICS
+                  - EDUCATION
+                  - SCIENTIFIC_RESEARCH
+                electronicHealthDataFormat: Geanonimiseerd
+        '404':
+          description: No permit exists with this id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: >-
+            Server error — e.g. the permit has no output controller on record, a data-integrity
+            precondition for signing, not a caller error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/permits/{id}/pdf:
+    get:
+      operationId: getDigitalPermitPdf
+      tags: [Permit Verification]
+      summary: Fetch the signed permit as a human-readable PDF
+      description: |
+        The same content as `GET /api/permits/{id}/json`, rendered as a 10-section PDF per the
+        TEHDAS2 D6.3 Annex 9 template, with the JSON document embedded as a file attachment
+        inside the PDF — this is how `hdab-nl-permit-validator`'s "upload PDF" flow extracts its
+        data today, rather than calling the JSON endpoint directly. Regenerated on demand if not
+        already cached.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The permit PDF.
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: >-
+            No permit exists with this id. Unlike the other three endpoints in this spec, this
+            response is plain text, not JSON.
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Not found
+
+  /api/public/permits/{permitNumber}/status:
+    get:
+      operationId: getPermitStatus
+      tags: [Permit Verification]
+      summary: Check whether a permit is still current, and whether it's been revoked
+      description: |
+        A lightweight status check, deliberately separate from the full digital permit document —
+        lets a third party confirm a permit it already holds is still the current version and
+        hasn't been revoked, without re-downloading the whole document. CORS is enabled
+        (`Access-Control-Allow-Origin: *`) specifically so this can be polled cross-origin — this
+        is the one endpoint in this spec that `hdab-nl-permit-validator` actually calls live over
+        the network (its other verification steps work from an uploaded file). Returns `404` —
+        not a distinguishing error — both when the permit number doesn't exist and when its
+        application's decision hasn't been published yet, to avoid leaking which case applies.
+      parameters:
+        - name: permitNumber
+          in: path
+          required: true
+          schema:
+            type: string
+          example: DP-NL-2026-0012
+          description: >-
+            The stable base permit number, not the version-suffixed id (e.g.
+            `DP-NL-2026-0012`, not `DP-NL-2026-0012-v2`).
+      responses:
+        '200':
+          description: Current status.
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: '*'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermitStatusResponse'
+              example:
+                permitNumber: DP-NL-2026-0012
+                currentVersion: 2
+                status: RENEWED
+                revoked: false
+                revocationReason: null
+                revocationAt: null
+        '404':
+          description: >-
+            No permit with this number exists, or its application's decision hasn't been
+            published yet.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+      example:
+        error: Not found
+
+    JwksResponse:
+      type: object
+      required: [keys]
+      properties:
+        keys:
+          type: array
+          items:
+            $ref: '#/components/schemas/JsonWebKey'
+
+    JsonWebKey:
+      type: object
+      description: >-
+        Public-only OKP (Octet Key Pair) JWK, RFC 8037 — never includes the private key.
+      required: [kty, crv, kid, use, alg, x]
+      properties:
+        kty:
+          type: string
+          enum: [OKP]
+        crv:
+          type: string
+          enum: [Ed25519]
+        kid:
+          type: string
+          description: Key id — matches `signingKeyId` on a digital permit document.
+          example: open-daams-nl-signing-key-2026-v1
+        use:
+          type: string
+          enum: [sig]
+        alg:
+          type: string
+          enum: [EdDSA]
+        x:
+          type: string
+          description: Base64url-encoded Ed25519 public key.
+          example: JOu9hHNvuFFi0kwtgrPCXQ1OzqUMF8KwQPHO93uvVXs
+
+    DataPermitStatus:
+      type: string
+      enum: [GRANTED, AMENDED, RENEWED, REVOKED, EXPIRED]
+
+    PermitStatusResponse:
+      type: object
+      required: [permitNumber, currentVersion, status, revoked, revocationReason, revocationAt]
+      properties:
+        permitNumber:
+          type: string
+          example: DP-NL-2026-0012
+        currentVersion:
+          type: integer
+          description: >-
+            The version number of the current permit version. Compare against the version you
+            hold to know if you're out of date.
+          example: 2
+        status:
+          $ref: '#/components/schemas/DataPermitStatus'
+        revoked:
+          type: boolean
+          description: >-
+            True iff `status === 'REVOKED'` — a convenience flag, redundant with `status` but
+            explicit.
+        revocationReason:
+          type: string
+          nullable: true
+        revocationAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    Distribution:
+      type: object
+      description: >-
+        One of the EU Dataset Catalogue's own access mechanisms for a dataset — carried through
+        verbatim from the HealthData@EU/NCP wire format.
+      properties:
+        distributionId:
+          type: string
+        title:
+          type: string
+          nullable: true
+
+    StorageLocation:
+      type: object
+      description: >-
+        Where the data holder should upload this dataset's data, and the identity authorized to
+        write there — frozen at issuance, part of the signed payload.
+      required: [reference, writerDid]
+      properties:
+        reference:
+          type: string
+          description: >-
+            `urn:objectstore:bucket:<slug>` — not a real object-storage backend, no bucket is
+            actually created; a sample reference for this reference-implementation project.
+          example: >-
+            urn:objectstore:bucket:toekomstig-autoriteit-digitale-gezondheid-adg-overleden-inwoners-van-nederland-naar-doodsoorzaak-uitgebreide-lijst-van-drie-teken-categorie-n-leeftijd-en-geslacht-5m7q5mnb
+        writerDid:
+          type: string
+          description: >-
+            Sample W3C DID-shaped identity (`did:key:z...`) — not backed by a real keypair; a
+            tracked reference, not a real cryptographic identity, per this project's "shell, not
+            real integration" convention for not-yet-real infrastructure.
+          example: 'did:key:zLNhGNtCqZXv1ChxbjGKAeaVgx2ojeNMC'
+
+    DatasetEntry:
+      type: object
+      required: [name, url, datasetId, catalogId, distributions]
+      properties:
+        name:
+          type: string
+        url:
+          type: string
+          nullable: true
+        datasetId:
+          type: string
+          nullable: true
+          description: >-
+            EU Dataset Catalogue identifier — a traceability reference, not a local foreign key
+            (open-daams doesn't own the catalogue).
+        catalogId:
+          type: string
+          nullable: true
+        distributions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Distribution'
+        storageLocation:
+          type: object
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/StorageLocation'
+
+    GrantedDatasetGroup:
+      type: object
+      required: [dataHolderName, datasets]
+      properties:
+        dataHolderName:
+          type: string
+        datasets:
+          type: array
+          items:
+            $ref: '#/components/schemas/DatasetEntry'
+
+    SpeType:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+
+    SpeOperator:
+      type: object
+      required: [id, name, providerName, type]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        providerName:
+          type: string
+          nullable: true
+        type:
+          type: object
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/SpeType'
+
+    AuthorizedIdentity:
+      type: object
+      description: >-
+        Deliberately name-free: the signed/printed permit carries only organisation and
+        identity, never the individual's name — that stays in open-daams's internal
+        case-management records.
+      required: [affiliation, did]
+      properties:
+        affiliation:
+          type: string
+        did:
+          type: string
+          description: >-
+            Sample DID identity — see `StorageLocation.writerDid` for the same "not a real
+            keypair" convention.
+
+    DigitalPermitDocument:
+      type: object
+      description: >-
+        The canonical signed payload plus unsigned display fields. `permitId` is the
+        version-suffixed display id (bare `permitNumber` for version 1, e.g.
+        `DP-NL-2026-0012`; `DP-NL-2026-0012-v2` from version 2 onward). `permitNumber` is the
+        stable base number used to look up current status via
+        `GET /api/public/permits/{permitNumber}/status`.
+      required:
+        - permitNumber
+        - version
+        - applicationId
+        - issuedAt
+        - validFrom
+        - validUntil
+        - grantedDatasets
+        - speOperator
+        - researcher
+        - outputController
+        - issuerKid
+        - permitId
+        - status
+        - revocationReason
+        - revocationAt
+        - signature
+        - signingKeyId
+        - algorithm
+        - purposeCategory
+        - purposeCategories
+        - electronicHealthDataFormat
+      properties:
+        permitNumber:
+          type: string
+          example: DP-NL-2026-0012
+        version:
+          type: integer
+          example: 1
+        applicationId:
+          type: string
+        issuedAt:
+          type: string
+          format: date-time
+        validFrom:
+          type: string
+          format: date-time
+        validUntil:
+          type: string
+          format: date-time
+        grantedDatasets:
+          type: array
+          items:
+            $ref: '#/components/schemas/GrantedDatasetGroup'
+        speOperator:
+          type: object
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/SpeOperator'
+        researcher:
+          type: object
+          nullable: true
+          description: >-
+            Null if the source application had neither `personResearchName` nor
+            `personResponsibleName` populated.
+          allOf:
+            - $ref: '#/components/schemas/AuthorizedIdentity'
+        outputController:
+          description: >-
+            Selected by HDAB staff at issuance (or re-selected on an approved amendment) — the
+            four-eyes check on SPE output, per D6.3.
+          allOf:
+            - $ref: '#/components/schemas/AuthorizedIdentity'
+        issuerKid:
+          type: string
+          description: >-
+            The signing key id active when this version was signed — always matches a `kid` in
+            `GET /.well-known/jwks.json` for a currently-verifiable permit.
+        permitId:
+          type: string
+          example: DP-NL-2026-0012
+        status:
+          $ref: '#/components/schemas/DataPermitStatus'
+        revocationReason:
+          type: string
+          nullable: true
+        revocationAt:
+          type: string
+          format: date-time
+          nullable: true
+        signature:
+          type: string
+          description: >-
+            Base64url-encoded Ed25519 signature over the canonical payload fields
+            (`permitNumber`, `version`, `applicationId`, `issuedAt`, `validFrom`, `validUntil`,
+            `grantedDatasets`, `speOperator`, `researcher`, `outputController`, `issuerKid`).
+        signingKeyId:
+          type: string
+        algorithm:
+          type: string
+          enum: [Ed25519]
+        purposeCategory:
+          type: string
+          nullable: true
+        purposeCategories:
+          type: array
+          items:
+            type: string
+        electronicHealthDataFormat:
+          type: string
+          nullable: true
+          description: Anonymisation level, e.g. "Geanonimiseerd".
