@@ -32,6 +32,49 @@ describe('getAvailableTransitions', () => {
     const withAcceptedEstimate = getAvailableTransitions('PROCESSING', 'DATA_ACCESS_APPLICATION', 'DECISION_MAKER', true);
     expect(withAcceptedEstimate.some((t) => t.requiresDecisionOutcome === 'POSITIVE')).toBe(true);
   });
+
+  // D6.4 Figure 1(a): PROCESSING ⇆ AWAITING_ADDITIONAL_INFORMATION is its own
+  // pair of arrows, distinct from the PRE_SCREENING one.
+  it('allows requesting additional information from PROCESSING too, not just PRE_SCREENING', () => {
+    const transitions = getAvailableTransitions('PROCESSING', 'DATA_ACCESS_APPLICATION', 'CASE_HANDLER', true);
+    expect(transitions.some((t) => t.to === 'AWAITING_ADDITIONAL_INFORMATION')).toBe(true);
+  });
+
+  // D6.4 R7.5.2/R6.3.7: resuming must return to whichever phase the request
+  // actually came from — never offer both resume targets at once.
+  it('only offers the resume transition matching where the request originated from', () => {
+    const fromPreScreening = getAvailableTransitions(
+      'AWAITING_ADDITIONAL_INFORMATION',
+      'DATA_ACCESS_APPLICATION',
+      'CASE_HANDLER',
+      true,
+      'PRE_SCREENING',
+    );
+    expect(fromPreScreening.map((t) => t.to).sort()).toEqual(['PRE_SCREENING', 'WITHDRAWN']);
+
+    const fromProcessing = getAvailableTransitions(
+      'AWAITING_ADDITIONAL_INFORMATION',
+      'DATA_ACCESS_APPLICATION',
+      'CASE_HANDLER',
+      true,
+      'PROCESSING',
+    );
+    expect(fromProcessing.map((t) => t.to).sort()).toEqual(['PROCESSING', 'WITHDRAWN']);
+  });
+
+  // D6.4 Figure 1(a): a non-response in due time goes to WITHDRAWN, not a
+  // decision — there's no separate "no response" transition to DECISION_ISSUED.
+  it('never offers a DECISION_ISSUED transition from AWAITING_ADDITIONAL_INFORMATION', () => {
+    const transitions = getAvailableTransitions(
+      'AWAITING_ADDITIONAL_INFORMATION',
+      'DATA_ACCESS_APPLICATION',
+      'ADMIN',
+      true,
+      'PRE_SCREENING',
+    );
+    expect(transitions.some((t) => t.to === 'DECISION_ISSUED')).toBe(false);
+    expect(transitions.some((t) => t.to === 'WITHDRAWN')).toBe(true);
+  });
 });
 
 describe('isTerminal', () => {
@@ -70,7 +113,7 @@ describe('calculateDecisionDeadline (EHDS Art. 68)', () => {
 });
 
 describe('calculateAdditionalInfoDeadline', () => {
-  it('adds 28 days (D6.4 §6)', () => {
+  it('adds 28 days (D6.4 R6.3.3)', () => {
     expect(calculateAdditionalInfoDeadline(new Date(2026, 0, 1))).toEqual(new Date(2026, 0, 29));
   });
 });

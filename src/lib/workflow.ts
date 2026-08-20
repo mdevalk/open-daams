@@ -20,9 +20,14 @@ export type Transition = {
  * and Data Requests (diagrams are identical).
  *
  * Application states: SUBMITTED → PRE_SCREENING ⇆ AWAITING_ADDITIONAL_INFORMATION
- *                     PRE_SCREENING → PROCESSING → DECISION_ISSUED (POSITIVE|NEGATIVE)
- *                     AWAITING_ADDITIONAL_INFORMATION → DECISION_ISSUED (no response)
+ *                     PRE_SCREENING → PROCESSING ⇆ AWAITING_ADDITIONAL_INFORMATION
+ *                     PROCESSING → DECISION_ISSUED (POSITIVE|NEGATIVE)
+ *                     AWAITING_ADDITIONAL_INFORMATION → WITHDRAWN (no response in due time)
  *                     Any active state → WITHDRAWN
+ *
+ * AWAITING_ADDITIONAL_INFORMATION always resumes to whichever phase it was
+ * entered from (D6.4 R7.5.2/R6.3.7) — tracked on
+ * `Application.additionalInfoRequestedFromStatus`, not inferred.
  *
  * DRAFT is a pre-submission state required by D6.4 §6 (applicant workspace) but
  * not shown in the state machine diagrams.
@@ -83,17 +88,23 @@ export const TRANSITIONS: Record<ApplicationStatus, Transition[]> = {
       key: 'resumePreScreening',
       // D6.4 §6: "updated information MUST be transmitted to the HDAB" — the
       // applicant initiates this by submitting their response; CASE_HANDLER/ADMIN
-      // can also record receipt on their behalf.
+      // can also record receipt on their behalf. Only offered when the request
+      // actually originated from PRE_SCREENING — see getAvailableTransitions.
       requiredRole: ['APPLICANT', 'CASE_HANDLER', 'ADMIN'],
       // D6.4 §8: deadline recalculated from timestamp of additional info receipt
     },
     {
-      to: 'DECISION_ISSUED',
-      key: 'autoNegativeNoResponse',
-      requiredRole: ['DECISION_MAKER', 'ADMIN'],
-      requiresDecisionOutcome: 'NEGATIVE',
+      to: 'PROCESSING',
+      key: 'resumeProcessing',
+      // Same as resumePreScreening above, for a request made during substantive
+      // assessment (D6.4 R7.5.2/R6.3.7) — only offered when that's where it
+      // originated from.
+      requiredRole: ['APPLICANT', 'CASE_HANDLER', 'ADMIN'],
     },
     {
+      // D6.4 Figure 1(a): a non-response in due time goes to WITHDRAWN, not a
+      // decision — no dedicated transition needed, the generic `withdraw`
+      // below already goes exactly there.
       to: 'WITHDRAWN',
       key: 'withdraw',
       requiredRole: ['APPLICANT', 'CASE_HANDLER', 'ADMIN'],
@@ -101,6 +112,14 @@ export const TRANSITIONS: Record<ApplicationStatus, Transition[]> = {
   ],
 
   PROCESSING: [
+    {
+      to: 'AWAITING_ADDITIONAL_INFORMATION',
+      key: 'requestAdditionalInfo',
+      requiredRole: ['CASE_HANDLER', 'ADMIN'],
+      // D6.4 Figure 1(a): PROCESSING ⇆ AWAITING_ADDITIONAL_INFORMATION is its
+      // own pair of arrows, distinct from the PRE_SCREENING one above — same
+      // action/label, different origin phase.
+    },
     {
       to: 'DECISION_ISSUED',
       key: 'positiveDecision',
@@ -142,10 +161,19 @@ export function getAvailableTransitions(
   _applicationType: ApplicationType,
   userRole: UserRole,
   feeEstimateAccepted: boolean,
+  // Only relevant in AWAITING_ADDITIONAL_INFORMATION — which phase the request
+  // was made from, so exactly one of resumePreScreening/resumeProcessing is
+  // ever offered, never both (D6.4 R7.5.2/R6.3.7).
+  additionalInfoRequestedFromStatus?: ApplicationStatus | null,
 ): Transition[] {
-  return (TRANSITIONS[currentStatus] ?? []).filter(
-    (t) => t.requiredRole.includes(userRole) && (!t.requiresFeeEstimateAccepted || feeEstimateAccepted),
-  );
+  return (TRANSITIONS[currentStatus] ?? []).filter((t) => {
+    if (!t.requiredRole.includes(userRole)) return false;
+    if (t.requiresFeeEstimateAccepted && !feeEstimateAccepted) return false;
+    if ((t.key === 'resumePreScreening' || t.key === 'resumeProcessing') && t.to !== additionalInfoRequestedFromStatus) {
+      return false;
+    }
+    return true;
+  });
 }
 
 export const STATUS_COLORS: Record<ApplicationStatus, string> = {
@@ -183,7 +211,7 @@ export function calculateDecisionDeadline(
 
 export function calculateAdditionalInfoDeadline(requestedAt: Date): Date {
   const d = new Date(requestedAt);
-  d.setDate(d.getDate() + 28); // ~1 month per D6.4 §6
+  d.setDate(d.getDate() + 28); // 4 weeks per D6.4 R6.3.3
   return d;
 }
 

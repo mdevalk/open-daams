@@ -55,12 +55,21 @@ function computeStatusUpdates(
     // D6.4 §8: void the decision deadline while awaiting additional information
     updates.decisionDeadline = null;
     updates.additionalInfoDeadline = calculateAdditionalInfoDeadline(now);
+    // D6.4 R7.5.2/R6.3.7: remember which phase this was entered from, so
+    // resuming returns to the right one — see getAvailableTransitions.
+    updates.additionalInfoRequestedFromStatus = application.status;
   }
 
-  if (toStatus === 'PRE_SCREENING' && application.status === 'AWAITING_ADDITIONAL_INFORMATION') {
-    // D6.4 §8: recalculate decision deadline from timestamp of additional info receipt
+  if (
+    (toStatus === 'PRE_SCREENING' || toStatus === 'PROCESSING') &&
+    application.status === 'AWAITING_ADDITIONAL_INFORMATION'
+  ) {
+    // D6.4 §8: recalculate decision deadline from timestamp of additional info
+    // receipt — phase-agnostic, applies the same whether resuming pre-screening
+    // or processing.
     updates.additionalInfoDeadline = null;
     updates.additionalInfoReceivedAt = now;
+    updates.additionalInfoRequestedFromStatus = null;
     updates.decisionDeadline = calculateDecisionDeadline(now, application.decisionTrack, application.deadlineExtended);
   }
 
@@ -224,7 +233,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (!found.ok) return NextResponse.json({ error: found.error }, { status: found.status });
 
     const feeEstimateAccepted = application.feeEstimate?.status === 'ACCEPTED';
-    const available = getAvailableTransitions(application.status, application.type, found.user.role, feeEstimateAccepted);
+    const available = getAvailableTransitions(
+      application.status,
+      application.type,
+      found.user.role,
+      feeEstimateAccepted,
+      application.additionalInfoRequestedFromStatus,
+    );
     const transition = available.find(
       (t) =>
         t.to === body.toStatus &&

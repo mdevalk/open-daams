@@ -813,7 +813,7 @@
     },
     "requestAdditionalInfo": {
       "label": "Aanvullende informatie opvragen",
-      "description": "HDAB vraagt aanvullende informatie. Beslissingstermijn wordt opgeschort (D6.4 §8)."
+      "description": "HDAB vraagt aanvullende informatie. Aanvrager heeft 28 dagen (4 weken) om te reageren; daarna wordt de beslissingstermijn opgeschort en herberekend vanaf de reactie (D6.4 R6.3.3, R8.0.6)."
     },
     "completePreScreening": {
       "label": "Pre-screening afronden — doorzetten naar beoordeling",
@@ -821,11 +821,11 @@
     },
     "resumePreScreening": {
       "label": "Aanvullende informatie ingediend — pre-screening hervatten",
-      "description": "Aanvrager heeft aanvullende informatie ingediend; pre-screening hervat. Termijn herberekend (D6.4 §8)."
+      "description": "Aanvrager heeft aanvullende informatie ingediend; pre-screening hervat. Beslissingstermijn herberekend vanaf vandaag (D6.4 R8.0.6)."
     },
-    "autoNegativeNoResponse": {
-      "label": "Negatief besluit — geen reactie ontvangen",
-      "description": "Aanvrager heeft geen aanvullende informatie ingediend binnen de termijn (D6.4 Fig. 1/2)."
+    "resumeProcessing": {
+      "label": "Aanvullende informatie ingediend — beoordeling hervatten",
+      "description": "Aanvrager heeft aanvullende informatie ingediend; beoordeling hervat. Beslissingstermijn herberekend vanaf vandaag (D6.4 R8.0.6)."
     },
     "positiveDecision": {
       "label": "Positief besluit uitbrengen",

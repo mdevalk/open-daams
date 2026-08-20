@@ -813,7 +813,7 @@
     },
     "requestAdditionalInfo": {
       "label": "Request additional information",
-      "description": "HDAB requests additional information. The decision deadline is suspended (D6.4 §8)."
+      "description": "HDAB requests additional information. The applicant has 28 days (4 weeks) to respond, after which the decision deadline is suspended and recalculated from the response (D6.4 R6.3.3, R8.0.6)."
     },
     "completePreScreening": {
       "label": "Complete pre-screening — move to assessment",
@@ -821,11 +821,11 @@
     },
     "resumePreScreening": {
       "label": "Additional information submitted — resume pre-screening",
-      "description": "The applicant has submitted additional information; pre-screening resumes. Deadline recalculated (D6.4 §8)."
+      "description": "The applicant has submitted additional information; pre-screening resumes. Decision deadline recalculated from today (D6.4 R8.0.6)."
     },
-    "autoNegativeNoResponse": {
-      "label": "Negative decision — no response received",
-      "description": "The applicant did not submit additional information within the deadline (D6.4 Fig. 1/2)."
+    "resumeProcessing": {
+      "label": "Additional information submitted — resume processing",
+      "description": "The applicant has submitted additional information; assessment resumes. Decision deadline recalculated from today (D6.4 R8.0.6)."
     },
     "positiveDecision": {
       "label": "Issue positive decision",

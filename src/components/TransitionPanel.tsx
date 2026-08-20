@@ -25,7 +25,13 @@ export function TransitionPanel({ application, currentUser, children }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   const feeEstimateAccepted = application.feeEstimate?.status === 'ACCEPTED';
-  const transitions = getAvailableTransitions(application.status, application.type, currentUser.role, feeEstimateAccepted);
+  const transitions = getAvailableTransitions(
+    application.status,
+    application.type,
+    currentUser.role,
+    feeEstimateAccepted,
+    application.additionalInfoRequestedFromStatus,
+  );
   if (transitions.length === 0 && !children) return null;
 
   async function submit() {

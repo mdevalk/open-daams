@@ -813,7 +813,7 @@
     },
     "requestAdditionalInfo": {
       "label": "Demander des informations complémentaires",
-      "description": "Le HDAB demande des informations complémentaires. Le délai de décision est suspendu (D6.4 §8)."
+      "description": "Le HDAB demande des informations complémentaires. Le demandeur dispose de 28 jours (4 semaines) pour répondre, après quoi le délai de décision est suspendu et recalculé à partir de la réponse (D6.4 R6.3.3, R8.0.6)."
     },
     "completePreScreening": {
       "label": "Terminer le pré-examen — passer à l'évaluation",
@@ -821,11 +821,11 @@
     },
     "resumePreScreening": {
       "label": "Informations complémentaires soumises — reprise du pré-examen",
-      "description": "Le demandeur a soumis des informations complémentaires ; le pré-examen reprend. Délai recalculé (D6.4 §8)."
+      "description": "Le demandeur a soumis des informations complémentaires ; le pré-examen reprend. Délai de décision recalculé à partir d'aujourd'hui (D6.4 R8.0.6)."
     },
-    "autoNegativeNoResponse": {
-      "label": "Décision négative — aucune réponse reçue",
-      "description": "Le demandeur n'a pas soumis d'informations complémentaires dans le délai imparti (D6.4 Fig. 1/2)."
+    "resumeProcessing": {
+      "label": "Informations complémentaires soumises — reprise de l'évaluation",
+      "description": "Le demandeur a soumis des informations complémentaires ; l'évaluation reprend. Délai de décision recalculé à partir d'aujourd'hui (D6.4 R8.0.6)."
     },
     "positiveDecision": {
       "label": "Rendre une décision positive",
