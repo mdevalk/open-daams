@@ -688,6 +688,9 @@ export async function createApplicationFromHdeuPayload(
       consentAcceptHealthDataBody: p.consentAcceptHealthDataBody,
 
       submittedAt: receivedAt,
+      // Art. 57(1)(j)(ii): publish without undue delay after reception —
+      // for a cross-border import, reception is this HDAB receiving it.
+      publishedAt: receivedAt,
       decisionDeadline: calculateDecisionDeadline(receivedAt),
     },
   });
