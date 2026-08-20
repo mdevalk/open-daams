@@ -101,7 +101,7 @@
     "manualEntry": "Handmatig invullen",
     "ncpFetch": "Ophalen via NCP",
     "searchLabel": "Zoeken",
-    "searchPlaceholder": "Kenmerk of titel...",
+    "searchPlaceholder": "Kenmerk, titel of HD@EU-ID...",
     "statusLabel": "Status",
     "allStatuses": "Alle statussen",
     "typeLabel": "Type",
@@ -630,7 +630,9 @@
     "tabSpeProviders": "SPE-providers",
     "tabDataUsers": "Datagebruikers",
     "recentChanges": "Recente wijzigingen",
-    "noRecentChanges": "Nog geen wijzigingen."
+    "noRecentChanges": "Nog geen wijzigingen.",
+    "contactPhoneHint": "Nederlands formaat, bijv. 06 12345678 of +31 6 12345678",
+    "contactPhoneInvalid": "Voer een geldig Nederlands telefoonnummer in, bijv. 06 12345678 of +31 6 12345678"
   },
   "auditLog": {
     "title": "Auditlog",

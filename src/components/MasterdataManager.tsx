@@ -28,11 +28,17 @@ type ApplicantBillingDetails = {
   section4ProfileDataDate: string | Date | null;
 };
 
+type Contact = {
+  role: 'PRIMARY' | null;
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+};
+
 type Entity = {
   id: string;
   name: string;
-  contactEmail: string | null;
-  contactPhone: string | null;
+  contacts: Contact[];
   speProvider?: { name: string } | null;
   speProviderId?: string | null;
   isTrusted?: boolean;
@@ -135,6 +141,11 @@ function hasFieldValue(value: unknown, type?: 'boolean' | 'date'): boolean {
   return type === 'boolean' ? value !== null && value !== undefined : Boolean(value);
 }
 
+function isValidDutchPhone(value: string): boolean {
+  const cleaned = value.replace(/[\s-]/g, '');
+  return /^(?:\+31|0031|0)[1-9]\d{8}$/.test(cleaned);
+}
+
 const inputCls =
   'w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]';
 
@@ -143,6 +154,7 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const t = useTranslations(namespace as any);
   const terr = useTranslations('errors');
+  const tmd = useTranslations('masterdata');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -162,11 +174,14 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
   const [newTrusted, setNewTrusted] = useState(false);
   const [newBilling, setNewBilling] = useState<BillingFields>(EMPTY_BILLING);
 
+  const editPhoneInvalid = editPhone !== '' && !isValidDutchPhone(editPhone);
+  const newPhoneInvalid = newPhone !== '' && !isValidDutchPhone(newPhone);
+
   function startEdit(entity: Entity) {
     setEditingId(entity.id);
     setEditName(entity.name);
-    setEditEmail(entity.contactEmail ?? '');
-    setEditPhone(entity.contactPhone ?? '');
+    setEditEmail(entity.contacts[0]?.email ?? '');
+    setEditPhone(entity.contacts[0]?.phone ?? '');
     setEditProviderId(entity.speProviderId ?? '');
     setEditTrusted(entity.isTrusted ?? false);
     setEditBilling(billingFieldsFromEntity(entity));
@@ -313,7 +328,17 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
                 <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder={t('name')} className={inputCls} />
                 <div className="grid grid-cols-2 gap-2">
                   <input value={editEmail} onChange={(e) => setEditEmail(e.target.value)} placeholder={t('contactEmail')} className={inputCls} />
-                  <input value={editPhone} onChange={(e) => setEditPhone(e.target.value)} placeholder={t('contactPhone')} className={inputCls} />
+                  <div>
+                    <input
+                      value={editPhone}
+                      onChange={(e) => setEditPhone(e.target.value)}
+                      placeholder={t('contactPhone')}
+                      className={`${inputCls}${editPhoneInvalid ? ' border-red-400 focus:ring-red-400' : ''}`}
+                    />
+                    <p className={`text-xs mt-1 ${editPhoneInvalid ? 'text-red-600' : 'text-gray-400'}`}>
+                      {editPhoneInvalid ? tmd('contactPhoneInvalid') : tmd('contactPhoneHint')}
+                    </p>
+                  </div>
                 </div>
                 {relationOptions && (
                   <select value={editProviderId} onChange={(e) => setEditProviderId(e.target.value)} className={inputCls}>
@@ -331,7 +356,7 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
                 )}
                 {hasBillingDetails && renderBillingFields(editBilling, setEditBilling)}
                 <div className="flex gap-2">
-                  <button disabled={loading || !editName.trim()} onClick={() => saveEdit(entity.id)}
+                  <button disabled={loading || !editName.trim() || editPhoneInvalid} onClick={() => saveEdit(entity.id)}
                     className="rounded px-3 py-1.5 text-xs font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50">
                     {t('save')}
                   </button>
@@ -352,11 +377,21 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
                       </span>
                     )}
                   </p>
-                  {(entity.contactEmail || entity.contactPhone) && (
-                    <p className="text-xs text-gray-500">
-                      {[entity.contactEmail, entity.contactPhone].filter(Boolean).join(' · ')}
-                    </p>
-                  )}
+                  {entity.contacts.map((contact, i) => (
+                    (contact.name || contact.email || contact.phone) && (
+                      <p key={i} className="text-xs text-gray-500 mt-0.5">
+                        {contact.name && <span className="text-gray-700 font-medium">{contact.name}</span>}
+                        {contact.name && (contact.email || contact.phone) && <span className="mx-1.5 text-gray-300">·</span>}
+                        {contact.email && (
+                          <a href={`mailto:${contact.email}`} className="hover:text-[#01689b] hover:underline">{contact.email}</a>
+                        )}
+                        {contact.email && contact.phone && <span className="mx-1.5 text-gray-300">·</span>}
+                        {contact.phone && (
+                          <a href={`tel:${contact.phone}`} className="hover:text-[#01689b] hover:underline">{contact.phone}</a>
+                        )}
+                      </p>
+                    )
+                  ))}
                   {relationOptions && (
                     <p className="text-xs text-gray-400">{t('providerLabel')}: {entity.speProvider?.name ?? '—'}</p>
                   )}
@@ -406,7 +441,17 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
             <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder={t('name')} className={inputCls} />
             <div className="grid grid-cols-2 gap-2">
               <input value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder={t('contactEmail')} className={inputCls} />
-              <input value={newPhone} onChange={(e) => setNewPhone(e.target.value)} placeholder={t('contactPhone')} className={inputCls} />
+              <div>
+                <input
+                  value={newPhone}
+                  onChange={(e) => setNewPhone(e.target.value)}
+                  placeholder={t('contactPhone')}
+                  className={`${inputCls}${newPhoneInvalid ? ' border-red-400 focus:ring-red-400' : ''}`}
+                />
+                <p className={`text-xs mt-1 ${newPhoneInvalid ? 'text-red-600' : 'text-gray-400'}`}>
+                  {newPhoneInvalid ? tmd('contactPhoneInvalid') : tmd('contactPhoneHint')}
+                </p>
+              </div>
             </div>
             {relationOptions && (
               <select value={newProviderId} onChange={(e) => setNewProviderId(e.target.value)} className={inputCls}>
@@ -424,7 +469,7 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
             )}
             {hasBillingDetails && renderBillingFields(newBilling, setNewBilling)}
             <div className="flex gap-2">
-              <button disabled={loading || !newName.trim()} onClick={submitNew}
+              <button disabled={loading || !newName.trim() || newPhoneInvalid} onClick={submitNew}
                 className="rounded px-3 py-1.5 text-xs font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50">
                 {loading ? t('save') : t('addNew')}
               </button>

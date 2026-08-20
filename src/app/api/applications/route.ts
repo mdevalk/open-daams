@@ -19,6 +19,7 @@ export async function GET(req: NextRequest) {
         OR: [
           { referenceNumber: { contains: search, mode: 'insensitive' } },
           { title: { contains: search, mode: 'insensitive' } },
+          { hdeuApplicationId: { contains: search, mode: 'insensitive' } },
         ],
       } : {}),
     },

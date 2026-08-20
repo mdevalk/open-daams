@@ -9,7 +9,7 @@ import { requireRole } from '@/lib/authz';
  * /api/users precedent.
  */
 export async function GET() {
-  const dataUsers = await prisma.dataUser.findMany({ orderBy: { name: 'asc' } });
+  const dataUsers = await prisma.dataUser.findMany({ orderBy: { name: 'asc' }, include: { contacts: true } });
   return NextResponse.json(dataUsers);
 }
 
@@ -32,9 +32,11 @@ export async function POST(req: NextRequest) {
     const dataUser = await prisma.dataUser.create({
       data: {
         name: String(body.name).trim(),
-        contactEmail: body.contactEmail || null,
-        contactPhone: body.contactPhone || null,
+        ...(body.contactEmail || body.contactPhone
+          ? { contacts: { create: { email: body.contactEmail || null, phone: body.contactPhone || null, role: 'PRIMARY' } } }
+          : {}),
       },
+      include: { contacts: true },
     });
 
     await prisma.auditLog.create({

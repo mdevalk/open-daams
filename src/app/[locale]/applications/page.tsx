@@ -32,6 +32,7 @@ export default async function ApplicationsPage({
         OR: [
           { referenceNumber: { contains: search, mode: 'insensitive' } },
           { title: { contains: search, mode: 'insensitive' } },
+          { hdeuApplicationId: { contains: search, mode: 'insensitive' } },
         ],
       } : {}),
     },

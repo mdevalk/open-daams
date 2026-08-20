@@ -16,13 +16,25 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const auth = await requireRole(body.actingUserId, ['ADMIN']);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
+    if (body.contactEmail !== undefined || body.contactPhone !== undefined) {
+      const existingContact = await prisma.contact.findFirst({ where: { dataUserId: id, role: 'PRIMARY' } });
+      const contactData = {
+        ...(body.contactEmail !== undefined ? { email: body.contactEmail || null } : {}),
+        ...(body.contactPhone !== undefined ? { phone: body.contactPhone || null } : {}),
+      };
+      if (existingContact) {
+        await prisma.contact.update({ where: { id: existingContact.id }, data: contactData });
+      } else {
+        await prisma.contact.create({ data: { dataUserId: id, role: 'PRIMARY', ...contactData } });
+      }
+    }
+
     const dataUser = await prisma.dataUser.update({
       where: { id },
       data: {
         ...(body.name !== undefined ? { name: String(body.name).trim() } : {}),
-        ...(body.contactEmail !== undefined ? { contactEmail: body.contactEmail || null } : {}),
-        ...(body.contactPhone !== undefined ? { contactPhone: body.contactPhone || null } : {}),
       },
+      include: { contacts: true },
     });
 
     const changes: string[] = [];

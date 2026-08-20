@@ -10,7 +10,7 @@ import { requireRole } from '@/lib/authz';
  */
 export async function GET() {
   const speOperators = await prisma.speOperator.findMany({
-    include: { speProvider: { select: { name: true } } },
+    include: { speProvider: { select: { name: true } }, contacts: true },
     orderBy: { name: 'asc' },
   });
   return NextResponse.json(speOperators);
@@ -37,8 +37,6 @@ export async function POST(req: NextRequest) {
     const speOperator = await prisma.speOperator.create({
       data: {
         name: String(body.name).trim(),
-        contactEmail: body.contactEmail || null,
-        contactPhone: body.contactPhone || null,
         speProviderId: body.speProviderId || null,
         address: body.address || null,
         businessId: body.businessId || null,
@@ -48,7 +46,11 @@ export async function POST(req: NextRequest) {
         eInvoiceAddress: body.eInvoiceAddress || null,
         operatorId: body.operatorId || null,
         peppolCode: body.peppolCode || null,
+        ...(body.contactEmail || body.contactPhone
+          ? { contacts: { create: { email: body.contactEmail || null, phone: body.contactPhone || null, role: 'PRIMARY' } } }
+          : {}),
       },
+      include: { contacts: true },
     });
 
     await prisma.auditLog.create({

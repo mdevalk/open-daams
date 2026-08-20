@@ -101,7 +101,7 @@
     "manualEntry": "Manual entry",
     "ncpFetch": "Fetch from NCP",
     "searchLabel": "Search",
-    "searchPlaceholder": "Reference or title...",
+    "searchPlaceholder": "Reference, title, or HD@EU ID...",
     "statusLabel": "Status",
     "allStatuses": "All statuses",
     "typeLabel": "Type",
@@ -630,7 +630,9 @@
     "tabSpeProviders": "SPE providers",
     "tabDataUsers": "Data users",
     "recentChanges": "Recent changes",
-    "noRecentChanges": "No changes yet."
+    "noRecentChanges": "No changes yet.",
+    "contactPhoneHint": "Dutch format, e.g. 06 12345678 or +31 6 12345678",
+    "contactPhoneInvalid": "Enter a valid Dutch phone number, e.g. 06 12345678 or +31 6 12345678"
   },
   "auditLog": {
     "title": "Audit log",

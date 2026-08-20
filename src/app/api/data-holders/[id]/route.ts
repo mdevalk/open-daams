@@ -18,12 +18,23 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const auth = await requireRole(body.actingUserId, ['ADMIN']);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
+    if (body.contactEmail !== undefined || body.contactPhone !== undefined) {
+      const existingContact = await prisma.contact.findFirst({ where: { dataHolderId: id, role: 'PRIMARY' } });
+      const contactData = {
+        ...(body.contactEmail !== undefined ? { email: body.contactEmail || null } : {}),
+        ...(body.contactPhone !== undefined ? { phone: body.contactPhone || null } : {}),
+      };
+      if (existingContact) {
+        await prisma.contact.update({ where: { id: existingContact.id }, data: contactData });
+      } else {
+        await prisma.contact.create({ data: { dataHolderId: id, role: 'PRIMARY', ...contactData } });
+      }
+    }
+
     const dataHolder = await prisma.dataHolder.update({
       where: { id },
       data: {
         ...(body.name !== undefined ? { name: String(body.name).trim() } : {}),
-        ...(body.contactEmail !== undefined ? { contactEmail: body.contactEmail || null } : {}),
-        ...(body.contactPhone !== undefined ? { contactPhone: body.contactPhone || null } : {}),
         ...(body.isTrusted !== undefined ? { isTrusted: Boolean(body.isTrusted) } : {}),
         ...(body.address !== undefined ? { address: body.address || null } : {}),
         ...(body.businessId !== undefined ? { businessId: body.businessId || null } : {}),
@@ -34,6 +45,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         ...(body.operatorId !== undefined ? { operatorId: body.operatorId || null } : {}),
         ...(body.peppolCode !== undefined ? { peppolCode: body.peppolCode || null } : {}),
       },
+      include: { contacts: true },
     });
 
     const changes: string[] = [];

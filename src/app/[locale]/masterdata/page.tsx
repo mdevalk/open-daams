@@ -25,13 +25,13 @@ export default async function MasterdataPage({
   const [users, dataHolders, speOperators, speProviders, dataUsers, applicantBillingDetailsList, auditLogEntries] =
     await Promise.all([
       prisma.user.findMany({ orderBy: { name: 'asc' } }),
-      prisma.dataHolder.findMany({ orderBy: { name: 'asc' } }),
+      prisma.dataHolder.findMany({ orderBy: { name: 'asc' }, include: { contacts: true } }),
       prisma.speOperator.findMany({
-        include: { speProvider: { select: { name: true } }, types: { orderBy: { name: 'asc' } } },
+        include: { speProvider: { select: { name: true } }, types: { orderBy: { name: 'asc' } }, contacts: true },
         orderBy: { name: 'asc' },
       }),
-      prisma.speProvider.findMany({ orderBy: { name: 'asc' } }),
-      prisma.dataUser.findMany({ orderBy: { name: 'asc' } }),
+      prisma.speProvider.findMany({ orderBy: { name: 'asc' }, include: { contacts: true } }),
+      prisma.dataUser.findMany({ orderBy: { name: 'asc' }, include: { contacts: true } }),
       // Not stored on DataUser — shown by reference: the most recent
       // ApplicantBillingDetails among all applications from any user
       // belonging to that organisation (first per dataUserId wins, since

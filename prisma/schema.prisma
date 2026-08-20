@@ -1384,8 +1384,6 @@ enum InvoiceDeliveryType {
 model DataHolder {
   id           String   @id @default(cuid())
   name         String   @unique
-  contactEmail String?
-  contactPhone String?
   // TEHDAS2 D6.4 §12 / EHDS Art. 72 trusted data holder — eligible for
   // referral/selection on an application.
   isTrusted    Boolean  @default(false)
@@ -1409,6 +1407,7 @@ model DataHolder {
   trustedForApplications Application[]
   lineItems              FinancialLineItem[]
   invoices               Invoice[]
+  contacts               Contact[]
 }
 
 // The party actually providing/hosting the SPE technology. Distinct from
@@ -1417,19 +1416,16 @@ model DataHolder {
 model SpeProvider {
   id           String   @id @default(cuid())
   name         String   @unique
-  contactEmail String?
-  contactPhone String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   operators SpeOperator[]
+  contacts  Contact[]
 }
 
 model SpeOperator {
   id           String   @id @default(cuid())
   name         String   @unique
-  contactEmail String?
-  contactPhone String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -1452,6 +1448,7 @@ model SpeOperator {
   feeEstimates       FeeEstimate[]
   types              SpeType[]
   invoices           Invoice[]
+  contacts           Contact[]
 }
 
 // A tier/product an SPE operator offers (e.g. "Standard", "High-security"),
@@ -1478,10 +1475,45 @@ model SpeType {
 model DataUser {
   id           String   @id @default(cuid())
   name         String   @unique
-  contactEmail String?
-  contactPhone String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  users User[]
+  users    User[]
+  contacts Contact[]
+}
+
+// Generic, role-distinguished contact — Phase 1 of consolidating contacts
+// that today live scattered across Application and the masterdata registries
+// (see docs/d6.4-gap-analysis.md and this session's planning notes) into one
+// table. For now, only DataUser/DataHolder/SpeOperator/SpeProvider's own
+// contactEmail/contactPhone are migrated here; Application-side contacts
+// (applicant, contact person, person responsible/research, etc.) are a
+// separate, later phase. `role` is nullable, same precedent as
+// AuthorizedPerson.role — a roleless contact is a normal, valid state, not
+// an error. Exactly one of the four owner FKs is set per row, following the
+// same nullable-FK-per-possible-owner convention already used throughout
+// this schema (Invoice.dataHolderId/speOperatorId, GrantedDataset.dataHolderId,
+// etc.) rather than a new polymorphic pattern.
+enum ContactRole {
+  PRIMARY
+}
+
+model Contact {
+  id    String       @id @default(cuid())
+  name  String?
+  email String?
+  phone String?
+  role  ContactRole?
+
+  dataUserId    String?
+  dataUser      DataUser?    @relation(fields: [dataUserId], references: [id], onDelete: Cascade)
+  dataHolderId  String?
+  dataHolder    DataHolder?  @relation(fields: [dataHolderId], references: [id], onDelete: Cascade)
+  speOperatorId String?
+  speOperator   SpeOperator? @relation(fields: [speOperatorId], references: [id], onDelete: Cascade)
+  speProviderId String?
+  speProvider   SpeProvider? @relation(fields: [speProviderId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

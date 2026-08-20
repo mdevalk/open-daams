@@ -9,7 +9,7 @@ import { requireRole } from '@/lib/authz';
  * "Provider" dropdown works for any role.
  */
 export async function GET() {
-  const speProviders = await prisma.speProvider.findMany({ orderBy: { name: 'asc' } });
+  const speProviders = await prisma.speProvider.findMany({ orderBy: { name: 'asc' }, include: { contacts: true } });
   return NextResponse.json(speProviders);
 }
 
@@ -32,9 +32,11 @@ export async function POST(req: NextRequest) {
     const speProvider = await prisma.speProvider.create({
       data: {
         name: String(body.name).trim(),
-        contactEmail: body.contactEmail || null,
-        contactPhone: body.contactPhone || null,
+        ...(body.contactEmail || body.contactPhone
+          ? { contacts: { create: { email: body.contactEmail || null, phone: body.contactPhone || null, role: 'PRIMARY' } } }
+          : {}),
       },
+      include: { contacts: true },
     });
 
     await prisma.auditLog.create({

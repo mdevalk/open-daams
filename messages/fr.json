@@ -101,7 +101,7 @@
     "manualEntry": "Saisie manuelle",
     "ncpFetch": "Récupérer depuis le PCN",
     "searchLabel": "Rechercher",
-    "searchPlaceholder": "Référence ou titre...",
+    "searchPlaceholder": "Référence, titre ou ID HD@EU...",
     "statusLabel": "Statut",
     "allStatuses": "Tous les statuts",
     "typeLabel": "Type",
@@ -630,7 +630,9 @@
     "tabSpeProviders": "Fournisseurs SPE",
     "tabDataUsers": "Utilisateurs de données",
     "recentChanges": "Modifications récentes",
-    "noRecentChanges": "Aucune modification pour l'instant."
+    "noRecentChanges": "Aucune modification pour l'instant.",
+    "contactPhoneHint": "Format néerlandais, p. ex. 06 12345678 ou +31 6 12345678",
+    "contactPhoneInvalid": "Saisissez un numéro de téléphone néerlandais valide, p. ex. 06 12345678 ou +31 6 12345678"
   },
   "auditLog": {
     "title": "Journal d'audit",

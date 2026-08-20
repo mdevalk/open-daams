@@ -10,7 +10,7 @@ import { requireRole } from '@/lib/authz';
  * work for any role, matching the /api/users precedent.
  */
 export async function GET() {
-  const dataHolders = await prisma.dataHolder.findMany({ orderBy: { name: 'asc' } });
+  const dataHolders = await prisma.dataHolder.findMany({ orderBy: { name: 'asc' }, include: { contacts: true } });
   return NextResponse.json(dataHolders);
 }
 
@@ -35,8 +35,6 @@ export async function POST(req: NextRequest) {
     const dataHolder = await prisma.dataHolder.create({
       data: {
         name: String(body.name).trim(),
-        contactEmail: body.contactEmail || null,
-        contactPhone: body.contactPhone || null,
         isTrusted: Boolean(body.isTrusted),
         address: body.address || null,
         businessId: body.businessId || null,
@@ -46,7 +44,11 @@ export async function POST(req: NextRequest) {
         eInvoiceAddress: body.eInvoiceAddress || null,
         operatorId: body.operatorId || null,
         peppolCode: body.peppolCode || null,
+        ...(body.contactEmail || body.contactPhone
+          ? { contacts: { create: { email: body.contactEmail || null, phone: body.contactPhone || null, role: 'PRIMARY' } } }
+          : {}),
       },
+      include: { contacts: true },
     });
 
     await prisma.auditLog.create({
