@@ -38,6 +38,8 @@
     "@swc/helpers": "0.5.23"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.2",
     "@types/adm-zip": "^0.5.8",
     "@types/node": "^20",
     "@types/react": "^19.2.18",
@@ -46,6 +48,7 @@
     "autoprefixer": "^10.0.1",
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.3.0",
+    "jsdom": "^30.0.1",
     "playwright": "^1.62.1",
     "postcss": "^8",
     "prisma": "^5.22.0",
