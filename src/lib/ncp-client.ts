@@ -775,14 +775,13 @@ function estimateFlag(v: NcpKeyValue | undefined): boolean | undefined {
  * here; the caller (mapMetadataToHdeuPayload) resolves it once it knows each
  * row's position in the full, cross-country studyCohorts array.
  */
-function mapSection6Entry(
+function buildCohortEntry(
   entry: NcpSection6Entry,
-  dataProcessingCountry: string,
-): { cohort: HdeuStudyCohort; control?: HdeuStudyCohort; relative?: HdeuStudyCohort } {
-  const countryId = (entry.country_id || dataProcessingCountry).toUpperCase();
-  const { start: dataStartDate, end: dataEndDate } = parseDutchDateRange(entry.timePeriodOfDataExtraction);
-
-  const cohort: HdeuStudyCohort = {
+  countryId: string,
+  dataStartDate: string | undefined,
+  dataEndDate: string | undefined,
+): HdeuStudyCohort {
+  return {
     countryId,
     role: 'COHORT',
     hdabContacts: entry.hdabContacts,
@@ -834,81 +833,95 @@ function mapSection6Entry(
     includesControls: yesNo(entry.willControlsBeExtracted),
     includesRelatives: yesNo(entry.willRelativesBeExtracted),
   };
+}
 
-  const control: HdeuStudyCohort | undefined = yesNo(entry.willControlsBeExtracted)
-    ? {
-        countryId,
-        role: 'CONTROL',
-        sameAsCohortData: yesNo(entry.willSameDataBeExtractedForControls),
-        regionsSeekForData: entry.regionForControlsDataExtraction,
-        dataHolderIds: entry.dataHoldersForControls,
-        databaseIds: entry.databasesForControls,
-        datasetIds: entry.datasetsForControls,
-        timePeriod: entry.timePeriodForDataExtraction,
-        variablesAttachmentRef: Array.isArray(entry.variablesForDataExtraction)
-          ? entry.variablesForDataExtraction[0]?.name
-          : undefined,
-        variablesAttachmentId: Array.isArray(entry.variablesForDataExtraction)
-          ? entry.variablesForDataExtraction[0]?.id
-          : undefined,
-        matchingCriteria: entry.extractionCriteriaForControls,
-        size: entry.sizeOfControlGroup ? parseInt(entry.sizeOfControlGroup, 10) || undefined : undefined,
-        sizeIsEstimate: estimateFlag(entry.sizeOfControlGroupEstimationOrExact),
-        controlsPerCohortPerson: entry.controlsPerPersonInStudyCohort,
-        inclusionCriteria: entry.inclusionCriteriaForControls,
-        exclusionCriteria: entry.exclusionCriteriaForControls,
-        priorPermitIssuer: entry.previouslyIssuedPermitIssuer,
-        priorPermitDate: entry.previouslyIssuedPermitDate,
-        priorPermitValidFrom: entry.previouslyIssuedPermitValidityPeriodFrom,
-        priorPermitValidTo: entry.previouslyIssuedPermitValidityPeriodTo,
-        priorPermitNumber: entry.previouslyIssuedPermitNumber,
-        willDataBeExtractedSimultaneously: yesNo(entry.willDataForControlsBeExtractedSimultaneously),
-        extractionTimingNotes:
-          [entry.dataExtractionFrequencyMultipleTimesInformation, entry.moreInfoOnExtractionPeriods].filter(Boolean).join('\n') ||
-          undefined,
-        extractionFrequency: mapExtractionFrequency(entry.dataExtractionFrequency),
-        extractionInterval: entry.dataNeedsToBeExtractedEvery?.key
-          ? EXTRACTION_INTERVAL_BY_KEY[entry.dataNeedsToBeExtractedEvery.key]
-          : undefined,
-        extractionIntervalOther: entry.specifyOther,
-        orderForExtraction: entry.orderOfControlsDataExtraction || entry.extractionPhases,
-      }
-    : undefined;
+export function buildControlEntry(entry: NcpSection6Entry, countryId: string): HdeuStudyCohort | undefined {
+  if (!yesNo(entry.willControlsBeExtracted)) return undefined;
+  return {
+    countryId,
+    role: 'CONTROL',
+    sameAsCohortData: yesNo(entry.willSameDataBeExtractedForControls),
+    regionsSeekForData: entry.regionForControlsDataExtraction,
+    dataHolderIds: entry.dataHoldersForControls,
+    databaseIds: entry.databasesForControls,
+    datasetIds: entry.datasetsForControls,
+    timePeriod: entry.timePeriodForDataExtraction,
+    variablesAttachmentRef: Array.isArray(entry.variablesForDataExtraction)
+      ? entry.variablesForDataExtraction[0]?.name
+      : undefined,
+    variablesAttachmentId: Array.isArray(entry.variablesForDataExtraction)
+      ? entry.variablesForDataExtraction[0]?.id
+      : undefined,
+    matchingCriteria: entry.extractionCriteriaForControls,
+    size: entry.sizeOfControlGroup ? parseInt(entry.sizeOfControlGroup, 10) || undefined : undefined,
+    sizeIsEstimate: estimateFlag(entry.sizeOfControlGroupEstimationOrExact),
+    controlsPerCohortPerson: entry.controlsPerPersonInStudyCohort,
+    inclusionCriteria: entry.inclusionCriteriaForControls,
+    exclusionCriteria: entry.exclusionCriteriaForControls,
+    priorPermitIssuer: entry.previouslyIssuedPermitIssuer,
+    priorPermitDate: entry.previouslyIssuedPermitDate,
+    priorPermitValidFrom: entry.previouslyIssuedPermitValidityPeriodFrom,
+    priorPermitValidTo: entry.previouslyIssuedPermitValidityPeriodTo,
+    priorPermitNumber: entry.previouslyIssuedPermitNumber,
+    willDataBeExtractedSimultaneously: yesNo(entry.willDataForControlsBeExtractedSimultaneously),
+    extractionTimingNotes:
+      [entry.dataExtractionFrequencyMultipleTimesInformation, entry.moreInfoOnExtractionPeriods].filter(Boolean).join('\n') ||
+      undefined,
+    extractionFrequency: mapExtractionFrequency(entry.dataExtractionFrequency),
+    extractionInterval: entry.dataNeedsToBeExtractedEvery?.key
+      ? EXTRACTION_INTERVAL_BY_KEY[entry.dataNeedsToBeExtractedEvery.key]
+      : undefined,
+    extractionIntervalOther: entry.specifyOther,
+    orderForExtraction: entry.orderOfControlsDataExtraction || entry.extractionPhases,
+  };
+}
 
-  const relative: HdeuStudyCohort | undefined = yesNo(entry.willRelativesBeExtracted)
-    ? {
-        countryId,
-        role: 'RELATIVE',
-        relationshipToSubject: entry.relationshipToStudyCohort,
-        sameAsCohortData: yesNo(entry.willSameDataBeExtractedForRelatives),
-        dataHolderIds: entry.dataHoldersForRelatives,
-        databaseIds: entry.databasesForRelatives,
-        datasetIds: entry.datasetsForRelatives,
-        timePeriod: entry.timePeriodForDataExtractionRelatives,
-        variablesAttachmentRef: Array.isArray(entry.variablesForDataExtractionRelatives)
-          ? entry.variablesForDataExtractionRelatives[0]?.name
-          : undefined,
-        variablesAttachmentId: Array.isArray(entry.variablesForDataExtractionRelatives)
-          ? entry.variablesForDataExtractionRelatives[0]?.id
-          : undefined,
-        size: entry.sizeOfRelativesGroup ? parseInt(entry.sizeOfRelativesGroup, 10) || undefined : undefined,
-        sizeIsEstimate: estimateFlag(entry.sizeOfRelativesGroupEstimateOrExact),
-        priorPermitIssuer: entry.previouslyIssuedPermitIssuerRelatives,
-        willDataBeExtractedSimultaneously: yesNo(entry.willDataForRelativesBeExtractedSimultaneously),
-        extractionTimingNotes:
-          [entry.dataExtractionFrequencyMultipleTimesInformationRelatives, entry.moreInfoOnExtractionPeriodsRelatives]
-            .filter(Boolean)
-            .join('\n') || undefined,
-        extractionFrequency: mapExtractionFrequency(entry.dataExtractionFrequencyRelatives),
-        extractionInterval: entry.dataNeedsToBeExtractedEveryRelatives?.key
-          ? EXTRACTION_INTERVAL_BY_KEY[entry.dataNeedsToBeExtractedEveryRelatives.key]
-          : undefined,
-        extractionIntervalOther: entry.specifyOtherRelatives,
-        orderForExtraction: entry.orderOfRelativesDataExtraction || entry.extractionPhasesRelatives,
-      }
-    : undefined;
+export function buildRelativeEntry(entry: NcpSection6Entry, countryId: string): HdeuStudyCohort | undefined {
+  if (!yesNo(entry.willRelativesBeExtracted)) return undefined;
+  return {
+    countryId,
+    role: 'RELATIVE',
+    relationshipToSubject: entry.relationshipToStudyCohort,
+    sameAsCohortData: yesNo(entry.willSameDataBeExtractedForRelatives),
+    dataHolderIds: entry.dataHoldersForRelatives,
+    databaseIds: entry.databasesForRelatives,
+    datasetIds: entry.datasetsForRelatives,
+    timePeriod: entry.timePeriodForDataExtractionRelatives,
+    variablesAttachmentRef: Array.isArray(entry.variablesForDataExtractionRelatives)
+      ? entry.variablesForDataExtractionRelatives[0]?.name
+      : undefined,
+    variablesAttachmentId: Array.isArray(entry.variablesForDataExtractionRelatives)
+      ? entry.variablesForDataExtractionRelatives[0]?.id
+      : undefined,
+    size: entry.sizeOfRelativesGroup ? parseInt(entry.sizeOfRelativesGroup, 10) || undefined : undefined,
+    sizeIsEstimate: estimateFlag(entry.sizeOfRelativesGroupEstimateOrExact),
+    priorPermitIssuer: entry.previouslyIssuedPermitIssuerRelatives,
+    willDataBeExtractedSimultaneously: yesNo(entry.willDataForRelativesBeExtractedSimultaneously),
+    extractionTimingNotes:
+      [entry.dataExtractionFrequencyMultipleTimesInformationRelatives, entry.moreInfoOnExtractionPeriodsRelatives]
+        .filter(Boolean)
+        .join('\n') || undefined,
+    extractionFrequency: mapExtractionFrequency(entry.dataExtractionFrequencyRelatives),
+    extractionInterval: entry.dataNeedsToBeExtractedEveryRelatives?.key
+      ? EXTRACTION_INTERVAL_BY_KEY[entry.dataNeedsToBeExtractedEveryRelatives.key]
+      : undefined,
+    extractionIntervalOther: entry.specifyOtherRelatives,
+    orderForExtraction: entry.orderOfRelativesDataExtraction || entry.extractionPhasesRelatives,
+  };
+}
 
-  return { cohort, control, relative };
+function mapSection6Entry(
+  entry: NcpSection6Entry,
+  dataProcessingCountry: string,
+): { cohort: HdeuStudyCohort; control?: HdeuStudyCohort; relative?: HdeuStudyCohort } {
+  const countryId = (entry.country_id || dataProcessingCountry).toUpperCase();
+  const { start: dataStartDate, end: dataEndDate } = parseDutchDateRange(entry.timePeriodOfDataExtraction);
+
+  return {
+    cohort: buildCohortEntry(entry, countryId, dataStartDate, dataEndDate),
+    control: buildControlEntry(entry, countryId),
+    relative: buildRelativeEntry(entry, countryId),
+  };
 }
 
 /**
@@ -923,6 +936,69 @@ function mapSection6Entry(
  * HdeuPayload.attachments, but the file bytes themselves stay in the zip,
  * fetched on demand via the existing attachment route.
  */
+
+/**
+ * Flattens each section6 entry's {cohort, control?, relative?} into one
+ * array, resolving relatesToIndex once each row's final array position is
+ * known (cohort first, so control/relative can point back to it).
+ */
+function buildStudyCohortsFromSection6(section6: NcpSection6Entry[], dataProcessingCountry: string): HdeuStudyCohort[] {
+  const studyCohorts: HdeuStudyCohort[] = [];
+  for (const entry of section6) {
+    const { cohort, control, relative } = mapSection6Entry(entry, dataProcessingCountry);
+    const cohortIndex = studyCohorts.push(cohort) - 1;
+    if (control) studyCohorts.push({ ...control, relatesToIndex: cohortIndex });
+    if (relative) studyCohorts.push({ ...relative, relatesToIndex: cohortIndex });
+  }
+  return studyCohorts;
+}
+
+export function buildInvoicingDetails(section4: NcpMetadata['form']['section4']): HdeuInvoicingDetails | undefined {
+  if (!section4) return undefined;
+  return {
+    sameAsContactPerson: section4.sameAsContactPerson,
+    fullName: section4.fullName,
+    email: section4.email,
+    phone: formatPhone(section4.phone),
+    organisationName: section4.nameOfTheOrganisation,
+    address: section4.address,
+    businessId: section4.businessIdentifierOrganization,
+    vatNumber: section4.vatNumber,
+    invoiceType: rawText(section4.invoiceType),
+    invoiceReferenceNumber: section4.invoiceReferenceNumber,
+    eInvoiceAddress: section4.invoiceAddress,
+    operatorId: section4.operatorIdentifier,
+    peppolCode: section4.peppolCode,
+    isProjectFinanciallyCovered: yesNo(section4.isTheProjectFinanciallyCovered),
+    financingAmountRange: rawText(section4.rangeOfAmountOfFinancing),
+    section4ProfileDataDate: section4.section4ProfileDataDate,
+  };
+}
+
+/**
+ * legalOrNaturalPerson gates which branch of section3 is populated (see
+ * NcpMetadata's own note) — both have been observed in real samples. Every
+ * applicant/legal-person field below shares that one gate, so it's resolved
+ * once here rather than repeating the same ternary at each call site.
+ */
+export function buildSection3Fields(section3: NonNullable<NcpMetadata['form']['section3']>) {
+  const isNaturalPerson = rawText(section3.legalOrNaturalPerson)?.toLowerCase().includes('natural');
+  return {
+    isNaturalPerson,
+    applicantName: (isNaturalPerson ? section3.naturalPersonName : section3.contactPersonName) || 'Not specified',
+    applicantEmail:
+      (isNaturalPerson ? section3.naturalPersonEmail : section3.contactPersonEmail) || 'unknown@unknown.invalid',
+    applicantOrganisation:
+      (isNaturalPerson ? section3.naturalPersonAffiliation : section3.legalPersonName) || 'Unknown',
+    legalPersonAddress: isNaturalPerson ? section3.naturalPersonAddress : section3.legalPersonAddress,
+    legalPersonZipCode: isNaturalPerson ? section3.naturalPersonZipCode : section3.legalPersonZipCode,
+    legalPersonCity: isNaturalPerson ? section3.naturalPersonCity : section3.legalPersonCity,
+    legalPersonCountry: rawText(isNaturalPerson ? section3.naturalPersonCountry : section3.legalPersonCountry),
+    contactPersonAffiliation: isNaturalPerson ? section3.naturalPersonAffiliation : section3.contactPersonOrganisationName,
+    contactPersonPhone: formatPhone(isNaturalPerson ? section3.naturalPersonPhone : section3.contactPersonPhone),
+  };
+}
+
 function mapMetadataToHdeuPayload(meta: NcpMetadata): HdeuPayload {
   const dataset = meta.datasets[0];
   const form = meta.form;
@@ -968,46 +1044,10 @@ function mapMetadataToHdeuPayload(meta: NcpMetadata): HdeuPayload {
     dataset?.variables?.map((v) => localized(v.titles, v.titles?.[Object.keys(v.titles)[0]] ?? '')).join(', ') ||
     'Not specified';
 
-  // Flatten each section6 entry's {cohort, control?, relative?} into one
-  // array, resolving relatesToIndex once each row's final array position is
-  // known (cohort first, so control/relative can point back to it).
-  const studyCohorts: HdeuStudyCohort[] = [];
-  for (const entry of section6) {
-    const { cohort, control, relative } = mapSection6Entry(entry, dataProcessingCountry);
-    const cohortIndex = studyCohorts.push(cohort) - 1;
-    if (control) studyCohorts.push({ ...control, relatesToIndex: cohortIndex });
-    if (relative) studyCohorts.push({ ...relative, relatesToIndex: cohortIndex });
-  }
-
-  const invoicingDetails: HdeuInvoicingDetails | undefined = section4
-    ? {
-        sameAsContactPerson: section4.sameAsContactPerson,
-        fullName: section4.fullName,
-        email: section4.email,
-        phone: formatPhone(section4.phone),
-        organisationName: section4.nameOfTheOrganisation,
-        address: section4.address,
-        businessId: section4.businessIdentifierOrganization,
-        vatNumber: section4.vatNumber,
-        invoiceType: rawText(section4.invoiceType),
-        invoiceReferenceNumber: section4.invoiceReferenceNumber,
-        eInvoiceAddress: section4.invoiceAddress,
-        operatorId: section4.operatorIdentifier,
-        peppolCode: section4.peppolCode,
-        isProjectFinanciallyCovered: yesNo(section4.isTheProjectFinanciallyCovered),
-        financingAmountRange: rawText(section4.rangeOfAmountOfFinancing),
-        section4ProfileDataDate: section4.section4ProfileDataDate,
-      }
-    : undefined;
-
-  // legalOrNaturalPerson gates which branch of section3 is populated (see
-  // NcpMetadata's own note) — both have been observed in real samples.
-  const isNaturalPerson = rawText(section3.legalOrNaturalPerson)?.toLowerCase().includes('natural');
-  const applicantName = (isNaturalPerson ? section3.naturalPersonName : section3.contactPersonName) || 'Not specified';
-  const applicantEmail =
-    (isNaturalPerson ? section3.naturalPersonEmail : section3.contactPersonEmail) || 'unknown@unknown.invalid';
-  const applicantOrganisation =
-    (isNaturalPerson ? section3.naturalPersonAffiliation : section3.legalPersonName) || 'Unknown';
+  const studyCohorts = buildStudyCohortsFromSection6(section6, dataProcessingCountry);
+  const invoicingDetails = buildInvoicingDetails(section4);
+  const section3Fields = buildSection3Fields(section3);
+  const { applicantName, applicantEmail, applicantOrganisation } = section3Fields;
 
   const attachments = [
     ...toAttachments('section5.summaryOfPlanForUsingTheData', section5.summaryOfPlanForUsingTheData),
@@ -1083,15 +1123,15 @@ function mapMetadataToHdeuPayload(meta: NcpMetadata): HdeuPayload {
     // §3
     applyingOnBehalfOfPublicSector: yesNo(section3.applyingForDataOnBehalfOfPublicSector),
     legalOrNaturalPerson: rawText(section3.legalOrNaturalPerson),
-    legalPersonAddress: isNaturalPerson ? section3.naturalPersonAddress : section3.legalPersonAddress,
-    legalPersonZipCode: isNaturalPerson ? section3.naturalPersonZipCode : section3.legalPersonZipCode,
-    legalPersonCity: isNaturalPerson ? section3.naturalPersonCity : section3.legalPersonCity,
-    legalPersonCountry: rawText(isNaturalPerson ? section3.naturalPersonCountry : section3.legalPersonCountry),
+    legalPersonAddress: section3Fields.legalPersonAddress,
+    legalPersonZipCode: section3Fields.legalPersonZipCode,
+    legalPersonCity: section3Fields.legalPersonCity,
+    legalPersonCountry: section3Fields.legalPersonCountry,
     contactPersonJobTitle: section3.naturalPersonJobTitle,
-    contactPersonAffiliation: isNaturalPerson ? section3.naturalPersonAffiliation : section3.contactPersonOrganisationName,
+    contactPersonAffiliation: section3Fields.contactPersonAffiliation,
     contactPersonRelationship: section3.contactPersonRelationship,
     contactPersonBusinessId: section3.contactPersonBusinessID,
-    contactPersonPhone: formatPhone(isNaturalPerson ? section3.naturalPersonPhone : section3.contactPersonPhone),
+    contactPersonPhone: section3Fields.contactPersonPhone,
 
     // §3 (remaining)
     applyingForMandatedTasks: yesNo(section3.applyingForDataForCarryingOutTasks),

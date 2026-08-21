@@ -433,6 +433,249 @@ export type CreateApplicationResult =
   | { ok: false; status: 409 | 500; error: string };
 
 /**
+ * Find or create an APPLICANT user record for the cross-border applicant.
+ * Their organisation is free text on the incoming payload (another country's
+ * HDAB, outside our registry) — find-or-create a DataUser by name to resolve
+ * it to a masterdata reference.
+ */
+async function resolveOrCreateApplicant(p: HdeuPayload) {
+  const existing = await prisma.user.findUnique({ where: { email: p.applicantEmail } });
+  if (existing) return existing;
+
+  const dataUser = await prisma.dataUser.upsert({
+    where: { name: p.applicantOrganisation },
+    update: {},
+    create: { name: p.applicantOrganisation },
+  });
+  return prisma.user.create({
+    data: {
+      name: p.applicantName,
+      email: p.applicantEmail,
+      dataUserId: dataUser.id,
+      role: 'APPLICANT',
+    },
+  });
+}
+
+/** Find an admin/system user to attribute the import audit entry. */
+async function resolveSystemUser() {
+  return (
+    (await prisma.user.findFirst({ where: { role: 'ADMIN' } })) ??
+    (await prisma.user.findFirst({ where: { role: 'CASE_HANDLER' } }))
+  );
+}
+
+const toDate = (d?: string) => (d ? new Date(d) : null);
+
+/** Builds the full prisma.application.create() `data` payload for an HD@EU import. */
+function buildApplicationCreateData(
+  p: HdeuPayload,
+  rawPayload: unknown,
+  applicantId: string,
+  referenceNumber: string,
+  transmittedAt: Date,
+  receivedAt: Date,
+) {
+  // dataSubjectsInformed/includesControls/includesRelatives(+details) moved
+  // to StudyCohort (per-country) — mirror the first COHORT entry when
+  // studyCohorts is present, else fall back to the top-level payload fields
+  // (manual entry / direct JSON import, which don't produce studyCohorts)
+  const firstCohort = p.studyCohorts?.find((c) => c.role === 'COHORT');
+  const mirrorCohort = <K extends keyof HdeuStudyCohort>(key: K, fallback: HdeuPayload[K & keyof HdeuPayload]) =>
+    firstCohort ? firstCohort[key] : fallback;
+
+  return {
+    referenceNumber,
+    source: 'HDEU' as const,
+    type: p.applicationType,
+    status: 'SUBMITTED' as const,
+    isCrossBorder: true,
+
+    hdeuApplicationId: p.hdeuApplicationId,
+    hdeuSendingCountry: p.sendingCountry,
+    hdeuTransmittedAt: transmittedAt,
+    hdeuReceivedAt: receivedAt,
+    hdeuRawPayload: JSON.stringify(rawPayload),
+
+    applicantId,
+
+    title: p.title,
+    projectDescription: p.projectDescription,
+    purposeCategory: p.purposeCategory,
+    purposeCategories: p.purposeCategories ?? [],
+    projectLeaderName: p.projectLeaderName,
+    projectLeaderCountry: p.projectLeaderCountry,
+    theResearchFocusesOnTheFollowingObjectives: p.theResearchFocusesOnTheFollowingObjectives ?? [],
+    theResearchFocusesOnTheFollowingObjectivesOther: p.theResearchFocusesOnTheFollowingObjectivesOther,
+    areaOfResearch: p.areaOfResearch,
+    areaOfResearchOther: p.areaOfResearchOther,
+    descriptionOfTheDataYouWillUse: p.descriptionOfTheDataYouWillUse,
+    theNatureOfTheDataDoesNotLetYouProvideADescription: p.theNatureOfTheDataDoesNotLetYouProvideADescription,
+    descriptionOfTheProject: p.descriptionOfTheProject,
+    summaryOfTheProject: p.summaryOfTheProject,
+    theNatureOfTheProjectDoesNotLetYouProvideASummary: p.theNatureOfTheProjectDoesNotLetYouProvideASummary,
+    theNatureOfTheProjectDoesNotLetYouProvideASummaryReason: p.theNatureOfTheProjectDoesNotLetYouProvideASummaryReason,
+    legalBasis: p.legalBasis,
+    requestedVariables: p.requestedVariables,
+    studyPopulation: p.studyPopulation,
+    inclusionCriteria: p.inclusionCriteria,
+    exclusionCriteria: p.exclusionCriteria,
+    dataStartDate: toDate(p.dataStartDate),
+    dataEndDate: toDate(p.dataEndDate),
+    projectStartDate: toDate(p.projectStartDate),
+    projectEndDate: toDate(p.projectEndDate),
+    dataProcessingCountry: p.dataProcessingCountry,
+
+    // §3
+    applyingOnBehalfOfPublicSector: p.applyingOnBehalfOfPublicSector,
+    applyingForMandatedTasks: p.applyingForMandatedTasks,
+    legalOrNaturalPerson: p.legalOrNaturalPerson,
+    legalOrNaturalPersonProfileDataDate: toDate(p.legalOrNaturalPersonProfileDataDate),
+    legalPersonAddress: p.legalPersonAddress,
+    legalPersonZipCode: p.legalPersonZipCode,
+    legalPersonCity: p.legalPersonCity,
+    legalPersonCountry: p.legalPersonCountry,
+    contactPersonJobTitle: p.contactPersonJobTitle,
+    contactPersonAffiliation: p.contactPersonAffiliation,
+    contactPersonOrganisationName: p.contactPersonOrganisationName,
+    contactPersonRelationship: p.contactPersonRelationship,
+    contactPersonBusinessId: p.contactPersonBusinessId,
+    contactPersonOperatorID: p.contactPersonOperatorID,
+    contactPersonPhone: p.contactPersonPhone,
+    contactPersonProfileDataDate: toDate(p.contactPersonProfileDataDate),
+
+    // §5
+    whyDataIsNeeded: p.whyDataIsNeeded,
+    whatIsTheAimAndTopicOfTheProject: p.whatIsTheAimAndTopicOfTheProject,
+    expectedBenefits: p.expectedBenefits,
+    applicantQualifications: p.applicantQualifications,
+    linkToTheSupportingLegalBasis: p.linkToTheSupportingLegalBasis,
+    summaryOfPlanForUsingTheDataLanguage: p.summaryOfPlanForUsingTheDataLanguage,
+    summaryOfResearchPlanLanguage: p.summaryOfResearchPlanLanguage,
+    personResponsibleSameAsContactPerson: p.personResponsibleSameAsContactPerson,
+    personResponsibleName: p.personResponsibleName,
+    personResponsibleJobTitle: p.personResponsibleJobTitle,
+    personResponsibleAffiliation: p.personResponsibleAffiliation,
+    personResponsibleProfileDataDate: toDate(p.personResponsibleProfileDataDate),
+    personResearchSameAsContactPerson: p.personResearchSameAsContactPerson,
+    personResearchName: p.personResearchName,
+    personResearchJobTitle: p.personResearchJobTitle,
+    personResearchAffiliation: p.personResearchAffiliation,
+    personResearchProfileDataDate: toDate(p.personResearchProfileDataDate),
+    electronicHealthDataFormat: p.electronicHealthDataFormat,
+    pseudonymisedDataJustification: p.pseudonymisedDataJustification,
+    consentCompliesWithArt6: p.consentCompliesWithArt6,
+    consentAssessedEthicalAspects: p.consentAssessedEthicalAspects,
+
+    // §6 flat mirror (see StudyCohort rows created below for full fidelity)
+    cohortSizeIsEstimate: p.cohortSizeIsEstimate,
+    cohortSize: p.cohortSize,
+    cohortSizeJustification: p.cohortSizeJustification,
+    cohortFormationMethod: p.cohortFormationMethod,
+    extractionMethod: p.extractionMethod,
+    sampleSize: p.sampleSize,
+    samplingMethodDescription: p.samplingMethodDescription,
+    extractionFrequency: p.extractionFrequency,
+    extractionInterval: p.extractionInterval,
+    extractionIntervalOther: p.extractionIntervalOther,
+    extractionTimingNotes: p.extractionTimingNotes,
+    dataSubjectsInformed: mirrorCohort('dataSubjectsInformed', p.dataSubjectsInformed),
+    dataSubjectsInformedDetail: mirrorCohort('dataSubjectsInformedDetail', p.dataSubjectsInformedDetail),
+    includesControls: mirrorCohort('includesControls', p.includesControls) ?? false,
+    controlsDescription: mirrorCohort('controlsDescription', p.controlsDescription),
+    includesRelatives: mirrorCohort('includesRelatives', p.includesRelatives) ?? false,
+    relativesDescription: mirrorCohort('relativesDescription', p.relativesDescription),
+    usesOptOutException: p.usesOptOutException ?? false,
+    optOutExceptionJustification: p.optOutExceptionJustification,
+    tabulationPlan: p.tabulationPlan,
+    ethicalReviewInput: p.ethicalReviewInput,
+    whatIsTheFrequencyOfUpdates: p.whatIsTheFrequencyOfUpdates,
+
+    // §7
+    otherDataToCombine: p.otherDataToCombine ?? false,
+    otherDataDescription: p.otherDataDescription,
+    otherDataCountries: p.otherDataCountries ?? [],
+    otherDataHolders: p.otherDataHolders ?? [],
+    otherDataDatabases: p.otherDataDatabases ?? [],
+    otherDataDatasets: p.otherDataDatasets ?? [],
+    otherDataCombinationMethod: p.otherDataCombinationMethod,
+    hasPendingPermitApplications: p.hasPendingPermitApplications,
+    pendingApplicationDate: toDate(p.pendingApplicationDate),
+    pendingApplicationIssuer: p.pendingApplicationIssuer,
+    pendingApplicationPermitCode: p.pendingApplicationPermitCode,
+
+    // §8
+    speName: p.speName,
+    speTechnicalRequirements: p.speTechnicalRequirements,
+    environmentProviderName: p.environmentProviderName,
+    dataAccessTiming: p.dataAccessTiming,
+    dataAccessLaterDate: toDate(p.dataAccessLaterDate),
+    dataAccessPeriodInfo: p.dataAccessPeriodInfo,
+    dataAccessUpdateFrequency: p.dataAccessUpdateFrequency,
+    inactiveStoragePeriodStart: toDate(p.inactiveStoragePeriodStart),
+    inactiveStoragePeriodEnd: toDate(p.inactiveStoragePeriodEnd),
+    transfersOutsideEuEea: p.transfersOutsideEuEea ?? false,
+    transferCountries: p.transferCountries ?? [],
+    transferLegalBasis: p.transferLegalBasis,
+    transferLegalArticle: p.transferLegalArticle,
+    transferSafeguards: p.transferSafeguards ?? [],
+    whyWillDataBeTransferredOutsideEUArticle47: p.whyWillDataBeTransferredOutsideEUArticle47,
+    whyWillDataBeTransferredOutsideEUArticle47Options: p.whyWillDataBeTransferredOutsideEUArticle47Options ?? [],
+    whyWillDataBeTransferredOutsideEUArticle47a: p.whyWillDataBeTransferredOutsideEUArticle47a,
+    whyWillDataBeTransferredOutsideEUArticle47b: p.whyWillDataBeTransferredOutsideEUArticle47b,
+    whyWillDataBeTransferredOutsideEUArticle47c: p.whyWillDataBeTransferredOutsideEUArticle47c,
+    whyWillDataBeTransferredOutsideEUArticle48: p.whyWillDataBeTransferredOutsideEUArticle48,
+    whyWillDataBeTransferredOutsideEUArticle48a: p.whyWillDataBeTransferredOutsideEUArticle48a,
+    whyWillDataBeTransferredOutsideEUArticle48b: p.whyWillDataBeTransferredOutsideEUArticle48b,
+    whyWillDataBeTransferredOutsideEUArticle48bOptions: p.whyWillDataBeTransferredOutsideEUArticle48bOptions ?? [],
+    whyWillDataBeTransferredOutsideEUArticle48c: p.whyWillDataBeTransferredOutsideEUArticle48c,
+    whyWillDataBeTransferredOutsideEUArticle48cOpt: p.whyWillDataBeTransferredOutsideEUArticle48cOpt,
+    whyWillDataBeTransferredOutsideEUArticle48d: p.whyWillDataBeTransferredOutsideEUArticle48d,
+    whyWillDataBeTransferredOutsideEUArticle48e: p.whyWillDataBeTransferredOutsideEUArticle48e,
+    whyWillDataBeTransferredOutsideEUArticle49: p.whyWillDataBeTransferredOutsideEUArticle49,
+    legalBasisForTransferringTheDataOutsideEU: p.legalBasisForTransferringTheDataOutsideEU,
+    legalBasisForTransferringTheDataOutsideEUOtherOptions: p.legalBasisForTransferringTheDataOutsideEUOtherOptions ?? [],
+    safeguardsAreProvidedByReferringGDCP: p.safeguardsAreProvidedByReferringGDCP ?? [],
+    safeguardsAreProvidedByOtherExceptionalLegalBases: p.safeguardsAreProvidedByOtherExceptionalLegalBases,
+    dataController: p.dataController,
+    dataMinimisationCompliance: p.dataMinimisationCompliance,
+    complyWithDataMinimisationPrincipleNotEUMember: p.complyWithDataMinimisationPrincipleNotEUMember,
+    protectionStatement1: p.protectionStatement1,
+    protectionStatement2: p.protectionStatement2,
+    protectionStatement3: p.protectionStatement3,
+    protectionStatement4: p.protectionStatement4,
+    protectionStatement5: p.protectionStatement5,
+    dataProcessingPersonnel: p.dataProcessingPersonnel ?? [],
+    lawfulnessOfProcessing: p.lawfulnessOfProcessing ?? [],
+    lawfulnessLegalBasisOther: p.lawfulnessLegalBasisOther,
+    lawfulForProcessingPersonalData: p.lawfulForProcessingPersonalData ?? [],
+    europeanUnionInstitution: p.europeanUnionInstitution ?? [],
+    legalBasisForProcessingCombinedData: p.legalBasisForProcessingCombinedData ?? [],
+    otherLegalBasisForProcessingCombinedData: p.otherLegalBasisForProcessingCombinedData,
+    legalBasisForProcessingApplicationData: p.legalBasisForProcessingApplicationData ?? [],
+    otherLegalBasisForProcessingApplicationData: p.otherLegalBasisForProcessingApplicationData,
+    legalBasisForProcessingCombinedApplicationData: p.legalBasisForProcessingCombinedApplicationData ?? [],
+    otherLegalBasisForProcessingCombinedApplicationData: p.otherLegalBasisForProcessingCombinedApplicationData,
+
+    // §9
+    additionalInformation: p.additionalInformation,
+
+    // §10
+    consentAwareProcessingFee: p.consentAwareProcessingFee,
+    consentAwareChargeFee: p.consentAwareChargeFee,
+    consentAwareInformationCorrect: p.consentAwareInformationCorrect,
+    consentNoAccessToUnderlyingData: p.consentNoAccessToUnderlyingData,
+    consentAcceptHealthDataBody: p.consentAcceptHealthDataBody,
+
+    submittedAt: receivedAt,
+    // Art. 57(1)(j)(ii): publish without undue delay after reception —
+    // for a cross-border import, reception is this HDAB receiving it.
+    publishedAt: receivedAt,
+    decisionDeadline: calculateDecisionDeadline(receivedAt),
+  };
+}
+
+/**
  * Registers a parsed HdeuPayload as a new cross-border application in
  * SUBMITTED state. The decision clock starts from this national DAAMS's own
  * import time (R8.0.7 — "DAAMS MUST calculate due dates based on the
@@ -443,6 +686,140 @@ export type CreateApplicationResult =
  * (`/api/import/ncp-applications/[id]`, list-then-detail) — one place for
  * the find-or-create/creation logic so the two don't drift apart.
  */
+
+async function createInvoicingDetails(applicationId: string, invoicingDetails: HdeuInvoicingDetails | undefined) {
+  if (!invoicingDetails) return;
+  const { section4ProfileDataDate, ...invoicingData } = invoicingDetails;
+  await prisma.applicantBillingDetails.create({
+    data: { applicationId, ...invoicingData, section4ProfileDataDate: toDate(section4ProfileDataDate) },
+  });
+}
+
+async function createAttachments(applicationId: string, attachments: HdeuAttachment[] | undefined) {
+  const attachmentsWithContent = (attachments ?? []).filter(
+    (a): a is HdeuAttachment & { content: Buffer } => a.content !== undefined,
+  );
+  if (attachmentsWithContent.length === 0) return;
+  await prisma.attachment.createMany({
+    data: attachmentsWithContent.map((a) => ({ applicationId, ...a })),
+  });
+}
+
+async function createDatasetVariables(applicationId: string, datasetVariables: HdeuDatasetVariable[] | undefined) {
+  if (!datasetVariables || datasetVariables.length === 0) return;
+  await prisma.datasetVariable.createMany({
+    data: datasetVariables.map((v) => ({ applicationId, ...v })),
+  });
+}
+
+async function createRelatedDataPermits(applicationId: string, relatedDataPermits: HdeuRelatedDataPermit[] | undefined) {
+  if (!relatedDataPermits || relatedDataPermits.length === 0) return;
+  await prisma.relatedDataPermit.createMany({
+    data: relatedDataPermits.map((r) => ({ applicationId, ...r })),
+  });
+}
+
+async function createTabulationPlans(applicationId: string, tabulationPlans: HdeuTabulationPlan[] | undefined) {
+  if (!tabulationPlans || tabulationPlans.length === 0) return;
+  await prisma.tabulationPlan.createMany({
+    data: tabulationPlans.map((t) => ({ applicationId, ...t })),
+  });
+}
+
+/**
+ * COHORT rows first, so CONTROL/RELATIVE rows can resolve relatesToIndex to
+ * a real database id via their self-relation.
+ */
+export async function createStudyCohorts(applicationId: string, studyCohorts: HdeuStudyCohort[] | undefined) {
+  if (!studyCohorts || studyCohorts.length === 0) return;
+
+  const idByIndex = new Map<number, string>();
+  const cohortEntries = studyCohorts
+    .map((c, index) => ({ c, index }))
+    .filter(({ c }) => c.role === 'COHORT');
+  for (const { c, index } of cohortEntries) {
+    const { relatesToIndex: _relatesToIndex, ...data } = c;
+    const created = await prisma.studyCohort.create({
+      data: {
+        applicationId,
+        ...data,
+        cohortFormationMethod: data.cohortFormationMethod,
+        extractionMethod: data.extractionMethod,
+        extractionFrequency: data.extractionFrequency,
+        extractionInterval: data.extractionInterval,
+        dataStartDate: toDate(data.dataStartDate),
+        dataEndDate: toDate(data.dataEndDate),
+        priorPermitDate: toDate(data.priorPermitDate),
+        priorPermitValidFrom: toDate(data.priorPermitValidFrom),
+        priorPermitValidTo: toDate(data.priorPermitValidTo),
+        personProfileDataDate: toDate(data.personProfileDataDate),
+      },
+    });
+    idByIndex.set(index, created.id);
+  }
+
+  const dependentEntries = studyCohorts
+    .map((c, index) => ({ c, index }))
+    .filter(({ c }) => c.role !== 'COHORT');
+  for (const { c } of dependentEntries) {
+    const { relatesToIndex, ...data } = c;
+    await prisma.studyCohort.create({
+      data: {
+        applicationId,
+        ...data,
+        relatesToId: relatesToIndex !== undefined ? idByIndex.get(relatesToIndex) : undefined,
+        cohortFormationMethod: data.cohortFormationMethod,
+        extractionMethod: data.extractionMethod,
+        extractionFrequency: data.extractionFrequency,
+        extractionInterval: data.extractionInterval,
+        dataStartDate: toDate(data.dataStartDate),
+        dataEndDate: toDate(data.dataEndDate),
+        priorPermitDate: toDate(data.priorPermitDate),
+        priorPermitValidFrom: toDate(data.priorPermitValidFrom),
+        priorPermitValidTo: toDate(data.priorPermitValidTo),
+        personProfileDataDate: toDate(data.personProfileDataDate),
+      },
+    });
+  }
+}
+
+/**
+ * Same find-or-create treatment as the applicant's DataUser above — incoming
+ * data holder names are free text from another HDAB, not guaranteed to
+ * already exist in our registry. Batched (pre-fetch + create-missing)
+ * rather than one upsert per distinct name, mirroring the same pattern in
+ * applications/route.ts's POST handler.
+ */
+export async function createRequestedDatasets(applicationId: string, requestedDatasets: HdeuPayload['requestedDatasets']) {
+  if (requestedDatasets.length === 0) return;
+
+  const distinctNames = [...new Set(requestedDatasets.map((g) => g.dataHolderName))];
+  const existingDataHolders = await prisma.dataHolder.findMany({ where: { name: { in: distinctNames } } });
+  const missingNames = distinctNames.filter((n) => !existingDataHolders.some((dh) => dh.name === n));
+  if (missingNames.length > 0) {
+    await prisma.dataHolder.createMany({ data: missingNames.map((name) => ({ name })), skipDuplicates: true });
+  }
+  const allDataHolders =
+    missingNames.length > 0
+      ? await prisma.dataHolder.findMany({ where: { name: { in: distinctNames } } })
+      : existingDataHolders;
+  const dataHolderIdsByName = new Map(allDataHolders.map((dh) => [dh.name, dh.id]));
+
+  await prisma.requestedDataset.createMany({
+    data: requestedDatasets.flatMap((g) =>
+      g.datasets.map((d) => ({
+        applicationId,
+        dataHolderId: dataHolderIdsByName.get(g.dataHolderName)!,
+        name: d.name,
+        url: d.url || null,
+        datasetId: d.datasetId || null,
+        catalogId: d.catalogId || null,
+        distributions: d.distributions && d.distributions.length > 0 ? d.distributions : undefined,
+      })),
+    ),
+  });
+}
+
 export async function createApplicationFromHdeuPayload(
   p: HdeuPayload,
   rawPayload: unknown,
@@ -455,31 +832,8 @@ export async function createApplicationFromHdeuPayload(
     return { ok: false, status: 409, error: `Already imported as ${existing.referenceNumber}` };
   }
 
-  // Find or create an APPLICANT user record for the cross-border applicant.
-  // Their organisation is free text on the incoming payload (another
-  // country's HDAB, outside our registry) — find-or-create a DataUser by
-  // name to resolve it to a masterdata reference.
-  let applicant = await prisma.user.findUnique({ where: { email: p.applicantEmail } });
-  if (!applicant) {
-    const dataUser = await prisma.dataUser.upsert({
-      where: { name: p.applicantOrganisation },
-      update: {},
-      create: { name: p.applicantOrganisation },
-    });
-    applicant = await prisma.user.create({
-      data: {
-        name: p.applicantName,
-        email: p.applicantEmail,
-        dataUserId: dataUser.id,
-        role: 'APPLICANT',
-      },
-    });
-  }
-
-  // Find an admin/system user to attribute the import audit entry
-  const systemUser =
-    (await prisma.user.findFirst({ where: { role: 'ADMIN' } })) ??
-    (await prisma.user.findFirst({ where: { role: 'CASE_HANDLER' } }));
+  const applicant = await resolveOrCreateApplicant(p);
+  const systemUser = await resolveSystemUser();
   if (!systemUser) {
     return {
       ok: false,
@@ -493,326 +847,17 @@ export async function createApplicationFromHdeuPayload(
   const count = await prisma.application.count();
   const referenceNumber = `HDAB-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`;
 
-  const toDate = (d?: string) => (d ? new Date(d) : null);
-
-  // dataSubjectsInformed/includesControls/includesRelatives(+details) moved
-  // to StudyCohort (per-country) — mirror the first COHORT entry when
-  // studyCohorts is present, else fall back to the top-level payload fields
-  // (manual entry / direct JSON import, which don't produce studyCohorts)
-  const firstCohort = p.studyCohorts?.find((c) => c.role === 'COHORT');
-  const mirrorCohort = <K extends keyof HdeuStudyCohort>(key: K, fallback: HdeuPayload[K & keyof HdeuPayload]) =>
-    firstCohort ? firstCohort[key] : fallback;
-
   const application = await prisma.application.create({
-    data: {
-      referenceNumber,
-      source: 'HDEU',
-      type: p.applicationType,
-      status: 'SUBMITTED',
-      isCrossBorder: true,
-
-      hdeuApplicationId: p.hdeuApplicationId,
-      hdeuSendingCountry: p.sendingCountry,
-      hdeuTransmittedAt: transmittedAt,
-      hdeuReceivedAt: receivedAt,
-      hdeuRawPayload: JSON.stringify(rawPayload),
-
-      applicantId: applicant.id,
-
-      title: p.title,
-      projectDescription: p.projectDescription,
-      purposeCategory: p.purposeCategory,
-      purposeCategories: p.purposeCategories ?? [],
-      projectLeaderName: p.projectLeaderName,
-      projectLeaderCountry: p.projectLeaderCountry,
-      theResearchFocusesOnTheFollowingObjectives: p.theResearchFocusesOnTheFollowingObjectives ?? [],
-      theResearchFocusesOnTheFollowingObjectivesOther: p.theResearchFocusesOnTheFollowingObjectivesOther,
-      areaOfResearch: p.areaOfResearch,
-      areaOfResearchOther: p.areaOfResearchOther,
-      descriptionOfTheDataYouWillUse: p.descriptionOfTheDataYouWillUse,
-      theNatureOfTheDataDoesNotLetYouProvideADescription: p.theNatureOfTheDataDoesNotLetYouProvideADescription,
-      descriptionOfTheProject: p.descriptionOfTheProject,
-      summaryOfTheProject: p.summaryOfTheProject,
-      theNatureOfTheProjectDoesNotLetYouProvideASummary: p.theNatureOfTheProjectDoesNotLetYouProvideASummary,
-      theNatureOfTheProjectDoesNotLetYouProvideASummaryReason: p.theNatureOfTheProjectDoesNotLetYouProvideASummaryReason,
-      legalBasis: p.legalBasis,
-      requestedVariables: p.requestedVariables,
-      studyPopulation: p.studyPopulation,
-      inclusionCriteria: p.inclusionCriteria,
-      exclusionCriteria: p.exclusionCriteria,
-      dataStartDate: toDate(p.dataStartDate),
-      dataEndDate: toDate(p.dataEndDate),
-      projectStartDate: toDate(p.projectStartDate),
-      projectEndDate: toDate(p.projectEndDate),
-      dataProcessingCountry: p.dataProcessingCountry,
-
-      // §3
-      applyingOnBehalfOfPublicSector: p.applyingOnBehalfOfPublicSector,
-      applyingForMandatedTasks: p.applyingForMandatedTasks,
-      legalOrNaturalPerson: p.legalOrNaturalPerson,
-      legalOrNaturalPersonProfileDataDate: toDate(p.legalOrNaturalPersonProfileDataDate),
-      legalPersonAddress: p.legalPersonAddress,
-      legalPersonZipCode: p.legalPersonZipCode,
-      legalPersonCity: p.legalPersonCity,
-      legalPersonCountry: p.legalPersonCountry,
-      contactPersonJobTitle: p.contactPersonJobTitle,
-      contactPersonAffiliation: p.contactPersonAffiliation,
-      contactPersonOrganisationName: p.contactPersonOrganisationName,
-      contactPersonRelationship: p.contactPersonRelationship,
-      contactPersonBusinessId: p.contactPersonBusinessId,
-      contactPersonOperatorID: p.contactPersonOperatorID,
-      contactPersonPhone: p.contactPersonPhone,
-      contactPersonProfileDataDate: toDate(p.contactPersonProfileDataDate),
-
-      // §5
-      whyDataIsNeeded: p.whyDataIsNeeded,
-      whatIsTheAimAndTopicOfTheProject: p.whatIsTheAimAndTopicOfTheProject,
-      expectedBenefits: p.expectedBenefits,
-      applicantQualifications: p.applicantQualifications,
-      linkToTheSupportingLegalBasis: p.linkToTheSupportingLegalBasis,
-      summaryOfPlanForUsingTheDataLanguage: p.summaryOfPlanForUsingTheDataLanguage,
-      summaryOfResearchPlanLanguage: p.summaryOfResearchPlanLanguage,
-      personResponsibleSameAsContactPerson: p.personResponsibleSameAsContactPerson,
-      personResponsibleName: p.personResponsibleName,
-      personResponsibleJobTitle: p.personResponsibleJobTitle,
-      personResponsibleAffiliation: p.personResponsibleAffiliation,
-      personResponsibleProfileDataDate: toDate(p.personResponsibleProfileDataDate),
-      personResearchSameAsContactPerson: p.personResearchSameAsContactPerson,
-      personResearchName: p.personResearchName,
-      personResearchJobTitle: p.personResearchJobTitle,
-      personResearchAffiliation: p.personResearchAffiliation,
-      personResearchProfileDataDate: toDate(p.personResearchProfileDataDate),
-      electronicHealthDataFormat: p.electronicHealthDataFormat,
-      pseudonymisedDataJustification: p.pseudonymisedDataJustification,
-      consentCompliesWithArt6: p.consentCompliesWithArt6,
-      consentAssessedEthicalAspects: p.consentAssessedEthicalAspects,
-
-      // §6 flat mirror (see StudyCohort rows created below for full fidelity)
-      cohortSizeIsEstimate: p.cohortSizeIsEstimate,
-      cohortSize: p.cohortSize,
-      cohortSizeJustification: p.cohortSizeJustification,
-      cohortFormationMethod: p.cohortFormationMethod,
-      extractionMethod: p.extractionMethod,
-      sampleSize: p.sampleSize,
-      samplingMethodDescription: p.samplingMethodDescription,
-      extractionFrequency: p.extractionFrequency,
-      extractionInterval: p.extractionInterval,
-      extractionIntervalOther: p.extractionIntervalOther,
-      extractionTimingNotes: p.extractionTimingNotes,
-      dataSubjectsInformed: mirrorCohort('dataSubjectsInformed', p.dataSubjectsInformed),
-      dataSubjectsInformedDetail: mirrorCohort('dataSubjectsInformedDetail', p.dataSubjectsInformedDetail),
-      includesControls: mirrorCohort('includesControls', p.includesControls) ?? false,
-      controlsDescription: mirrorCohort('controlsDescription', p.controlsDescription),
-      includesRelatives: mirrorCohort('includesRelatives', p.includesRelatives) ?? false,
-      relativesDescription: mirrorCohort('relativesDescription', p.relativesDescription),
-      usesOptOutException: p.usesOptOutException ?? false,
-      optOutExceptionJustification: p.optOutExceptionJustification,
-      tabulationPlan: p.tabulationPlan,
-      ethicalReviewInput: p.ethicalReviewInput,
-      whatIsTheFrequencyOfUpdates: p.whatIsTheFrequencyOfUpdates,
-
-      // §7
-      otherDataToCombine: p.otherDataToCombine ?? false,
-      otherDataDescription: p.otherDataDescription,
-      otherDataCountries: p.otherDataCountries ?? [],
-      otherDataHolders: p.otherDataHolders ?? [],
-      otherDataDatabases: p.otherDataDatabases ?? [],
-      otherDataDatasets: p.otherDataDatasets ?? [],
-      otherDataCombinationMethod: p.otherDataCombinationMethod,
-      hasPendingPermitApplications: p.hasPendingPermitApplications,
-      pendingApplicationDate: toDate(p.pendingApplicationDate),
-      pendingApplicationIssuer: p.pendingApplicationIssuer,
-      pendingApplicationPermitCode: p.pendingApplicationPermitCode,
-
-      // §8
-      speName: p.speName,
-      speTechnicalRequirements: p.speTechnicalRequirements,
-      environmentProviderName: p.environmentProviderName,
-      dataAccessTiming: p.dataAccessTiming,
-      dataAccessLaterDate: toDate(p.dataAccessLaterDate),
-      dataAccessPeriodInfo: p.dataAccessPeriodInfo,
-      dataAccessUpdateFrequency: p.dataAccessUpdateFrequency,
-      inactiveStoragePeriodStart: toDate(p.inactiveStoragePeriodStart),
-      inactiveStoragePeriodEnd: toDate(p.inactiveStoragePeriodEnd),
-      transfersOutsideEuEea: p.transfersOutsideEuEea ?? false,
-      transferCountries: p.transferCountries ?? [],
-      transferLegalBasis: p.transferLegalBasis,
-      transferLegalArticle: p.transferLegalArticle,
-      transferSafeguards: p.transferSafeguards ?? [],
-      whyWillDataBeTransferredOutsideEUArticle47: p.whyWillDataBeTransferredOutsideEUArticle47,
-      whyWillDataBeTransferredOutsideEUArticle47Options: p.whyWillDataBeTransferredOutsideEUArticle47Options ?? [],
-      whyWillDataBeTransferredOutsideEUArticle47a: p.whyWillDataBeTransferredOutsideEUArticle47a,
-      whyWillDataBeTransferredOutsideEUArticle47b: p.whyWillDataBeTransferredOutsideEUArticle47b,
-      whyWillDataBeTransferredOutsideEUArticle47c: p.whyWillDataBeTransferredOutsideEUArticle47c,
-      whyWillDataBeTransferredOutsideEUArticle48: p.whyWillDataBeTransferredOutsideEUArticle48,
-      whyWillDataBeTransferredOutsideEUArticle48a: p.whyWillDataBeTransferredOutsideEUArticle48a,
-      whyWillDataBeTransferredOutsideEUArticle48b: p.whyWillDataBeTransferredOutsideEUArticle48b,
-      whyWillDataBeTransferredOutsideEUArticle48bOptions: p.whyWillDataBeTransferredOutsideEUArticle48bOptions ?? [],
-      whyWillDataBeTransferredOutsideEUArticle48c: p.whyWillDataBeTransferredOutsideEUArticle48c,
-      whyWillDataBeTransferredOutsideEUArticle48cOpt: p.whyWillDataBeTransferredOutsideEUArticle48cOpt,
-      whyWillDataBeTransferredOutsideEUArticle48d: p.whyWillDataBeTransferredOutsideEUArticle48d,
-      whyWillDataBeTransferredOutsideEUArticle48e: p.whyWillDataBeTransferredOutsideEUArticle48e,
-      whyWillDataBeTransferredOutsideEUArticle49: p.whyWillDataBeTransferredOutsideEUArticle49,
-      legalBasisForTransferringTheDataOutsideEU: p.legalBasisForTransferringTheDataOutsideEU,
-      legalBasisForTransferringTheDataOutsideEUOtherOptions: p.legalBasisForTransferringTheDataOutsideEUOtherOptions ?? [],
-      safeguardsAreProvidedByReferringGDCP: p.safeguardsAreProvidedByReferringGDCP ?? [],
-      safeguardsAreProvidedByOtherExceptionalLegalBases: p.safeguardsAreProvidedByOtherExceptionalLegalBases,
-      dataController: p.dataController,
-      dataMinimisationCompliance: p.dataMinimisationCompliance,
-      complyWithDataMinimisationPrincipleNotEUMember: p.complyWithDataMinimisationPrincipleNotEUMember,
-      protectionStatement1: p.protectionStatement1,
-      protectionStatement2: p.protectionStatement2,
-      protectionStatement3: p.protectionStatement3,
-      protectionStatement4: p.protectionStatement4,
-      protectionStatement5: p.protectionStatement5,
-      dataProcessingPersonnel: p.dataProcessingPersonnel ?? [],
-      lawfulnessOfProcessing: p.lawfulnessOfProcessing ?? [],
-      lawfulnessLegalBasisOther: p.lawfulnessLegalBasisOther,
-      lawfulForProcessingPersonalData: p.lawfulForProcessingPersonalData ?? [],
-      europeanUnionInstitution: p.europeanUnionInstitution ?? [],
-      legalBasisForProcessingCombinedData: p.legalBasisForProcessingCombinedData ?? [],
-      otherLegalBasisForProcessingCombinedData: p.otherLegalBasisForProcessingCombinedData,
-      legalBasisForProcessingApplicationData: p.legalBasisForProcessingApplicationData ?? [],
-      otherLegalBasisForProcessingApplicationData: p.otherLegalBasisForProcessingApplicationData,
-      legalBasisForProcessingCombinedApplicationData: p.legalBasisForProcessingCombinedApplicationData ?? [],
-      otherLegalBasisForProcessingCombinedApplicationData: p.otherLegalBasisForProcessingCombinedApplicationData,
-
-      // §9
-      additionalInformation: p.additionalInformation,
-
-      // §10
-      consentAwareProcessingFee: p.consentAwareProcessingFee,
-      consentAwareChargeFee: p.consentAwareChargeFee,
-      consentAwareInformationCorrect: p.consentAwareInformationCorrect,
-      consentNoAccessToUnderlyingData: p.consentNoAccessToUnderlyingData,
-      consentAcceptHealthDataBody: p.consentAcceptHealthDataBody,
-
-      submittedAt: receivedAt,
-      // Art. 57(1)(j)(ii): publish without undue delay after reception —
-      // for a cross-border import, reception is this HDAB receiving it.
-      publishedAt: receivedAt,
-      decisionDeadline: calculateDecisionDeadline(receivedAt),
-    },
+    data: buildApplicationCreateData(p, rawPayload, applicant.id, referenceNumber, transmittedAt, receivedAt),
   });
 
-  if (p.invoicingDetails) {
-    const { section4ProfileDataDate, ...invoicingData } = p.invoicingDetails;
-    await prisma.applicantBillingDetails.create({
-      data: { applicationId: application.id, ...invoicingData, section4ProfileDataDate: toDate(section4ProfileDataDate) },
-    });
-  }
-
-  const attachmentsWithContent = (p.attachments ?? []).filter(
-    (a): a is HdeuAttachment & { content: Buffer } => a.content !== undefined,
-  );
-  if (attachmentsWithContent.length > 0) {
-    await prisma.attachment.createMany({
-      data: attachmentsWithContent.map((a) => ({ applicationId: application.id, ...a })),
-    });
-  }
-
-  if (p.datasetVariables && p.datasetVariables.length > 0) {
-    await prisma.datasetVariable.createMany({
-      data: p.datasetVariables.map((v) => ({ applicationId: application.id, ...v })),
-    });
-  }
-
-  if (p.relatedDataPermits && p.relatedDataPermits.length > 0) {
-    await prisma.relatedDataPermit.createMany({
-      data: p.relatedDataPermits.map((r) => ({ applicationId: application.id, ...r })),
-    });
-  }
-
-  if (p.tabulationPlans && p.tabulationPlans.length > 0) {
-    await prisma.tabulationPlan.createMany({
-      data: p.tabulationPlans.map((t) => ({ applicationId: application.id, ...t })),
-    });
-  }
-
-  if (p.studyCohorts && p.studyCohorts.length > 0) {
-    // COHORT rows first, so CONTROL/RELATIVE rows can resolve relatesToIndex
-    // to a real database id via their self-relation.
-    const idByIndex = new Map<number, string>();
-    const cohortEntries = p.studyCohorts
-      .map((c, index) => ({ c, index }))
-      .filter(({ c }) => c.role === 'COHORT');
-    for (const { c, index } of cohortEntries) {
-      const { relatesToIndex: _relatesToIndex, ...data } = c;
-      const created = await prisma.studyCohort.create({
-        data: {
-          applicationId: application.id,
-          ...data,
-          cohortFormationMethod: data.cohortFormationMethod,
-          extractionMethod: data.extractionMethod,
-          extractionFrequency: data.extractionFrequency,
-          extractionInterval: data.extractionInterval,
-          dataStartDate: toDate(data.dataStartDate),
-          dataEndDate: toDate(data.dataEndDate),
-          priorPermitDate: toDate(data.priorPermitDate),
-          priorPermitValidFrom: toDate(data.priorPermitValidFrom),
-          priorPermitValidTo: toDate(data.priorPermitValidTo),
-          personProfileDataDate: toDate(data.personProfileDataDate),
-        },
-      });
-      idByIndex.set(index, created.id);
-    }
-    const dependentEntries = p.studyCohorts
-      .map((c, index) => ({ c, index }))
-      .filter(({ c }) => c.role !== 'COHORT');
-    for (const { c } of dependentEntries) {
-      const { relatesToIndex, ...data } = c;
-      await prisma.studyCohort.create({
-        data: {
-          applicationId: application.id,
-          ...data,
-          relatesToId: relatesToIndex !== undefined ? idByIndex.get(relatesToIndex) : undefined,
-          cohortFormationMethod: data.cohortFormationMethod,
-          extractionMethod: data.extractionMethod,
-          extractionFrequency: data.extractionFrequency,
-          extractionInterval: data.extractionInterval,
-          dataStartDate: toDate(data.dataStartDate),
-          dataEndDate: toDate(data.dataEndDate),
-          priorPermitDate: toDate(data.priorPermitDate),
-          priorPermitValidFrom: toDate(data.priorPermitValidFrom),
-          priorPermitValidTo: toDate(data.priorPermitValidTo),
-          personProfileDataDate: toDate(data.personProfileDataDate),
-        },
-      });
-    }
-  }
-
-  if (p.requestedDatasets.length > 0) {
-    // Same find-or-create treatment as the applicant's DataUser above —
-    // incoming data holder names are free text from another HDAB, not
-    // guaranteed to already exist in our registry. Batched (pre-fetch +
-    // create-missing) rather than one upsert per distinct name, mirroring
-    // the same pattern in applications/route.ts's POST handler.
-    const distinctNames = [...new Set(p.requestedDatasets.map((g) => g.dataHolderName))];
-    const existingDataHolders = await prisma.dataHolder.findMany({ where: { name: { in: distinctNames } } });
-    const missingNames = distinctNames.filter((n) => !existingDataHolders.some((dh) => dh.name === n));
-    if (missingNames.length > 0) {
-      await prisma.dataHolder.createMany({ data: missingNames.map((name) => ({ name })), skipDuplicates: true });
-    }
-    const allDataHolders =
-      missingNames.length > 0
-        ? await prisma.dataHolder.findMany({ where: { name: { in: distinctNames } } })
-        : existingDataHolders;
-    const dataHolderIdsByName = new Map(allDataHolders.map((dh) => [dh.name, dh.id]));
-
-    await prisma.requestedDataset.createMany({
-      data: p.requestedDatasets.flatMap((g) =>
-        g.datasets.map((d) => ({
-          applicationId: application.id,
-          dataHolderId: dataHolderIdsByName.get(g.dataHolderName)!,
-          name: d.name,
-          url: d.url || null,
-          datasetId: d.datasetId || null,
-          catalogId: d.catalogId || null,
-          distributions: d.distributions && d.distributions.length > 0 ? d.distributions : undefined,
-        })),
-      ),
-    });
-  }
+  await createInvoicingDetails(application.id, p.invoicingDetails);
+  await createAttachments(application.id, p.attachments);
+  await createDatasetVariables(application.id, p.datasetVariables);
+  await createRelatedDataPermits(application.id, p.relatedDataPermits);
+  await createTabulationPlans(application.id, p.tabulationPlans);
+  await createStudyCohorts(application.id, p.studyCohorts);
+  await createRequestedDatasets(application.id, p.requestedDatasets);
 
   await prisma.applicationLog.create({
     data: {

@@ -1,6 +1,7 @@
 # SonarQube assessment: open-daams
 
-_Snapshot date: 2026-08-21._
+_Snapshot date: 2026-08-21 (updated same day: 3 more API routes and 2 lib files' cognitive
+complexity fixed — 14 → 8 CRITICAL issues remaining)._
 
 This is a static-analysis assessment of the open-daams codebase against **SonarQube Community
 Edition**'s default TypeScript/JavaScript rule set — bugs, vulnerabilities, security hotspots,
@@ -28,25 +29,25 @@ this one is closer to code-quality/maintainability), same "assessment, not certi
 | Vulnerabilities | **0** (Security rating A) |
 | Security hotspots | **0** (Security Review rating A) |
 | Maintainability rating | **A** |
-| Code smells | 255 |
-| — of which CRITICAL severity | 14 |
-| Cognitive-complexity issues (rule S3776) | 14 |
-| Duplicated lines | 3.0% |
-| Test coverage (line, via lcov) | ~44-46%* |
-| Lines of code analyzed | ~15,300 |
-| Maintainability debt (`sqale_index`) | ~1,240 minutes (~20.7 hours) |
+| Code smells | 252 |
+| — of which CRITICAL severity | 8 |
+| Cognitive-complexity issues (rule S3776) | 8 |
+| Duplicated lines | 2.8% |
+| Test coverage (line, via lcov) | ~45-48%* |
+| Lines of code analyzed | ~15,400 |
+| Maintainability debt (`sqale_index`) | ~1,193 minutes (~19.9 hours) |
 
 \* Coverage fluctuates a few points run-to-run depending on which files were touched most recently
-in the same session; treat it as "low-to-mid 40s%," not a fixed number. It was 33.2% at the start
+in the same session; treat it as "mid-to-high 40s%," not a fixed number. It was 33.2% at the start
 of this session's testing/refactoring work.
 
 **Headline takeaway**: zero bugs, vulnerabilities, or security hotspots, and all three reliability/
 security ratings are A. Everything flagged is a maintainability (code smell) concern — this is a
 "clean up when convenient" list, not a security or correctness gate.
 
-## Where the 255 code smells concentrate
+## Where the 252 code smells concentrate
 
-Five rules account for roughly three-quarters of all findings:
+Four rules account for roughly two-thirds of all findings:
 
 | Rule | Count | What it flags |
 |---|---|---|
@@ -54,18 +55,18 @@ Five rules account for roughly three-quarters of all findings:
 | `typescript:S6759` | 57 | React component props not typed `Readonly<...>` |
 | `typescript:S3358` | 27 | Nested ternary operators (readability) |
 | `typescript:S9020` | 20 | Testing Library `find*` vs `get*`/`query*` misuse (all in this session's own new test files) |
-| `typescript:S3776` | 14 | Cognitive complexity over the default threshold of 15 |
+| `typescript:S6582` | 8 | Optional-chaining preference |
+| `typescript:S3776` | 8 | Cognitive complexity over the default threshold of 15 |
 
-The remainder (`S6582` optional-chaining preference, `S7776` array-as-Set for existence checks,
-`S7773`, `S4624`, `S6551`, and a long tail of 1-3-count rules) are minor, scattered findings not
-worth a dedicated pass.
+The remainder (`S7776` array-as-Set for existence checks, `S6551`, `S7773`, `S4624`, and a long
+tail of 1-3-count rules) are minor, scattered findings not worth a dedicated pass.
 
 ## Cognitive complexity (S3776) — the one category worth actively chasing
 
 This is the only rule category where the metric tracks real bug risk rather than a style
 preference: the deeper and more tangled a function's branching, the more likely a future edit
 misses an edge case. It started this session at **20 issues** (worst: `generate-permit-pdf.ts` at
-**107** — the single biggest outlier by a wide margin) and is down to **14** after two fix passes:
+**107** — the single biggest outlier by a wide margin) and is down to **8** after three fix passes:
 
 1. **`generate-permit-pdf.ts`** (107 → 0) — decomposed into ~28 functions mapped 1:1 to the
    TEHDAS2 D6.3 Annex 9 template sections the file already followed in its comments. Verified
@@ -80,28 +81,39 @@ misses an edge case. It started this session at **20 issues** (worst: `generate-
    sequence. Fixed by extracting pure `build<X>UpdateData()`/`describe<X>Changes()` helper pairs
    and one named function per already-commented orchestration step. Added guard-clause-level route
    tests (`vi.mock('@/lib/db')`) plus direct unit tests for every pure extracted function.
+3. **3 more API routes** (`data-users/[id]/route.ts` 20, `spe-providers/[id]/route.ts` 20,
+   `spe-types/[id]/route.ts` 18) — all → 0. Byte-for-byte the same shape as #2's routes, fixed with
+   the identical technique.
+4. **2 lib files** (`hdeu.ts` 26, `ncp-client.ts` 21+17) — all → 0. `hdeu.ts`'s
+   `createApplicationFromHdeuPayload` split into an applicant/system-user resolver, a pure
+   `buildApplicationCreateData()`, and one function per conditional post-creation block (invoicing,
+   attachments, dataset variables, related permits, tabulation plans, study cohorts, requested
+   datasets). `ncp-client.ts`'s two flagged functions (`mapSection6Entry`, `mapMetadataToHdeuPayload`)
+   are both pure NCP-metadata-to-`HdeuPayload` mappers — split by sub-object
+   (`buildCohortEntry`/`buildControlEntry`/`buildRelativeEntry`) and by concern
+   (`buildStudyCohortsFromSection6`, `buildInvoicingDetails`, `buildSection3Fields` — the last one
+   collapsing 9 repeated `isNaturalPerson ? A : B` ternaries scattered across the function into one
+   place). All extracted pure functions got direct unit tests, no mocking needed.
 
-### Still open (14 issues, 11 files)
+### Still open (8 issues, 7 files)
 
 | File | Complexity | Category |
 |---|---|---|
 | `src/components/StudyCohortExplorer.tsx` | 31, 18 | Component (has existing tests) |
 | `src/app/[locale]/applications/[id]/page.tsx` | 29 | RSC page (no existing tests) |
-| `src/lib/hdeu.ts` | 26 | Lib (partial existing tests) |
 | `src/app/[locale]/financials/page.tsx` | 21 | RSC page (no existing tests) |
-| `src/lib/ncp-client.ts` | 21, 17 | Lib, both pure functions (existing tests) |
 | `src/components/NewApplicationForm.tsx` | 22 | Component (has existing tests) |
-| `src/app/api/data-users/[id]/route.ts` | 20 | API route — same proven pattern as the 5 already fixed |
-| `src/app/api/spe-providers/[id]/route.ts` | 20 | API route — same proven pattern |
 | `src/app/[locale]/permits/[id]/page.tsx` | 20 | RSC page (no existing tests) |
 | `src/components/DeadlineExtensionPanel.tsx` | 20 | Component (has existing tests) |
-| `src/app/api/spe-types/[id]/route.ts` | 18 | API route — same proven pattern |
 | `src/components/PermitChangeRequestPanel.tsx` | 17 | Component (has existing tests) |
 
-The 3 remaining API routes are confirmed (read all three) to be the exact same shape as the 5
-already fixed — lowest-risk, highest-confidence next step. The 3 RSC pages are the one genuinely
-open question: async Server Components with inline Prisma calls and zero existing tests, a
-different testing shape than anything proven safe so far this session.
+All remaining API routes and lib files are done — every remaining CRITICAL issue is either a
+component (4 files, all with an existing `.test.tsx` safety net from an earlier pass this session)
+or an RSC page (3 files, zero existing tests, async Server Components with inline Prisma calls —
+the one genuinely open question left: the fix technique proven everywhere else this session
+(extract the *branching/derivation logic* into small pure functions, test those directly) should
+still apply without needing to solve "how do I render this whole page in a test," but it hasn't
+been tried on a page file yet).
 
 ## Duplication (3.0% overall — two concrete, worth-fixing clusters)
 
@@ -123,7 +135,7 @@ project.
 ## What's not worth chasing
 
 This is a community-built, unofficial EHDS/TEHDAS2 reference implementation (see the project
-README's own disclaimer), not a production app under a maintainability SLA. Driving the 255 code
+README's own disclaimer), not a production app under a maintainability SLA. Driving the 252 code
 smells to zero — especially the 70 button-`type` and 57 readonly-prop findings, both real but
 low-severity and mostly mechanical — is churn for its own sake past a certain point. The
 recommendation from this assessment is narrower: finish the cognitive-complexity list (real bug-risk

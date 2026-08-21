@@ -3,6 +3,38 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
 
+/** Builds the `data:` object for prisma.speProvider.update() from a PATCH body. */
+export function buildSpeProviderUpdateData(body: Record<string, unknown>) {
+  return {
+    ...(body.name !== undefined ? { name: String(body.name).trim() } : {}),
+  };
+}
+
+/** Builds the human-readable audit-log `changes` list from a PATCH body. */
+export function describeSpeProviderChanges(body: Record<string, unknown>): string[] {
+  const changes: string[] = [];
+  if (body.name !== undefined) changes.push('name');
+  if (body.contactEmail !== undefined) changes.push('contact email');
+  if (body.contactPhone !== undefined) changes.push('contact phone');
+  return changes;
+}
+
+/** Upserts the SPE provider's PRIMARY contact when contactEmail/contactPhone are present in the body. */
+async function upsertPrimaryContact(id: string, body: Record<string, unknown>) {
+  if (body.contactEmail === undefined && body.contactPhone === undefined) return;
+
+  const existingContact = await prisma.contact.findFirst({ where: { speProviderId: id, role: 'PRIMARY' } });
+  const contactData = {
+    ...(body.contactEmail !== undefined ? { email: (body.contactEmail as string | null | undefined) || null } : {}),
+    ...(body.contactPhone !== undefined ? { phone: (body.contactPhone as string | null | undefined) || null } : {}),
+  };
+  if (existingContact) {
+    await prisma.contact.update({ where: { id: existingContact.id }, data: contactData });
+  } else {
+    await prisma.contact.create({ data: { speProviderId: id, role: 'PRIMARY', ...contactData } });
+  }
+}
+
 /**
  * PATCH /api/spe-providers/[id]
  * Update an SPE provider's masterdata (ADMIN-only).
@@ -16,31 +48,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const auth = await requireRole(body.actingUserId, ['ADMIN']);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-    if (body.contactEmail !== undefined || body.contactPhone !== undefined) {
-      const existingContact = await prisma.contact.findFirst({ where: { speProviderId: id, role: 'PRIMARY' } });
-      const contactData = {
-        ...(body.contactEmail !== undefined ? { email: body.contactEmail || null } : {}),
-        ...(body.contactPhone !== undefined ? { phone: body.contactPhone || null } : {}),
-      };
-      if (existingContact) {
-        await prisma.contact.update({ where: { id: existingContact.id }, data: contactData });
-      } else {
-        await prisma.contact.create({ data: { speProviderId: id, role: 'PRIMARY', ...contactData } });
-      }
-    }
+    await upsertPrimaryContact(id, body);
 
     const speProvider = await prisma.speProvider.update({
       where: { id },
-      data: {
-        ...(body.name !== undefined ? { name: String(body.name).trim() } : {}),
-      },
+      data: buildSpeProviderUpdateData(body),
       include: { contacts: true },
     });
 
-    const changes: string[] = [];
-    if (body.name !== undefined) changes.push('name');
-    if (body.contactEmail !== undefined) changes.push('contact email');
-    if (body.contactPhone !== undefined) changes.push('contact phone');
+    const changes = describeSpeProviderChanges(body);
 
     await prisma.auditLog.create({
       data: {

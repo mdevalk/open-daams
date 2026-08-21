@@ -3,6 +3,35 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
 
+/** Validates the setupFee/monthlyFee fields from a PATCH body; returns an error message, or null if valid. */
+export function validateSpeTypeFees(body: Record<string, unknown>): string | null {
+  if (body.setupFee !== undefined && !Number.isFinite(Number(body.setupFee as string | number))) {
+    return 'setupFee must be a number';
+  }
+  if (body.monthlyFee !== undefined && !Number.isFinite(Number(body.monthlyFee as string | number))) {
+    return 'monthlyFee must be a number';
+  }
+  return null;
+}
+
+/** Builds the `data:` object for prisma.speType.update() from a PATCH body. */
+export function buildSpeTypeUpdateData(body: Record<string, unknown>) {
+  return {
+    ...(body.name !== undefined ? { name: String(body.name).trim() } : {}),
+    ...(body.setupFee !== undefined ? { setupFee: Number(body.setupFee as string | number) } : {}),
+    ...(body.monthlyFee !== undefined ? { monthlyFee: Number(body.monthlyFee as string | number) } : {}),
+  };
+}
+
+/** Builds the human-readable audit-log `changes` list from a PATCH body. */
+export function describeSpeTypeChanges(body: Record<string, unknown>): string[] {
+  const changes: string[] = [];
+  if (body.name !== undefined) changes.push('name');
+  if (body.setupFee !== undefined) changes.push('setup fee');
+  if (body.monthlyFee !== undefined) changes.push('monthly fee');
+  return changes;
+}
+
 /**
  * PATCH /api/spe-types/[id]
  * Update an SPE type's name/fees (ADMIN-only).
@@ -16,27 +45,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const auth = await requireRole(body.actingUserId, ['ADMIN']);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-    if (body.setupFee !== undefined && !Number.isFinite(Number(body.setupFee))) {
-      return NextResponse.json({ error: 'setupFee must be a number' }, { status: 422 });
-    }
-    if (body.monthlyFee !== undefined && !Number.isFinite(Number(body.monthlyFee))) {
-      return NextResponse.json({ error: 'monthlyFee must be a number' }, { status: 422 });
-    }
+    const feeError = validateSpeTypeFees(body);
+    if (feeError) return NextResponse.json({ error: feeError }, { status: 422 });
 
     const type = await prisma.speType.update({
       where: { id },
-      data: {
-        ...(body.name !== undefined ? { name: String(body.name).trim() } : {}),
-        ...(body.setupFee !== undefined ? { setupFee: Number(body.setupFee) } : {}),
-        ...(body.monthlyFee !== undefined ? { monthlyFee: Number(body.monthlyFee) } : {}),
-      },
+      data: buildSpeTypeUpdateData(body),
       include: { speOperator: { select: { name: true } } },
     });
 
-    const changes: string[] = [];
-    if (body.name !== undefined) changes.push('name');
-    if (body.setupFee !== undefined) changes.push('setup fee');
-    if (body.monthlyFee !== undefined) changes.push('monthly fee');
+    const changes = describeSpeTypeChanges(body);
 
     await prisma.auditLog.create({
       data: {
