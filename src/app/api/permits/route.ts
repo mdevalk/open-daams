@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
-import { signPermit, groupDatasetsByHolder } from '@/lib/permit-signing';
+import { signPermit, groupDatasetsByHolder, type GrantedDatasetGroup } from '@/lib/permit-signing';
 import { regenerateStoredPermitPdf } from '@/lib/permit-pdf-store';
 import { generateSampleDid } from '@/lib/did';
 
@@ -29,6 +29,239 @@ async function generatePermitNumber(year: number): Promise<string> {
   });
   const lastSeq = last ? parseInt(last.permitNumber.slice(prefix.length), 10) || 0 : 0;
   return `${prefix}${String(lastSeq + 1).padStart(4, '0')}`;
+}
+
+type ApplicationWithRelations = Prisma.ApplicationGetPayload<{
+  include: {
+    dataPermits: { select: { id: true } };
+    requestedDatasets: { include: { dataHolder: { select: { name: true } } } };
+    feeEstimate: { include: { lineItems: true } };
+  };
+}>;
+
+type RequestedDatasetRow = ApplicationWithRelations['requestedDatasets'][number];
+
+type StorageLocationsByDataset = Map<string, { reference: string; writerDid: string }>;
+
+type ResearcherInfo = { name: string; affiliation: string; did: string };
+
+type OutputControllerInfo = { name: string; affiliation: string; did: string };
+
+/**
+ * One storage location per requested dataset, generated once here so the
+ * exact reference/writerDid signed afterward (via grantedDatasets) is what
+ * actually gets persisted (see persistGrantedDatasetsAndAuthorizedPersons) —
+ * not regenerated and potentially drifting from the signature.
+ */
+export function buildStorageLocations(requestedDatasets: RequestedDatasetRow[]): StorageLocationsByDataset {
+  return new Map(
+    requestedDatasets.map((rd) => [
+      rd.id,
+      {
+        reference: `urn:objectstore:bucket:${slugify(rd.dataHolder?.name ?? 'holder')}-${slugify(rd.name)}-${rd.id.slice(-8)}`,
+        writerDid: generateSampleDid(),
+      },
+    ]),
+  );
+}
+
+/**
+ * The researcher — sourced from the application's own Section 5 fields,
+ * mirroring the form's own alternation between "person responsible for
+ * the research" and "person responsible for data use."
+ */
+export function resolveResearcher(application: ApplicationWithRelations): ResearcherInfo | null {
+  const researcherName = application.personResearchName ?? application.personResponsibleName;
+  const researcherAffiliation = application.personResearchAffiliation ?? application.personResponsibleAffiliation;
+  return researcherName
+    ? {
+        name: researcherName,
+        affiliation: researcherAffiliation ?? '',
+        did: generateSampleDid(),
+      }
+    : null;
+}
+
+/**
+ * Resolved once here and frozen into both the signature and the permit row
+ * itself (speOperatorName/etc.) — see the schema comment on those columns
+ * for why this can't just be a live join at verify time.
+ */
+export async function resolveSpeSelection(feeEstimate: ApplicationWithRelations['feeEstimate']) {
+  const speOperatorId = feeEstimate?.speOperatorId ?? null;
+  const speTypeId = feeEstimate?.speTypeId ?? null;
+  const estimateLineItems = feeEstimate?.lineItems ?? [];
+  const totalAmount = estimateLineItems.reduce((sum, item) => sum + Number(item.amount), 0);
+
+  const [speOperatorRow, speTypeRow] = await Promise.all([
+    speOperatorId
+      ? prisma.speOperator.findUnique({
+          where: { id: speOperatorId },
+          include: { speProvider: { select: { name: true } } },
+        })
+      : null,
+    speTypeId
+      ? prisma.speType.findUnique({ where: { id: speTypeId } })
+      : null,
+  ]);
+  const speType = speTypeRow && { id: speTypeRow.id, name: speTypeRow.name };
+  const speOperator = speOperatorRow && {
+    id: speOperatorRow.id,
+    name: speOperatorRow.name,
+    providerName: speOperatorRow.speProvider?.name ?? null,
+    type: speType || null,
+  };
+
+  return { speOperatorId, speTypeId, speOperator, speType, estimateLineItems, totalAmount };
+}
+
+type SpeSelection = Awaited<ReturnType<typeof resolveSpeSelection>>;
+
+/**
+ * Generates the next permit number and signs + persists the permit, retrying
+ * on a permitNumber unique-constraint collision (another issuance racing for
+ * the same sequence number) up to MAX_ATTEMPTS times.
+ */
+/** The prisma.dataPermit.create() `data` payload, given an already-generated permitNumber and signature. */
+function buildPermitCreateData(
+  permitNumber: string,
+  application: ApplicationWithRelations,
+  params: { issuedAt: Date; validFrom: Date; validUntil: Date },
+  signature: { signature: string; signedAt: Date; signingKeyId: string },
+  speSelection: SpeSelection,
+) {
+  return {
+    permitNumber,
+    applicationId: application.id,
+    status: 'GRANTED' as const,
+    issuedAt: params.issuedAt,
+    validFrom: params.validFrom,
+    validUntil: params.validUntil,
+    signature: signature.signature,
+    signedAt: signature.signedAt,
+    signingKeyId: signature.signingKeyId,
+    totalAmount: speSelection.estimateLineItems.length > 0 ? speSelection.totalAmount : null,
+    lineItems: {
+      create: speSelection.estimateLineItems.map((item) => ({
+        category: item.category,
+        glCode: item.glCode,
+        description: item.description,
+        amount: item.amount,
+        currency: item.currency,
+        applicationId: application.id,
+        dataHolderId: item.dataHolderId,
+      })),
+    },
+    speOperatorId: speSelection.speOperatorId,
+    speTypeId: speSelection.speTypeId,
+    speOperatorName: speSelection.speOperator ? speSelection.speOperator.name : null,
+    speOperatorProviderName: speSelection.speOperator ? speSelection.speOperator.providerName : null,
+    speTypeName: speSelection.speType ? speSelection.speType.name : null,
+    // Frozen at issuance (D6.4 R7.3.2/R7.4.2) — see the schema comment.
+    purposeCategory: application.purposeCategory,
+    purposeCategories: application.purposeCategories,
+    electronicHealthDataFormat: application.electronicHealthDataFormat,
+  };
+}
+
+async function createPermitWithRetry(params: {
+  application: ApplicationWithRelations;
+  year: number;
+  issuedAt: Date;
+  validFrom: Date;
+  validUntil: Date;
+  grantedDatasets: GrantedDatasetGroup[];
+  speSelection: SpeSelection;
+  researcher: ResearcherInfo | null;
+  outputController: OutputControllerInfo;
+}) {
+  const { application, speSelection } = params;
+  const MAX_ATTEMPTS = 5;
+  for (let attempt = 1; ; attempt++) {
+    const permitNumber = await generatePermitNumber(params.year);
+    const signature = await signPermit({
+      permitNumber,
+      version: 1,
+      applicationId: application.id,
+      issuedAt: params.issuedAt,
+      validFrom: params.validFrom,
+      validUntil: params.validUntil,
+      grantedDatasets: params.grantedDatasets,
+      speOperator: speSelection.speOperator || null,
+      // Name/email stay in the AuthorizedPerson DB row only (below) — the
+      // signed/printed permit itself carries just organisation + identity.
+      researcher: params.researcher ? { affiliation: params.researcher.affiliation, did: params.researcher.did } : null,
+      outputController: { affiliation: params.outputController.affiliation, did: params.outputController.did },
+    });
+    try {
+      return await prisma.dataPermit.create({
+        data: buildPermitCreateData(permitNumber, application, params, signature, speSelection),
+      });
+    } catch (e) {
+      const isUniqueClash =
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === 'P2002' &&
+        (e.meta?.target as string[] | undefined)?.includes('permitNumber');
+      if (isUniqueClash && attempt < MAX_ATTEMPTS) continue;
+      throw e;
+    }
+  }
+}
+
+/**
+ * Individual creates (not createMany) so each GrantedDataset can nest its own
+ * StorageLocation — the same reference/writerDid already signed above.
+ */
+async function persistGrantedDatasetsAndAuthorizedPersons(
+  permit: { id: string },
+  application: ApplicationWithRelations,
+  storageLocationsByDataset: StorageLocationsByDataset,
+  researcher: ResearcherInfo | null,
+  outputController: OutputControllerInfo,
+  issuedByUserId: string,
+) {
+  for (const rd of application.requestedDatasets) {
+    const storageLocation = storageLocationsByDataset.get(rd.id);
+    await prisma.grantedDataset.create({
+      data: {
+        permitId: permit.id,
+        // Frozen at issuance — never re-derived from the registry later.
+        dataHolderName: rd.dataHolder?.name ?? 'Unknown',
+        dataHolderId: rd.dataHolderId,
+        name: rd.name,
+        url: rd.url,
+        datasetId: rd.datasetId,
+        catalogId: rd.catalogId,
+        distributions: rd.distributions ?? undefined,
+        ...(storageLocation
+          ? {
+              storageLocation: {
+                create: {
+                  reference: storageLocation.reference,
+                  writerDid: storageLocation.writerDid,
+                  authorizedById: issuedByUserId,
+                },
+              },
+            }
+          : {}),
+      },
+    });
+  }
+
+  await prisma.authorizedPerson.createMany({
+    data: [
+      ...(researcher
+        ? [{ permitId: permit.id, name: researcher.name, affiliation: researcher.affiliation, role: 'RESEARCHER' as const, did: researcher.did }]
+        : []),
+      {
+        permitId: permit.id,
+        name: outputController.name,
+        affiliation: outputController.affiliation,
+        role: 'OUTPUT_CONTROLLER' as const,
+        did: outputController.did,
+      },
+    ],
+  });
 }
 
 /**
@@ -78,19 +311,8 @@ export async function POST(req: NextRequest) {
     const issuedAt = new Date();
     const validFrom = new Date(body.validFrom);
     const validUntil = new Date(body.validUntil);
-    // One storage location per requested dataset, generated once here so the
-    // exact reference/writerDid signed below (via grantedDatasets) is what
-    // actually gets persisted afterward (see the GrantedDataset creation
-    // loop) — not regenerated and potentially drifting from the signature.
-    const storageLocationsByDataset = new Map(
-      application.requestedDatasets.map((rd) => [
-        rd.id,
-        {
-          reference: `urn:objectstore:bucket:${slugify(rd.dataHolder?.name ?? 'holder')}-${slugify(rd.name)}-${rd.id.slice(-8)}`,
-          writerDid: generateSampleDid(),
-        },
-      ]),
-    );
+
+    const storageLocationsByDataset = buildStorageLocations(application.requestedDatasets);
 
     // Reshape to the flat {dataHolderName,name,url} shape groupDatasetsByHolder
     // expects — keeps signPermit()'s input byte-for-byte identical regardless
@@ -107,18 +329,7 @@ export async function POST(req: NextRequest) {
       })),
     );
 
-    // The researcher — sourced from the application's own Section 5 fields,
-    // mirroring the form's own alternation between "person responsible for
-    // the research" and "person responsible for data use."
-    const researcherName = application.personResearchName ?? application.personResponsibleName;
-    const researcherAffiliation = application.personResearchAffiliation ?? application.personResponsibleAffiliation;
-    const researcher = researcherName
-      ? {
-          name: researcherName,
-          affiliation: researcherAffiliation ?? '',
-          did: generateSampleDid(),
-        }
-      : null;
+    const researcher = resolveResearcher(application);
 
     // Selected by HDAB at the moment of issuance — can be HDAB staff, a data
     // holder's employee, or an external expert, so this is always
@@ -130,141 +341,28 @@ export async function POST(req: NextRequest) {
       did: generateSampleDid(),
     };
 
-    const speOperatorId = application.feeEstimate?.speOperatorId ?? null;
-    const speTypeId = application.feeEstimate?.speTypeId ?? null;
-    const estimateLineItems = application.feeEstimate?.lineItems ?? [];
-    const totalAmount = estimateLineItems.reduce((sum, item) => sum + Number(item.amount), 0);
+    const speSelection = await resolveSpeSelection(application.feeEstimate);
 
-    // Resolved once here and frozen into both the signature and the permit
-    // row itself (speOperatorName/etc.) — see the schema comment on those
-    // columns for why this can't just be a live join at verify time.
-    const [speOperatorRow, speTypeRow] = await Promise.all([
-      speOperatorId
-        ? prisma.speOperator.findUnique({
-            where: { id: speOperatorId },
-            include: { speProvider: { select: { name: true } } },
-          })
-        : null,
-      speTypeId
-        ? prisma.speType.findUnique({ where: { id: speTypeId } })
-        : null,
-    ]);
-    const speType = speTypeRow && { id: speTypeRow.id, name: speTypeRow.name };
-    const speOperator = speOperatorRow && {
-      id: speOperatorRow.id,
-      name: speOperatorRow.name,
-      providerName: speOperatorRow.speProvider?.name ?? null,
-      type: speType || null,
-    };
-
-    let permit;
-    const MAX_ATTEMPTS = 5;
-    for (let attempt = 1; ; attempt++) {
-      const permitNumber = await generatePermitNumber(year);
-      const { signature, signedAt, signingKeyId } = await signPermit({
-        permitNumber,
-        version: 1,
-        applicationId: body.applicationId,
-        issuedAt,
-        validFrom,
-        validUntil,
-        grantedDatasets,
-        speOperator: speOperator || null,
-        // Name/email stay in the AuthorizedPerson DB row only (below) — the
-        // signed/printed permit itself carries just organisation + identity.
-        researcher: researcher ? { affiliation: researcher.affiliation, did: researcher.did } : null,
-        outputController: { affiliation: outputController.affiliation, did: outputController.did },
-      });
-      try {
-        permit = await prisma.dataPermit.create({
-          data: {
-            permitNumber,
-            applicationId: body.applicationId,
-            status: 'GRANTED',
-            issuedAt,
-            validFrom,
-            validUntil,
-            signature,
-            signedAt,
-            signingKeyId,
-            totalAmount: estimateLineItems.length > 0 ? totalAmount : null,
-            lineItems: {
-              create: estimateLineItems.map((item) => ({
-                category: item.category,
-                glCode: item.glCode,
-                description: item.description,
-                amount: item.amount,
-                currency: item.currency,
-                applicationId: body.applicationId,
-                dataHolderId: item.dataHolderId,
-              })),
-            },
-            speOperatorId,
-            speTypeId,
-            speOperatorName: speOperator ? speOperator.name : null,
-            speOperatorProviderName: speOperator ? speOperator.providerName : null,
-            speTypeName: speType ? speType.name : null,
-            // Frozen at issuance (D6.4 R7.3.2/R7.4.2) — see the schema comment.
-            purposeCategory: application.purposeCategory,
-            purposeCategories: application.purposeCategories,
-            electronicHealthDataFormat: application.electronicHealthDataFormat,
-          },
-        });
-        break;
-      } catch (e) {
-        const isUniqueClash =
-          e instanceof Prisma.PrismaClientKnownRequestError &&
-          e.code === 'P2002' &&
-          (e.meta?.target as string[] | undefined)?.includes('permitNumber');
-        if (isUniqueClash && attempt < MAX_ATTEMPTS) continue;
-        throw e;
-      }
-    }
-
-    // Individual creates (not createMany) so each GrantedDataset can nest its
-    // own StorageLocation — the same reference/writerDid already signed above.
-    for (const rd of application.requestedDatasets) {
-      const storageLocation = storageLocationsByDataset.get(rd.id);
-      await prisma.grantedDataset.create({
-        data: {
-          permitId: permit.id,
-          // Frozen at issuance — never re-derived from the registry later.
-          dataHolderName: rd.dataHolder?.name ?? 'Unknown',
-          dataHolderId: rd.dataHolderId,
-          name: rd.name,
-          url: rd.url,
-          datasetId: rd.datasetId,
-          catalogId: rd.catalogId,
-          distributions: rd.distributions ?? undefined,
-          ...(storageLocation
-            ? {
-                storageLocation: {
-                  create: {
-                    reference: storageLocation.reference,
-                    writerDid: storageLocation.writerDid,
-                    authorizedById: body.issuedByUserId,
-                  },
-                },
-              }
-            : {}),
-        },
-      });
-    }
-
-    await prisma.authorizedPerson.createMany({
-      data: [
-        ...(researcher
-          ? [{ permitId: permit.id, name: researcher.name, affiliation: researcher.affiliation, role: 'RESEARCHER' as const, did: researcher.did }]
-          : []),
-        {
-          permitId: permit.id,
-          name: outputController.name,
-          affiliation: outputController.affiliation,
-          role: 'OUTPUT_CONTROLLER' as const,
-          did: outputController.did,
-        },
-      ],
+    const permit = await createPermitWithRetry({
+      application,
+      year,
+      issuedAt,
+      validFrom,
+      validUntil,
+      grantedDatasets,
+      speSelection,
+      researcher,
+      outputController,
     });
+
+    await persistGrantedDatasetsAndAuthorizedPersons(
+      permit,
+      application,
+      storageLocationsByDataset,
+      researcher,
+      outputController,
+      body.issuedByUserId,
+    );
 
     await prisma.dataPermitLog.create({
       data: {

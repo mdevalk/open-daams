@@ -2,7 +2,7 @@ import { PDFDocument, rgb, StandardFonts, PDFFont, PDFPage } from 'pdf-lib';
 import { DataPermitStatus, FinancialLineCategory } from '@prisma/client';
 import { APP_NAME } from './branding';
 import { formatPermitId } from './permit';
-import { buildDigitalPermitDocument, groupDatasetsByHolder } from './permit-signing';
+import { buildDigitalPermitDocument, groupDatasetsByHolder, type DatasetEntry, type GrantedDatasetGroup } from './permit-signing';
 import { formatDateNumeric } from './utils';
 import { LINE_CATEGORY_META } from './financial-line-items';
 
@@ -36,7 +36,7 @@ const WINANSI_REPLACEMENTS: Record<string, string> = {
   '≥': '>=', '≤': '<=', '≠': '!=',
   '‘': "'", '’': "'", '“': '"', '”': '"',
   '–': '-', '—': '-', '…': '...', '•': '-',
-  ' ': ' ',
+  ' ': ' ',
 };
 
 // Built from WINANSI_REPLACEMENTS' own keys so every mapped character is
@@ -287,6 +287,18 @@ const PURPOSE_LABELS: Record<string, string> = {
   CARE_IMPROVEMENT: 'verbetering van zorgverlening en behandeling (Art. 53(1)(f) EHDS)',
 };
 
+// Derived once per document and threaded through every section function below
+// rather than recomputed in each — keeps every section's isDataRequest/
+// isRevoked/etc. reading from a single source of truth.
+type Ctx = {
+  app: PermitPdfData['application'];
+  isRevoked: boolean;
+  isAmendment: boolean;
+  isDataRequest: boolean;
+  permitId: string;
+  statusLabel: string;
+};
+
 export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Array> {
   const doc = new Doc();
   await doc.init();
@@ -296,17 +308,40 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
   doc.pdfDoc.setSubject('EHDS Dataverwerkingsvergunning');
   doc.pdfDoc.setCreationDate(new Date());
 
-  const app = permit.application;
-  const isRevoked = permit.status === 'REVOKED';
-  const isAmendment = !!permit.previousPermit;
-  const isDataRequest = app?.type === 'DATA_REQUEST';
-  const statusLabel = STATUS_NL[permit.status] ?? permit.status;
+  const ctx: Ctx = {
+    app: permit.application,
+    isRevoked: permit.status === 'REVOKED',
+    isAmendment: !!permit.previousPermit,
+    isDataRequest: permit.application?.type === 'DATA_REQUEST',
+    permitId,
+    statusLabel: STATUS_NL[permit.status] ?? permit.status,
+  };
 
   doc.newPage();
+  renderMasthead(doc, permit, ctx);
+  renderIssuingAuthoritySection(doc);
+  renderApplicantSection(doc, permit, ctx);
+  renderReferenceSection(doc, permit, ctx);
+  renderSubjectSection(doc, ctx);
+  renderDecisionSection(doc, permit, ctx);
+  renderJustificationsSection(doc, permit, ctx);
+  renderFeesSection(doc, permit, ctx);
+  renderApplicableLegislationSection(doc);
+  renderRedressSection(doc);
+  renderAppendicesSection(doc);
+  await renderDigitalSignatureSection(doc, permit, ctx);
 
-  // Running header, per Annex 9 top block — the title bar carries the
-  // template's own title ("Data permit decision" / "Dataverwerkingsvergunning"),
-  // not a generic placeholder.
+  doc.footer();
+
+  return doc.pdfDoc.save();
+}
+
+// Running header, per Annex 9 top block — the title bar carries the
+// template's own title ("Data permit decision" / "Dataverwerkingsvergunning"),
+// not a generic placeholder.
+function renderMasthead(doc: Doc, permit: PermitPdfData, ctx: Ctx) {
+  const { app, isRevoked, isDataRequest, permitId, statusLabel } = ctx;
+
   doc.rect(0, 0, PW, 62, C.darkBlue);
   doc.text(
     isDataRequest ? 'Besluit op gezondheidsgegevensverzoek' : 'Dataverwerkingsvergunning',
@@ -327,14 +362,17 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
     { size: 8, color: C.gray, font: doc.italic },
   );
   doc.spacer(6);
+}
 
-  // 1. Issuing authority
+function renderIssuingAuthoritySection(doc: Doc) {
   doc.heading('1', 'AFGEVENDE AUTORITEIT');
   doc.field('Naam', 'Health Data Access Body Nederland (HDAB-NL)');
   doc.field('Contactgegevens', 'info@hdab.nl');
   doc.spacer(6);
+}
 
-  // 2. Health data user / applicant
+function renderApplicantSection(doc: Doc, permit: PermitPdfData, ctx: Ctx) {
+  const { app } = ctx;
   doc.heading('2', 'GEZONDHEIDSGEGEVENSGEBRUIKER / AANVRAGER');
   if (app) {
     doc.field('Type gebruiker', 'Rechtspersoon (met vertegenwoordiger)');
@@ -347,8 +385,10 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
     doc.field('Verwerkingsverantwoordelijke', app.applicant.organisation);
   }
   doc.spacer(4);
+}
 
-  // 3. Reference
+function renderReferenceSection(doc: Doc, permit: PermitPdfData, ctx: Ctx) {
+  const { app, permitId } = ctx;
   doc.heading('3', 'REFERENTIE');
   doc.field('Projecttitel', app?.title ?? '—');
   doc.field('Vergunningsnummer / dossiernummer', permitId);
@@ -357,8 +397,10 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
     doc.field('Eerdere vergunning', formatPermitId(permit.previousPermit.permitNumber, permit.previousPermit.version));
   }
   doc.spacer(4);
+}
 
-  // 4. Subject
+function renderSubjectSection(doc: Doc, ctx: Ctx) {
+  const { app, isDataRequest } = ctx;
   doc.heading('4', 'ONDERWERP');
   doc.paragraph(
     `De gezondheidsgegevensgebruiker heeft bij HDAB-NL een aanvraag ingediend voor het project ` +
@@ -371,60 +413,83 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
     doc.paragraph(app.projectDescription);
   }
   doc.spacer(4);
+}
 
-  // 5. Decision
+function renderDecisionSection(doc: Doc, permit: PermitPdfData, ctx: Ctx) {
   doc.heading('5', 'BESLUIT');
-  if (isRevoked) {
-    doc.paragraph(
-      'Op grond van de EHDS trekt HDAB-NL de aan de gezondheidsgegevensgebruiker verleende vergunning in.',
-      { color: C.redText },
-    );
-    doc.field('Datum intrekking', fmt(permit.revocationAt));
-    if (permit.revocationReason) {
-      doc.spacer(6);
-      doc.paragraph(`Reden van intrekking: ${permit.revocationReason}`, { color: C.redText });
-    }
+  if (ctx.isRevoked) {
+    renderRevocationDecision(doc, permit);
   } else {
-    doc.paragraph(
-      `Op grond van de EHDS verleent HDAB-NL de gezondheidsgegevensgebruiker ${isDataRequest ? 'de goedkeuring om een antwoord te ontvangen' : 'de vergunning om de in dit besluit bedoelde gegevens te verwerken'}, ` +
-      `overeenkomstig artikel ${isDataRequest ? '69' : '68, lid 3,'} EHDS. ${isDataRequest ? 'De goedkeuring' : 'De vergunning'} wordt verleend voor het project ` +
-      `zoals beschreven in de aanvraag. HDAB-NL is van oordeel dat is voldaan aan de vereisten van artikel ` +
-      `${isDataRequest ? '69' : '68, lid 1,'} EHDS en dat de risico's bedoeld in artikel 68, lid 2, voldoende zijn beperkt. ` +
-      `De gevraagde gegevens zijn bovendien noodzakelijk, adequaat en evenredig voor de in de aanvraag ` +
-      `beschreven doeleinden.`,
-    );
-    if (app?.decisionSummary) {
-      doc.spacer(6);
-      doc.paragraph(app.decisionSummary);
-    }
-    doc.spacer(8);
-    if (isAmendment) {
-      doc.paragraph('Deze vergunning betreft een wijziging (amendement) van een eerder verleende vergunning.', { color: C.gray, size: 8 });
-      doc.spacer(4);
-    }
-    doc.field('Toegangsperiode (SPE)', `${fmt(permit.validFrom)} — ${fmt(permit.validUntil)}`);
-    doc.field('Bewaartermijn in de SPE', `Verwijdering uiterlijk 6 maanden na ${fmt(permit.validUntil)} (Art. 68, lid 12, EHDS)`);
-    if (app?.dataStartDate || app?.dataEndDate) {
-      doc.field('Periode brongegevens', `${fmt(app?.dataStartDate)} — ${fmt(app?.dataEndDate)}`);
-    }
-
-    doc.spacer(6);
-    doc.placeholder('Handelsgeheimen / intellectuele-eigendomsrechten: nog niet geregistreerd — vul aan indien van toepassing (Art. 52 EHDS)');
-    doc.placeholder('Uitzondering opt-out mechanisme: nog niet geregistreerd — vul aan indien van toepassing (Art. 71, lid 4, EHDS)');
-    if (app?.isCrossBorder) {
-      doc.spacer(4);
-      doc.paragraph(
-        `Dit betreft een grensoverschrijdende aanvraag. Gegevens worden mede verwerkt in samenwerking met ` +
-        `de bevoegde autoriteit(en) van: ${app.dataProcessingCountry ?? '—'} (Art. 76 EHDS).`,
-      );
-      doc.placeholder('Wederzijdse erkenning van een door een andere HDAB verleende vergunning: nog niet geregistreerd');
-    }
+    renderGrantDecision(doc, permit, ctx);
   }
   doc.spacer(4);
+}
 
-  // 6. Justifications
+function renderRevocationDecision(doc: Doc, permit: PermitPdfData) {
+  doc.paragraph(
+    'Op grond van de EHDS trekt HDAB-NL de aan de gezondheidsgegevensgebruiker verleende vergunning in.',
+    { color: C.redText },
+  );
+  doc.field('Datum intrekking', fmt(permit.revocationAt));
+  if (permit.revocationReason) {
+    doc.spacer(6);
+    doc.paragraph(`Reden van intrekking: ${permit.revocationReason}`, { color: C.redText });
+  }
+}
+
+function renderGrantDecision(doc: Doc, permit: PermitPdfData, ctx: Ctx) {
+  const { app, isDataRequest, isAmendment } = ctx;
+  doc.paragraph(
+    `Op grond van de EHDS verleent HDAB-NL de gezondheidsgegevensgebruiker ${isDataRequest ? 'de goedkeuring om een antwoord te ontvangen' : 'de vergunning om de in dit besluit bedoelde gegevens te verwerken'}, ` +
+    `overeenkomstig artikel ${isDataRequest ? '69' : '68, lid 3,'} EHDS. ${isDataRequest ? 'De goedkeuring' : 'De vergunning'} wordt verleend voor het project ` +
+    `zoals beschreven in de aanvraag. HDAB-NL is van oordeel dat is voldaan aan de vereisten van artikel ` +
+    `${isDataRequest ? '69' : '68, lid 1,'} EHDS en dat de risico's bedoeld in artikel 68, lid 2, voldoende zijn beperkt. ` +
+    `De gevraagde gegevens zijn bovendien noodzakelijk, adequaat en evenredig voor de in de aanvraag ` +
+    `beschreven doeleinden.`,
+  );
+  if (app?.decisionSummary) {
+    doc.spacer(6);
+    doc.paragraph(app.decisionSummary);
+  }
+  doc.spacer(8);
+  if (isAmendment) {
+    doc.paragraph('Deze vergunning betreft een wijziging (amendement) van een eerder verleende vergunning.', { color: C.gray, size: 8 });
+    doc.spacer(4);
+  }
+  doc.field('Toegangsperiode (SPE)', `${fmt(permit.validFrom)} — ${fmt(permit.validUntil)}`);
+  doc.field('Bewaartermijn in de SPE', `Verwijdering uiterlijk 6 maanden na ${fmt(permit.validUntil)} (Art. 68, lid 12, EHDS)`);
+  if (app?.dataStartDate || app?.dataEndDate) {
+    doc.field('Periode brongegevens', `${fmt(app?.dataStartDate)} — ${fmt(app?.dataEndDate)}`);
+  }
+
+  doc.spacer(6);
+  doc.placeholder('Handelsgeheimen / intellectuele-eigendomsrechten: nog niet geregistreerd — vul aan indien van toepassing (Art. 52 EHDS)');
+  doc.placeholder('Uitzondering opt-out mechanisme: nog niet geregistreerd — vul aan indien van toepassing (Art. 71, lid 4, EHDS)');
+  if (app?.isCrossBorder) {
+    doc.spacer(4);
+    doc.paragraph(
+      `Dit betreft een grensoverschrijdende aanvraag. Gegevens worden mede verwerkt in samenwerking met ` +
+      `de bevoegde autoriteit(en) van: ${app.dataProcessingCountry ?? '—'} (Art. 76 EHDS).`,
+    );
+    doc.placeholder('Wederzijdse erkenning van een door een andere HDAB verleende vergunning: nog niet geregistreerd');
+  }
+}
+
+function renderJustificationsSection(doc: Doc, permit: PermitPdfData, ctx: Ctx) {
   doc.heading('6', 'MOTIVERING VAN HET BESLUIT');
+  renderCompetenceSubsection(doc);
+  renderStatementsSubsection(doc, ctx);
+  renderPurposeSubsection(doc, permit, ctx);
+  renderDataProvidedSubsection(doc, permit, ctx);
+  renderDataPreparationSubsection(doc);
+  if (!ctx.isDataRequest) {
+    renderSpeSubsection(doc);
+  }
+  renderAnonymousResultsSubsection(doc, ctx);
+  renderAuthorizedPersonsSubsection(doc, permit);
+}
 
+function renderCompetenceSubsection(doc: Doc) {
   doc.subheading('6.1  Bevoegdheid van HDAB-NL');
   doc.paragraph(
     'HDAB-NL is de door Nederland aangewezen bevoegde autoriteit voor de behandeling van ' +
@@ -434,7 +499,10 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
   doc.spacer(4);
   doc.placeholder('Indien beoordeeld door een trusted health data holder (Art. 72, lid 2 en 4, EHDS): naam, verwijzingsbesluit en datum van het advies nog niet geregistreerd');
   doc.spacer(6);
+}
 
+function renderStatementsSubsection(doc: Doc, ctx: Ctx) {
+  const { app } = ctx;
   doc.subheading('6.2  Ontvangen verklaringen');
   if (app?.ethicalReviewRequired && app.ethicalReviewStatus && app.ethicalReviewStatus !== 'NOT_REQUIRED') {
     const ETHICAL_STATUS_NL: Record<string, string> = {
@@ -452,7 +520,10 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
   doc.spacer(4);
   doc.placeholder('Overzicht van overige relevante vergunningen e.d. (afgevende autoriteit, dossiernummer, datum van afgifte) — nog niet geregistreerd in DAAMS');
   doc.spacer(6);
+}
 
+function renderPurposeSubsection(doc: Doc, permit: PermitPdfData, ctx: Ctx) {
+  const { app, isDataRequest } = ctx;
   doc.subheading('6.3  Beschrijving van het doel van gebruik');
   const purposeText = permit.purposeCategory
     ? (PURPOSE_LABELS[permit.purposeCategory] ?? permit.purposeCategory)
@@ -465,28 +536,50 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
   doc.spacer(4);
   doc.paragraph('De reikwijdte en doelstellingen van het project zijn getoetst en in lijn bevonden met de EHDS.');
   doc.spacer(6);
+}
 
+function renderDataProvidedSubsection(doc: Doc, permit: PermitPdfData, ctx: Ctx) {
+  const { app, isDataRequest } = ctx;
   doc.subheading('6.4  Gegevens die op grond van de vergunning worden verstrekt');
   for (const group of groupDatasetsByHolder(permit.grantedDatasets ?? [])) {
-    doc.paragraph(group.dataHolderName, { size: 8.5, color: C.darkBlue, font: doc.bold });
-    for (const dataset of group.datasets) {
-      const label = dataset.url ? `${dataset.name} — ${dataset.url}` : dataset.name;
-      const idBits = [
-        dataset.datasetId ? `dataset: ${dataset.datasetId}` : null,
-        dataset.catalogId ? `catalogus: ${dataset.catalogId}` : null,
-        dataset.distributions.length > 0
-          ? `distributies: ${dataset.distributions.map((d) => d.distributionId).join(', ')}`
-          : null,
-      ]
-        .filter(Boolean)
-        .join(' | ');
-      doc.bullet(idBits ? `${label} (${idBits})` : label);
-      if (dataset.storageLocation) {
-        doc.field('Opslaglocatie', dataset.storageLocation.reference);
-        doc.field('Identiteit voor schrijftoegang', dataset.storageLocation.writerDid);
-      }
-    }
+    renderDatasetGroup(doc, group);
   }
+  renderRequestedDataFields(doc, app);
+  doc.spacer(4);
+  doc.paragraph(
+    `De gegevens worden verstrekt in ${isDataRequest ? 'geanonimiseerd, geaggregeerd statistisch' : 'geanonimiseerd of gepseudonimiseerd individueel-niveau'} formaat.`,
+  );
+  doc.spacer(4);
+  doc.paragraph('Een gedetailleerde beschrijving van de op grond van deze vergunning verstrekte gegevens is opgenomen in bijlage 1.', { size: 8, color: C.gray });
+  doc.spacer(6);
+}
+
+function renderDatasetGroup(doc: Doc, group: GrantedDatasetGroup) {
+  doc.paragraph(group.dataHolderName, { size: 8.5, color: C.darkBlue, font: doc.bold });
+  for (const dataset of group.datasets) {
+    renderDatasetEntry(doc, dataset);
+  }
+}
+
+function renderDatasetEntry(doc: Doc, dataset: DatasetEntry) {
+  const label = dataset.url ? `${dataset.name} — ${dataset.url}` : dataset.name;
+  const idBits = [
+    dataset.datasetId ? `dataset: ${dataset.datasetId}` : null,
+    dataset.catalogId ? `catalogus: ${dataset.catalogId}` : null,
+    dataset.distributions.length > 0
+      ? `distributies: ${dataset.distributions.map((d) => d.distributionId).join(', ')}`
+      : null,
+  ]
+    .filter(Boolean)
+    .join(' | ');
+  doc.bullet(idBits ? `${label} (${idBits})` : label);
+  if (dataset.storageLocation) {
+    doc.field('Opslaglocatie', dataset.storageLocation.reference);
+    doc.field('Identiteit voor schrijftoegang', dataset.storageLocation.writerDid);
+  }
+}
+
+function renderRequestedDataFields(doc: Doc, app: Ctx['app']) {
   if (app?.requestedVariables) {
     doc.field('Gevraagde variabelen', app.requestedVariables);
   }
@@ -502,192 +595,198 @@ export async function generatePermitPdf(permit: PermitPdfData): Promise<Uint8Arr
   if (app?.dataProcessingCountry) {
     doc.field('Land van gegevensverwerking', app.dataProcessingCountry);
   }
-  doc.spacer(4);
-  doc.paragraph(
-    `De gegevens worden verstrekt in ${isDataRequest ? 'geanonimiseerd, geaggregeerd statistisch' : 'geanonimiseerd of gepseudonimiseerd individueel-niveau'} formaat.`,
-  );
-  doc.spacer(4);
-  doc.paragraph('Een gedetailleerde beschrijving van de op grond van deze vergunning verstrekte gegevens is opgenomen in bijlage 1.', { size: 8, color: C.gray });
-  doc.spacer(6);
+}
 
+function renderDataPreparationSubsection(doc: Doc) {
   doc.subheading('6.5  Voorbereiding en verstrekking van de gegevens');
   doc.paragraph(
     'HDAB-NL combineert, bewerkt en anonimiseert/pseudonimiseert de gegevens voorafgaand aan verstrekking.',
   );
   doc.placeholder('Indien voorbereiding is uitgevoerd door een trusted health data holder (Art. 72, lid 6, EHDS): naam nog niet geregistreerd');
   doc.spacer(6);
+}
 
-  if (!isDataRequest) {
-    doc.subheading('6.6  Beveiligde verwerkingsomgeving');
-    doc.paragraph(
-      'De op grond van deze vergunning verstrekte gegevens worden uitsluitend beschikbaar gesteld in ' +
-      'een beveiligde verwerkingsomgeving (Secure Processing Environment, SPE) die voldoet aan de ' +
-      'technische en organisatorische eisen van artikel 73 EHDS.',
-    );
-    doc.spacer(4);
-    doc.placeholder('Naam van de toegewezen SPE en technische kenmerken/tools — nog niet geregistreerd in DAAMS');
-    doc.spacer(4);
-    doc.paragraph(
-      'De gezondheidsgegevensgebruiker is verantwoordelijk voor naleving van de EHDS-voorwaarden en ' +
-      'toepasselijke wetgeving (o.a. AVG), en voor het voorkomen van verboden gebruik zoals ' +
-      're-identificatie of ongeautoriseerde doorgifte van gegevens. Alleen anonieme resultaten mogen ' +
-      'uit de SPE worden geëxporteerd.',
-    );
-    doc.spacer(6);
-  }
+function renderSpeSubsection(doc: Doc) {
+  doc.subheading('6.6  Beveiligde verwerkingsomgeving');
+  doc.paragraph(
+    'De op grond van deze vergunning verstrekte gegevens worden uitsluitend beschikbaar gesteld in ' +
+    'een beveiligde verwerkingsomgeving (Secure Processing Environment, SPE) die voldoet aan de ' +
+    'technische en organisatorische eisen van artikel 73 EHDS.',
+  );
+  doc.spacer(4);
+  doc.placeholder('Naam van de toegewezen SPE en technische kenmerken/tools — nog niet geregistreerd in DAAMS');
+  doc.spacer(4);
+  doc.paragraph(
+    'De gezondheidsgegevensgebruiker is verantwoordelijk voor naleving van de EHDS-voorwaarden en ' +
+    'toepasselijke wetgeving (o.a. AVG), en voor het voorkomen van verboden gebruik zoals ' +
+    're-identificatie of ongeautoriseerde doorgifte van gegevens. Alleen anonieme resultaten mogen ' +
+    'uit de SPE worden geëxporteerd.',
+  );
+  doc.spacer(6);
+}
 
+function renderAnonymousResultsSubsection(doc: Doc, ctx: Ctx) {
   doc.subheading('6.7  Totstandkoming van anonieme resultaten');
   doc.paragraph(
-    isDataRequest
+    ctx.isDataRequest
       ? 'HDAB-NL produceert de geaggregeerde statistische gegevens conform het bij de aanvraag ingediende tabulatieplan. De gezondheidsgegevensgebruiker heeft geen toegang tot de onderliggende individuele gegevens.'
       : 'Uitsluitend geaggregeerde en geanonimiseerde resultaten mogen door de gezondheidsgegevensgebruiker uit de SPE worden geëxporteerd, conform de richtlijnen van HDAB-NL voor disclosure control.',
   );
   doc.spacer(6);
+}
 
+function renderAuthorizedPersonsSubsection(doc: Doc, permit: PermitPdfData) {
   doc.subheading('6.8  Personen die gemachtigd zijn de gegevens te verwerken');
   if (permit.authorizedPersons && permit.authorizedPersons.length > 0) {
-    const ROLE_NL: Record<string, string> = { RESEARCHER: 'Onderzoeker', OUTPUT_CONTROLLER: 'Uitvoercontroleur' };
     for (const person of permit.authorizedPersons) {
-      if (person.role) {
-        // Fixed at issuance, signed into the permit — organisation, role and
-        // identity only, never the individual's name (see
-        // SignableAuthorizedPerson in permit-signing.ts).
-        const roleLabel = ROLE_NL[person.role] ?? person.role;
-        doc.bullet(`${person.affiliation} (${roleLabel})`);
-        if (person.did) doc.field('Identiteit', person.did);
-      } else {
-        doc.bullet(`${person.name} — ${person.affiliation}`);
-        if (person.did) doc.field('Identiteit', person.did);
-      }
+      renderAuthorizedPersonEntry(doc, person);
     }
   } else {
     doc.placeholder('Lijst van gemachtigde personen (naam, affiliatie, e-mailadres) — nog niet geregistreerd in DAAMS');
   }
   doc.spacer(4);
+}
 
-  // 7. Fees
+function renderAuthorizedPersonEntry(doc: Doc, person: NonNullable<PermitPdfData['authorizedPersons']>[number]) {
+  const ROLE_NL: Record<string, string> = { RESEARCHER: 'Onderzoeker', OUTPUT_CONTROLLER: 'Uitvoercontroleur' };
+  if (person.role) {
+    // Fixed at issuance, signed into the permit — organisation, role and
+    // identity only, never the individual's name (see
+    // SignableAuthorizedPerson in permit-signing.ts).
+    const roleLabel = ROLE_NL[person.role] ?? person.role;
+    doc.bullet(`${person.affiliation} (${roleLabel})`);
+    if (person.did) doc.field('Identiteit', person.did);
+  } else {
+    doc.bullet(`${person.name} — ${person.affiliation}`);
+    if (person.did) doc.field('Identiteit', person.did);
+  }
+}
+
+function renderFeesSection(doc: Doc, permit: PermitPdfData, ctx: Ctx) {
+  const { isDataRequest } = ctx;
   doc.heading('7', 'KOSTEN VOOR VERGUNNING EN GEGEVENSVERWERKING');
-  {
-    const currency = permit.currency ?? 'EUR';
-    const lineItems = (permit.lineItems ?? []).filter(
-      (item) => !isDataRequest || (item.category !== 'SPE_SETUP' && item.category !== 'SPE_USAGE'),
-    );
+  const currency = permit.currency ?? 'EUR';
+  const lineItems = (permit.lineItems ?? []).filter(
+    (item) => !isDataRequest || (item.category !== 'SPE_SETUP' && item.category !== 'SPE_USAGE'),
+  );
 
-    if (lineItems.length > 0) {
-      doc.paragraph(`Kosten worden vermeld in ${currency}, conform artikel 62 EHDS.`, { size: 8, color: C.gray });
-      doc.spacer(4);
-      let total = 0;
-      for (const item of lineItems) {
-        const formatted = fmtMoney(item.amount, currency) ?? '—';
-        total += Number(item.amount);
-        const label = item.description
-          ? `${LINE_CATEGORY_META[item.category].label} — ${item.description}`
-          : LINE_CATEGORY_META[item.category].label;
-        doc.field(label, formatted);
-      }
-      doc.spacer(2);
-      doc.field('Totaal', fmtMoney(total, currency) ?? '—');
-    } else {
-      doc.paragraph(`Kosten worden vermeld in ${currency}, conform artikel 62 EHDS.`, { size: 8, color: C.gray });
-      doc.spacer(4);
-      doc.bullet('Behandelkosten vergunning: mogelijk reeds voldaan bij indiening van de aanvraag');
-      doc.bullet('Kosten gegevensvoorbereiding (anonimisering, pseudonimisering, koppeling, variabelenselectie)');
-      if (!isDataRequest) {
-        doc.bullet('SPE-gebruikskosten: opstartkosten en doorlopende gebruikskosten (opslag, rekencapaciteit)');
-      }
-      doc.bullet('Aanvullende diensten (technische ondersteuning, aanpassingen aan variabelen)');
-      doc.bullet('Kosten in rekening gebracht door gegevenshouders');
-      doc.spacer(4);
-      doc.placeholder('Bedragen, betalingstermijnen en eventuele kortingen/vrijstellingen — nog niet geregistreerd in DAAMS');
+  if (lineItems.length > 0) {
+    doc.paragraph(`Kosten worden vermeld in ${currency}, conform artikel 62 EHDS.`, { size: 8, color: C.gray });
+    doc.spacer(4);
+    let total = 0;
+    for (const item of lineItems) {
+      const formatted = fmtMoney(item.amount, currency) ?? '—';
+      total += Number(item.amount);
+      const label = item.description
+        ? `${LINE_CATEGORY_META[item.category].label} — ${item.description}`
+        : LINE_CATEGORY_META[item.category].label;
+      doc.field(label, formatted);
     }
+    doc.spacer(2);
+    doc.field('Totaal', fmtMoney(total, currency) ?? '—');
+  } else {
+    doc.paragraph(`Kosten worden vermeld in ${currency}, conform artikel 62 EHDS.`, { size: 8, color: C.gray });
+    doc.spacer(4);
+    doc.bullet('Behandelkosten vergunning: mogelijk reeds voldaan bij indiening van de aanvraag');
+    doc.bullet('Kosten gegevensvoorbereiding (anonimisering, pseudonimisering, koppeling, variabelenselectie)');
+    if (!isDataRequest) {
+      doc.bullet('SPE-gebruikskosten: opstartkosten en doorlopende gebruikskosten (opslag, rekencapaciteit)');
+    }
+    doc.bullet('Aanvullende diensten (technische ondersteuning, aanpassingen aan variabelen)');
+    doc.bullet('Kosten in rekening gebracht door gegevenshouders');
+    doc.spacer(4);
+    doc.placeholder('Bedragen, betalingstermijnen en eventuele kortingen/vrijstellingen — nog niet geregistreerd in DAAMS');
   }
   doc.spacer(4);
+}
 
-  // 8. Applicable legislation
+function renderApplicableLegislationSection(doc: Doc) {
   doc.heading('8', 'TOEPASSELIJKE WETGEVING');
   doc.bullet('Verordening (EU) 2025/327 van het Europees Parlement en de Raad (EHDS-verordening)');
   doc.bullet('Verordening (EU) 2016/679 (Algemene Verordening Gegevensbescherming / GDPR)');
   doc.bullet('Nederlandse uitvoeringswetgeving EHDS');
   doc.spacer(4);
+}
 
-  // 9. Redress mechanisms
+function renderRedressSection(doc: Doc) {
   doc.heading('9', 'RECHTSMIDDELEN');
   doc.paragraph(
     'Tegen dit besluit kan bezwaar worden gemaakt en, aansluitend, beroep worden ingesteld bij de ' +
     'bevoegde Nederlandse bestuursrechter, overeenkomstig de Algemene wet bestuursrecht.',
   );
   doc.spacer(4);
+}
 
-  // 10. Appendices
+function renderAppendicesSection(doc: Doc) {
   doc.heading('10', 'BIJLAGEN');
   doc.bullet('Bijlage 1 — Gedetailleerde beschrijving van de verstrekte gegevens');
   doc.bullet('Bijlage 2 — Lijst van personen gemachtigd tot gegevensverwerking');
   doc.bullet('Bijlage 3 — Algemene voorwaarden HDAB-NL');
   doc.spacer(4);
+}
 
-  // 11. Digital signature — the PDF is a rendering of the digital permit; the
-  // signed JSON source document (D6.4 R9.1.3) is attached below.
+// The PDF is a rendering of the digital permit; the signed JSON source
+// document (D6.4 R9.1.3) is attached below.
+async function renderDigitalSignatureSection(doc: Doc, permit: PermitPdfData, ctx: Ctx) {
   if (
-    permit.signature && permit.signingKeyId && permit.signedAt &&
-    permit.issuedAt && permit.validFrom && permit.validUntil
+    !(permit.signature && permit.signingKeyId && permit.signedAt &&
+      permit.issuedAt && permit.validFrom && permit.validUntil)
   ) {
-    doc.heading('11', 'DIGITALE ONDERTEKENING');
-    doc.field('Algoritme', 'Ed25519');
-    doc.field('Sleutel-ID', permit.signingKeyId);
-    doc.field('Ondertekend op', fmt(permit.signedAt));
-    doc.field('Handtekening', `${permit.signature.slice(0, 24)}...`);
-    doc.paragraph(
-      'De volledige digitale vergunning (het ondertekende brondocument) is bijgevoegd als bijlage ' +
-      'bij dit PDF-bestand en onafhankelijk te verifieren tegen de publieke sleutel op ' +
-      '/.well-known/jwks.json.',
-      { size: 8, color: C.gray },
-    );
-
-    const researcherRow = (permit.authorizedPersons ?? []).find((p) => p.role === 'RESEARCHER');
-    const outputControllerRow = (permit.authorizedPersons ?? []).find((p) => p.role === 'OUTPUT_CONTROLLER');
-
-    const digitalPermit = buildDigitalPermitDocument({
-      permitNumber: permit.permitNumber,
-      version: permit.version,
-      applicationId: permit.applicationId,
-      issuedAt: permit.issuedAt,
-      validFrom: permit.validFrom,
-      validUntil: permit.validUntil,
-      grantedDatasets: groupDatasetsByHolder(permit.grantedDatasets ?? []),
-      status: permit.status,
-      revocationReason: permit.revocationReason ?? null,
-      revocationAt: permit.revocationAt ?? null,
-      signature: permit.signature,
-      signingKeyId: permit.signingKeyId,
-      purposeCategory: permit.purposeCategory ?? null,
-      purposeCategories: permit.purposeCategories ?? [],
-      electronicHealthDataFormat: permit.electronicHealthDataFormat ?? null,
-      speOperator: permit.speOperatorId
-        ? {
-            id: permit.speOperatorId,
-            name: permit.speOperatorName ?? '',
-            providerName: permit.speOperatorProviderName ?? null,
-            type: permit.speTypeId ? { id: permit.speTypeId, name: permit.speTypeName ?? '' } : null,
-          }
-        : null,
-      researcher: researcherRow?.did ? { affiliation: researcherRow.affiliation, did: researcherRow.did } : null,
-      outputController: outputControllerRow?.did
-        ? { affiliation: outputControllerRow.affiliation, did: outputControllerRow.did }
-        : { affiliation: '', did: '' },
-    });
-    await doc.pdfDoc.attach(
-      new TextEncoder().encode(JSON.stringify(digitalPermit, null, 2)),
-      `${formatPermitId(permit.permitNumber, permit.version)}.json`,
-      {
-        mimeType: 'application/json',
-        description: 'Digitale vergunning (ondertekend brondocument)',
-        creationDate: permit.signedAt,
-        modificationDate: permit.signedAt,
-      },
-    );
+    return;
   }
 
-  doc.footer();
+  doc.heading('11', 'DIGITALE ONDERTEKENING');
+  doc.field('Algoritme', 'Ed25519');
+  doc.field('Sleutel-ID', permit.signingKeyId);
+  doc.field('Ondertekend op', fmt(permit.signedAt));
+  doc.field('Handtekening', `${permit.signature.slice(0, 24)}...`);
+  doc.paragraph(
+    'De volledige digitale vergunning (het ondertekende brondocument) is bijgevoegd als bijlage ' +
+    'bij dit PDF-bestand en onafhankelijk te verifieren tegen de publieke sleutel op ' +
+    '/.well-known/jwks.json.',
+    { size: 8, color: C.gray },
+  );
 
-  return doc.pdfDoc.save();
+  const researcherRow = (permit.authorizedPersons ?? []).find((p) => p.role === 'RESEARCHER');
+  const outputControllerRow = (permit.authorizedPersons ?? []).find((p) => p.role === 'OUTPUT_CONTROLLER');
+
+  const digitalPermit = buildDigitalPermitDocument({
+    permitNumber: permit.permitNumber,
+    version: permit.version,
+    applicationId: permit.applicationId,
+    issuedAt: permit.issuedAt,
+    validFrom: permit.validFrom,
+    validUntil: permit.validUntil,
+    grantedDatasets: groupDatasetsByHolder(permit.grantedDatasets ?? []),
+    status: permit.status,
+    revocationReason: permit.revocationReason ?? null,
+    revocationAt: permit.revocationAt ?? null,
+    signature: permit.signature,
+    signingKeyId: permit.signingKeyId,
+    purposeCategory: permit.purposeCategory ?? null,
+    purposeCategories: permit.purposeCategories ?? [],
+    electronicHealthDataFormat: permit.electronicHealthDataFormat ?? null,
+    speOperator: permit.speOperatorId
+      ? {
+          id: permit.speOperatorId,
+          name: permit.speOperatorName ?? '',
+          providerName: permit.speOperatorProviderName ?? null,
+          type: permit.speTypeId ? { id: permit.speTypeId, name: permit.speTypeName ?? '' } : null,
+        }
+      : null,
+    researcher: researcherRow?.did ? { affiliation: researcherRow.affiliation, did: researcherRow.did } : null,
+    outputController: outputControllerRow?.did
+      ? { affiliation: outputControllerRow.affiliation, did: outputControllerRow.did }
+      : { affiliation: '', did: '' },
+  });
+  await doc.pdfDoc.attach(
+    new TextEncoder().encode(JSON.stringify(digitalPermit, null, 2)),
+    `${ctx.permitId}.json`,
+    {
+      mimeType: 'application/json',
+      description: 'Digitale vergunning (ondertekend brondocument)',
+      creationDate: permit.signedAt,
+      modificationDate: permit.signedAt,
+    },
+  );
 }

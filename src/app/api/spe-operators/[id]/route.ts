@@ -3,6 +3,63 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
 
+/** Builds the `data:` object for prisma.speOperator.update() from a PATCH body. */
+export function buildSpeOperatorUpdateData(body: Record<string, unknown>) {
+  return {
+    ...(body.name !== undefined ? { name: String(body.name).trim() } : {}),
+    ...(body.speProviderId !== undefined ? { speProviderId: body.speProviderId || null } : {}),
+    ...(body.address !== undefined ? { address: body.address || null } : {}),
+    ...(body.businessId !== undefined ? { businessId: body.businessId || null } : {}),
+    ...(body.vatNumber !== undefined ? { vatNumber: body.vatNumber || null } : {}),
+    ...(body.invoiceType !== undefined ? { invoiceType: body.invoiceType || null } : {}),
+    ...(body.invoiceReferenceNumber !== undefined
+      ? { invoiceReferenceNumber: body.invoiceReferenceNumber || null }
+      : {}),
+    ...(body.eInvoiceAddress !== undefined ? { eInvoiceAddress: body.eInvoiceAddress || null } : {}),
+    ...(body.operatorId !== undefined ? { operatorId: body.operatorId || null } : {}),
+    ...(body.peppolCode !== undefined ? { peppolCode: body.peppolCode || null } : {}),
+  };
+}
+
+/** Builds the human-readable audit-log `changes` list from a PATCH body and the post-update row. */
+export function describeSpeOperatorChanges(
+  body: Record<string, unknown>,
+  speOperator: { name: string; speProvider: { name: string } | null },
+): string[] {
+  const changes: string[] = [];
+  if (body.name !== undefined) changes.push('name');
+  if (body.contactEmail !== undefined) changes.push('contact email');
+  if (body.contactPhone !== undefined) changes.push('contact phone');
+  if (body.speProviderId !== undefined) {
+    changes.push(speOperator.speProvider ? `SPE provider set to ${speOperator.speProvider.name}` : 'SPE provider cleared');
+  }
+  if (body.address !== undefined) changes.push('address');
+  if (body.businessId !== undefined) changes.push('business ID');
+  if (body.vatNumber !== undefined) changes.push('VAT number');
+  if (body.invoiceType !== undefined) changes.push('invoice type');
+  if (body.invoiceReferenceNumber !== undefined) changes.push('invoice reference number');
+  if (body.eInvoiceAddress !== undefined) changes.push('e-invoice address');
+  if (body.operatorId !== undefined) changes.push('operator ID');
+  if (body.peppolCode !== undefined) changes.push('Peppol code');
+  return changes;
+}
+
+/** Upserts the SPE operator's PRIMARY contact when contactEmail/contactPhone are present in the body. */
+async function upsertPrimaryContact(id: string, body: Record<string, unknown>) {
+  if (body.contactEmail === undefined && body.contactPhone === undefined) return;
+
+  const existingContact = await prisma.contact.findFirst({ where: { speOperatorId: id, role: 'PRIMARY' } });
+  const contactData = {
+    ...(body.contactEmail !== undefined ? { email: (body.contactEmail as string | null | undefined) || null } : {}),
+    ...(body.contactPhone !== undefined ? { phone: (body.contactPhone as string | null | undefined) || null } : {}),
+  };
+  if (existingContact) {
+    await prisma.contact.update({ where: { id: existingContact.id }, data: contactData });
+  } else {
+    await prisma.contact.create({ data: { speOperatorId: id, role: 'PRIMARY', ...contactData } });
+  }
+}
+
 /**
  * PATCH /api/spe-operators/[id]
  * Update an SPE operator's masterdata, including which provider it
@@ -19,51 +76,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const auth = await requireRole(body.actingUserId, ['ADMIN']);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-    if (body.contactEmail !== undefined || body.contactPhone !== undefined) {
-      const existingContact = await prisma.contact.findFirst({ where: { speOperatorId: id, role: 'PRIMARY' } });
-      const contactData = {
-        ...(body.contactEmail !== undefined ? { email: body.contactEmail || null } : {}),
-        ...(body.contactPhone !== undefined ? { phone: body.contactPhone || null } : {}),
-      };
-      if (existingContact) {
-        await prisma.contact.update({ where: { id: existingContact.id }, data: contactData });
-      } else {
-        await prisma.contact.create({ data: { speOperatorId: id, role: 'PRIMARY', ...contactData } });
-      }
-    }
+    await upsertPrimaryContact(id, body);
 
     const speOperator = await prisma.speOperator.update({
       where: { id },
-      data: {
-        ...(body.name !== undefined ? { name: String(body.name).trim() } : {}),
-        ...(body.speProviderId !== undefined ? { speProviderId: body.speProviderId || null } : {}),
-        ...(body.address !== undefined ? { address: body.address || null } : {}),
-        ...(body.businessId !== undefined ? { businessId: body.businessId || null } : {}),
-        ...(body.vatNumber !== undefined ? { vatNumber: body.vatNumber || null } : {}),
-        ...(body.invoiceType !== undefined ? { invoiceType: body.invoiceType || null } : {}),
-        ...(body.invoiceReferenceNumber !== undefined ? { invoiceReferenceNumber: body.invoiceReferenceNumber || null } : {}),
-        ...(body.eInvoiceAddress !== undefined ? { eInvoiceAddress: body.eInvoiceAddress || null } : {}),
-        ...(body.operatorId !== undefined ? { operatorId: body.operatorId || null } : {}),
-        ...(body.peppolCode !== undefined ? { peppolCode: body.peppolCode || null } : {}),
-      },
+      data: buildSpeOperatorUpdateData(body),
       include: { speProvider: { select: { name: true } }, contacts: true },
     });
 
-    const changes: string[] = [];
-    if (body.name !== undefined) changes.push('name');
-    if (body.contactEmail !== undefined) changes.push('contact email');
-    if (body.contactPhone !== undefined) changes.push('contact phone');
-    if (body.speProviderId !== undefined) {
-      changes.push(speOperator.speProvider ? `SPE provider set to ${speOperator.speProvider.name}` : 'SPE provider cleared');
-    }
-    if (body.address !== undefined) changes.push('address');
-    if (body.businessId !== undefined) changes.push('business ID');
-    if (body.vatNumber !== undefined) changes.push('VAT number');
-    if (body.invoiceType !== undefined) changes.push('invoice type');
-    if (body.invoiceReferenceNumber !== undefined) changes.push('invoice reference number');
-    if (body.eInvoiceAddress !== undefined) changes.push('e-invoice address');
-    if (body.operatorId !== undefined) changes.push('operator ID');
-    if (body.peppolCode !== undefined) changes.push('Peppol code');
+    const changes = describeSpeOperatorChanges(body, speOperator);
 
     await prisma.auditLog.create({
       data: {

@@ -163,6 +163,8 @@ would need to clear, not a certification — see each document's own framing not
 - [`docs/wcag-2.1-assessment.md`](./docs/wcag-2.1-assessment.md) — WCAG 2.1 AA (accessibility)
 - [`docs/comply-or-explain-assessment.md`](./docs/comply-or-explain-assessment.md) — Forum
   Standaardisatie's "pas toe of leg uit" open-standards list
+- [`docs/sonarqube-assessment.md`](./docs/sonarqube-assessment.md) — SonarQube Community Edition
+  (code quality/maintainability, bugs, vulnerabilities, duplication)
 
 ## References
 
