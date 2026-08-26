@@ -5,8 +5,8 @@ _Snapshot date: 2026-08-26._
 This assesses the open-daams codebase against **OWASP Application Security Verification Standard
 5.0**, Level 2 (L2 is cumulative — every Level 1 requirement plus the additional Level 2 set). ASVS
 is a flat checklist of individually numbered, testable requirements across 17 chapters (V1–V17),
-not a thematic top-10 list — this doc follows [`d6.4-requirements-matrix.md`](./d6.4-requirements-matrix.md)'s
-flat-matrix format crossed with [`owasp-top10-assessment.md`](./owasp-top10-assessment.md)'s
+not a thematic top-10 list — this doc follows [`d6.4-requirements-traceability.md`](./d6.4-requirements-traceability.md)'s
+flat-list format crossed with [`owasp-top10-assessment.md`](./owasp-top10-assessment.md)'s
 narrative framing, rather than a shorter summarized pass. **253 Level 1/2 requirements** in total,
 sourced directly from OWASP's authoritative repository (`github.com/OWASP/ASVS`, `5.0/en/0x1*-0x2*`
 chapter files) rather than reconstructed from memory.
