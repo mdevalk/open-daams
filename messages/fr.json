@@ -629,6 +629,7 @@
     "tabSpeOperators": "Opérateurs SPE",
     "tabSpeProviders": "Fournisseurs SPE",
     "tabDataUsers": "Utilisateurs de données",
+    "tabContacts": "Contacts",
     "recentChanges": "Modifications récentes",
     "noRecentChanges": "Aucune modification pour l'instant.",
     "contactPhoneHint": "Format néerlandais, p. ex. 06 12345678 ou +31 6 12345678",
@@ -676,6 +677,24 @@
     "clearFilter": "Effacer",
     "allDirections": "Toutes les directions",
     "allOutcomes": "Tous les résultats"
+  },
+  "contacts": {
+    "name": "Nom",
+    "email": "E-mail",
+    "phone": "Téléphone",
+    "addNew": "Ajouter un contact",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "empty": "Aucun contact enregistré pour le moment.",
+    "unnamed": "Contact sans nom",
+    "ownerType": "Type d'organisation",
+    "owner": "Organisation",
+    "ownerTypeDataUser": "Utilisateur de données",
+    "ownerTypeDataHolder": "Détenteur de données",
+    "ownerTypeSpeOperator": "Opérateur SPE",
+    "ownerTypeSpeProvider": "Fournisseur SPE"
   },
   "dataHolders": {
     "name": "Nom",

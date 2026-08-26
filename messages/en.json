@@ -629,6 +629,7 @@
     "tabSpeOperators": "SPE operators",
     "tabSpeProviders": "SPE providers",
     "tabDataUsers": "Data users",
+    "tabContacts": "Contacts",
     "recentChanges": "Recent changes",
     "noRecentChanges": "No changes yet.",
     "contactPhoneHint": "Dutch format, e.g. 06 12345678 or +31 6 12345678",
@@ -676,6 +677,24 @@
     "clearFilter": "Clear",
     "allDirections": "All directions",
     "allOutcomes": "All outcomes"
+  },
+  "contacts": {
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "addNew": "Add contact",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "empty": "No contacts registered yet.",
+    "unnamed": "Unnamed contact",
+    "ownerType": "Organisation type",
+    "owner": "Organisation",
+    "ownerTypeDataUser": "Data user",
+    "ownerTypeDataHolder": "Data holder",
+    "ownerTypeSpeOperator": "SPE operator",
+    "ownerTypeSpeProvider": "SPE provider"
   },
   "dataHolders": {
     "name": "Name",

@@ -629,6 +629,7 @@
     "tabSpeOperators": "SPE-operators",
     "tabSpeProviders": "SPE-providers",
     "tabDataUsers": "Datagebruikers",
+    "tabContacts": "Contacten",
     "recentChanges": "Recente wijzigingen",
     "noRecentChanges": "Nog geen wijzigingen.",
     "contactPhoneHint": "Nederlands formaat, bijv. 06 12345678 of +31 6 12345678",
@@ -676,6 +677,24 @@
     "clearFilter": "Wissen",
     "allDirections": "Alle richtingen",
     "allOutcomes": "Alle resultaten"
+  },
+  "contacts": {
+    "name": "Naam",
+    "email": "E-mail",
+    "phone": "Telefoon",
+    "addNew": "Contact toevoegen",
+    "edit": "Bewerken",
+    "delete": "Verwijderen",
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "empty": "Nog geen contacten geregistreerd.",
+    "unnamed": "Naamloos contact",
+    "ownerType": "Organisatietype",
+    "owner": "Organisatie",
+    "ownerTypeDataUser": "Datagebruiker",
+    "ownerTypeDataHolder": "Gegevenshouder",
+    "ownerTypeSpeOperator": "SPE-operator",
+    "ownerTypeSpeProvider": "SPE-provider"
   },
   "dataHolders": {
     "name": "Naam",

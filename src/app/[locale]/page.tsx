@@ -244,7 +244,6 @@ export default async function DashboardPage({
     <div className="space-y-8">
       <div className="border-b border-gray-200 pb-4">
         <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
-        <p className="text-sm text-gray-500 mt-1">{t('subtitle')}</p>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
