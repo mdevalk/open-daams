@@ -140,7 +140,8 @@
     "positive": "Positive",
     "negative": "Négative",
     "permitNumber": "Numéro d'autorisation",
-    "section1Title": "Section 1 — Sélection des sources de données",
+    "section1Title": "Section 1 — Sources de données demandées",
+    "dataset": "Jeu de données",
     "datatype": "Type de données",
     "description": "Description",
     "section2Title": "Section 2 — Projet",
@@ -393,9 +394,8 @@
     "issueSubtitle": "Décision positive prise. Délivrez une autorisation de traitement de données EHDS (D6.4 §9).",
     "validFrom": "Valable du",
     "validUntil": "Valable jusqu'au",
-    "outputControllerTitle": "Contrôleur de sortie (contrôle à quatre yeux sur la sortie du SPE)",
-    "outputControllerName": "Nom",
-    "outputControllerAffiliation": "Affiliation",
+    "outputControllerTitle": "Contrôleur de sortie",
+    "outputControllerContact": "Sélectionner un contact",
     "issueButton": "Délivrer l'autorisation",
     "noPermission": "Seul un DECISION_MAKER ou ADMIN peut délivrer une autorisation.",
     "loading": "En cours...",
@@ -962,6 +962,25 @@
       "legalBasis": "La base juridique est indiquée",
       "processingCountry": "Le pays de traitement / le statut transfrontalier est indiqué",
       "attachments": "Les pièces jointes requises sont présentes et lisibles"
+    }
+  },
+  "assessmentCheckPanel": {
+    "title": "Évaluation (D6.4 §7.3/7.4)",
+    "resultPENDING": "Pas encore évalué",
+    "resultCOMPLETE": "Complet",
+    "resultINCOMPLETE": "Incomplet",
+    "remarks": "Remarques (facultatif)",
+    "markComplete": "Marquer comme complet",
+    "notAllChecked": "Tous les points n'ont pas encore été cochés.",
+    "items": {
+      "eligibleApplicant": "Demandeur éligible ?",
+      "permittedPurpose": "Finalité autorisée ?",
+      "noProhibitedUse": "Aucun usage interdit ?",
+      "necessaryAndProportionate": "Demande de données nécessaire et proportionnée ?",
+      "privacySafeguards": "Garanties de confidentialité adéquates ?",
+      "securitySafeguards": "Garanties de sécurité adéquates ?",
+      "rightsAndRestrictions": "Droits et restrictions pris en compte ?",
+      "legalRequirements": "Toutes les exigences légales sont satisfaites ?"
     }
   },
   "appealsPanel": {

@@ -21,8 +21,10 @@ type CurrentUser = ComponentProps<typeof PermitPanel>['currentUser'];
 const DECISION_MAKER = { id: 'u-1', role: 'DECISION_MAKER' } as unknown as CurrentUser;
 const CASE_HANDLER = { id: 'u-2', role: 'CASE_HANDLER' } as unknown as CurrentUser;
 
-const DATA_HOLDERS = [{ id: 'dh-1', name: 'GP Information Network' }];
-const DATA_USERS = [{ id: 'du-1', name: 'UMC Utrecht' }];
+const CONTACTS = [
+  { id: 'contact-1', name: 'J. Jansen', ownerName: 'GP Information Network' },
+  { id: 'contact-2', name: 'A. de Boer', ownerName: 'UMC Utrecht' },
+];
 
 function makeApplication(overrides: Record<string, unknown> = {}): Application {
   return {
@@ -46,8 +48,7 @@ describe('PermitPanel — visibility gating', () => {
       <PermitPanel
         application={makeApplication({ status: 'PROCESSING', decisionOutcome: null })}
         currentUser={DECISION_MAKER}
-        dataHolders={DATA_HOLDERS}
-        dataUsers={DATA_USERS}
+        contacts={CONTACTS}
       />,
     );
     expect(container).toBeEmptyDOMElement();
@@ -58,8 +59,7 @@ describe('PermitPanel — visibility gating', () => {
       <PermitPanel
         application={makeApplication({ permitAcceptanceStatus: 'PENDING' })}
         currentUser={DECISION_MAKER}
-        dataHolders={DATA_HOLDERS}
-        dataUsers={DATA_USERS}
+        contacts={CONTACTS}
       />,
     );
     expect(container).toBeEmptyDOMElement();
@@ -72,8 +72,7 @@ describe('PermitPanel — issue form', () => {
       <PermitPanel
         application={makeApplication()}
         currentUser={CASE_HANDLER}
-        dataHolders={DATA_HOLDERS}
-        dataUsers={DATA_USERS}
+        contacts={CONTACTS}
       />,
     );
     expect(screen.getByText('noPermission')).toBeInTheDocument();
@@ -92,7 +91,7 @@ describe('PermitPanel — issue form', () => {
       },
     });
     render(
-      <PermitPanel application={application} currentUser={DECISION_MAKER} dataHolders={DATA_HOLDERS} dataUsers={DATA_USERS} />,
+      <PermitPanel application={application} currentUser={DECISION_MAKER} contacts={CONTACTS} />,
     );
     expect(screen.getByText('€500')).toBeInTheDocument();
     expect(screen.getByText('€100')).toBeInTheDocument();
@@ -100,31 +99,27 @@ describe('PermitPanel — issue form', () => {
     expect(screen.getByText(/SURF Research Cloud/)).toBeInTheDocument();
   });
 
-  it('disables the issue button until output controller name and affiliation are filled', () => {
+  it('disables the issue button until an output controller contact is selected', () => {
     render(
-      <PermitPanel application={makeApplication()} currentUser={DECISION_MAKER} dataHolders={DATA_HOLDERS} dataUsers={DATA_USERS} />,
+      <PermitPanel application={makeApplication()} currentUser={DECISION_MAKER} contacts={CONTACTS} />,
     );
     const issueButton = screen.getByText('issueButton');
     expect(issueButton).toBeDisabled();
 
-    fireEvent.change(screen.getByPlaceholderText('outputControllerName'), { target: { value: 'J. Jansen' } });
-    expect(issueButton).toBeDisabled();
-
-    const affiliationSelect = screen.getByDisplayValue('outputControllerAffiliation...');
-    fireEvent.change(affiliationSelect, { target: { value: 'UMC Utrecht' } });
+    const contactSelect = screen.getByDisplayValue('outputControllerContact...');
+    fireEvent.change(contactSelect, { target: { value: 'contact-1' } });
     expect(issueButton).not.toBeDisabled();
   });
 
-  it('issues the permit with the entered fields and refreshes on success', async () => {
+  it('issues the permit with the selected contact and refreshes on success', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }));
 
     render(
-      <PermitPanel application={makeApplication()} currentUser={DECISION_MAKER} dataHolders={DATA_HOLDERS} dataUsers={DATA_USERS} />,
+      <PermitPanel application={makeApplication()} currentUser={DECISION_MAKER} contacts={CONTACTS} />,
     );
 
-    fireEvent.change(screen.getByPlaceholderText('outputControllerName'), { target: { value: 'J. Jansen' } });
-    fireEvent.change(screen.getByDisplayValue('outputControllerAffiliation...'), {
-      target: { value: 'GP Information Network' },
+    fireEvent.change(screen.getByDisplayValue('outputControllerContact...'), {
+      target: { value: 'contact-1' },
     });
     fireEvent.click(screen.getByText('issueButton'));
 
@@ -137,8 +132,7 @@ describe('PermitPanel — issue form', () => {
     const body = JSON.parse((init as RequestInit).body as string);
     expect(body).toMatchObject({
       applicationId: 'app-1',
-      outputControllerName: 'J. Jansen',
-      outputControllerAffiliation: 'GP Information Network',
+      outputControllerContactId: 'contact-1',
       issuedByUserId: 'u-1',
     });
   });
@@ -160,7 +154,7 @@ describe('PermitPanel — existing permit', () => {
       },
     });
     render(
-      <PermitPanel application={application} currentUser={DECISION_MAKER} dataHolders={DATA_HOLDERS} dataUsers={DATA_USERS} />,
+      <PermitPanel application={application} currentUser={DECISION_MAKER} contacts={CONTACTS} />,
     );
     expect(screen.queryByText('issueButton')).not.toBeInTheDocument();
     // version 1 renders as the bare permit number (formatPermitId only appends

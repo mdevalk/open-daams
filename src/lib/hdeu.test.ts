@@ -15,6 +15,7 @@ import {
   createApplicationFromHdeuPayload,
   createStudyCohorts,
   createRequestedDatasets,
+  describeOtherCountryHdabContacts,
   type HdeuStudyCohort,
 } from '@/lib/hdeu';
 import samplePayload from './poc-demo-hdeu-payload.json';
@@ -187,5 +188,36 @@ describe('createRequestedDatasets', () => {
         expect.objectContaining({ applicationId: 'app-1', dataHolderId: 'dh-new', name: 'Registry B' }),
       ],
     });
+  });
+});
+
+describe('describeOtherCountryHdabContacts', () => {
+  it('returns null when studyCohorts is absent', () => {
+    expect(describeOtherCountryHdabContacts(undefined, 'NL')).toBeNull();
+  });
+
+  it('returns null when every COHORT entry is in the sending country', () => {
+    const cohorts: HdeuStudyCohort[] = [
+      { countryId: 'NL', role: 'COHORT' },
+      { countryId: 'NL', role: 'CONTROL', relatesToIndex: 0 },
+    ];
+    expect(describeOtherCountryHdabContacts(cohorts, 'NL')).toBeNull();
+  });
+
+  it('lists other countries with their HDAB contact, skipping the sending country', () => {
+    const cohorts: HdeuStudyCohort[] = [
+      { countryId: 'NL', role: 'COHORT' },
+      { countryId: 'DE', role: 'COHORT', hdabContacts: 'de-hdab@example.org' },
+      { countryId: 'FI', role: 'COHORT' },
+    ];
+    expect(describeOtherCountryHdabContacts(cohorts, 'NL')).toBe('DE (de-hdab@example.org), FI');
+  });
+
+  it('ignores CONTROL/RELATIVE entries — only COHORT rows represent a country', () => {
+    const cohorts: HdeuStudyCohort[] = [
+      { countryId: 'NL', role: 'COHORT' },
+      { countryId: 'DE', role: 'CONTROL', relatesToIndex: 0, hdabContacts: 'should not appear' },
+    ];
+    expect(describeOtherCountryHdabContacts(cohorts, 'NL')).toBeNull();
   });
 });

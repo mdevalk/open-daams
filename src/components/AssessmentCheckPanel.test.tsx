@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
-import { CompletenessCheckPanel } from './CompletenessCheckPanel';
+import { AssessmentCheckPanel } from './AssessmentCheckPanel';
 
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
@@ -19,12 +19,12 @@ beforeEach(() => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }));
 });
 
-describe('CompletenessCheckPanel — fresh checklist (no existing check)', () => {
+describe('AssessmentCheckPanel — fresh checklist (no existing check)', () => {
   it('renders the default items unchecked, with the PENDING badge', () => {
-    render(<CompletenessCheckPanel applicationId="app-1" currentUserId="u-1" canManage={true} existing={null} />);
+    render(<AssessmentCheckPanel applicationId="app-1" currentUserId="u-1" canManage={true} existing={null} />);
 
     expect(screen.getByText('resultPENDING')).toBeInTheDocument();
-    expect(screen.getByText('items.title')).toBeInTheDocument();
+    expect(screen.getByText('items.eligibleApplicant')).toBeInTheDocument();
 
     const checkboxes = document.querySelectorAll('input[type="checkbox"]');
     expect(checkboxes).toHaveLength(8); // DEFAULT_ITEM_KEYS
@@ -33,7 +33,7 @@ describe('CompletenessCheckPanel — fresh checklist (no existing check)', () =>
   });
 
   it('toggles an item when its checkbox is clicked', () => {
-    render(<CompletenessCheckPanel applicationId="app-1" currentUserId="u-1" canManage={true} existing={null} />);
+    render(<AssessmentCheckPanel applicationId="app-1" currentUserId="u-1" canManage={true} existing={null} />);
 
     const firstCheckbox = document.querySelectorAll('input[type="checkbox"]')[0] as HTMLInputElement;
     expect(firstCheckbox).not.toBeChecked();
@@ -42,7 +42,7 @@ describe('CompletenessCheckPanel — fresh checklist (no existing check)', () =>
   });
 
   it('starts collapsed when canManage is false, and expanding shows disabled checkboxes, read-only remarks, and no mark-complete action', () => {
-    render(<CompletenessCheckPanel applicationId="app-1" currentUserId="u-1" canManage={false} existing={null} />);
+    render(<AssessmentCheckPanel applicationId="app-1" currentUserId="u-1" canManage={false} existing={null} />);
 
     expect(document.querySelectorAll('input[type="checkbox"]')).toHaveLength(0);
     fireEvent.click(screen.getByText('title'));
@@ -53,9 +53,29 @@ describe('CompletenessCheckPanel — fresh checklist (no existing check)', () =>
   });
 });
 
-describe('CompletenessCheckPanel — marking complete', () => {
+describe('AssessmentCheckPanel — collapsing', () => {
+  it('auto-collapses when canManage flips to false (e.g. after a decision is issued)', () => {
+    const existing = {
+      items: [{ key: 'eligibleApplicant', label: 'Applicant is eligible', passed: true }],
+      result: 'COMPLETE',
+      remarks: 'All good',
+    };
+    const { rerender } = render(
+      <AssessmentCheckPanel applicationId="app-1" currentUserId="u-1" canManage={true} existing={existing} />,
+    );
+    expect(screen.getByText('Applicant is eligible')).toBeInTheDocument();
+
+    rerender(<AssessmentCheckPanel applicationId="app-1" currentUserId="u-1" canManage={false} existing={existing} />);
+    expect(screen.queryByText('Applicant is eligible')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('title'));
+    expect(screen.getByText('Applicant is eligible')).toBeInTheDocument();
+  });
+});
+
+describe('AssessmentCheckPanel — marking complete', () => {
   it('submits all items as a POST request and updates the badge to COMPLETE', async () => {
-    render(<CompletenessCheckPanel applicationId="app-1" currentUserId="u-1" canManage={true} existing={null} />);
+    render(<AssessmentCheckPanel applicationId="app-1" currentUserId="u-1" canManage={true} existing={null} />);
 
     document.querySelectorAll('input[type="checkbox"]').forEach((cb) => fireEvent.click(cb));
 
@@ -66,7 +86,7 @@ describe('CompletenessCheckPanel — marking complete', () => {
 
     const fetchMock = vi.mocked(fetch);
     expect(fetchMock).toHaveBeenCalledWith(
-      '/api/applications/app-1/completeness-check',
+      '/api/applications/app-1/assessment-check',
       expect.objectContaining({ method: 'POST' }),
     );
     const [, init] = fetchMock.mock.calls[0];
@@ -78,7 +98,7 @@ describe('CompletenessCheckPanel — marking complete', () => {
   });
 
   it('disables the mark-complete button once the result is COMPLETE, preventing duplicate submits', async () => {
-    render(<CompletenessCheckPanel applicationId="app-1" currentUserId="u-1" canManage={true} existing={null} />);
+    render(<AssessmentCheckPanel applicationId="app-1" currentUserId="u-1" canManage={true} existing={null} />);
 
     document.querySelectorAll('input[type="checkbox"]').forEach((cb) => fireEvent.click(cb));
     fireEvent.click(screen.getByText('markComplete'));
@@ -91,36 +111,16 @@ describe('CompletenessCheckPanel — marking complete', () => {
   });
 });
 
-describe('CompletenessCheckPanel — collapsing', () => {
-  it('auto-collapses when canManage flips to false (e.g. after completing pre-screening)', () => {
-    const existing = {
-      items: [{ key: 'title', label: 'Title provided', passed: true }],
-      result: 'COMPLETE',
-      remarks: 'All good',
-    };
-    const { rerender } = render(
-      <CompletenessCheckPanel applicationId="app-1" currentUserId="u-1" canManage={true} existing={existing} />,
-    );
-    expect(screen.getByText('Title provided')).toBeInTheDocument();
-
-    rerender(<CompletenessCheckPanel applicationId="app-1" currentUserId="u-1" canManage={false} existing={existing} />);
-    expect(screen.queryByText('Title provided')).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByText('title'));
-    expect(screen.getByText('Title provided')).toBeInTheDocument();
-  });
-});
-
-describe('CompletenessCheckPanel — existing check', () => {
+describe('AssessmentCheckPanel — existing check', () => {
   it('renders items and remarks from the existing check, and hides notAllChecked once it is no longer PENDING', () => {
     const existing = {
-      items: [{ key: 'title', label: 'Title provided', passed: true }],
+      items: [{ key: 'eligibleApplicant', label: 'Applicant is eligible', passed: true }],
       result: 'COMPLETE',
       remarks: 'All good',
     };
-    render(<CompletenessCheckPanel applicationId="app-1" currentUserId="u-1" canManage={true} existing={existing} />);
+    render(<AssessmentCheckPanel applicationId="app-1" currentUserId="u-1" canManage={true} existing={existing} />);
 
-    expect(screen.getByText('Title provided')).toBeInTheDocument();
+    expect(screen.getByText('Applicant is eligible')).toBeInTheDocument();
     expect(screen.getByDisplayValue('All good')).toBeInTheDocument();
     expect(screen.getByText('resultCOMPLETE')).toBeInTheDocument();
     expect(screen.queryByText('notAllChecked')).not.toBeInTheDocument();

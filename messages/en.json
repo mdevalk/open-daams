@@ -140,7 +140,8 @@
     "positive": "Positive",
     "negative": "Negative",
     "permitNumber": "Permit number",
-    "section1Title": "Section 1 — Selecting data sources",
+    "section1Title": "Section 1 — Requested data sources",
+    "dataset": "Dataset",
     "datatype": "Datatype",
     "description": "Description",
     "section2Title": "Section 2 — Project",
@@ -393,9 +394,8 @@
     "issueSubtitle": "Positive decision taken. Issue an EHDS data processing permit (D6.4 §9).",
     "validFrom": "Valid from",
     "validUntil": "Valid until",
-    "outputControllerTitle": "Output controller (four-eyes check on SPE output)",
-    "outputControllerName": "Name",
-    "outputControllerAffiliation": "Affiliation",
+    "outputControllerTitle": "Output controller",
+    "outputControllerContact": "Select a contact",
     "issueButton": "Issue permit",
     "noPermission": "Only DECISION_MAKER or ADMIN can issue a permit.",
     "loading": "Processing...",
@@ -962,6 +962,25 @@
       "legalBasis": "Legal basis is provided",
       "processingCountry": "Processing country / cross-border status is provided",
       "attachments": "Required attachments are present and legible"
+    }
+  },
+  "assessmentCheckPanel": {
+    "title": "Assessment (D6.4 §7.3/7.4)",
+    "resultPENDING": "Not yet assessed",
+    "resultCOMPLETE": "Complete",
+    "resultINCOMPLETE": "Incomplete",
+    "remarks": "Remarks (optional)",
+    "markComplete": "Mark as complete",
+    "notAllChecked": "Not all items have been checked yet.",
+    "items": {
+      "eligibleApplicant": "Eligible applicant?",
+      "permittedPurpose": "Permitted purpose?",
+      "noProhibitedUse": "No prohibited use?",
+      "necessaryAndProportionate": "Data request necessary and proportionate?",
+      "privacySafeguards": "Privacy safeguards adequate?",
+      "securitySafeguards": "Security safeguards adequate?",
+      "rightsAndRestrictions": "Rights and restrictions addressed?",
+      "legalRequirements": "All legal requirements satisfied?"
     }
   },
   "appealsPanel": {

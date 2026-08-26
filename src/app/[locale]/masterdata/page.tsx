@@ -40,7 +40,17 @@ export default async function MasterdataPage({
         include: { application: { select: { applicant: { select: { dataUserId: true } } } } },
         orderBy: { createdAt: 'desc' },
       }),
+      // AuditLog is shared with non-masterdata case-workflow events (Invoice,
+      // Appeal, AuthorizedPerson, Application-level actions) — restrict this
+      // page's "recent changes" panel to reference-data entity types only.
+      // 'SpeOperatorType' is a legacy label predating the SpeType rename,
+      // still present on older rows.
       prisma.auditLog.findMany({
+        where: {
+          entityType: {
+            in: ['DataHolder', 'SpeOperator', 'SpeProvider', 'DataUser', 'SpeType', 'SpeOperatorType', 'Contact'],
+          },
+        },
         include: { user: { select: { name: true } } },
         orderBy: { createdAt: 'desc' },
         take: 20,

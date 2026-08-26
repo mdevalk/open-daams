@@ -820,6 +820,29 @@ export async function createRequestedDatasets(applicationId: string, requestedDa
   });
 }
 
+/**
+ * Describes the HDAB contact for every country involved in a multi-country
+ * study beyond the one that transmitted the payload — one HdeuStudyCohort
+ * COHORT-role entry per country (D6.3 Annex 5 §6.1-6.3). The transmitting
+ * NCP is always a single origin (sendingCountry/sendingHdab), but the study
+ * itself can span countries whose own HDAB isn't otherwise named anywhere
+ * in the envelope, so this is the only place that information is available.
+ * Returns null when there's nothing beyond the sending country to add.
+ */
+export function describeOtherCountryHdabContacts(
+  studyCohorts: HdeuStudyCohort[] | undefined,
+  sendingCountry: string,
+): string | null {
+  if (!studyCohorts) return null;
+  const otherCountryCohorts = studyCohorts.filter(
+    (c) => c.role === 'COHORT' && c.countryId !== sendingCountry,
+  );
+  if (otherCountryCohorts.length === 0) return null;
+  return otherCountryCohorts
+    .map((c) => (c.hdabContacts ? `${c.countryId} (${c.hdabContacts})` : c.countryId))
+    .join(', ');
+}
+
 export async function createApplicationFromHdeuPayload(
   p: HdeuPayload,
   rawPayload: unknown,
@@ -859,15 +882,17 @@ export async function createApplicationFromHdeuPayload(
   await createStudyCohorts(application.id, p.studyCohorts);
   await createRequestedDatasets(application.id, p.requestedDatasets);
 
+  const otherCountryHdabs = describeOtherCountryHdabContacts(p.studyCohorts, p.sendingCountry);
+
   await prisma.applicationLog.create({
     data: {
       applicationId: application.id,
       userId: systemUser.id,
       toStatus: 'SUBMITTED',
-      action: `Received via HealthData@EU NCP from ${p.sendingCountry} (${p.sendingHdab})`,
+      action: `Received via HealthData@EU NCP from ${p.sendingCountry}`,
       comment: `HD@EU application ID: ${p.hdeuApplicationId}${
         p.ncpTransactionId ? ` | NCP transaction: ${p.ncpTransactionId}` : ''
-      }`,
+      }${otherCountryHdabs ? ` | Also involves: ${otherCountryHdabs}` : ''}`,
     },
   });
 

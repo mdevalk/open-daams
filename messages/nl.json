@@ -140,7 +140,8 @@
     "positive": "Positief",
     "negative": "Negatief",
     "permitNumber": "Vergunningsnummer",
-    "section1Title": "Sectie 1 — Selectie van databronnen",
+    "section1Title": "Sectie 1 — Gevraagde databronnen",
+    "dataset": "Dataset",
     "datatype": "Gegevenstype",
     "description": "Omschrijving",
     "section2Title": "Sectie 2 — Project",
@@ -393,9 +394,8 @@
     "issueSubtitle": "Positief besluit genomen. Schrijf een EHDS-dataverwerkingsvergunning uit (D6.4 §9).",
     "validFrom": "Geldig vanaf",
     "validUntil": "Geldig tot",
-    "outputControllerTitle": "Uitvoercontroleur (vier-ogen-controle op SPE-uitvoer)",
-    "outputControllerName": "Naam",
-    "outputControllerAffiliation": "Affiliatie",
+    "outputControllerTitle": "Uitvoercontroleur",
+    "outputControllerContact": "Selecteer een contactpersoon",
     "issueButton": "Vergunning uitschrijven",
     "noPermission": "Alleen DECISION_MAKER of ADMIN kan een vergunning uitschrijven.",
     "loading": "Bezig...",
@@ -962,6 +962,25 @@
       "legalBasis": "Rechtsgrondslag is opgegeven",
       "processingCountry": "Verwerkingsland / grensoverschrijdende status is opgegeven",
       "attachments": "Vereiste bijlagen zijn aanwezig en leesbaar"
+    }
+  },
+  "assessmentCheckPanel": {
+    "title": "Inhoudelijke beoordeling (D6.4 §7.3/7.4)",
+    "resultPENDING": "Nog niet beoordeeld",
+    "resultCOMPLETE": "Volledig",
+    "resultINCOMPLETE": "Onvolledig",
+    "remarks": "Opmerkingen (optioneel)",
+    "markComplete": "Markeer als volledig",
+    "notAllChecked": "Nog niet alle punten zijn afgevinkt.",
+    "items": {
+      "eligibleApplicant": "Aanvrager gerechtigd?",
+      "permittedPurpose": "Toegestaan doel?",
+      "noProhibitedUse": "Geen verboden gebruik?",
+      "necessaryAndProportionate": "Gegevensverzoek noodzakelijk en proportioneel?",
+      "privacySafeguards": "Privacywaarborgen toereikend?",
+      "securitySafeguards": "Beveiligingswaarborgen toereikend?",
+      "rightsAndRestrictions": "Rechten en beperkingen geadresseerd?",
+      "legalRequirements": "Alle wettelijke vereisten voldaan?"
     }
   },
   "appealsPanel": {

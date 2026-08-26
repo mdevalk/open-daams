@@ -16,6 +16,7 @@ vi.mock('@/lib/db', () => ({
     application: { findUnique: vi.fn() },
     speOperator: { findUnique: vi.fn() },
     speType: { findUnique: vi.fn() },
+    contact: { findUnique: vi.fn() },
   },
 }));
 
@@ -27,9 +28,18 @@ const authzFailureLogCreate = vi.mocked(prisma.authzFailureLog.create);
 const applicationFindUnique = vi.mocked(prisma.application.findUnique);
 const speOperatorFindUnique = vi.mocked(prisma.speOperator.findUnique);
 const speTypeFindUnique = vi.mocked(prisma.speType.findUnique);
+const contactFindUnique = vi.mocked(prisma.contact.findUnique);
 
 const DECISION_MAKER = { id: 'u-1', role: 'DECISION_MAKER' as const, name: 'D. Maker', email: 'dm@hdab.nl' };
 const APPLICANT = { id: 'u-2', role: 'APPLICANT' as const, name: 'A. de Vries', email: 'researcher@umcu.nl' };
+const OUTPUT_CONTROLLER_CONTACT = {
+  id: 'contact-1',
+  name: 'Output Controller',
+  dataUser: null,
+  dataHolder: { name: 'HDAB-NL' },
+  speOperator: null,
+  speProvider: null,
+};
 
 beforeEach(() => {
   userFindUnique.mockReset();
@@ -37,6 +47,8 @@ beforeEach(() => {
   applicationFindUnique.mockReset();
   speOperatorFindUnique.mockReset();
   speTypeFindUnique.mockReset();
+  contactFindUnique.mockReset();
+  contactFindUnique.mockResolvedValue(OUTPUT_CONTROLLER_CONTACT as never);
 });
 
 describe('buildStorageLocations', () => {
@@ -205,8 +217,7 @@ describe('POST /api/permits', () => {
     validFrom: '2026-01-01T00:00:00Z',
     validUntil: '2027-01-01T00:00:00Z',
     issuedByUserId: 'u-1',
-    outputControllerName: 'Output Controller',
-    outputControllerAffiliation: 'HDAB-NL',
+    outputControllerContactId: 'contact-1',
   };
 
   it('rejects an acting user who is not DECISION_MAKER/ADMIN', async () => {
@@ -219,15 +230,26 @@ describe('POST /api/permits', () => {
     expect(applicationFindUnique).not.toHaveBeenCalled();
   });
 
-  it('rejects a missing outputControllerName/outputControllerAffiliation with a 422', async () => {
+  it('rejects a missing outputControllerContactId with a 422', async () => {
     userFindUnique.mockResolvedValue(DECISION_MAKER as never);
 
-    const res = await callPost({ ...VALID_BODY, outputControllerName: '' });
+    const res = await callPost({ ...VALID_BODY, outputControllerContactId: '' });
 
     expect(res.status).toBe(422);
     expect(await res.json()).toEqual({
-      error: 'Output controller name and affiliation are required to issue a permit',
+      error: 'An output controller must be selected to issue a permit',
     });
+    expect(applicationFindUnique).not.toHaveBeenCalled();
+  });
+
+  it('returns 404 when the output controller contact does not exist', async () => {
+    userFindUnique.mockResolvedValue(DECISION_MAKER as never);
+    contactFindUnique.mockResolvedValue(null);
+
+    const res = await callPost(VALID_BODY);
+
+    expect(res.status).toBe(404);
+    expect(await res.json()).toEqual({ error: 'Output controller contact not found' });
     expect(applicationFindUnique).not.toHaveBeenCalled();
   });
 

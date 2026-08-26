@@ -13,11 +13,13 @@ import { FeeEstimatePanel } from '@/components/FeeEstimatePanel';
 import { EthicalReviewPanel } from '@/components/EthicalReviewPanel';
 import { AppealsPanel } from '@/components/AppealsPanel';
 import { CompletenessCheckPanel } from '@/components/CompletenessCheckPanel';
+import { AssessmentCheckPanel } from '@/components/AssessmentCheckPanel';
 import { ExtractionRequestsPanel } from '@/components/ExtractionRequestsPanel';
 import { TrustedDataHolderPanel } from '@/components/TrustedDataHolderPanel';
 import { UserSwitcher } from '@/components/UserSwitcher';
 import { StudyCohortExplorer } from '@/components/StudyCohortExplorer';
 import type { CompletenessItem } from '@/app/api/applications/[id]/completeness-check/route';
+import type { AssessmentItem } from '@/app/api/applications/[id]/assessment-check/route';
 import { formatDate, formatDateTime, purposeLabel, serializePrisma } from '@/lib/utils';
 import { formatPermitId } from '@/lib/permit';
 import { groupDatasetsByHolder } from '@/lib/permit-signing';
@@ -46,7 +48,7 @@ export default async function ApplicationDetailPage({
 
   const t = await getTranslations({ locale, namespace: 'applicationDetail' });
 
-  const [rawApplication, users, dataHolders, speOperators, dataUsers] = await Promise.all([
+  const [rawApplication, users, dataHolders, speOperators, contacts] = await Promise.all([
     prisma.application.findUnique({
       where: { id },
       include: {
@@ -81,6 +83,7 @@ export default async function ApplicationDetailPage({
           orderBy: { submittedAt: 'desc' },
         },
         completenessCheck: true,
+        assessmentCheck: true,
         trustedDataHolder: { select: { name: true } },
         extractionRequests: {
           include: { dataHolder: { select: { name: true } } },
@@ -101,11 +104,29 @@ export default async function ApplicationDetailPage({
     prisma.user.findMany({ orderBy: { name: 'asc' } }),
     prisma.dataHolder.findMany({ orderBy: { name: 'asc' } }),
     prisma.speOperator.findMany({ include: { types: { orderBy: { name: 'asc' } } }, orderBy: { name: 'asc' } }),
-    // Output-controller affiliation can also be a data user (applicant)
-    // organisation, not just a data holder — restricted to DataUser records
-    // that actually have an applicant, filtering out HDAB's own internal ones.
-    prisma.dataUser.findMany({ where: { users: { some: { role: 'APPLICANT' } } }, orderBy: { name: 'asc' } }),
+    // The output controller (PermitPanel's issuance form) is selected from
+    // this masterdata contacts list rather than freely typed. Most seeded
+    // contacts only have an email (migrated from contactEmail, name was
+    // never backfilled — see Contact's schema comment), so fall back to
+    // that rather than requiring a name.
+    prisma.contact.findMany({
+      where: { OR: [{ name: { not: null } }, { email: { not: null } }] },
+      include: {
+        dataUser: { select: { name: true } },
+        dataHolder: { select: { name: true } },
+        speOperator: { select: { name: true } },
+        speProvider: { select: { name: true } },
+      },
+    }),
   ]);
+
+  const contactsForClient = contacts
+    .map((c) => ({
+      id: c.id,
+      name: (c.name ?? c.email) as string,
+      ownerName: c.dataUser?.name ?? c.dataHolder?.name ?? c.speOperator?.name ?? c.speProvider?.name ?? null,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   // Decimal is a class instance, not a plain object — React's server->client
   // prop serialization rejects it outright, so convert before it crosses
@@ -127,6 +148,28 @@ export default async function ApplicationDetailPage({
   const attachmentHref = (a: { id: string }) => `/api/attachments/${a.id}?userId=${currentUser.id}`;
 
   const cohortRows = application.studyCohorts.filter((c) => c.role === 'COHORT');
+
+  // Section 1 lists variables (DatasetVariable.sourceDatasetId), not datasets —
+  // resolve each variable's dataset name/id from the matching RequestedDataset,
+  // and group variables under one heading per source dataset.
+  const datasetById = new Map(
+    application.requestedDatasets.filter((rd) => rd.datasetId).map((rd) => [rd.datasetId as string, rd]),
+  );
+  const datasetVariableGroups = Array.from(
+    application.datasetVariables
+      .reduce((groups, v) => {
+        const group = groups.get(v.sourceDatasetId) ?? [];
+        group.push(v);
+        groups.set(v.sourceDatasetId, group);
+        return groups;
+      }, new Map<string, typeof application.datasetVariables>())
+      .entries(),
+  ).map(([sourceDatasetId, variables]) => ({
+    sourceDatasetId,
+    name: datasetById.get(sourceDatasetId)?.name,
+    url: datasetById.get(sourceDatasetId)?.url,
+    variables,
+  }));
 
   // Art. 47/48/49 transfer legal grounds — rendered as a bullet list of
   // whichever specific grounds the applicant flagged true, rather than 11
@@ -215,17 +258,40 @@ export default async function ApplicationDetailPage({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main content */}
         <div className="lg:col-span-2 space-y-6">
-          {application.status === 'PRE_SCREENING' && (
+          {(application.status === 'PRE_SCREENING' || application.completenessCheck) && (
             <CompletenessCheckPanel
               applicationId={application.id}
               currentUserId={currentUser.id}
-              canManage={['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(currentUser.role)}
+              canManage={
+                application.status === 'PRE_SCREENING' &&
+                ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(currentUser.role)
+              }
               existing={
                 application.completenessCheck
                   ? {
                       items: application.completenessCheck.items as unknown as CompletenessItem[],
                       result: application.completenessCheck.result,
                       remarks: application.completenessCheck.remarks,
+                    }
+                  : null
+              }
+            />
+          )}
+
+          {(application.status === 'PROCESSING' || application.assessmentCheck) && (
+            <AssessmentCheckPanel
+              applicationId={application.id}
+              currentUserId={currentUser.id}
+              canManage={
+                application.status === 'PROCESSING' &&
+                ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(currentUser.role)
+              }
+              existing={
+                application.assessmentCheck
+                  ? {
+                      items: application.assessmentCheck.items as unknown as AssessmentItem[],
+                      result: application.assessmentCheck.result,
+                      remarks: application.assessmentCheck.remarks,
                     }
                   : null
               }
@@ -280,40 +346,57 @@ export default async function ApplicationDetailPage({
             </dl>
           </section>
 
-          {application.datasetVariables.length > 0 && (
+          {datasetVariableGroups.length > 0 && (
             <section className="rounded-xl border border-gray-200 bg-white p-5">
               <h2 className="font-semibold text-gray-900 mb-3">{t('section1Title')}</h2>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-left text-gray-500 text-xs uppercase tracking-wide border-b border-gray-200">
-                      <th className="py-1.5 pr-4 font-medium">{t('variables')}</th>
-                      <th className="py-1.5 pr-4 font-medium">{t('datatype')}</th>
-                      <th className="py-1.5 font-medium">{t('description')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {application.datasetVariables.map((v) => (
-                      <tr key={v.id} className="border-b border-gray-100 last:border-0 align-top">
-                        <td className="py-2 pr-4 font-medium text-gray-900">{v.name}</td>
-                        <td className="py-2 pr-4 text-gray-800">{v.datatype || '—'}</td>
-                        <td className="py-2 text-gray-800">
-                          {v.title || v.description || '—'}
-                          {v.propertyUrl && (
-                            <a
-                              href={v.propertyUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="block text-xs text-blue-600 hover:underline break-all"
-                            >
-                              {v.propertyUrl}
-                            </a>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="space-y-5">
+                {datasetVariableGroups.map((group) => (
+                  <div key={group.sourceDatasetId}>
+                    <p className="text-gray-500 text-xs uppercase tracking-wide mb-1">{t('dataset')}</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {group.url ? (
+                        <a href={group.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                          {group.name || '—'}
+                        </a>
+                      ) : (
+                        group.name || '—'
+                      )}
+                      <span className="ml-2 text-xs text-gray-500 font-mono">{`(${group.sourceDatasetId})`}</span>
+                    </p>
+                    <div className="overflow-x-auto mt-2">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="text-left text-gray-500 text-xs uppercase tracking-wide border-b border-gray-200">
+                            <th className="py-1.5 pr-4 font-medium">{t('variables')}</th>
+                            <th className="py-1.5 pr-4 font-medium">{t('datatype')}</th>
+                            <th className="py-1.5 font-medium">{t('description')}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {group.variables.map((v) => (
+                            <tr key={v.id} className="border-b border-gray-100 last:border-0 align-top">
+                              <td className="py-2 pr-4 font-medium text-gray-900">{v.name}</td>
+                              <td className="py-2 pr-4 text-gray-800">{v.datatype || '—'}</td>
+                              <td className="py-2 text-gray-800">
+                                {v.title || v.description || '—'}
+                                {v.propertyUrl && (
+                                  <a
+                                    href={v.propertyUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="block text-xs text-blue-600 hover:underline break-all"
+                                  >
+                                    {v.propertyUrl}
+                                  </a>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ))}
               </div>
             </section>
           )}
@@ -941,8 +1024,7 @@ export default async function ApplicationDetailPage({
           <PermitPanel
             application={{ ...application, dataPermit: currentPermit }}
             currentUser={currentUser}
-            dataHolders={dataHolders}
-            dataUsers={dataUsers}
+            contacts={contactsForClient}
           />
           {application.decisionOutcome === 'POSITIVE' && (
             <ExtractionRequestsPanel

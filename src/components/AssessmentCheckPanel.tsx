@@ -5,20 +5,26 @@ import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { readErrorMessage } from '@/lib/utils';
-import type { CompletenessItem } from '@/app/api/applications/[id]/completeness-check/route';
+import type { AssessmentItem } from '@/app/api/applications/[id]/assessment-check/route';
 
 type Props = {
   applicationId: string;
   currentUserId: string;
   canManage: boolean;
-  existing: { items: CompletenessItem[]; result: string; remarks?: string | null } | null;
+  existing: { items: AssessmentItem[]; result: string; remarks?: string | null } | null;
 };
 
-// TEHDAS2 D6.3 §5.4 / Annex 7 — representative subset of the plausibility
-// checklist, mapped to the fields this application form actually collects.
-// `key` doubles as the i18n key in the `completenessCheckPanel.items` namespace.
+// TEHDAS2 D6.4 §7.3/7.4 — substantive assessment criteria (Art. 68(1)-(2)).
+// `key` doubles as the i18n key in the `assessmentCheckPanel.items` namespace.
 const DEFAULT_ITEM_KEYS = [
-  'title', 'applicant', 'purpose', 'datasets', 'population', 'legalBasis', 'processingCountry', 'attachments',
+  'eligibleApplicant',
+  'permittedPurpose',
+  'noProhibitedUse',
+  'necessaryAndProportionate',
+  'privacySafeguards',
+  'securitySafeguards',
+  'rightsAndRestrictions',
+  'legalRequirements',
 ] as const;
 
 const RESULT_STYLES: Record<string, string> = {
@@ -27,23 +33,23 @@ const RESULT_STYLES: Record<string, string> = {
   INCOMPLETE: 'bg-red-100 text-red-700',
 };
 
-export function CompletenessCheckPanel({ applicationId, currentUserId, canManage, existing }: Props) {
+export function AssessmentCheckPanel({ applicationId, currentUserId, canManage, existing }: Props) {
   const router = useRouter();
-  const t = useTranslations('completenessCheckPanel');
+  const t = useTranslations('assessmentCheckPanel');
   const terr = useTranslations('errors');
   // `existing.items[].label` is text persisted at check time — like an audit
   // log entry, it stays as recorded rather than being retranslated per
   // viewer. A fresh (not yet saved) checklist uses live-translated labels.
-  const [items, setItems] = useState<CompletenessItem[]>(
+  const [items, setItems] = useState<AssessmentItem[]>(
     existing?.items ?? DEFAULT_ITEM_KEYS.map((key) => ({ key, label: t(`items.${key}`), passed: false })),
   );
   const [result, setResult] = useState(existing?.result ?? 'PENDING');
   const [remarks, setRemarks] = useState(existing?.remarks ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Collapsed by default once read-only (pre-screening is over) — still
+  // Collapsed by default once read-only (processing is over) — still
   // expanded while actively being worked on, and auto-collapses the moment
-  // canManage flips to false (e.g. after "Complete pre-screening").
+  // canManage flips to false (e.g. after a decision is issued).
   const [expanded, setExpanded] = useState(canManage);
   useEffect(() => {
     if (!canManage) setExpanded(false);
@@ -59,7 +65,7 @@ export function CompletenessCheckPanel({ applicationId, currentUserId, canManage
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/applications/${applicationId}/completeness-check`, {
+      const res = await fetch(`/api/applications/${applicationId}/assessment-check`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ items, result: 'COMPLETE', remarks, checkedById: currentUserId }),
@@ -80,7 +86,7 @@ export function CompletenessCheckPanel({ applicationId, currentUserId, canManage
         type="button"
         onClick={() => setExpanded((e) => !e)}
         aria-expanded={expanded}
-        aria-controls="completeness-check-body"
+        aria-controls="assessment-check-body"
         className="w-full flex items-center justify-between text-left"
       >
         <h2 className="font-semibold text-gray-900 text-sm">{t('title')}</h2>
@@ -95,7 +101,7 @@ export function CompletenessCheckPanel({ applicationId, currentUserId, canManage
       </button>
 
       {expanded && (
-        <div id="completeness-check-body" className="space-y-3">
+        <div id="assessment-check-body" className="space-y-3">
           <ul className="space-y-1.5">
             {items.map((item) => (
               <li key={item.key} className="flex items-start gap-2 text-sm">
@@ -112,11 +118,11 @@ export function CompletenessCheckPanel({ applicationId, currentUserId, canManage
           </ul>
 
           <div>
-            <label className="text-xs text-gray-500" htmlFor="completeness-remarks">
+            <label className="text-xs text-gray-500" htmlFor="assessment-remarks">
               {t('remarks')}
             </label>
             <textarea
-              id="completeness-remarks"
+              id="assessment-remarks"
               value={remarks}
               readOnly={!canManage}
               onChange={(e) => setRemarks(e.target.value)}

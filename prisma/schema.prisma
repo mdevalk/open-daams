@@ -119,6 +119,14 @@ enum CompletenessResult {
   INCOMPLETE
 }
 
+// D6.4 §7.3/7.4 — outcome of the substantive assessment (reuses the same
+// PENDING/COMPLETE/INCOMPLETE shape as the pre-screening completeness check)
+enum AssessmentResult {
+  PENDING
+  COMPLETE
+  INCOMPLETE
+}
+
 // TEHDAS2 D6.3 §7.1 / EHDS Art. 60, 68(7) — extraction request lifecycle
 // between the HDAB and a health data holder
 enum ExtractionStatus {
@@ -214,6 +222,7 @@ model User {
   permitActions               DataPermitLog[]
   auditLogs                   AuditLog[]
   completenessChecks          CompletenessCheck[]
+  assessmentChecks            AssessmentCheck[]
   extractionRequests          DataExtractionRequest[]
   issuedInvoices              Invoice[]
   speProvisioningActions      SpeProvisioningLog[]
@@ -514,6 +523,7 @@ model Application {
   feeEstimate        FeeEstimate?
   appeals            Appeal[]
   completenessCheck  CompletenessCheck?
+  assessmentCheck    AssessmentCheck?
   extractionRequests DataExtractionRequest[]
   invoices           Invoice[]
   requestedDatasets  RequestedDataset[]
@@ -686,6 +696,26 @@ model CompletenessCheck {
   items   Json
   result  CompletenessResult @default(PENDING)
   remarks String?            @db.Text
+
+  checkedById String?
+  checkedBy   User?     @relation(fields: [checkedById], references: [id])
+  checkedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// TEHDAS2 D6.4 §7.3/7.4 — structured substantive assessment during PROCESSING,
+// distinct from the pre-screening CompletenessCheck above
+model AssessmentCheck {
+  id            String      @id @default(cuid())
+  applicationId String      @unique
+  application   Application @relation(fields: [applicationId], references: [id])
+
+  // [{ key: string, label: string, passed: boolean, comment?: string }]
+  items   Json
+  result  AssessmentResult @default(PENDING)
+  remarks String?          @db.Text
 
   checkedById String?
   checkedBy   User?     @relation(fields: [checkedById], references: [id])

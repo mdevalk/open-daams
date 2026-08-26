@@ -13,11 +13,10 @@ type Props = {
     feeEstimate?: (FeeEstimate & { speOperator: SpeOperator | null; speType: SpeType | null; lineItems: FinancialLineItem[] }) | null;
   };
   currentUser: User;
-  dataHolders: { id: string; name: string }[];
-  dataUsers: { id: string; name: string }[];
+  contacts: { id: string; name: string; ownerName: string | null }[];
 };
 
-export function PermitPanel({ application, currentUser, dataHolders, dataUsers }: Props) {
+export function PermitPanel({ application, currentUser, contacts }: Props) {
   const router = useRouter();
   const tp = useTranslations('permitPanel');
   const tc = useTranslations('financialLineCategory');
@@ -30,13 +29,11 @@ export function PermitPanel({ application, currentUser, dataHolders, dataUsers }
   const [validUntil, setValidUntil] = useState(
     new Date(Date.now() + 2 * 365.25 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
   );
-  // The output controller (four-eyes check on SPE output) is selected by
-  // HDAB at the moment of issuance — can be HDAB staff, a data holder's
-  // employee, or an external expert; affiliation is UI-constrained to
-  // existing data holders/data users for now (see AuthorizedPerson.affiliation).
-  const [outputControllerName, setOutputControllerName] = useState('');
-  const [outputControllerAffiliation, setOutputControllerAffiliation] = useState('');
-  const affiliationOptions = [...dataHolders, ...dataUsers].sort((a, b) => a.name.localeCompare(b.name));
+  // The output controller is selected by HDAB at the moment of issuance from
+  // the masterdata contacts list — can be HDAB staff, a data holder's
+  // employee, or an external expert. Affiliation is derived server-side from
+  // the selected contact's own owner (see AuthorizedPerson.affiliation).
+  const [outputControllerContactId, setOutputControllerContactId] = useState('');
   const estimate = application.feeEstimate;
 
   // Only show if positive decision
@@ -66,8 +63,7 @@ export function PermitPanel({ application, currentUser, dataHolders, dataUsers }
           applicationId: application.id,
           validFrom,
           validUntil,
-          outputControllerName,
-          outputControllerAffiliation,
+          outputControllerContactId,
           issuedByUserId: currentUser.id,
         }),
       });
@@ -110,20 +106,14 @@ export function PermitPanel({ application, currentUser, dataHolders, dataUsers }
 
             <div className="border-t border-emerald-200 pt-3 space-y-2">
               <p className="text-xs font-semibold text-emerald-900">{tp('outputControllerTitle')}</p>
-              <input
-                value={outputControllerName}
-                onChange={e => setOutputControllerName(e.target.value)}
-                placeholder={tp('outputControllerName')}
-                className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
-              />
               <select
-                value={outputControllerAffiliation}
-                onChange={e => setOutputControllerAffiliation(e.target.value)}
+                value={outputControllerContactId}
+                onChange={e => setOutputControllerContactId(e.target.value)}
                 className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
               >
-                <option value="">{tp('outputControllerAffiliation')}...</option>
-                {affiliationOptions.map((o) => (
-                  <option key={o.id} value={o.name}>{o.name}</option>
+                <option value="">{tp('outputControllerContact')}...</option>
+                {contacts.map((c) => (
+                  <option key={c.id} value={c.id}>{c.ownerName ? `${c.name} — ${c.ownerName}` : c.name}</option>
                 ))}
               </select>
             </div>
@@ -151,7 +141,7 @@ export function PermitPanel({ application, currentUser, dataHolders, dataUsers }
 
             {error && <p className="text-xs text-red-600">{error}</p>}
             <button
-              disabled={loading || !outputControllerName.trim() || !outputControllerAffiliation.trim()}
+              disabled={loading || !outputControllerContactId}
               onClick={issuePermit}
               className="w-full rounded px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 transition-colors"
             >

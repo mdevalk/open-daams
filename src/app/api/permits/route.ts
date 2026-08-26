@@ -281,11 +281,24 @@ export async function POST(req: NextRequest) {
     const auth = await requireRole(body.issuedByUserId, ['DECISION_MAKER', 'ADMIN']);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-    if (!body.outputControllerName || !body.outputControllerAffiliation) {
+    if (!body.outputControllerContactId) {
       return NextResponse.json(
-        { error: 'Output controller name and affiliation are required to issue a permit' },
+        { error: 'An output controller must be selected to issue a permit' },
         { status: 422 },
       );
+    }
+
+    const outputControllerContact = await prisma.contact.findUnique({
+      where: { id: body.outputControllerContactId },
+      include: {
+        dataUser: { select: { name: true } },
+        dataHolder: { select: { name: true } },
+        speOperator: { select: { name: true } },
+        speProvider: { select: { name: true } },
+      },
+    });
+    if (!outputControllerContact || !(outputControllerContact.name || outputControllerContact.email)) {
+      return NextResponse.json({ error: 'Output controller contact not found' }, { status: 404 });
     }
 
     const application = await prisma.application.findUnique({
@@ -331,13 +344,18 @@ export async function POST(req: NextRequest) {
 
     const researcher = resolveResearcher(application);
 
-    // Selected by HDAB at the moment of issuance — can be HDAB staff, a data
-    // holder's employee, or an external expert, so this is always
-    // freshly-entered on the issuance form, never derived from a User.
-    // Affiliation is UI-constrained to existing data holders for now.
+    // Selected by HDAB at the moment of issuance from the masterdata contacts
+    // list (Contact model) — can be HDAB staff, a data holder's employee, or
+    // an external expert. Affiliation is derived from whichever owner
+    // (DataUser/DataHolder/SpeOperator/SpeProvider) the contact belongs to.
     const outputController = {
-      name: String(body.outputControllerName).trim(),
-      affiliation: String(body.outputControllerAffiliation).trim(),
+      name: outputControllerContact.name ?? outputControllerContact.email ?? 'Unknown',
+      affiliation:
+        outputControllerContact.dataUser?.name ??
+        outputControllerContact.dataHolder?.name ??
+        outputControllerContact.speOperator?.name ??
+        outputControllerContact.speProvider?.name ??
+        'Unknown',
       did: generateSampleDid(),
     };
 
