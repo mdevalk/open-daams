@@ -1,4 +1,4 @@
-import type { FinancialLineItem, InvoiceRecipientType } from '@prisma/client';
+import type { FinancialLineItem, InvoiceRecipientType, InvoiceStatus, Prisma } from '@prisma/client';
 
 export type SourceLineItem = Pick<
   FinancialLineItem,
@@ -95,4 +95,72 @@ export function calculateDueDate(from: Date, days = DEFAULT_PAYMENT_TERM_DAYS): 
 
 export function nextInvoiceNumber(sequence: number, prefix = 'INV-NL'): string {
   return `${prefix}-${new Date().getFullYear()}-${String(sequence).padStart(4, '0')}`;
+}
+
+type InvoiceGroupRef = {
+  referenceNumber: string | null;
+  title: string | null;
+  applicant: { name: string } | null;
+};
+
+type InvoiceGroupInput = {
+  permit: { id: string; application: InvoiceGroupRef | null } | null;
+  application: ({ id: string } & InvoiceGroupRef) | null;
+};
+
+// Groups invoices issued together — a permit's "Issue invoices" click can
+// produce one applicant invoice plus one self-billing invoice per data
+// holder/SPE operator, and those belong together visually. Grouped by
+// permitId when set, falling back to applicationId for provisional
+// (pre-permit) invoices, which are always solo. Callers should pass an
+// already createdAt-desc-sorted list — iterating that order into a Map
+// preserves "most recently active permit first" group ordering for free.
+export function groupInvoicesByPermitOrApplication<T extends InvoiceGroupInput>(
+  invoices: T[],
+): { key: string; permit: T['permit']; reference: string; invoices: T[] }[] {
+  const groupsMap = new Map<string, { key: string; permit: T['permit']; reference: string; invoices: T[] }>();
+  for (const invoice of invoices) {
+    const key = invoice.permit ? `permit-${invoice.permit.id}` : `application-${invoice.application?.id}`;
+    let group = groupsMap.get(key);
+    if (!group) {
+      const applicant = invoice.permit?.application?.applicant ?? invoice.application?.applicant;
+      const reference = invoice.permit
+        ? `${invoice.permit.application?.referenceNumber} — ${invoice.permit.application?.title}`
+        : `${invoice.application?.referenceNumber} — ${invoice.application?.title}`;
+      group = { key, permit: invoice.permit, reference: `${applicant?.name ?? '—'} — ${reference}`, invoices: [] };
+      groupsMap.set(key, group);
+    }
+    group.invoices.push(invoice);
+  }
+  return [...groupsMap.values()];
+}
+
+export function buildInvoiceWhereClause(params: {
+  status?: string;
+  overdue?: string;
+  permitId?: string;
+}): Prisma.InvoiceWhereInput {
+  return {
+    ...(params.status ? { status: params.status as InvoiceStatus } : {}),
+    ...(params.overdue ? { status: 'ISSUED' as const, dueAt: { lt: new Date() } } : {}),
+    ...(params.permitId ? { permitId: params.permitId } : {}),
+  };
+}
+
+export function buildInvoiceStatusCounts(counts: { status: string; _count: number }[]): Record<string, number> {
+  const countMap: Record<string, number> = {};
+  counts.forEach((c) => { countMap[c.status] = c._count; });
+  return countMap;
+}
+
+export function buildInvoiceStatusSums(
+  totals: { status: string; _sum: { totalAmount: Prisma.Decimal | null } }[],
+): Record<string, number> {
+  const sumByStatus: Record<string, number> = {};
+  totals.forEach((s) => { sumByStatus[s.status] = Number(s._sum.totalAmount ?? 0); });
+  return sumByStatus;
+}
+
+export function resolveActiveTab(rawTab: string | undefined): 'estimates' | 'invoices' {
+  return rawTab === 'invoices' ? 'invoices' : 'estimates';
 }

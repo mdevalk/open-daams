@@ -108,3 +108,78 @@ export function extractionIntervalLabel(code?: string | null): string | undefine
   };
   return map[code] ?? code;
 }
+
+type Translator = (key: string, values?: Record<string, string | number | Date>) => string;
+
+export function yesNoLabel(value: boolean | null | undefined, t: Translator): string | undefined {
+  return value !== null && value !== undefined ? (value ? t('yes') : t('no')) : undefined;
+}
+
+export function populationLabel(
+  row: { size: number | null; sizeIsEstimate: boolean | null },
+  t: Translator,
+): string | undefined {
+  if (row.size === null) return undefined;
+  return `${row.size}${row.sizeIsEstimate !== null ? ` (${row.sizeIsEstimate ? t('estimate') : t('exact')})` : ''}`;
+}
+
+export function dataPeriodLabel(row: {
+  timePeriod: string | null;
+  dataStartDate: Date | string | null;
+  dataEndDate: Date | string | null;
+}): string | undefined {
+  return row.timePeriod || (row.dataStartDate ? `${formatDate(row.dataStartDate)} – ${formatDate(row.dataEndDate)}` : undefined);
+}
+
+export function extractionIntervalDisplay(row: {
+  extractionInterval: string | null;
+  extractionIntervalOther: string | null;
+}): string | undefined {
+  if (!row.extractionInterval) return undefined;
+  return `${extractionIntervalLabel(row.extractionInterval)}${row.extractionIntervalOther ? ` — ${row.extractionIntervalOther}` : ''}`;
+}
+
+export function informationProviderLabel(
+  cohort: {
+    informationProviderSameAsContactPerson: boolean | null;
+    informationProviderName: string | null;
+    informationProviderEmail: string | null;
+    informationProviderPhone: string | null;
+  },
+  t: Translator,
+): string {
+  if (cohort.informationProviderSameAsContactPerson) return t('sameAsContactPerson');
+  return [cohort.informationProviderName, cohort.informationProviderEmail, cohort.informationProviderPhone]
+    .filter(Boolean)
+    .join(' · ');
+}
+
+export function hasBaseSectionData(cohort: {
+  hdabContacts: string | null;
+  howWillDataBeLinked: string | null;
+  dataSubjectsInformed: boolean | null;
+  hasTheStudyCohortBeenFormedBasedOnInformationOfStudyParticipants: boolean | null;
+  doesTheInformedConsentCoverTheRequestedRegistryExtractions: boolean | null;
+  confirmThatDataPermitHasBeenGrantedForTheResearchProject: boolean | null;
+  howTheStudyCohortWasObtained: string | null;
+  detailsOfHowTheStudyCohortHasBeenFormed: string | null;
+  whyNeedDataOfaWholePopulation: string | null;
+  regionsSeekForData: string | null;
+  informationProviderName: string | null;
+  informationProviderSameAsContactPerson: boolean | null;
+}): boolean {
+  return Boolean(
+    cohort.hdabContacts ||
+      cohort.howWillDataBeLinked ||
+      cohort.dataSubjectsInformed !== null ||
+      cohort.hasTheStudyCohortBeenFormedBasedOnInformationOfStudyParticipants !== null ||
+      cohort.doesTheInformedConsentCoverTheRequestedRegistryExtractions !== null ||
+      cohort.confirmThatDataPermitHasBeenGrantedForTheResearchProject !== null ||
+      cohort.howTheStudyCohortWasObtained ||
+      cohort.detailsOfHowTheStudyCohortHasBeenFormed ||
+      cohort.whyNeedDataOfaWholePopulation ||
+      cohort.regionsSeekForData ||
+      cohort.informationProviderName ||
+      cohort.informationProviderSameAsContactPerson,
+  );
+}

@@ -5,6 +5,7 @@ import { Application, User } from '@prisma/client';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { readErrorMessage } from '@/lib/utils';
+import { isDeadlineExtensionHidden, deadlineExtensionViewState } from '@/lib/deadline-extension';
 
 type Props = {
   application: Pick<Application, 'id' | 'status' | 'deadlineExtended' | 'deadlineExtensionReason'>;
@@ -22,10 +23,8 @@ export function DeadlineExtensionPanel({ application, currentUser, embedded }: P
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (['DECISION_ISSUED', 'WITHDRAWN'].includes(application.status)) return null;
-
   const canManage = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(currentUser.role);
-  if (!canManage && !application.deadlineExtended) return null;
+  if (isDeadlineExtensionHidden(application.status, canManage, application.deadlineExtended)) return null;
 
   async function submit() {
     setLoading(true);
@@ -46,14 +45,24 @@ export function DeadlineExtensionPanel({ application, currentUser, embedded }: P
     }
   }
 
-  const body = application.deadlineExtended ? (
-    <div className={embedded ? 'rounded border border-gray-200 bg-gray-50 px-4 py-3 text-sm' : 'text-sm space-y-1'}>
-      <p className="text-xs text-emerald-700 font-medium">{t('extendedLabel')}</p>
-      <p className="text-xs text-gray-500 mt-0.5">{application.deadlineExtensionReason}</p>
-      <p className="text-xs text-gray-400 mt-1">{t('transmittedToApplicant')}</p>
-    </div>
-  ) : canManage ? (
-    editing ? (
+  const viewState = deadlineExtensionViewState({
+    deadlineExtended: application.deadlineExtended,
+    canManage,
+    editing,
+    embedded: Boolean(embedded),
+  });
+
+  let body: React.ReactNode = null;
+  if (viewState === 'extended') {
+    body = (
+      <div className={embedded ? 'rounded border border-gray-200 bg-gray-50 px-4 py-3 text-sm' : 'text-sm space-y-1'}>
+        <p className="text-xs text-emerald-700 font-medium">{t('extendedLabel')}</p>
+        <p className="text-xs text-gray-500 mt-0.5">{application.deadlineExtensionReason}</p>
+        <p className="text-xs text-gray-400 mt-1">{t('transmittedToApplicant')}</p>
+      </div>
+    );
+  } else if (viewState === 'editing') {
+    body = (
       <div className="space-y-2">
         <textarea
           rows={3}
@@ -80,7 +89,9 @@ export function DeadlineExtensionPanel({ application, currentUser, embedded }: P
           </button>
         </div>
       </div>
-    ) : embedded ? (
+    );
+  } else if (viewState === 'embedded-prompt') {
+    body = (
       <button
         onClick={() => setEditing(true)}
         className="w-full text-left rounded border px-4 py-3 text-sm transition-colors border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-800"
@@ -88,12 +99,14 @@ export function DeadlineExtensionPanel({ application, currentUser, embedded }: P
         <p className="font-medium">{t('extendButton')}</p>
         <p className="text-xs opacity-70 mt-0.5">{t('title')}</p>
       </button>
-    ) : (
+    );
+  } else if (viewState === 'prompt') {
+    body = (
       <button onClick={() => setEditing(true)} className="text-xs text-[#01689b] hover:underline">
         {t('extendButton')}
       </button>
-    )
-  ) : null;
+    );
+  }
 
   if (embedded) return body;
 

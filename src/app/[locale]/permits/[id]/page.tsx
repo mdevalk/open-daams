@@ -7,7 +7,13 @@ import { InvoicePanel } from '@/components/InvoicePanel';
 import { SpeProvisioningPanel } from '@/components/SpeProvisioningPanel';
 import { PermitChangeRequestPanel } from '@/components/PermitChangeRequestPanel';
 import { PermitLifecyclePanel } from '@/components/PermitLifecyclePanel';
-import { PERMIT_STATUS_COLORS, formatPermitId } from '@/lib/permit';
+import {
+  PERMIT_STATUS_COLORS,
+  formatPermitId,
+  resolveCurrentAndPendingVersion,
+  derivePermitDisplayFlags,
+  formatSpeOperatorLabel,
+} from '@/lib/permit';
 import { groupDatasetsByHolder } from '@/lib/permit-signing';
 import { determineOutstandingInvoiceGroups } from '@/lib/invoice';
 import { formatDate, formatDateTime, purposeLabel, serializePrisma } from '@/lib/utils';
@@ -24,13 +30,6 @@ function Field({ label, value, wide }: { label: string; value: React.ReactNode; 
       <dd className="font-medium whitespace-pre-wrap break-words">{value}</dd>
     </div>
   );
-}
-
-// Retention deadline: data deleted ≤ 6 months after the permit expires (Art. 68(12)).
-function addMonths(date: Date, months: number): Date {
-  const d = new Date(date);
-  d.setMonth(d.getMonth() + months);
-  return d;
 }
 
 export default async function PermitDetailPage({
@@ -136,20 +135,7 @@ export default async function PermitDetailPage({
       orderBy: { createdAt: 'asc' },
     }),
   ]);
-  const currentVersion = versions.find((v) => v.isCurrent) ?? null;
-  // R9.3.9: the next version, if it was approved with a deferred effective
-  // date and hasn't been activated yet — only ever set for the current
-  // permit's own successor, since a new amendment can only be requested
-  // while the permit is current.
-  const pendingVersionRaw = versions.find((v) => v.version === rawPermit.version + 1 && v.effectiveAt && !v.activatedAt) ?? null;
-  const pendingVersion = pendingVersionRaw?.effectiveAt
-    ? {
-        id: pendingVersionRaw.id,
-        permitNumber: pendingVersionRaw.permitNumber,
-        version: pendingVersionRaw.version,
-        effectiveAt: pendingVersionRaw.effectiveAt,
-      }
-    : null;
+  const { currentVersion, pendingVersion } = resolveCurrentAndPendingVersion(versions, rawPermit.version);
 
   // DataPermit carries Prisma Decimal fee fields, which the RSC boundary
   // can't serialise when passed to the client panels below.
@@ -163,10 +149,7 @@ export default async function PermitDetailPage({
   if (!currentUser) notFound();
 
   const app = permit.application;
-  const isDataRequest = app?.type === 'DATA_REQUEST';
-  const retentionDeadline = permit.validUntil ? addMonths(new Date(permit.validUntil), 6) : null;
-  const showEthical =
-    app?.ethicalReviewRequired && app.ethicalReviewStatus && app.ethicalReviewStatus !== 'NOT_REQUIRED';
+  const { isDataRequest, retentionDeadline, showEthical } = derivePermitDisplayFlags(permit, app);
 
   return (
     <div className="space-y-6">
@@ -348,16 +331,7 @@ export default async function PermitDetailPage({
               {!isDataRequest && <Field label={t('speName')} value={app?.speName} />}
               {!isDataRequest && <Field label={t('speTechnical')} value={app?.speTechnicalRequirements} wide />}
               {!isDataRequest && (
-                <Field
-                  label={t('speOperator')}
-                  value={
-                    permit.speOperator
-                      ? permit.speOperator.speProvider
-                        ? t('speOperatorViaProvider', { operator: permit.speOperator.name, provider: permit.speOperator.speProvider.name })
-                        : permit.speOperator.name
-                      : null
-                  }
-                />
+                <Field label={t('speOperator')} value={formatSpeOperatorLabel(permit.speOperator, t)} />
               )}
               <Field label={t('optOut')} value={app?.usesOptOutException ? t('optOutApplicable') : null} />
               <Field label={t('optOutJustification')} value={app?.usesOptOutException ? app.optOutExceptionJustification : null} wide />

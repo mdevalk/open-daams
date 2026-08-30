@@ -6,6 +6,11 @@ import {
   nextInvoiceNumber,
   groupByDataHolder,
   determineOutstandingInvoiceGroups,
+  groupInvoicesByPermitOrApplication,
+  buildInvoiceWhereClause,
+  buildInvoiceStatusCounts,
+  buildInvoiceStatusSums,
+  resolveActiveTab,
   type SourceLineItem,
 } from '@/lib/invoice';
 
@@ -157,5 +162,102 @@ describe('nextInvoiceNumber', () => {
   it('accepts a custom prefix, for self-billing invoices', () => {
     const year = new Date().getFullYear();
     expect(nextInvoiceNumber(7, 'SBI-NL')).toBe(`SBI-NL-${year}-0007`);
+  });
+});
+
+describe('groupInvoicesByPermitOrApplication', () => {
+  function invoice(overrides: Record<string, unknown>) {
+    return { permit: null, application: null, ...overrides };
+  }
+
+  it('groups by permitId when set', () => {
+    const permit = { id: 'permit-1', application: { referenceNumber: 'HDAB-1', title: 'Study A', applicant: { name: 'A. de Vries' } } };
+    const groups = groupInvoicesByPermitOrApplication([
+      invoice({ id: 'inv-1', permit }),
+      invoice({ id: 'inv-2', permit }),
+    ]);
+    expect(groups).toHaveLength(1);
+    expect(groups[0].key).toBe('permit-permit-1');
+    expect(groups[0].invoices).toHaveLength(2);
+    expect(groups[0].reference).toBe('A. de Vries — HDAB-1 — Study A');
+  });
+
+  it('falls back to applicationId for provisional (pre-permit) invoices', () => {
+    const application = { id: 'app-1', referenceNumber: 'HDAB-2', title: 'Study B', applicant: { name: 'M. Jansen' } };
+    const groups = groupInvoicesByPermitOrApplication([invoice({ id: 'inv-3', application })]);
+    expect(groups).toHaveLength(1);
+    expect(groups[0].key).toBe('application-app-1');
+    expect(groups[0].reference).toBe('M. Jansen — HDAB-2 — Study B');
+  });
+
+  it('preserves iteration order across distinct groups', () => {
+    const permitA = { id: 'permit-A', application: { referenceNumber: 'A', title: 'A', applicant: null } };
+    const permitB = { id: 'permit-B', application: { referenceNumber: 'B', title: 'B', applicant: null } };
+    const groups = groupInvoicesByPermitOrApplication([
+      invoice({ id: 'inv-1', permit: permitA }),
+      invoice({ id: 'inv-2', permit: permitB }),
+      invoice({ id: 'inv-3', permit: permitA }),
+    ]);
+    expect(groups.map((g) => g.key)).toEqual(['permit-permit-A', 'permit-permit-B']);
+    expect(groups[0].invoices).toHaveLength(2);
+  });
+});
+
+describe('buildInvoiceWhereClause', () => {
+  it('returns an empty filter when nothing is set', () => {
+    expect(buildInvoiceWhereClause({})).toEqual({});
+  });
+
+  it('filters by status', () => {
+    expect(buildInvoiceWhereClause({ status: 'PAID' })).toEqual({ status: 'PAID' });
+  });
+
+  it('filters overdue invoices regardless of the status param', () => {
+    const where = buildInvoiceWhereClause({ overdue: '1' });
+    expect(where).toMatchObject({ status: 'ISSUED', dueAt: { lt: expect.any(Date) } });
+  });
+
+  it('filters by permitId', () => {
+    expect(buildInvoiceWhereClause({ permitId: 'permit-1' })).toEqual({ permitId: 'permit-1' });
+  });
+});
+
+describe('buildInvoiceStatusCounts', () => {
+  it('maps groupBy count rows into a status -> count record', () => {
+    expect(buildInvoiceStatusCounts([{ status: 'ISSUED', _count: 3 }, { status: 'PAID', _count: 5 }])).toEqual({
+      ISSUED: 3,
+      PAID: 5,
+    });
+  });
+
+  it('returns an empty record for no rows', () => {
+    expect(buildInvoiceStatusCounts([])).toEqual({});
+  });
+});
+
+describe('buildInvoiceStatusSums', () => {
+  it('maps groupBy sum rows into a status -> total record', () => {
+    expect(
+      buildInvoiceStatusSums([
+        { status: 'ISSUED', _sum: { totalAmount: 1250.5 as never } },
+        { status: 'PAID', _sum: { totalAmount: 300 as never } },
+      ]),
+    ).toEqual({ ISSUED: 1250.5, PAID: 300 });
+  });
+
+  it('treats a null sum as 0', () => {
+    expect(buildInvoiceStatusSums([{ status: 'DRAFT', _sum: { totalAmount: null } }])).toEqual({ DRAFT: 0 });
+  });
+});
+
+describe('resolveActiveTab', () => {
+  it('returns "invoices" only when explicitly requested', () => {
+    expect(resolveActiveTab('invoices')).toBe('invoices');
+  });
+
+  it('defaults to "estimates" for anything else', () => {
+    expect(resolveActiveTab(undefined)).toBe('estimates');
+    expect(resolveActiveTab('estimates')).toBe('estimates');
+    expect(resolveActiveTab('bogus')).toBe('estimates');
   });
 });

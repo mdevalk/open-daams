@@ -12,7 +12,15 @@ import {
   extractionMethodLabel,
   extractionFrequencyLabel,
   extractionIntervalLabel,
+  yesNoLabel,
+  populationLabel,
+  dataPeriodLabel,
+  extractionIntervalDisplay,
+  informationProviderLabel,
+  hasBaseSectionData,
 } from '@/lib/utils';
+
+const t = (key: string) => key;
 
 describe('cn', () => {
   it('joins class names and drops falsy values', () => {
@@ -133,5 +141,115 @@ describe('label lookups', () => {
     expect(extractionIntervalLabel('QUARTERLY')).toBe('Quarterly');
     expect(extractionIntervalLabel('UNKNOWN_CODE')).toBe('UNKNOWN_CODE');
     expect(extractionIntervalLabel(null)).toBeUndefined();
+  });
+});
+
+describe('yesNoLabel', () => {
+  it('returns "yes" for true and "no" for false', () => {
+    expect(yesNoLabel(true, t)).toBe('yes');
+    expect(yesNoLabel(false, t)).toBe('no');
+  });
+
+  it('returns undefined for null or undefined', () => {
+    expect(yesNoLabel(null, t)).toBeUndefined();
+    expect(yesNoLabel(undefined, t)).toBeUndefined();
+  });
+});
+
+describe('populationLabel', () => {
+  it('returns undefined when size is null', () => {
+    expect(populationLabel({ size: null, sizeIsEstimate: null }, t)).toBeUndefined();
+  });
+
+  it('returns the bare size when sizeIsEstimate is null', () => {
+    expect(populationLabel({ size: 500, sizeIsEstimate: null }, t)).toBe('500');
+  });
+
+  it('appends "estimate" or "exact" when sizeIsEstimate is set', () => {
+    expect(populationLabel({ size: 500, sizeIsEstimate: true }, t)).toBe('500 (estimate)');
+    expect(populationLabel({ size: 500, sizeIsEstimate: false }, t)).toBe('500 (exact)');
+  });
+});
+
+describe('dataPeriodLabel', () => {
+  it('prefers timePeriod when set', () => {
+    expect(dataPeriodLabel({ timePeriod: '2020-2022', dataStartDate: null, dataEndDate: null })).toBe('2020-2022');
+  });
+
+  it('falls back to a formatted start–end range', () => {
+    expect(
+      dataPeriodLabel({ timePeriod: null, dataStartDate: '2020-01-01', dataEndDate: '2020-06-01' }),
+    ).toContain('–');
+  });
+
+  it('returns undefined when neither is set', () => {
+    expect(dataPeriodLabel({ timePeriod: null, dataStartDate: null, dataEndDate: null })).toBeUndefined();
+  });
+});
+
+describe('extractionIntervalDisplay', () => {
+  it('returns undefined when there is no interval', () => {
+    expect(extractionIntervalDisplay({ extractionInterval: null, extractionIntervalOther: null })).toBeUndefined();
+  });
+
+  it('formats a known interval', () => {
+    expect(extractionIntervalDisplay({ extractionInterval: 'QUARTERLY', extractionIntervalOther: null })).toBe('Quarterly');
+  });
+
+  it('appends the "other" detail when the interval is OTHER', () => {
+    expect(extractionIntervalDisplay({ extractionInterval: 'OTHER', extractionIntervalOther: 'Twice a year' })).toBe(
+      'Other — Twice a year',
+    );
+  });
+});
+
+describe('informationProviderLabel', () => {
+  it('returns "sameAsContactPerson" when flagged as such', () => {
+    expect(
+      informationProviderLabel(
+        { informationProviderSameAsContactPerson: true, informationProviderName: 'X', informationProviderEmail: null, informationProviderPhone: null },
+        t,
+      ),
+    ).toBe('sameAsContactPerson');
+  });
+
+  it('joins name/email/phone otherwise', () => {
+    expect(
+      informationProviderLabel(
+        {
+          informationProviderSameAsContactPerson: false,
+          informationProviderName: 'Dr. Jansen',
+          informationProviderEmail: 'j@example.com',
+          informationProviderPhone: null,
+        },
+        t,
+      ),
+    ).toBe('Dr. Jansen · j@example.com');
+  });
+});
+
+describe('hasBaseSectionData', () => {
+  const empty = {
+    hdabContacts: null,
+    howWillDataBeLinked: null,
+    dataSubjectsInformed: null,
+    hasTheStudyCohortBeenFormedBasedOnInformationOfStudyParticipants: null,
+    doesTheInformedConsentCoverTheRequestedRegistryExtractions: null,
+    confirmThatDataPermitHasBeenGrantedForTheResearchProject: null,
+    howTheStudyCohortWasObtained: null,
+    detailsOfHowTheStudyCohortHasBeenFormed: null,
+    whyNeedDataOfaWholePopulation: null,
+    regionsSeekForData: null,
+    informationProviderName: null,
+    informationProviderSameAsContactPerson: null,
+  };
+
+  it('returns false when every field is empty', () => {
+    expect(hasBaseSectionData(empty)).toBe(false);
+  });
+
+  it('returns true when any single field is set', () => {
+    expect(hasBaseSectionData({ ...empty, hdabContacts: 'Dr. Jansen' })).toBe(true);
+    expect(hasBaseSectionData({ ...empty, dataSubjectsInformed: false })).toBe(true);
   });
 });

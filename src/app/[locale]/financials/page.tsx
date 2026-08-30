@@ -3,6 +3,13 @@ import { prisma } from '@/lib/db';
 import { InvoiceStatus, FeeEstimateStatus, InvoiceRecipientType } from '@prisma/client';
 import { formatDateTime } from '@/lib/utils';
 import { formatPermitId } from '@/lib/permit';
+import {
+  groupInvoicesByPermitOrApplication,
+  buildInvoiceWhereClause,
+  buildInvoiceStatusCounts,
+  buildInvoiceStatusSums,
+  resolveActiveTab,
+} from '@/lib/invoice';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,7 +50,7 @@ export default async function FinancialsPage({
 }) {
   const { locale } = await params;
   const { tab: rawTab, status, overdue, permitId } = await searchParams;
-  const tab = rawTab === 'invoices' ? 'invoices' : 'estimates';
+  const tab = resolveActiveTab(rawTab);
   const t = await getTranslations({ locale, namespace: 'invoices' });
 
   const tabs = (
@@ -127,11 +134,7 @@ export default async function FinancialsPage({
   }
 
   const invoices = await prisma.invoice.findMany({
-    where: {
-      ...(status ? { status: status as InvoiceStatus } : {}),
-      ...(overdue ? { status: 'ISSUED', dueAt: { lt: new Date() } } : {}),
-      ...(permitId ? { permitId } : {}),
-    },
+    where: buildInvoiceWhereClause({ status, overdue, permitId }),
     include: {
       permit: {
         select: {
@@ -149,39 +152,15 @@ export default async function FinancialsPage({
     orderBy: { createdAt: 'desc' },
   });
 
-  // Group invoices issued together — a permit's "Issue invoices" click can
-  // produce one applicant invoice plus one self-billing invoice per data
-  // holder/SPE operator, and those belong together visually. Grouped by
-  // permitId when set, falling back to applicationId for provisional
-  // (pre-permit) invoices, which are always solo. Iterating the
-  // already createdAt-desc-sorted list and using a Map preserves "most
-  // recently active permit first" group ordering for free.
-  type InvoiceRow = (typeof invoices)[number];
-  const groupsMap = new Map<string, { key: string; permit: InvoiceRow['permit']; reference: string; invoices: InvoiceRow[] }>();
-  for (const invoice of invoices) {
-    const key = invoice.permit ? `permit-${invoice.permit.id}` : `application-${invoice.application?.id}`;
-    let group = groupsMap.get(key);
-    if (!group) {
-      const applicant = invoice.permit?.application?.applicant ?? invoice.application?.applicant;
-      const reference = invoice.permit
-        ? `${invoice.permit.application?.referenceNumber} — ${invoice.permit.application?.title}`
-        : `${invoice.application?.referenceNumber} — ${invoice.application?.title}`;
-      group = { key, permit: invoice.permit, reference: `${applicant?.name ?? '—'} — ${reference}`, invoices: [] };
-      groupsMap.set(key, group);
-    }
-    group.invoices.push(invoice);
-  }
-  const invoiceGroups = [...groupsMap.values()];
+  const invoiceGroups = groupInvoicesByPermitOrApplication(invoices);
 
   const counts = await prisma.invoice.groupBy({ by: ['status'], _count: true });
-  const countMap: Record<string, number> = {};
-  counts.forEach((c) => { countMap[c.status] = c._count; });
+  const countMap = buildInvoiceStatusCounts(counts.map((c) => ({ status: c.status, _count: c._count })));
   const total = Object.values(countMap).reduce((a, b) => a + b, 0);
   const overdueCount = await prisma.invoice.count({ where: { status: 'ISSUED', dueAt: { lt: new Date() } } });
 
   const totals = await prisma.invoice.groupBy({ by: ['status'], _sum: { totalAmount: true } });
-  const sumByStatus: Record<string, number> = {};
-  totals.forEach((s) => { sumByStatus[s.status] = Number(s._sum.totalAmount ?? 0); });
+  const sumByStatus = buildInvoiceStatusSums(totals);
 
   return (
     <div className="space-y-6">

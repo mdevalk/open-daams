@@ -3,6 +3,7 @@ import type { DefaultSession } from 'next-auth';
 import Keycloak from 'next-auth/providers/keycloak';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@prisma/client';
+import { resolveSignInClaims, resolveImpersonationUpdate } from '@/lib/auth-helpers';
 
 type ImpersonationClaims = {
   impersonatedUserId?: string;
@@ -52,44 +53,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     // Postgres on every request via actingUserId(), unchanged). The raw
     // Keycloak id_token is kept for RP-initiated logout (see
     // /api/auth/keycloak-signout) — Auth.js's own signOut() only clears our
-    // cookie, not Keycloak's SSO session.
-    //
-    // `trigger === 'update'` handles the "Act as" flow: the client calls
-    // useSession().update({ impersonatedUserId }) from AuthStatus. Re-checks
-    // the REAL user's role fresh from Postgres on every call — never trusts
-    // a stale token.role or a client-supplied flag.
+    // cookie, not Keycloak's SSO session. See src/lib/auth-helpers.ts for
+    // the sign-in-resolution and "Act as"-update logic itself.
     async jwt({ token, account, profile, trigger, session }) {
-      if (account && profile?.email) {
-        const user = await prisma.user.findUnique({ where: { email: profile.email } });
-        if (user) {
-          token.internalUserId = user.id;
-          token.role = user.role;
-        }
-        if (account.id_token) token.idToken = account.id_token;
-      }
-
-      if (trigger === 'update' && session && typeof session === 'object' && 'impersonatedUserId' in session) {
-        const realUser = token.internalUserId
-          ? await prisma.user.findUnique({ where: { id: token.internalUserId } })
-          : null;
-
-        if (realUser?.role === 'ADMIN') {
-          const targetId = (session as { impersonatedUserId: string | null }).impersonatedUserId;
-          if (targetId === null) {
-            token.impersonatedUserId = undefined;
-            token.impersonatedName = undefined;
-            token.impersonatedRole = undefined;
-          } else {
-            const target = await prisma.user.findUnique({ where: { id: targetId } });
-            if (target) {
-              token.impersonatedUserId = target.id;
-              token.impersonatedName = target.name;
-              token.impersonatedRole = target.role;
-            }
-          }
-        }
-      }
-
+      await resolveSignInClaims(token, account, profile);
+      await resolveImpersonationUpdate(token, trigger, session);
       return token;
     },
     async session({ session, token }) {

@@ -55,3 +55,73 @@ export const PERMIT_STATUS_COLORS: Record<DataPermitStatus, string> = {
 export function formatPermitId(permitNumber: string, version: number): string {
   return version > 1 ? `${permitNumber}-v${version}` : permitNumber;
 }
+
+type PermitVersionSummary = {
+  id: string;
+  permitNumber: string;
+  version: number;
+  isCurrent: boolean;
+  effectiveAt: Date | null;
+  activatedAt: Date | null;
+};
+
+// Resolves the current version and (if any) the pending next version from a
+// permit's full version chain (D6.4 §9.3). "Pending" (R9.3.9) means: the next
+// version was approved with a deferred effective date and hasn't been
+// activated yet — only ever set for the current permit's own successor,
+// since a new amendment can only be requested while the permit is current.
+export function resolveCurrentAndPendingVersion(
+  versions: PermitVersionSummary[],
+  currentPermitVersion: number,
+): {
+  currentVersion: PermitVersionSummary | null;
+  pendingVersion: { id: string; permitNumber: string; version: number; effectiveAt: Date } | null;
+} {
+  const currentVersion = versions.find((v) => v.isCurrent) ?? null;
+  const pendingVersionRaw =
+    versions.find((v) => v.version === currentPermitVersion + 1 && v.effectiveAt && !v.activatedAt) ?? null;
+  const pendingVersion = pendingVersionRaw?.effectiveAt
+    ? {
+        id: pendingVersionRaw.id,
+        permitNumber: pendingVersionRaw.permitNumber,
+        version: pendingVersionRaw.version,
+        effectiveAt: pendingVersionRaw.effectiveAt,
+      }
+    : null;
+  return { currentVersion, pendingVersion };
+}
+
+type PermitDisplayApplication = {
+  type: 'DATA_REQUEST' | 'DATA_ACCESS_APPLICATION';
+  ethicalReviewRequired: boolean | null;
+  ethicalReviewStatus: string | null;
+} | null;
+
+// Retention deadline: data deleted ≤ 6 months after the permit expires (Art. 68(12)).
+function addMonths(date: Date, months: number): Date {
+  const d = new Date(date);
+  d.setMonth(d.getMonth() + months);
+  return d;
+}
+
+export function derivePermitDisplayFlags(
+  permit: { validUntil: Date | string | null },
+  app: PermitDisplayApplication,
+): { isDataRequest: boolean; retentionDeadline: Date | null; showEthical: boolean } {
+  return {
+    isDataRequest: app?.type === 'DATA_REQUEST',
+    retentionDeadline: permit.validUntil ? addMonths(new Date(permit.validUntil), 6) : null,
+    showEthical: Boolean(app?.ethicalReviewRequired && app.ethicalReviewStatus && app.ethicalReviewStatus !== 'NOT_REQUIRED'),
+  };
+}
+
+type SpeOperatorForLabel = { name: string; speProvider: { name: string } | null } | null;
+
+export function formatSpeOperatorLabel(
+  speOperator: SpeOperatorForLabel,
+  t: (key: string, values?: Record<string, string>) => string,
+): string | null {
+  if (!speOperator) return null;
+  if (!speOperator.speProvider) return speOperator.name;
+  return t('speOperatorViaProvider', { operator: speOperator.name, provider: speOperator.speProvider.name });
+}

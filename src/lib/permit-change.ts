@@ -57,3 +57,46 @@ export const APPROVAL_EFFECT: Record<PermitChangeType, { to: DataPermitStatus; n
   RENEWAL: { to: 'RENEWED', newVersion: true },
   REVOCATION_APPEAL: { to: 'GRANTED', newVersion: true }, // revocation overturned → reinstated
 };
+
+// Builds the PATCH body for a change-request decision. Fields that only
+// apply on an APPROVED decision of a specific request type are sent as
+// undefined (dropped by JSON.stringify) rather than null, matching the API
+// route's "unchanged" vs. "explicitly clear" distinction.
+export function buildChangeRequestDecisionBody(params: {
+  decision: 'APPROVED' | 'REJECTED';
+  requestType: PermitChangeType;
+  actingUserId: string;
+  comment: string;
+  newValidUntil: string;
+  effectiveDate: string;
+  speOperatorId: string;
+  outputControllerName: string;
+  outputControllerAffiliation: string;
+}) {
+  const isApprovedRenewal = params.decision === 'APPROVED' && params.requestType === 'RENEWAL';
+  const isApprovedAmendment = params.decision === 'APPROVED' && params.requestType === 'AMENDMENT';
+  return {
+    decision: params.decision,
+    actingUserId: params.actingUserId,
+    comment: params.comment || null,
+    newValidUntil: isApprovedRenewal ? params.newValidUntil : undefined,
+    effectiveDate: isApprovedAmendment ? params.effectiveDate || undefined : undefined,
+    speOperatorId: isApprovedAmendment ? params.speOperatorId || undefined : undefined,
+    outputControllerName: isApprovedAmendment ? params.outputControllerName || undefined : undefined,
+    outputControllerAffiliation: isApprovedAmendment ? params.outputControllerAffiliation || undefined : undefined,
+  };
+}
+
+// After a decision PATCH: an immediate approval issues a new CURRENT permit
+// version, so the UI navigates to it. A deferred (pending-activation)
+// approval, a rejection, or no id at all keep the current page — the old
+// version is still the operative one.
+export function resolveChangeRequestNavigation(
+  data: { newPermitId?: string; pending?: boolean } | null,
+  currentPermitId: string,
+): { type: 'push'; permitId: string } | { type: 'refresh' } {
+  if (data?.newPermitId && data.newPermitId !== currentPermitId && !data.pending) {
+    return { type: 'push', permitId: data.newPermitId };
+  }
+  return { type: 'refresh' };
+}

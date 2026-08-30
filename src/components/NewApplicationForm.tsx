@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { User } from '@prisma/client';
 import { useRouter } from 'next/navigation';
+import { buildApplicationCreateBody } from '@/lib/application-form';
 
 const PURPOSE_VALUES = ['PUBLIC_HEALTH', 'POLICY_MAKING', 'STATISTICS', 'EDUCATION', 'SCIENTIFIC_RESEARCH', 'CARE_IMPROVEMENT'] as const;
 
@@ -96,80 +97,23 @@ export function NewApplicationForm({
     setError(null);
     const form = new FormData(e.currentTarget);
 
-    const body = {
-      actingUserId: currentUser.id,
-      type: form.get('type'),
-      applicantId: currentUser.role === 'APPLICANT' ? currentUser.id : form.get('applicantId'),
-      title: form.get('title'),
-      projectDescription: form.get('projectDescription'),
-      purposeCategory: form.get('purposeCategory'),
-      requestedDatasets: dataHolderGroups
-        .filter((g) => g.dataHolderId)
-        .map((g) => ({
-          dataHolderId: g.dataHolderId,
-          datasets: g.datasets
-            .filter((d) => d.name.trim())
-            .map((d) => ({ name: d.name.trim(), url: d.url.trim() || null })),
-        }))
-        .filter((g) => g.datasets.length > 0),
-      requestedVariables: form.get('requestedVariables'),
-      studyPopulation: form.get('studyPopulation'),
-      inclusionCriteria: form.get('inclusionCriteria'),
-      exclusionCriteria: form.get('exclusionCriteria'),
-      dataStartDate: form.get('dataStartDate') || null,
-      dataEndDate: form.get('dataEndDate') || null,
-      projectStartDate: form.get('projectStartDate') || null,
-      projectEndDate: form.get('projectEndDate') || null,
-      legalBasis: form.get('legalBasis'),
-      dataProcessingCountry: form.get('dataProcessingCountry') || 'NL',
-      isCrossBorder: form.get('isCrossBorder') === 'on',
+    const body = buildApplicationCreateBody(type, currentUser, form, {
+      dataHolderGroups,
       decisionTrack,
-
-      // Shared cohort/extraction fields (Annex 5 §6.1 / Annex 6 §6.1)
-      cohortSizeIsEstimate: cohortSizeIsEstimate === 'true',
-      cohortSize: form.get('cohortSize') || null,
-      cohortSizeJustification: form.get('cohortSizeJustification'),
-      extractionMethod: extractionMethod || null,
-      sampleSize: form.get('sampleSize'),
-      samplingMethodDescription: form.get('samplingMethodDescription'),
-      extractionFrequency: extractionFrequency || null,
-      extractionInterval: extractionFrequency === 'MULTIPLE_TIMES' ? (extractionInterval || null) : null,
-      extractionIntervalOther: form.get('extractionIntervalOther'),
-      extractionTimingNotes: form.get('extractionTimingNotes'),
-
-      // Opt-out exception (Annex 5 §8 / Annex 6 §6, EHDS Art. 71(4))
+      cohortSizeIsEstimate,
+      extractionMethod,
+      extractionFrequency,
+      extractionInterval,
       usesOptOutException,
-      optOutExceptionJustification: form.get('optOutExceptionJustification'),
-
-      // Data access application only (Annex 5 §6.1–6.3, 7, 8)
-      ...(type === 'DATA_ACCESS_APPLICATION' ? {
-        cohortFormationMethod: cohortFormationMethod || null,
-        dataSubjectsInformed: dataSubjectsInformed ? dataSubjectsInformed === 'true' : null,
-        dataSubjectsInformedDetail: form.get('dataSubjectsInformedDetail'),
-        includesControls,
-        controlsDescription: includesControls ? form.get('controlsDescription') : null,
-        includesRelatives,
-        relativesDescription: includesRelatives ? form.get('relativesDescription') : null,
-        otherDataToCombine,
-        otherDataDescription: otherDataToCombine ? form.get('otherDataDescription') : null,
-        speName: form.get('speName'),
-        speTechnicalRequirements: form.get('speTechnicalRequirements'),
-        dataAccessTiming,
-        dataAccessLaterDate: dataAccessTiming === 'LATER' ? (form.get('dataAccessLaterDate') || null) : null,
-        transfersOutsideEuEea,
-        transferCountries: transfersOutsideEuEea
-          ? String(form.get('transferCountries') || '').split(',').map((s) => s.trim()).filter(Boolean)
-          : [],
-        transferLegalBasis: transfersOutsideEuEea ? form.get('transferLegalBasis') : null,
-        dataController: form.get('dataController'),
-        lawfulnessOfProcessing: lawfulness,
-      } : {}),
-
-      // Data request only (Annex 6 §6)
-      ...(type === 'DATA_REQUEST' ? {
-        tabulationPlan: form.get('tabulationPlan'),
-      } : {}),
-    };
+      cohortFormationMethod,
+      dataSubjectsInformed,
+      includesControls,
+      includesRelatives,
+      otherDataToCombine,
+      dataAccessTiming,
+      transfersOutsideEuEea,
+      lawfulness,
+    });
 
     try {
       const res = await fetch('/api/applications', {

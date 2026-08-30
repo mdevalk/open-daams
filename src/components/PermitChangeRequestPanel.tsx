@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { DataPermitStatus, PermitChangeType, PermitChangeStatus } from '@prisma/client';
-import { CHANGE_STATUS_COLORS, requestableTypes } from '@/lib/permit-change';
+import { CHANGE_STATUS_COLORS, requestableTypes, buildChangeRequestDecisionBody, resolveChangeRequestNavigation } from '@/lib/permit-change';
 import { formatDate, readErrorMessage } from '@/lib/utils';
 
 type ChangeRequest = {
@@ -134,21 +134,19 @@ export function PermitChangeRequestPanel({
       const res = await fetch(`/api/permits/${permitId}/change-requests/${request.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          decision,
-          actingUserId: currentUserId,
-          comment: decisionComment || null,
-          newValidUntil:
-            decision === 'APPROVED' && request.type === 'RENEWAL' ? newValidUntil : undefined,
-          effectiveDate:
-            decision === 'APPROVED' && request.type === 'AMENDMENT' ? effectiveDate || undefined : undefined,
-          speOperatorId:
-            decision === 'APPROVED' && request.type === 'AMENDMENT' ? speOperatorId || undefined : undefined,
-          outputControllerName:
-            decision === 'APPROVED' && request.type === 'AMENDMENT' ? outputControllerName || undefined : undefined,
-          outputControllerAffiliation:
-            decision === 'APPROVED' && request.type === 'AMENDMENT' ? outputControllerAffiliation || undefined : undefined,
-        }),
+        body: JSON.stringify(
+          buildChangeRequestDecisionBody({
+            decision,
+            requestType: request.type,
+            actingUserId: currentUserId,
+            comment: decisionComment,
+            newValidUntil,
+            effectiveDate,
+            speOperatorId,
+            outputControllerName,
+            outputControllerAffiliation,
+          }),
+        ),
       });
       if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
       const data = (await res.json().catch(() => null)) as { newPermitId?: string; pending?: boolean } | null;
@@ -159,11 +157,9 @@ export function PermitChangeRequestPanel({
       setSpeOperatorId('');
       setOutputControllerName('');
       setOutputControllerAffiliation('');
-      // Immediate approval issues a new CURRENT permit version — navigate to
-      // it. A deferred (pending-activation) approval stays on this page,
-      // since the old version is still the operative one.
-      if (data?.newPermitId && data.newPermitId !== permitId && !data.pending) {
-        router.push(pathname.replace(/[^/]+$/, data.newPermitId));
+      const navigation = resolveChangeRequestNavigation(data, permitId);
+      if (navigation.type === 'push') {
+        router.push(pathname.replace(/[^/]+$/, navigation.permitId));
       } else {
         router.refresh();
       }
