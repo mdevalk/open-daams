@@ -1,19 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
+import { actingUserId } from '@/auth';
 
 /**
  * POST /api/applications/[id]/appeals
  * Register a new appeal (bezwaar/beroep) against a decision issued on this
  * application (EHDS Art. 63, national administrative law).
- * body: { submittedBy, grounds, authority?, actingUserId }
+ * body: { submittedBy, grounds, authority? }
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const body = await req.json();
 
-    const auth = await requireRole(body.actingUserId, ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN']);
+    const auth = await requireRole(await actingUserId(), ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN']);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const application = await prisma.application.findUnique({ where: { id } });

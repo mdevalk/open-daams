@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
+import { actingUserId } from '@/auth';
 import { DECIDE_ROLES, APPROVAL_EFFECT } from '@/lib/permit-change';
 import { signPermit, groupDatasetsByHolder } from '@/lib/permit-signing';
 import { regenerateStoredPermitPdf } from '@/lib/permit-pdf-store';
@@ -424,7 +425,7 @@ async function prepareApproval(
  * (with effectiveAt set) and the old version keeps operating until a staff
  * member activates it via POST /api/permits/[id]/activate once the date is
  * due. Renewals and revocation appeals always stay immediate, per spec.
- * body: { decision: 'APPROVED' | 'REJECTED', actingUserId, comment?, newValidUntil?, effectiveDate?,
+ * body: { decision: 'APPROVED' | 'REJECTED', comment?, newValidUntil?, effectiveDate?,
  *         speOperatorId?, speTypeId?, outputControllerName?, outputControllerAffiliation? }
  *
  * speOperatorId/speTypeId carry forward from the current version
@@ -449,7 +450,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'decision must be APPROVED or REJECTED' }, { status: 400 });
     }
 
-    const auth = await requireRole(body.actingUserId, [...DECIDE_ROLES]);
+    const auth = await requireRole(await actingUserId(), [...DECIDE_ROLES]);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const request = await prisma.permitChangeRequest.findUnique({

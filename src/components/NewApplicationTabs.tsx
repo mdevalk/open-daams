@@ -58,9 +58,9 @@ export function NewApplicationTabs({
       {tab === 'manual' ? (
         <NewApplicationForm applicants={applicants} dataHolders={dataHolders} currentUser={currentUser} />
       ) : tab === 'hdeu' ? (
-        <HdeuImportForm locale={locale} actingUserId={currentUser.id} />
+        <HdeuImportForm locale={locale} />
       ) : (
-        <NcpFetchForm locale={locale} actingUserId={currentUser.id} />
+        <NcpFetchForm locale={locale} />
       )}
     </div>
   );

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { ExtractionStatus } from '@prisma/client';
 import { requireRole } from '@/lib/authz';
+import { actingUserId } from '@/auth';
 
 const VALID_STATUSES: ExtractionStatus[] = ['REQUESTED', 'CONFIRMED', 'DELIVERED', 'DECLINED'];
 
@@ -9,14 +10,14 @@ const VALID_STATUSES: ExtractionStatus[] = ['REQUESTED', 'CONFIRMED', 'DELIVERED
  * PATCH /api/extraction-requests/[id]
  * Progress an extraction request's status (confirmed by the data holder,
  * delivered, or declined).
- * body: { status, deliveryNotes?, actingUserId }
+ * body: { status, deliveryNotes? }
  */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const body = await req.json();
 
-    const auth = await requireRole(body.actingUserId, ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN']);
+    const auth = await requireRole(await actingUserId(), ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN']);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const request = await prisma.dataExtractionRequest.findUnique({ where: { id } });

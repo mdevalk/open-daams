@@ -16,7 +16,7 @@ import { CompletenessCheckPanel } from '@/components/CompletenessCheckPanel';
 import { AssessmentCheckPanel } from '@/components/AssessmentCheckPanel';
 import { ExtractionRequestsPanel } from '@/components/ExtractionRequestsPanel';
 import { TrustedDataHolderPanel } from '@/components/TrustedDataHolderPanel';
-import { UserSwitcher } from '@/components/UserSwitcher';
+import { requireCurrentUser } from '@/lib/current-user';
 import { StudyCohortExplorer } from '@/components/StudyCohortExplorer';
 import type { CompletenessItem } from '@/app/api/applications/[id]/completeness-check/route';
 import type { AssessmentItem } from '@/app/api/applications/[id]/assessment-check/route';
@@ -38,17 +38,15 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
 
 export default async function ApplicationDetailPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ id: string; locale: string }>;
-  searchParams: Promise<{ userId?: string }>;
 }) {
   const { id, locale } = await params;
-  const { userId: queryUserId } = await searchParams;
+  const currentUser = await requireCurrentUser(locale);
 
   const t = await getTranslations({ locale, namespace: 'applicationDetail' });
 
-  const [rawApplication, users, dataHolders, speOperators, contacts] = await Promise.all([
+  const [rawApplication, dataHolders, speOperators, contacts] = await Promise.all([
     prisma.application.findUnique({
       where: { id },
       include: {
@@ -101,7 +99,6 @@ export default async function ApplicationDetailPage({
         tabulationPlans: { orderBy: { createdAt: 'asc' } },
       },
     }),
-    prisma.user.findMany({ orderBy: { name: 'asc' } }),
     prisma.dataHolder.findMany({ orderBy: { name: 'asc' } }),
     prisma.speOperator.findMany({ include: { types: { orderBy: { name: 'asc' } } }, orderBy: { name: 'asc' } }),
     // The output controller (PermitPanel's issuance form) is selected from
@@ -145,7 +142,7 @@ export default async function ApplicationDetailPage({
   const currentPermit = application.dataPermits[0] ?? null;
   const trustedDataHolders = dataHolders.filter((dh) => dh.isTrusted);
 
-  const attachmentHref = (a: { id: string }) => `/api/attachments/${a.id}?userId=${currentUser.id}`;
+  const attachmentHref = (a: { id: string }) => `/api/attachments/${a.id}`;
 
   const cohortRows = application.studyCohorts.filter((c) => c.role === 'COHORT');
 
@@ -189,17 +186,6 @@ export default async function ApplicationDetailPage({
       ['art49', application.whyWillDataBeTransferredOutsideEUArticle49],
     ] as const
   ).filter(([, flag]) => flag);
-
-  const currentUser =
-    (queryUserId ? users.find(u => u.id === queryUserId) : null) ??
-    (application.status === 'PROCESSING'
-      ? users.find(u => u.role === 'DECISION_MAKER')
-      : null) ??
-    users.find(u => u.role === 'CASE_HANDLER') ??
-    users.find(u => u.role === 'DECISION_MAKER') ??
-    users[0];
-
-  if (!currentUser) notFound();
 
   // Filter on the application object itself, not just at the NotesList call
   // site — application is passed whole to several other client components
@@ -1010,7 +996,6 @@ export default async function ApplicationDetailPage({
 
         {/* Sidebar */}
         <div className="space-y-4">
-          <UserSwitcher users={users} currentUserId={currentUser.id} />
           <TrustedDataHolderPanel
             application={application}
             dataHolders={trustedDataHolders}

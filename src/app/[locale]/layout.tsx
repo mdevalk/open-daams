@@ -5,6 +5,9 @@ import '../globals.css';
 import { APP_NAME } from '@/lib/branding';
 import { prisma } from '@/lib/db';
 import { AdminMenu } from '@/components/AdminMenu';
+import { ActingAsBanner } from '@/components/ActingAsBanner';
+import { SessionProvider } from 'next-auth/react';
+import { auth } from '@/auth';
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -36,19 +39,31 @@ export default async function LocaleLayout({
   // (src/app/[locale]/page.tsx), just counted instead of listed in full.
   const now = new Date();
   const in14Days = new Date(now.getTime() + 14 * 86_400_000);
-  const [overdueDecisionCount, dueSoonDecisionCount] = await Promise.all([
+  // Gated on the real session's role, not just AdminMenu's client-side
+  // rendering — a value passed as a prop to a 'use client' component is
+  // serialized into the RSC payload regardless of how that component
+  // conditionally renders it, so an unauthenticated/non-admin viewer would
+  // otherwise receive the full user directory (id/name/role) in the page
+  // response even though the "Act as" picker itself stays hidden from them.
+  const session = await auth();
+  const isRealAdmin = session?.user?.role === 'ADMIN';
+  const [overdueDecisionCount, dueSoonDecisionCount, users] = await Promise.all([
     prisma.application.count({
       where: { decisionDeadline: { lt: now }, status: { notIn: ['DECISION_ISSUED', 'WITHDRAWN'] } },
     }),
     prisma.application.count({
       where: { decisionDeadline: { gte: now, lt: in14Days }, status: { notIn: ['DECISION_ISSUED', 'WITHDRAWN'] } },
     }),
+    isRealAdmin
+      ? prisma.user.findMany({ select: { id: true, name: true, role: true }, orderBy: { name: 'asc' } })
+      : Promise.resolve([]),
   ]);
   const attentionCount = overdueDecisionCount + dueSoonDecisionCount;
 
   return (
     <html lang={locale}>
       <body className="rvo-theme utrecht-document">
+        <SessionProvider>
         <NextIntlClientProvider messages={messages}>
 
           <a
@@ -121,11 +136,13 @@ export default async function LocaleLayout({
                       </a>
                     ))}
                   </div>
-                  <AdminMenu locale={locale} />
+                  <AdminMenu locale={locale} users={users} />
                 </div>
               </div>
             </div>
           </header>
+
+          <ActingAsBanner />
 
           <main id="main-content" className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
             {children}
@@ -171,6 +188,7 @@ export default async function LocaleLayout({
           </footer>
 
         </NextIntlClientProvider>
+        </SessionProvider>
       </body>
     </html>
   );

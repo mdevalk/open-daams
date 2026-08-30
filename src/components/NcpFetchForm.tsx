@@ -14,7 +14,7 @@ type NcpQueueEntry = NcpApplicationSummary & {
   alreadyImported: { id: string; referenceNumber: string } | null;
 };
 
-export function NcpFetchForm({ locale, actingUserId }: { locale?: string; actingUserId: string }) {
+export function NcpFetchForm({ locale }: { locale?: string }) {
   const applicationHref = (id: string) => (locale ? `/${locale}/applications/${id}` : `/applications/${id}`);
   const t = useTranslations('ncpFetchForm');
   const ta = useTranslations('applications');
@@ -67,7 +67,7 @@ export function NcpFetchForm({ locale, actingUserId }: { locale?: string; acting
   async function importEntry(entry: NcpApplicationSummary) {
     setImportingId(entry.applicationId);
     try {
-      const res = await fetch(`/api/import/ncp-applications/${entry.applicationId}?userId=${actingUserId}`, { method: 'POST' });
+      const res = await fetch(`/api/import/ncp-applications/${entry.applicationId}`, { method: 'POST' });
       const data = await res.json();
       if (!res.ok) {
         setResults((r) => ({
@@ -134,7 +134,7 @@ export function NcpFetchForm({ locale, actingUserId }: { locale?: string; acting
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   <a
-                    href={`/api/import/ncp-applications/${entry.applicationId}/attachments/application_metadata.json?userId=${actingUserId}`}
+                    href={`/api/import/ncp-applications/${entry.applicationId}/attachments/application_metadata.json`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100"
@@ -174,7 +174,7 @@ export function NcpFetchForm({ locale, actingUserId }: { locale?: string; acting
                           {result.attachments.map((filename) => (
                             <a
                               key={filename}
-                              href={`/api/import/ncp-applications/${entry.applicationId}/attachments/${encodeURIComponent(filename)}?userId=${actingUserId}`}
+                              href={`/api/import/ncp-applications/${entry.applicationId}/attachments/${encodeURIComponent(filename)}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="rounded border border-red-300 bg-white px-2 py-1 text-xs font-medium text-red-800 hover:bg-red-100"

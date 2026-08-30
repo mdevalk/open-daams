@@ -3,9 +3,10 @@ import { getNcpApplicationDetail, mapNcpDetailZipToHdeuPayload, NcpDetailMapping
 import { createApplicationFromHdeuPayload } from '@/lib/hdeu';
 import { requireRole } from '@/lib/authz';
 import { logNcpCall } from '@/lib/ncp-log';
+import { actingUserId } from '@/auth';
 
 /**
- * POST /api/import/ncp-applications/[id]?userId=
+ * POST /api/import/ncp-applications/[id]
  *
  * Step 2 of the NCP fetch flow (see ncp-client.ts): fetches one application's
  * full detail from the HDAB-NL test environment (a ZIP archive), maps it to
@@ -17,7 +18,7 @@ import { logNcpCall } from '@/lib/ncp-log';
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const auth = await requireRole(req.nextUrl.searchParams.get('userId'), ['CASE_HANDLER', 'ADMIN']);
+  const auth = await requireRole(await actingUserId(), ['CASE_HANDLER', 'ADMIN']);
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   try {

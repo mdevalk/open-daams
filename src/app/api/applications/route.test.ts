@@ -8,11 +8,17 @@ vi.mock('@/lib/db', () => ({
   },
 }));
 
+vi.mock('@/auth', () => ({
+  actingUserId: vi.fn().mockResolvedValue('mock-acting-user-id'),
+}));
+
 import { prisma } from '@/lib/db';
+import { actingUserId } from '@/auth';
 import { POST, dataAccessApplicationFields, dataAccessApplicationDefaults } from './route';
 
 const findUnique = vi.mocked(prisma.user.findUnique);
 const logCreate = vi.mocked(prisma.authzFailureLog.create);
+const actingUserIdMock = vi.mocked(actingUserId);
 
 const APPLICANT = { id: 'u-2', role: 'APPLICANT' as const, name: 'A. de Vries', email: 'researcher@umcu.nl' };
 
@@ -154,7 +160,8 @@ describe('POST /api/applications guard clauses', () => {
     logCreate.mockReset();
   });
 
-  it('rejects a missing actingUserId with 401', async () => {
+  it('rejects a missing session with 401', async () => {
+    actingUserIdMock.mockResolvedValueOnce(undefined);
     const res = await POST(postRequest({ applicantId: 'u-2', type: 'DATA_ACCESS_APPLICATION' }));
     expect(res.status).toBe(401);
     const json = await res.json();

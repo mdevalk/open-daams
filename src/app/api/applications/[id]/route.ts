@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireRole, requireRoleOrOwner } from '@/lib/authz';
+import { actingUserId } from '@/auth';
 
 const MANAGE_ROLES = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'] as const;
 const STAFF_ROLES = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN', 'DATA_HOLDER'] as const;
@@ -28,8 +29,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     if (!application) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-    const requestingUserId = req.nextUrl.searchParams.get('userId');
-    const auth = await requireRoleOrOwner(requestingUserId, [...STAFF_ROLES], application.applicantId);
+    const auth = await requireRoleOrOwner(await actingUserId(), [...STAFF_ROLES], application.applicantId);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const isStaff = (STAFF_ROLES as readonly string[]).includes(auth.user.role);
@@ -52,7 +52,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   try {
     const body = await req.json();
 
-    const auth = await requireRole(body.actingUserId, [...MANAGE_ROLES]);
+    const auth = await requireRole(await actingUserId(), [...MANAGE_ROLES]);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const application = await prisma.application.update({

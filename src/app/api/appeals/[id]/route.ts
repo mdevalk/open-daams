@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { AppealStatus } from '@prisma/client';
 import { requireRole } from '@/lib/authz';
+import { actingUserId } from '@/auth';
 import { signAppealDecision } from '@/lib/permit-signing';
 import { generateAppealDecisionPdf } from '@/lib/generate-appeal-decision-pdf';
 
@@ -13,14 +14,14 @@ const DECIDED_STATUSES: AppealStatus[] = ['UPHELD', 'REJECTED'];
 /**
  * PATCH /api/appeals/[id]
  * Update the status/decision of an in-progress appeal.
- * body: { status, decisionSummary?, actingUserId }
+ * body: { status, decisionSummary? }
  */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const body = await req.json();
 
-    const auth = await requireRole(body.actingUserId, ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN']);
+    const auth = await requireRole(await actingUserId(), ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN']);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const appeal = await prisma.appeal.findUnique({

@@ -1,6 +1,7 @@
 # OWASP ASVS 5.0 (Level 2) assessment: open-daams
 
-_Snapshot date: 2026-08-26._
+_Snapshot date: 2026-08-26, revised 2026-08-30 following the Keycloak/OIDC authentication
+integration (V6/V7/V9/V10/V14.2.1 re-assessed; everything else unchanged from the original pass)._
 
 This assesses the open-daams codebase against **OWASP Application Security Verification Standard
 5.0**, Level 2 (L2 is cumulative — every Level 1 requirement plus the additional Level 2 set). ASVS
@@ -12,9 +13,11 @@ sourced directly from OWASP's authoritative repository (`github.com/OWASP/ASVS`,
 chapter files) rather than reconstructed from memory.
 
 > **Framing.** Same as the other assessments: `docs/architecture.md` states the app runs on **test
-> data only** with authentication explicitly stubbed. This is written against the bar the project
-> would need to clear before holding real (special-category health) data or being publicly exposed
-> — not a certification or ASVS attestation.
+> data only**. Authentication is now real (Keycloak/OIDC via Auth.js — see V6/V7/V9/V10 below), but
+> scoped to a closed set of 5 seeded demo identities against a self-provisioned local realm, not a
+> production identity provider (DigiD/eHerkenning remain the documented production requirement).
+> This is written against the bar the project would need to clear before holding real (special-
+> category health) data or being publicly exposed — not a certification or ASVS attestation.
 >
 > **Scope boundary — same three exclusions as `docs/nis2-assessment.md`/`docs/bio2-assessment.md`**:
 > application code only. Datacenter/hosting/TLS-termination, the health data itself (never held by
@@ -39,15 +42,15 @@ chapter files) rather than reconstructed from memory.
 | **V3 — Web Frontend Security** | ✅ Clean | Full CSP/HSTS/frame-ancestors header set (A05); zero cookies exist in this app at all, so the entire Cookie Setup sub-chapter is N/A by architecture |
 | **V4 — API and Web Service** | ✅ Clean | Consistent `NextResponse.json`/correct-Content-Type pattern; no GraphQL/WebSocket exists |
 | **V5 — File Handling** | ⚠️ Open | No file-size limits, no extension/type allowlisting on the appeals-attachment upload route, no zip-bomb guard on the NCP nested-zip extraction |
-| **V6 — Authentication** | ⚠️ Open (root gap) | No real authentication exists at all — see `owasp-top10-assessment.md` A07 |
-| **V7 — Session Management** | ➖ N/A (root gap) | No session mechanism exists — `userId` is a plain, unsigned, client-supplied value, not a session token |
-| **V8 — Authorization** | ✅ Clean | `requireRole`/`requireRoleOrOwner` (`src/lib/authz.ts`) consistently applied; see A01 |
-| **V9 — Self-contained Tokens** | ➖ N/A | No JWTs or similar tokens issued or verified for auth anywhere in the app |
-| **V10 — OAuth and OIDC** | ➖ N/A (root gap) | Not implemented — named as the actual remediation for V6/V7 in A07 |
+| **V6 — Authentication** | ◑ Partial | Real OIDC login via Keycloak (Auth.js) replaces the former client-supplied `userId`; delegated concerns (password policy, MFA, recovery) aren't configured in the demo realm |
+| **V7 — Session Management** | ◑ Partial | Real session now exists — an Auth.js JWT cookie, 8h `maxAge`, real sign-out (incl. Keycloak RP-initiated logout); no concurrent-session limits or anomaly detection |
+| **V8 — Authorization** | ✅ Clean | `requireRole`/`requireRoleOrOwner` (`src/lib/authz.ts`) consistently applied, now fed a server-verified `userId`; see A01 |
+| **V9 — Self-contained Tokens** | ◑ Partial | The Auth.js session cookie is a self-contained signed/encrypted JWT (`AUTH_SECRET`); local-dev secret is a placeholder value, not a rotated production secret |
+| **V10 — OAuth and OIDC** | ◑ Partial | Implemented — Keycloak (OP) + Auth.js OIDC client (RP), PKCE in use; consent screens and step-up re-authentication aren't configured |
 | **V11 — Cryptography** | ✅ Clean | Ed25519 permit signing (`@noble/ed25519`), SHA-512, no hardcoded secrets — see A02 |
 | **V12 — Secure Communication** | ➖ Mostly out of scope | TLS termination is a deployment concern; HSTS is set unconditionally (A05) |
 | **V13 — Configuration** | ◑ Partial | `.env`/local key file, not a secrets vault (documented gap, `architecture.md`); no debug-mode/directory-listing exposure found |
-| **V14 — Data Protection** | ◑ Partial | `userId` (this app's entire trust credential) travels as a query-string param in ~10 places; only 2 routes set `Cache-Control: no-store` |
+| **V14 — Data Protection** | ◑ Partial | `userId` no longer travels as the trust credential (session cookie does); ~8 vestigial `?userId=` query params remain in client code as dead, ignored values — cheap cleanup, no longer a security-relevant exposure; only 2 routes set `Cache-Control: no-store` |
 | **V15 — Secure Coding and Architecture** | ✅ Clean | No mass-assignment pattern anywhere (6 routes use an explicit allowlist-builder helper); the one prototype-pollution-shaped bug found this session is already fixed |
 | **V16 — Security Logging and Error Handling** | ✅ Clean | `AuditLog`/`AuthzFailureLog`/entity-scoped logs, generic error messages only — see A09 |
 | **V17 — WebRTC** | ➖ N/A | No WebRTC anywhere in this codebase |
@@ -165,49 +168,54 @@ zip-within-a-zip** case at `ncp-client.ts:221`).
 | 5.4.2 | 2 | Served filenames are encoded/sanitized (RFC 6266) | ◑ | `fileResponse()` (`src/lib/http.ts:14`) escapes backslash/quote characters to prevent header injection/break-out, but doesn't implement full RFC 6266 `filename*=` encoding for non-ASCII names |
 | 5.4.3 | 2 | Files from untrusted sources are antivirus-scanned | ✗ | No AV scanning exists anywhere in the pipeline |
 
-### V6 — Authentication ⚠️ Open (root gap, by design)
+### V6 — Authentication ◑ Partial
 
-Every one of this chapter's 35 requirements concerns a real authentication system (passwords, MFA,
-account recovery, IdP federation) — none of it exists. `findActingUser`/`requireRole`/
-`requireRoleOrOwner` (`src/lib/authz.ts`) trust a client-supplied `userId`, verified only against
-the database role, not against any proof of identity. This is the **same root gap already assessed
-in depth** as `owasp-top10-assessment.md` A07, `nis2-assessment.md` (i)/(j), and
-`bio2-assessment.md` 5.15–5.18 — not re-derived here. All 35 requirements (6.1.1 through 6.8.4)
-carry a uniform disposition rather than 35 bespoke sentences:
-
-| ID range | Level | Chapter section | Status | Note |
-|---|:---:|---|:---:|---|
-| 6.1.1–6.1.3 | 1/2 | Authentication Documentation | ✗ | No documentation exists, because no authentication mechanism exists to document |
-| 6.2.1–6.2.12 | 1/2 | Password Security | ➖ | N/A — no password-based login exists anywhere in this app |
-| 6.3.1–6.3.4 | 1/2 | General Authentication Security | ✗ | Root gap — see A07. `requireRole` fails closed correctly (no bypass found), but authenticates nothing |
-| 6.4.1–6.4.4 | 1/2 | Auth Factor Lifecycle and Recovery | ➖ | N/A — no password/factor to have a lifecycle |
-| 6.5.1–6.5.5 | 2 | General MFA Requirements | ➖ | N/A — no MFA exists |
-| 6.6.1–6.6.3 | 2 | Out-of-Band Authentication | ➖ | N/A — no OOB auth exists |
-| 6.8.1–6.8.4 | 2 | Authentication with an Identity Provider | ➖ | N/A — no IdP integration exists (this is the named remediation, see V10) |
-
-### V7 — Session Management ➖ N/A (root gap)
-
-Same root cause as V6. There is no session concept in this application at all — no session token
-is issued, stored, or verified; `userId` is a plain value the client includes on every request
-(query param or body field), re-checked against the database on every call. It isn't a forgeable
-*session* so much as a nonexistent one. All 18 requirements are N/A for the same reason, cross-
-referencing A07 rather than repeating it per-row.
+Real authentication now exists: Keycloak (a dedicated OIDC identity provider, containerized in
+`docker-compose.yml`, self-provisioned via `keycloak/realm-export.json`) issues the actual login;
+Auth.js (`src/auth.ts`) is the OIDC client. `findActingUser`/`requireRole`/`requireRoleOrOwner`
+(`src/lib/authz.ts`, unchanged) now receive a server-verified `userId` — resolved from the session
+via `actingUserId()` — instead of a client-supplied one. This resolves the root gap previously
+cross-referenced as `owasp-top10-assessment.md` A07, `nis2-assessment.md` (i)/(j), and
+`bio2-assessment.md` 5.15–5.18 (those docs are updated to match, not re-derived here). What
+remains: most of this chapter's requirements concern factors and lifecycle stages (password
+policy, MFA, recovery) that are Keycloak's responsibility as the IdP, and the demo realm doesn't
+configure any of them.
 
 | ID range | Level | Chapter section | Status | Note |
 |---|:---:|---|:---:|---|
-| 7.1.1–7.1.3 | 2 | Session Management Documentation | ➖ | N/A — nothing to document |
-| 7.2.1–7.2.4 | 1 | Fundamental Session Management Security | ➖ | N/A — no session token is generated, verified, or rotated |
-| 7.3.1–7.3.2 | 2 | Session Timeout | ➖ | N/A — no session to time out |
-| 7.4.1–7.4.5 | 1/2 | Session Termination | ➖ | N/A — no session to terminate; "logout" in the UI is just the `UserSwitcher` changing which `userId` is sent next |
-| 7.5.1–7.5.2 | 2 | Defenses Against Session Abuse | ➖ | N/A |
-| 7.6.1–7.6.2 | 2 | Federated Re-authentication | ➖ | N/A — no federation exists (see V10) |
+| 6.1.1–6.1.3 | 1/2 | Authentication Documentation | ◑ | Described in `docs/architecture.md`, `CLAUDE.md`, and this doc's own framing note; no standalone authentication-design document |
+| 6.2.1–6.2.12 | 1/2 | Password Security | ➖ | N/A for open-daams's own code — password handling is entirely Keycloak's (the IdP). The demo realm itself sets no password policy and all 5 seeded users share one password (`Demo1234!`) — a deliberate, documented demo simplification, not a production posture |
+| 6.3.1–6.3.4 | 1/2 | General Authentication Security | ✅ | `signIn` callback (`src/auth.ts`) rejects any Keycloak identity without a matching Postgres `User` row — closed-world, fails closed; `requireRole` unchanged and still fails closed on an unresolvable id |
+| 6.4.1–6.4.4 | 1/2 | Auth Factor Lifecycle and Recovery | ➖ | N/A/delegated — Keycloak owns this; not configured in the demo realm (no email server wired up for password reset) |
+| 6.5.1–6.5.5 | 2 | General MFA Requirements | ➖ | Delegated to Keycloak, which supports OTP/WebAuthn — not enabled in the demo realm |
+| 6.6.1–6.6.3 | 2 | Out-of-Band Authentication | ➖ | N/A — not configured |
+| 6.8.1–6.8.4 | 2 | Authentication with an Identity Provider | ✅ | This is exactly what was built — see V10 for the OIDC-specific requirements |
+
+### V7 — Session Management ◑ Partial
+
+A real session now exists: Auth.js issues a signed/encrypted JWT session cookie on successful
+login (`session: { strategy: 'jwt', maxAge: 8 * 60 * 60 }` in `src/auth.ts`), verified on every
+request via `auth()`/`getToken()` — not a forgeable client-supplied value. Sign-out
+(`src/app/api/auth/keycloak-signout/route.ts`) clears the local cookie *and* performs Keycloak's
+RP-initiated logout (`id_token_hint`/`post_logout_redirect_uri`), closing the SSO session too —
+Auth.js's own `signOut()` alone only does the former.
+
+| ID range | Level | Chapter section | Status | Note |
+|---|:---:|---|:---:|---|
+| 7.1.1–7.1.3 | 2 | Session Management Documentation | ◑ | Described in `docs/architecture.md`/`CLAUDE.md`; no standalone document |
+| 7.2.1–7.2.4 | 1 | Fundamental Session Management Security | ✅ | Session token is a signed/encrypted JWT (delegated to Auth.js's implementation), issued fresh on each Keycloak login, carried in an `HttpOnly`/`SameSite=Lax` cookie |
+| 7.3.1–7.3.2 | 2 | Session Timeout | ✅ | Explicit 8-hour `maxAge`; no idle-timeout distinct from absolute timeout |
+| 7.4.1–7.4.5 | 1/2 | Session Termination | ✅ | Real sign-out clears the local session *and* ends the Keycloak SSO session (RP-initiated logout) — verified end-to-end (session is `null` after, a protected page redirects to sign-in again) |
+| 7.5.1–7.5.2 | 2 | Defenses Against Session Abuse | ➖ | No concurrent-session limits, no device/IP-change anomaly detection |
+| 7.6.1–7.6.2 | 2 | Federated Re-authentication | ➖ | No step-up re-authentication for sensitive actions (e.g. permit revocation) — a normal 8h-old session is sufficient for everything |
 
 ### V8 — Authorization ✅ Clean
 
-The one chapter of the auth-adjacent group where open-daams has real, working controls — because
-role-based authorization is layered independently on top of the (unauthenticated) `userId`. Cite
-A01 in full: `requireRole`/`requireRoleOrOwner` (`src/lib/authz.ts`) are applied consistently
-across every route sampled this session, including the newest ones (`contacts`, `assessment-check`).
+The one chapter of the auth-adjacent group that already had real, working controls before the
+Keycloak integration — role-based authorization was always layered independently, and now sits on
+top of a real, session-verified `userId` rather than a client-supplied one. Cite A01 in full:
+`requireRole`/`requireRoleOrOwner` (`src/lib/authz.ts`) are applied consistently across every route
+sampled this session, including the newest ones (`contacts`, `assessment-check`).
 
 | ID | Level | Requirement | Status | Note |
 |---|:---:|---|:---:|---|
@@ -219,29 +227,37 @@ across every route sampled this session, including the newest ones (`contacts`, 
 | 8.3.1 | 1 | Authorization enforced at a trusted service layer, not client-controllable | ✅ | Every check happens server-side in the API route; the `isAdmin`/role checks in client components (`MasterdataManager.tsx` etc.) are UX-only and re-checked server-side |
 | 8.4.1 | 2 | Multi-tenant cross-tenant isolation | ➖ | N/A — open-daams is single-tenant (one HDAB instance); no multi-tenant data model exists |
 
-### V9 — Self-contained Tokens ➖ N/A
+### V9 — Self-contained Tokens ◑ Partial
+
+The Auth.js session cookie is itself a self-contained signed/encrypted JWT — this chapter is now
+applicable where it was previously N/A. Implementation is delegated to Auth.js's own library code
+(`jose` under the hood), not hand-rolled.
 
 | ID | Level | Requirement | Status | Note |
 |---|:---:|---|:---:|---|
-| 9.1.1–9.1.3 | 1 | Signature/MAC validation, algorithm allowlist, trusted key source | ➖ | N/A for *authentication* purposes — no JWT/self-contained token is used for auth anywhere. (The Ed25519-signed digital permit, `src/lib/permit-signing.ts`, is a *document* signature for external verification, not an auth token — already assessed under A02/A08, distinct concern) |
-| 9.2.1–9.2.4 | 1/2 | Token validity window, type/purpose check, audience restriction | ➖ | N/A — same reason |
+| 9.1.1–9.1.3 | 1 | Signature/MAC validation, algorithm allowlist, trusted key source | ◑ | Delegated to Auth.js (`AUTH_SECRET`-derived key, fixed algorithm, no `alg: none` acceptance) — not independently re-verified line-by-line against the library's source. The `.env`/local-dev `AUTH_SECRET` is a placeholder value, not a rotated production secret (same posture as the permit-signing key, `13.1.1`/`bio2-assessment.md`). (The separate Ed25519-signed digital permit, `src/lib/permit-signing.ts`, is a *document* signature for external verification, not an auth token — already assessed under A02/A08, distinct concern) |
+| 9.2.1–9.2.4 | 1/2 | Token validity window, type/purpose check, audience restriction | ◑ | Validity window = the 8h `maxAge` (V7.3); audience restriction is N/A in the applicable sense — this is a first-party session cookie scoped to one app, never passed to a third-party resource server as a bearer token |
 
-### V10 — OAuth and OIDC ➖ N/A (root gap)
+### V10 — OAuth and OIDC ◑ Partial
 
-Not implemented. This is the concrete, named remediation for V6/V7's root gap — already stated as
-such in `owasp-top10-assessment.md` A07 ("Auth.js/OIDC... is the actual fix") and
-`comply-or-explain-assessment.md`'s federated-identity cross-reference. All 29 requirements are N/A
-because the feature doesn't exist yet, not because it exists and fails these checks.
+Implemented. Keycloak is the OpenID Provider; Auth.js (`src/auth.ts`, `next-auth/providers/keycloak`)
+is the OIDC client (Relying Party) — this was the concrete, named remediation for V6/V7's former
+root gap, already stated as such in `owasp-top10-assessment.md` A07 and
+`comply-or-explain-assessment.md`'s federated-identity cross-reference (both updated to match).
+Verified directly (not just configured): the authorization request includes
+`code_challenge`/`code_challenge_method=S256` (PKCE), the client is confidential
+(`publicClient: false`, `directAccessGrantsEnabled: false`), and the full code-exchange round trip
+was driven end-to-end via curl and a real browser.
 
 | ID range | Level | Chapter section | Status | Note |
 |---|:---:|---|:---:|---|
-| 10.1.1–10.1.2 | 2 | Generic OAuth/OIDC Security | ➖ | N/A — not implemented |
-| 10.2.1–10.2.2 | 2 | OAuth Client | ➖ | N/A |
-| 10.3.1–10.3.4 | 2 | OAuth Resource Server | ➖ | N/A |
-| 10.4.1–10.4.11 | 1/2 | OAuth Authorization Server | ➖ | N/A — open-daams isn't and doesn't run an authorization server |
-| 10.5.1–10.5.5 | 2 | OIDC Client | ➖ | N/A |
-| 10.6.1–10.6.2 | 2 | OpenID Provider | ➖ | N/A |
-| 10.7.1–10.7.3 | 2 | Consent Management | ➖ | N/A |
+| 10.1.1–10.1.2 | 2 | Generic OAuth/OIDC Security | ✅ | PKCE (`S256`) confirmed in the live authorization request; state/nonce handling is Auth.js's own implementation |
+| 10.2.1–10.2.2 | 2 | OAuth Client | ✅ | `daams-app` client: confidential, `standardFlowEnabled` only, exact-match `redirectUris` (no wildcard) |
+| 10.3.1–10.3.4 | 2 | OAuth Resource Server | ➖ | N/A — open-daams doesn't accept bearer tokens from third parties; it's the OIDC client only, not a resource server |
+| 10.4.1–10.4.11 | 1/2 | OAuth Authorization Server | ➖ | N/A — Keycloak is the authorization server; open-daams's own code doesn't implement one |
+| 10.5.1–10.5.5 | 2 | OIDC Client | ✅ | ID token consumed via Auth.js's standard OIDC flow; `signIn` callback additionally requires the email claim to match an existing seeded `User` row before accepting the login |
+| 10.6.1–10.6.2 | 2 | OpenID Provider | ➖ | N/A — Keycloak is the OP; open-daams's own code doesn't implement one |
+| 10.7.1–10.7.3 | 2 | Consent Management | ➖ | No consent screen shown — the client is first-party/confidential and the realm doesn't require consent for it, appropriate for this closed demo-user setup but worth revisiting if the client set ever grows beyond one first-party app |
 
 ### V11 — Cryptography ✅ Clean
 
@@ -290,20 +306,20 @@ picture.
 
 ### V14 — Data Protection ◑ Partial
 
-New investigation surfaces one finding not previously called out this specifically in the other
-docs: **`userId` — this application's entire trust credential, standing in for a session token —
-travels as a URL query-string parameter in roughly 10 places** (e.g. `?userId=...` links throughout
-`src/app/[locale]`). Query strings land in browser history, server access logs, and `Referer`
-headers sent to any external link on the same page — exactly the exposure V14.2.1 targets. This is
-a direct, concrete consequence of the same root gap as A07 (there's no `Authorization` header or
-cookie to carry it instead), but is a distinct, actionable observation in its own right: even before
-real authentication exists, moving `userId` into a request header or POST body rather than the URL
-would reduce this specific exposure.
+Previously: **`userId` — this application's entire trust credential, standing in for a session
+token — travelled as a URL query-string parameter in roughly 10 places.** That's now resolved —
+every API route reads the acting user from the verified session (`actingUserId()`), not the URL —
+but ~8 of those `?userId=...` query params are still physically present in client-side code
+(`DecisionCardPanel.tsx`, `AppealsPanel.tsx`, `NcpFetchForm.tsx`, `HdeuImportForm.tsx`,
+`applications/[id]/page.tsx`) as dead, ignored values the server no longer reads. They no longer
+function as a trust credential — the V14.2.1 exposure this row targets (browser history, access
+logs, `Referer` headers carrying something *sensitive*) is resolved — but removing the leftover
+literal strings is still worth doing as cleanup.
 
 | ID | Level | Requirement | Status | Note |
 |---|:---:|---|:---:|---|
 | 14.1.1–14.1.2 | 2 | Sensitive-data classification and protection-level documentation | ✗ | No such documentation exists — `CLAUDE.md`'s scope note (DAAMS never holds the health data itself) narrows what *would* need classifying, but the classification exercise itself hasn't been done |
-| 14.2.1 | 1 | Sensitive data only in body/headers, never URL/query string | ✗ | `userId` in ~10 query-string locations across `src/app/[locale]` — see above |
+| 14.2.1 | 1 | Sensitive data only in body/headers, never URL/query string | ◑ | Resolved as a security control (the session cookie, not the URL, carries trust) — see above. ~8 vestigial `?userId=` query params remain as dead client-side code, not yet cleaned up |
 | 14.2.2 | 2 | Sensitive data not cached in server components (load balancers, caches) | ◑ | Only 2 routes set explicit `Cache-Control` (the public permit-status endpoint's `no-store`, and one other); most routes serving application/permit detail data set no caching header at all, relying on Next.js's own per-request dynamic rendering (`export const dynamic = 'force-dynamic'` on every page) rather than an explicit no-store directive |
 | 14.2.3 | 2 | Sensitive data not sent to untrusted third parties (trackers) | ✅ | No analytics/tracking scripts found anywhere in `src/app` |
 | 14.2.4 | 2 | Controls around sensitive-data encryption/retention/logging/access are consistent with its classification | ◑ | Retention is tracked for permits (`architecture.md`'s compliance table, `bio2-assessment.md` 5.33/8.10 finding on the enforcement gap); no unified data-classification policy to check every category against (see 14.1.1) |
@@ -375,38 +391,44 @@ session.
 
 ## Bottom line
 
-open-daams's actual security posture, read through ASVS's finer-grained lens, tells the same story
-the five existing assessments already established — with a few new, concrete additions this pass
-surfaced that hadn't been called out this specifically before:
+open-daams's actual security posture, read through ASVS's finer-grained lens, has changed since the
+original pass: the dominant, single highest-leverage gap every assessment named is now closed.
 
-- **The dominant fact is still the root authentication gap** (V6/V7/V9/V10, ~89 of 253
-  requirements), by design for this reference implementation, unchanged from A07.
-- **Genuinely new, concrete findings**: no file-size/type/zip-bomb limits on the two real file-
-  handling surfaces (V5); `userId` — this app's entire trust credential — travels in the URL query
-  string in ~10 places (V14.2.1), a distinct and independently actionable exposure even before real
-  auth exists; no anti-automation/rate-limiting anywhere (V2.4.1).
+- **The root authentication gap is resolved** (V6/V7/V9/V10) — real OIDC login via Keycloak, a real
+  session (Auth.js JWT, 8h `maxAge`, real sign-out including Keycloak's own SSO), and
+  `authz.ts`/RBAC now fed a server-verified identity instead of a client-supplied one. What remains
+  in these chapters is delegated-to-Keycloak configuration not yet turned on (MFA, password policy,
+  consent) and documentation debt, not missing code.
+- **Genuinely new, concrete findings from the original pass, independent of auth, still open**: no
+  file-size/type/zip-bomb limits on the two real file-handling surfaces (V5); no anti-automation/
+  rate-limiting anywhere (V2.4.1).
+- **Resolved as a security control, cleanup remaining**: `userId` no longer travels as the trust
+  credential in the URL (V14.2.1) — ~8 vestigial, now-inert `?userId=` query params remain in
+  client-side code as housekeeping, not a live exposure.
 - **Genuinely clean, freshly-verified**: no mass-assignment pattern anywhere, and the one
   prototype-pollution-shaped bug in the codebase was caught and fixed the same session this
-  assessment was written (V15); the business-logic state machine in `workflow.ts` is a real,
-  enforced control, not just a UI convention (V2.3.1); the entire Cookie Setup sub-chapter is moot
-  by architecture — this app has no cookies at all (V3).
+  assessment was originally written (V15); the business-logic state machine in `workflow.ts` is a
+  real, enforced control, not just a UI convention (V2.3.1); the entire Cookie Setup sub-chapter is
+  moot by architecture — this app has no *tracking/preference* cookies, only the one first-party
+  session cookie already covered under V7 (V3).
 - **Everything else** either cross-references cleanly into the existing five assessments' evidence
   (crypto, headers, injection, access control, logging, dependency hygiene) or is out of scope at
   the same hosting/TLS/procedural boundary those docs already draw.
 
 ### Suggested order
 
-1. **Cheap, independent of the auth gap**: enforce a file-size cap and an extension/content-type
+1. **Cheap, independent of anything else**: enforce a file-size cap and an extension/content-type
    allowlist on `POST /api/appeals/[id]/attachments`, and a size/ratio guard before the `AdmZip`
    extraction in `src/lib/ncp-client.ts` (V5.2.1–5.2.3).
-2. **Cheap, independent of the auth gap**: move `userId` off the URL query string and onto a request
-   header or POST body where each call site allows it (V14.2.1) — doesn't require real
-   authentication to exist first, just changes where the same trust value travels.
+2. **Cheap cleanup**: remove the ~8 now-vestigial `?userId=` query params from client-side code
+   (`DecisionCardPanel.tsx`, `AppealsPanel.tsx`, `NcpFetchForm.tsx`, `HdeuImportForm.tsx`,
+   `applications/[id]/page.tsx`) — no security impact left (V14.2.1), purely housekeeping.
 3. **Small, scoped**: add explicit `Cache-Control: no-store` to routes serving application/permit
    detail data (V14.2.2/14.3.2), matching the pattern the public permit-status route already uses.
 4. **Documentation debt, not code**: a validation-rules document (V2.1.x), a cryptographic/secrets
-   inventory (V11.1.x/13.1.1), and a logging inventory (V16.1.1) — all "verify the documentation
-   defines X" gaps with no code change required, just writing down what's already true in practice.
-5. **The real fix, unchanged from every other assessment**: real session-based authentication
-   (Auth.js/OIDC) resolves V6/V7/V9/V10 in one piece of work, the same single highest-leverage item
-   `owasp-top10-assessment.md` already names.
+   inventory (V11.1.x/13.1.1), a logging inventory (V16.1.1), and an authentication/session-
+   management design note (V6.1.x/V7.1.x) — all "verify the documentation defines X" gaps with no
+   code change required.
+5. **Before any real (non-demo) rollout**: an independent review of the Keycloak realm config
+   itself (password policy, MFA, consent — V6.2/6.5/10.7), and the eventual DigiD/eHerkenning
+   integration this Keycloak setup stands in for today.

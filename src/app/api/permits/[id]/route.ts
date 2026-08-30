@@ -3,7 +3,8 @@ import { prisma } from '@/lib/db';
 import { PERMIT_TRANSITIONS } from '@/lib/permit';
 import { DataPermitStatus } from '@prisma/client';
 import { regenerateStoredPermitPdf } from '@/lib/permit-pdf-store';
-import { requireRole } from '@/lib/authz';
+import { requireRole, findActingUser } from '@/lib/authz';
+import { actingUserId } from '@/auth';
 
 const STAFF_ROLES = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN', 'DATA_HOLDER'] as const;
 
@@ -15,7 +16,7 @@ const STAFF_ROLES = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN', 'DATA_HOLDER'] a
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const auth = await requireRole(req.nextUrl.searchParams.get('userId'), [...STAFF_ROLES]);
+  const auth = await requireRole(await actingUserId(), [...STAFF_ROLES]);
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const permit = await prisma.dataPermit.findUnique({
@@ -36,13 +37,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   try {
     const { id } = await params;
     const body = await req.json();
-    // body: { toStatus, actingUserId, comment, validUntil? (for RENEWED) }
+    // body: { toStatus, comment, validUntil? (for RENEWED) }
 
     const permit = await prisma.dataPermit.findUnique({ where: { id } });
     if (!permit) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-    const user = await prisma.user.findUnique({ where: { id: body.actingUserId } });
-    if (!user) return NextResponse.json({ error: 'User not found' }, { status: 400 });
+    const found = await findActingUser(await actingUserId());
+    if (!found.ok) return NextResponse.json({ error: found.error }, { status: found.status });
+    const user = found.user;
 
     const available = PERMIT_TRANSITIONS[permit.status] ?? [];
     const transition = available.find((t) => t.to === body.toStatus && t.requiredRole.includes(user.role));
@@ -70,7 +72,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       prisma.dataPermitLog.create({
         data: {
           permitId: id,
-          userId: body.actingUserId,
+          userId: user.id,
           fromStatus: permit.status,
           toStatus,
           action: transition.label,

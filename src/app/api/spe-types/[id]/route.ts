@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
+import { actingUserId } from '@/auth';
 
 /** Validates the setupFee/monthlyFee fields from a PATCH body; returns an error message, or null if valid. */
 export function validateSpeTypeFees(body: Record<string, unknown>): string | null {
@@ -35,14 +36,14 @@ export function describeSpeTypeChanges(body: Record<string, unknown>): string[] 
 /**
  * PATCH /api/spe-types/[id]
  * Update an SPE type's name/fees (ADMIN-only).
- * body: { name?, setupFee?, monthlyFee?, actingUserId }
+ * body: { name?, setupFee?, monthlyFee? }
  */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const body = await req.json();
 
-    const auth = await requireRole(body.actingUserId, ['ADMIN']);
+    const auth = await requireRole(await actingUserId(), ['ADMIN']);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const feeError = validateSpeTypeFees(body);
@@ -82,14 +83,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
  * Remove an SPE type (ADMIN-only). Permits that already reference it keep
  * their speTypeId (FK is not restrict — historical record stays
  * intact) but it disappears from the picker for future issuances.
- * body: { actingUserId }
+ * (no request body needed)
  */
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const body = await req.json().catch(() => ({}));
 
-    const auth = await requireRole(body.actingUserId, ['ADMIN']);
+    const auth = await requireRole(await actingUserId(), ['ADMIN']);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const type = await prisma.speType.findUnique({

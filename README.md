@@ -48,7 +48,7 @@ fit together in code.
 | Appeal (bezwaar/beroep) tracking against a decision | Art. 63 / national administrative law |
 | Public transparency register (applications & decisions) | Art. 57(1)(j)(ii), Art. 58, Art. 61(4) |
 | Cross-border application import via HealthData@EU | Art. 75 |
-| Role-based access control, enforced server-side on reads and writes (no real authentication — see [assessments](#assessments)) | Art. 57 (HDAB responsibilities), implemented as internal RBAC |
+| Role-based access control, enforced server-side on reads and writes, backed by real OIDC login (Keycloak) — see [assessments](#assessments) | Art. 57 (HDAB responsibilities), implemented as internal RBAC |
 | Audit trail of application/permit/SPE-provisioning transitions and reference-data changes | supports record-keeping under Art. 57(1) |
 | Trusted data holder flag (registry) + selector on an application | Art. 72 — partial, see below |
 
@@ -108,6 +108,7 @@ Blue = HDAB handling · Amber = waiting on applicant · Teal = outcome · Gray =
 
 - **Next.js 16** (App Router, server components, Turbopack)
 - **PostgreSQL** + **Prisma** ORM
+- **Keycloak** (OIDC identity provider) + **Auth.js** (next-auth) — real login, JWT sessions
 - **next-intl** (nl/en/fr UI localisation)
 - **Tailwind CSS**
 - TypeScript
@@ -117,14 +118,17 @@ Blue = HDAB handling · Amber = waiting on applicant · Teal = outcome · Gray =
 ## Getting started
 
 ```bash
-# 1. Start the database
+# 1. Copy env file and the Keycloak realm template (both git-ignored — the
+#    real ones carry local-dev-only demo credentials, not committed as-is)
+cp .env.example .env
+cp keycloak/realm-export.json.example keycloak/realm-export.json
+
+# 2. Start the database and Keycloak (self-provisions a realm, client, and
+#    the 5 demo users below — no manual admin-console steps)
 docker compose up -d
 
-# 2. Install dependencies
+# 3. Install dependencies
 npm install
-
-# 3. Copy env file and configure
-cp .env.example .env
 
 # 4. Generate a permit-signing key (Ed25519, used to sign issued data permits)
 npm run generate-signing-key
@@ -137,7 +141,24 @@ npm run db:seed
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000) and sign in — every page requires a session
+except the public register. All 5 seeded demo users (see `prisma/seed.ts`) share the password
+`Demo1234!` (defined in `keycloak/realm-export.json.example`, local-dev-only credentials):
+
+| Email | Role |
+|---|---|
+| `researcher@umcu.nl` | APPLICANT |
+| `analyst@rivm.nl` | APPLICANT |
+| `casehandler@hdab.nl` | CASE_HANDLER |
+| `director@hdab.nl` | DECISION_MAKER |
+| `admin@hdab.nl` | ADMIN |
+
+Signed in as `admin@hdab.nl`, the header's account menu (⚙️) offers an **"Act as"** picker to
+switch between the other seeded users without a second login — useful for exercising
+role-specific views. Keycloak's own admin console is at
+[http://localhost:8080](http://localhost:8080) (`admin` / `changeme`, from `.env`'s
+`KEYCLOAK_ADMIN_USER`/`KEYCLOAK_ADMIN_PASSWORD`). Note: the realm only auto-imports on a *fresh*
+`keycloak_data` volume — `docker compose down -v` if you need to reset it.
 
 Run the unit test suite with `npm run test` (or `npm run test:watch` while developing).
 
@@ -150,8 +171,11 @@ on-demand mechanism — no scheduling, retention, or offsite copy.
 
 ## Assessments
 
-This app has **no real authentication** — role-based access control trusts a client-supplied
-user id, a documented and deliberate simplification for this reference implementation (see
+This app has **real authentication** via Keycloak (OIDC) — role-based access control is backed by
+a verified session, not a client-supplied value (see [`docs/architecture.md`](./docs/architecture.md)).
+The remaining honest limitation: Keycloak currently authenticates a closed set of 5 seeded demo
+identities against a self-provisioned local realm, not a production identity provider — DigiD
+(applicants) and eHerkenning (organisations) are still the documented production requirement (see
 [`CLAUDE.md`](./CLAUDE.md)). Each assessment below is written against the bar a real deployment
 would need to clear, not a certification — see each document's own framing note.
 

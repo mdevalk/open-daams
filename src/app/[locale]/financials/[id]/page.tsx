@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { prisma } from '@/lib/db';
+import { requireCurrentUser } from '@/lib/current-user';
 import { InvoiceActions } from '@/components/InvoiceActions';
-import { UserSwitcher } from '@/components/UserSwitcher';
 import { PermitCard } from '@/components/PermitCard';
 import { formatDate, serializePrisma } from '@/lib/utils';
 import { formatPermitId } from '@/lib/permit';
@@ -33,47 +33,34 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
 
 export default async function InvoiceDetailPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ id: string; locale: string }>;
-  searchParams: Promise<{ userId?: string }>;
 }) {
   const { id, locale } = await params;
-  const { userId: queryUserId } = await searchParams;
+  const currentUser = await requireCurrentUser(locale);
 
   const t = await getTranslations({ locale, namespace: 'invoices' });
   const tc = await getTranslations({ locale, namespace: 'financialLineCategory' });
 
-  const [rawInvoice, users] = await Promise.all([
-    prisma.invoice.findUnique({
-      where: { id },
-      include: {
-        permit: {
-          include: {
-            application: { select: { referenceNumber: true, title: true, type: true, applicant: { select: { name: true, email: true, dataUser: { select: { name: true } } } } } },
-          },
+  const rawInvoice = await prisma.invoice.findUnique({
+    where: { id },
+    include: {
+      permit: {
+        include: {
+          application: { select: { referenceNumber: true, title: true, type: true, applicant: { select: { name: true, email: true, dataUser: { select: { name: true } } } } } },
         },
-        application: {
-          select: { id: true, referenceNumber: true, title: true, applicant: { select: { name: true, email: true, dataUser: { select: { name: true } } } } },
-        },
-        createdBy: { select: { name: true, role: true } },
-        lineItems: true,
       },
-    }),
-    prisma.user.findMany({ orderBy: { name: 'asc' } }),
-  ]);
+      application: {
+        select: { id: true, referenceNumber: true, title: true, applicant: { select: { name: true, email: true, dataUser: { select: { name: true } } } } },
+      },
+      createdBy: { select: { name: true, role: true } },
+      lineItems: true,
+    },
+  });
 
   if (!rawInvoice) notFound();
 
   const invoice = serializePrisma(rawInvoice);
-
-  const currentUser =
-    (queryUserId ? users.find((u) => u.id === queryUserId) : null) ??
-    users.find((u) => u.role === 'DECISION_MAKER') ??
-    users.find((u) => u.role === 'ADMIN') ??
-    users[0];
-
-  if (!currentUser) notFound();
 
   const canManage = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(currentUser.role);
   const applicant = invoice.permit?.application?.applicant ?? invoice.application?.applicant;
@@ -170,7 +157,6 @@ export default async function InvoiceDetailPage({
               <InvoiceActions invoiceId={invoice.id} currentUserId={currentUser.id} />
             </section>
           )}
-          <UserSwitcher users={users} currentUserId={currentUser.id} />
         </div>
       </div>
     </div>

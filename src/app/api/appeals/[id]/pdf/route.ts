@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { fileResponse } from '@/lib/http';
 import { requireRoleOrOwner } from '@/lib/authz';
+import { actingUserId } from '@/auth';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -27,8 +28,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       return new NextResponse('Not found', { status: 404 });
     }
 
-    const requestingUserId = req.nextUrl.searchParams.get('userId');
-    const auth = await requireRoleOrOwner(requestingUserId, [...STAFF_ROLES], appeal.application.applicantId);
+    const auth = await requireRoleOrOwner(await actingUserId(), [...STAFF_ROLES], appeal.application.applicantId);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     return fileResponse(Buffer.from(appeal.pdf), `bezwaarbeslissing-${id}.pdf`, {

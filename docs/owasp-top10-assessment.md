@@ -1,13 +1,14 @@
 # OWASP Top 10 (2021) assessment: open-daams
 
-_Snapshot date: 2026-08-13 (updated same day: entity-scoped case-workflow actions now logged too — A09 fully closed)._
+_Snapshot date: 2026-08-13 (updated same day: entity-scoped case-workflow actions now logged too — A09 fully closed). Revised 2026-08-30: A07 closed by the Keycloak/OIDC integration._
 
 This is a security assessment of the open-daams codebase mapped to the
 **OWASP Top 10 (2021)** categories.
 
 > **Framing.** `docs/architecture.md` states the app runs on
-> **test data only** with authentication explicitly stubbed — practical risk is low in the
-> current demo posture. This is written against the bar the project would need to clear before
+> **test data only**. Authentication is now real (Keycloak/OIDC — see A07), scoped to 5 seeded
+> demo identities rather than a production identity provider, so practical risk is still low in
+> the current demo posture. This is written against the bar the project would need to clear before
 > holding real (special-category health) data or being publicly exposed. Not a certification or
 > compliance attestation.
 
@@ -15,13 +16,13 @@ This is a security assessment of the open-daams codebase mapped to the
 
 | Category | Status | Key finding |
 |---|---|---|
-| **A01 – Broken Access Control** | ✅ Fixed (root gap remains — see A07) | Previously fully-open reads (application detail, attachments, decision-card PDFs, internal permit record, `/api/users`) now require identity + role/ownership |
+| **A01 – Broken Access Control** | ✅ Fixed | Previously fully-open reads (application detail, attachments, decision-card PDFs, internal permit record, `/api/users`) now require identity + role/ownership; identity is now session-verified (see A07) |
 | **A02 – Cryptographic Failures** | ✅ Clean | Ed25519 signing (`@noble/ed25519`), key never committed, no hardcoded secrets |
 | **A03 – Injection** | ✅ Clean | All DB access via Prisma's typed query builder; zero raw SQL anywhere |
-| **A04 – Insecure Design** | ✅ Improved | No-real-auth is still the accepted baseline design, but the amplifying factors (open user directory, open sensitive reads) are closed |
+| **A04 – Insecure Design** | ✅ Fixed | The former baseline design gap (no real authentication) is closed — see A07; the amplifying factors (open user directory, open sensitive reads) were already closed |
 | **A05 – Security Misconfiguration** | ✅ Fixed | Nonce-based CSP + full security-header set now set in `src/proxy.ts`; error handling remains disciplined |
 | **A06 – Vulnerable Components** | ✅ Fixed | `npm audit`: **0 vulnerabilities**, now enforced on every push via `.github/workflows/ci.yml`; the two previously-`"*"`-pinned dependencies are now pinned to exact versions |
-| **A07 – Identification and Authentication Failures** | ⚠️ Open (root gap) | No real authentication — RBAC trusts a client-supplied user id, by design for this reference implementation |
+| **A07 – Identification and Authentication Failures** | ✅ Fixed | Real OIDC login via Keycloak (Auth.js); RBAC now fed a server-verified `userId` from the session instead of a client-supplied one. Scoped to 5 seeded demo identities, not DigiD/eHerkenning |
 | **A08 – Software and Data Integrity Failures** | ℹ️ Note | `verifyPermitSignature` exists but is never called in-app — verification happens in the separate external permit-validator app (by design); dependency pinning gap closed |
 | **A09 – Security Logging and Monitoring Failures** | ✅ Fixed | Rejected/unauthorized attempts (`AuthzFailureLog`) and all case-workflow actions (`AuditLog`) are now logged; no more unlogged mutation paths found |
 | **A10 – Server-Side Request Forgery** | ✅ Clean | The one outbound integration (NCP client) hardcodes host + protocol; no user-controlled host anywhere |
@@ -70,15 +71,13 @@ access goes through Prisma's typed query builder. No `eval`, `new Function()`, o
 calls in `src/` or `scripts/`. PDF generation places text at fixed coordinates rather than
 building interpretable markup — no injection vector there either.
 
-### A04 — Insecure Design ✅ Improved
+### A04 — Insecure Design ✅ Fixed
 
-The core design characteristic — no real authentication, RBAC trusts a client-supplied user id —
-is unchanged and remains a deliberate, documented simplification for this reference
-implementation (see A07). What changed: the two concrete things that made it *worse* than the
-documented baseline (an open user directory usable to harvest valid ids/roles for impersonation,
-and several sensitive reads requiring no identity at all — not even a spoofable one) are both
-closed as of the A01 fix. The residual design gap is exactly the accepted one, not an amplified
-one.
+The former core design characteristic — no real authentication, RBAC trusting a client-supplied
+user id — is now closed (see A07): real OIDC login via Keycloak backs every claimed identity. The
+two concrete things that made the old baseline *worse* than even its own documented scope (an open
+user directory usable to harvest valid ids/roles for impersonation, and several sensitive reads
+requiring no identity at all — not even a spoofable one) were already closed as of the A01 fix.
 
 ### A05 — Security Misconfiguration ✅ Fixed
 
@@ -121,23 +120,37 @@ pinned to the exact versions already in use (`15.1.2`/`16.1.0`), confirmed a beh
 manual step: `.github/workflows/ci.yml` (new) runs `npm ci` + `npm audit --audit-level=moderate` +
 `npm run test` on every push and pull request.
 
-### A07 — Identification and Authentication Failures ⚠️ Open (root, by design)
+### A07 — Identification and Authentication Failures ✅ Fixed
 
-Unchanged, and not in scope to silently fix per this project's own documentation: there is no
-real authentication. `findActingUser`/`requireRole`/`requireRoleOrOwner`
-(`src/lib/authz.ts`) all trust a client-supplied `userId`, verified only against the database
-role — not against any proof of identity. They do fail closed correctly (missing/invalid id →
-401, no silent privileged default), and no bypass was found in any sampled route.
+Real authentication now exists. Keycloak (a dedicated OIDC identity provider, containerized in
+`docker-compose.yml`, self-provisioned via `keycloak/realm-export.json` — realm, confidential
+client, and the 5 seeded demo users, zero manual admin-console steps) issues the login; Auth.js
+(`src/auth.ts`) is the OIDC client. `findActingUser`/`requireRole`/`requireRoleOrOwner`
+(`src/lib/authz.ts`, unchanged) now receive a server-verified `userId` — resolved from the session
+via `actingUserId()` — across all ~44 call sites, instead of a client-supplied one. They still fail
+closed correctly (missing/invalid id → 401, no silent privileged default), and no bypass was found
+in any sampled route.
 
-One inconsistency remains from the pre-A01-fix codebase: `src/app/api/permits/[id]/route.ts`
-**POST** (the transition/revoke/expire action) still does its own inline
-`prisma.user.findUnique(...)` rather than the shared helper — cosmetic/consistency issue, not a
-new authorization gap, since the effective check is equivalent. (Its sibling GET handler was
-centralized on `requireRole` during the A01 fix; the POST was out of that round's scope.)
+The one inconsistency previously noted — `src/app/api/permits/[id]/route.ts` **POST** doing its
+own inline `prisma.user.findUnique(...)` instead of the shared `findActingUser` helper — was
+normalized onto the shared helper during this migration; it now also gets the `AuthzFailureLog`
+audit trail it previously lacked.
 
-**Remediation**: real session-based authentication (Auth.js/OIDC) is the actual fix — this is the
-single highest-leverage remaining item in this assessment, since both CSRF/forgeable-mutation
-exposure and non-repudiation of actions cascade from it.
+Every page now requires a session except the public transparency register (`src/proxy.ts`,
+optimistic JWT-presence check; real enforcement stays in each route/page as above). Real sign-out
+clears the local session *and* performs Keycloak's RP-initiated logout
+(`src/app/api/auth/keycloak-signout/route.ts`) — Auth.js's own `signOut()` alone only does the
+former, which would otherwise let a subsequent sign-in silently SSO-reauthenticate as the same
+user. An ADMIN can additionally "Act as" any other seeded user (re-validated server-side on every
+switch, never trusting a client-supplied flag) — verified end-to-end that an ADMIN-only action
+correctly downgrades to 403 while impersonating a non-admin, and is restored on stopping.
+
+**Residual, not this category's concern**: Keycloak currently authenticates a closed set of 5
+seeded demo identities against a self-provisioned local realm — DigiD (applicants) and
+eHerkenning (organisations) remain the documented production requirement (`docs/architecture.md`).
+The demo realm itself sets no password policy, shares one password across all users, and has no
+MFA configured — a deliberate demo simplification, not a production posture. See
+`owasp-asvs-l2-assessment.md` V6/V7/V9/V10 for the itemized breakdown.
 
 ### A08 — Software and Data Integrity Failures ℹ️ Note
 
@@ -199,15 +212,16 @@ client-to-this-app's-own-API.
 
 ## Bottom line
 
-Four full categories are now closed out (A01, A05, A06, A09), with A04/A07's shared root cause
-narrowed to exactly its documented, accepted scope rather than an amplified one. A09 is fully
-closed this cycle — both the rejected/unauthorized-attempt logging (`AuthzFailureLog`) and the
-last unlogged case-workflow actions (`AuditLog`) are done, so every mutation path in the app now
-leaves a trace, success or failure. This cycle additionally closed A06's remaining
-pinned-dependency gap and added CI enforcement (`npm audit` + tests on every push) where previously
-none existed. The single highest-leverage remaining item is real authentication — everything else
-on this list either cascades from it (SC-23's forgeable-mutation exposure, tracked under A04/A07)
-or is already fully independent of it and closed (A09).
+Six full categories are now closed out (A01, A04, A05, A06, A07, A09) — the single highest-leverage
+item this assessment named across every prior revision, real authentication, is done. A09 was fully
+closed a prior cycle — both the rejected/unauthorized-attempt logging (`AuthzFailureLog`) and the
+last unlogged case-workflow actions (`AuditLog`) are done, so every mutation path in the app leaves
+a trace, success or failure. This cycle closed A07 (and with it A04's residual design gap): Keycloak
+OIDC login backs every claimed identity, RBAC is fed a server-verified `userId`, every page requires
+a session except the public register, and sign-out genuinely ends the session (local + Keycloak
+SSO). **No open items remain on this list** — what's left (Keycloak realm hardening for a real
+rollout: MFA, password policy, eventual DigiD/eHerkenning) is tracked in
+`owasp-asvs-l2-assessment.md`'s V6/V7/V9/V10, not a Top-10-shaped gap in this app's own code.
 
 ### Suggested order
 
@@ -217,5 +231,5 @@ or is already fully independent of it and closed (A09).
    **Done** — see A09 above.
 3. ~~**Round out A09**: the entity-scoped action log for authorized-persons/appeals/invoices/
    trusted-data-holder.~~ **Done** — see A09 above. A09 is now fully closed.
-4. **The real fix**: session-based authentication (A04/A07), which also resolves the residual
-   CSRF/forgeable-mutation exposure noted above. The only remaining open item on this list.
+4. ~~**The real fix**: session-based authentication (A04/A07), which also resolves the residual
+   CSRF/forgeable-mutation exposure noted above.~~ **Done** — see A04/A07 above.

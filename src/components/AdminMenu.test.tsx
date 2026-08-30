@@ -8,11 +8,17 @@ vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
 
+vi.mock('next-auth/react', () => ({
+  useSession: () => ({ data: null, status: 'unauthenticated', update: vi.fn() }),
+  signIn: vi.fn(),
+  signOut: vi.fn(),
+}));
+
 afterEach(cleanup);
 
 describe('AdminMenu', () => {
   it('is closed by default and opens the panel with locale-prefixed links on toggle click', () => {
-    render(<AdminMenu locale="nl" />);
+    render(<AdminMenu locale="nl" users={[]} />);
     expect(screen.queryByText('masterdata')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button'));
@@ -24,7 +30,7 @@ describe('AdminMenu', () => {
   });
 
   it('closes the panel when clicking an item, and toggles closed on a second button click', () => {
-    render(<AdminMenu locale="en" />);
+    render(<AdminMenu locale="en" users={[]} />);
     const button = screen.getByRole('button');
 
     fireEvent.click(button);
@@ -41,7 +47,7 @@ describe('AdminMenu', () => {
     render(
       <div>
         <div data-testid="outside">outside area</div>
-        <AdminMenu locale="nl" />
+        <AdminMenu locale="nl" users={[]} />
       </div>,
     );
     const button = screen.getByRole('button');
@@ -58,7 +64,7 @@ describe('AdminMenu', () => {
   });
 
   it('sets aria-expanded to reflect open state', () => {
-    render(<AdminMenu locale="nl" />);
+    render(<AdminMenu locale="nl" users={[]} />);
     const button = screen.getByRole('button');
     expect(button).toHaveAttribute('aria-expanded', 'false');
     fireEvent.click(button);

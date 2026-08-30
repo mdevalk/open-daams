@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
+import { actingUserId } from '@/auth';
 import { calculateDecisionDeadline } from '@/lib/workflow';
 
 const MANAGE_ROLES = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'] as const;
@@ -11,14 +12,14 @@ const MANAGE_ROLES = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'] as const;
  * (TEHDAS2 D6.4 R8.0.8, EHDS Art. 68). Recomputes from the original
  * submission date, not "now" — the extension is "+N months from
  * submission," not "+N months from today."
- * body: { reason, actingUserId }
+ * body: { reason }
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const body = await req.json();
 
-    const auth = await requireRole(body.actingUserId, [...MANAGE_ROLES]);
+    const auth = await requireRole(await actingUserId(), [...MANAGE_ROLES]);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const reason = typeof body.reason === 'string' ? body.reason.trim() : '';

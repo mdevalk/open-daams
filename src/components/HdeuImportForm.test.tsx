@@ -19,7 +19,7 @@ beforeEach(() => {
 
 describe('HdeuImportForm — mode toggle', () => {
   it('shows the paste textarea by default and switches to the file input in "file" mode', () => {
-    render(<HdeuImportForm actingUserId="u-1" />);
+    render(<HdeuImportForm />);
     expect(screen.getByPlaceholderText('{ "hdeuApplicationId": "...", ... }')).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('modeFile'));
@@ -30,7 +30,7 @@ describe('HdeuImportForm — mode toggle', () => {
 
 describe('HdeuImportForm — load sample', () => {
   it('populates the textarea with sample JSON when "loadSample" is clicked', () => {
-    render(<HdeuImportForm actingUserId="u-1" />);
+    render(<HdeuImportForm />);
     const textarea = screen.getByPlaceholderText('{ "hdeuApplicationId": "...", ... }') as HTMLTextAreaElement;
     expect(textarea.value).toBe('');
 
@@ -44,7 +44,7 @@ describe('HdeuImportForm — load sample', () => {
 
 describe('HdeuImportForm — submit', () => {
   it('disables the import button until JSON is entered', () => {
-    render(<HdeuImportForm actingUserId="u-1" />);
+    render(<HdeuImportForm />);
     expect(screen.getByText('importButton').closest('button')).toBeDisabled();
 
     fireEvent.change(screen.getByPlaceholderText('{ "hdeuApplicationId": "...", ... }'), {
@@ -54,7 +54,7 @@ describe('HdeuImportForm — submit', () => {
   });
 
   it('shows the invalidJson error without calling fetch when the textarea has malformed JSON', async () => {
-    render(<HdeuImportForm actingUserId="u-1" />);
+    render(<HdeuImportForm />);
     fireEvent.change(screen.getByPlaceholderText('{ "hdeuApplicationId": "...", ... }'), {
       target: { value: '{not valid' },
     });
@@ -73,7 +73,7 @@ describe('HdeuImportForm — submit', () => {
       }),
     );
 
-    render(<HdeuImportForm locale="nl" actingUserId="u-1" />);
+    render(<HdeuImportForm locale="nl" />);
     fireEvent.change(screen.getByPlaceholderText('{ "hdeuApplicationId": "...", ... }'), {
       target: { value: '{"title":"Test"}' },
     });
@@ -84,7 +84,7 @@ describe('HdeuImportForm — submit', () => {
 
     const fetchMock = vi.mocked(fetch);
     expect(fetchMock).toHaveBeenCalledWith(
-      '/api/import/hdeu?userId=u-1',
+      '/api/import/hdeu',
       expect.objectContaining({ method: 'POST', body: JSON.stringify({ title: 'Test' }) }),
     );
 
@@ -101,7 +101,7 @@ describe('HdeuImportForm — submit', () => {
       }),
     );
 
-    render(<HdeuImportForm actingUserId="u-1" />);
+    render(<HdeuImportForm />);
     fireEvent.change(screen.getByPlaceholderText('{ "hdeuApplicationId": "...", ... }'), {
       target: { value: '{"title":""}' },
     });

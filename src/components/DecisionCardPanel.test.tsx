@@ -60,7 +60,7 @@ describe('DecisionCardPanel — negative decision', () => {
     expect(screen.getByText('negativeTitle')).toBeInTheDocument();
     expect(screen.getByText('DEC-2026-001')).toBeInTheDocument();
     const link = screen.getByText('viewPdf');
-    expect(link).toHaveAttribute('href', '/api/applications/app-1/decision-card/pdf?userId=u-1');
+    expect(link).toHaveAttribute('href', '/api/applications/app-1/decision-card/pdf');
   });
 });
 

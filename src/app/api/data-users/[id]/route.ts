@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
+import { actingUserId } from '@/auth';
 
 /** Builds the `data:` object for prisma.dataUser.update() from a PATCH body. */
 export function buildDataUserUpdateData(body: Record<string, unknown>) {
@@ -40,14 +41,14 @@ async function upsertPrimaryContact(id: string, body: Record<string, unknown>) {
 /**
  * PATCH /api/data-users/[id]
  * Update a data user's masterdata (ADMIN-only).
- * body: { name?, contactEmail?, contactPhone?, actingUserId }
+ * body: { name?, contactEmail?, contactPhone? }
  */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const body = await req.json();
 
-    const auth = await requireRole(body.actingUserId, ['ADMIN']);
+    const auth = await requireRole(await actingUserId(), ['ADMIN']);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     await upsertPrimaryContact(id, body);
@@ -85,14 +86,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
  * DELETE /api/data-users/[id]
  * Remove a data user (ADMIN-only). Blocked with 409 if still referenced by
  * any User.
- * body: { actingUserId }
+ * (no request body needed)
  */
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const body = await req.json().catch(() => ({}));
 
-    const auth = await requireRole(body.actingUserId, ['ADMIN']);
+    const auth = await requireRole(await actingUserId(), ['ADMIN']);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const dataUser = await prisma.dataUser.findUnique({

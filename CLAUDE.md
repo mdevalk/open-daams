@@ -83,8 +83,13 @@ specifications. Always use the **final** Regulation numbering, not the draft-pro
 - **After `npm install`**, run `npx prisma generate` (the postinstall is often blocked), or
   the `@prisma/client` import will be stale/missing.
 - The **PostgreSQL database runs locally** (see `docker-compose.yml`); the app is seeded with
-  `npm run db:seed`. There is **no real authentication** — RBAC trusts a client-supplied
-  `userId` (documented gap, do not silently "fix").
+  `npm run db:seed`. **Real authentication** runs via Keycloak (OIDC, `docker-compose.yml`'s
+  `keycloak` service, self-provisioned realm in `keycloak/realm-export.json`) — RBAC
+  (`src/lib/authz.ts`, unchanged) now receives a server-verified `userId` from the session
+  (`src/auth.ts`'s `actingUserId()`) instead of a client-supplied one. Demo users share the
+  password `Demo1234!`; an ADMIN can "Act as" any other seeded user via the header's account
+  menu. Still a documented gap for real production use: Keycloak authenticates only the closed
+  set of seeded demo identities, not DigiD/eHerkenning.
 - Verify non-trivial changes with `npx tsc --noEmit` (baseline is 0 errors).
 - **Security review before pushing:** a `.claude/settings.json` `PreToolUse` hook reminds
   (non-blocking) before every `git push` to run the `security-review` skill on the diff —

@@ -2,7 +2,8 @@
 
 _Snapshot date: 2026-08-13 (updated same day: dependency pinning + CI landed; scope tightened to
 exclude service-management/HDAB-establishment processes; rejected/unauthorized attempts and the
-remaining case-workflow actions now logged; database backup/restore now exists)._
+remaining case-workflow actions now logged; database backup/restore now exists). Revised
+2026-08-30: 5.15–5.18/8.5 re-assessed following the Keycloak/OIDC integration._
 
 This assesses the open-daams codebase against **BIO2**, the Dutch public sector's information
 security baseline built on **ISO/IEC 27002:2022** — a structurally different control set from the
@@ -11,8 +12,10 @@ its 93 controls into 4 themes: **Organizational** (5.1–5.37), **People** (6.1�
 (7.1–7.14), **Technological** (8.1–8.34). It complements `docs/owasp-top10-assessment.md` — most
 Technological-theme findings reuse that assessment's evidence directly rather than re-deriving it.
 
-> **Framing.** Same as the other assessments: test data only, authentication stubbed — written
-> against the bar a real deployment would need to clear, not a certification or ENSIA attestation.
+> **Framing.** Same as the other assessments: test data only; authentication is now real
+> (Keycloak/OIDC) but scoped to 5 seeded demo identities, not a production identity provider —
+> written against the bar a real deployment would need to clear, not a certification or ENSIA
+> attestation.
 >
 > **Scope boundary — three things excluded, stated plainly, not silently omitted:**
 > 1. **Datacenter/hosting/facilities** — a separate DAAMS work package. Excludes the entire
@@ -76,9 +79,9 @@ codebase. Stated as a complete theme, not omitted.
 | 5.12 Classification of information | ⚠️ Open | See below |
 | 5.13 Labelling of information | ⚠️ Open | Follows from 5.12 — no classification, so nothing to label |
 | 5.14 Information transfer | ✅ Clean | Reuses OWASP A10 — hardcoded outbound host, no user-controlled transfer target |
-| 5.15 Access control | ⚠️ Open (root gap) | See below |
-| 5.16 Identity management | ⚠️ Open (root gap) | See below |
-| 5.17 Authentication information | ❌ N/A | No authentication exists, so there's no authentication information to manage |
+| 5.15 Access control | ✅ Fixed | See below |
+| 5.16 Identity management | ✅ Fixed | See below |
+| 5.17 Authentication information | ◑ Delegated | Password/credential management is Keycloak's responsibility as the IdP; the demo realm sets no password policy and shares one password across all 5 seeded users |
 | 5.18 Access rights | ✅ Partial | Role-based, correctly enforced; provisioning/de-provisioning is a direct DB write, no process |
 | 5.19 Supplier relationships | ➖ Out of scope (HDAB establishment) | No suppliers with contracts — npm dependency tree only, same reasoning as 5.20 |
 | 5.20 Supplier agreements | ➖ Out of scope (HDAB establishment) | No suppliers with contracts — npm dependency tree only |
@@ -116,16 +119,17 @@ sensitivity classification of the data itself. A real deployment would want an e
 classification scheme, even a simple one — this is a data-modeling question for the application
 itself, not an HDAB-establishment process, so it stays in scope.
 
-### 5.15/5.16/5.17/5.18 — Access control & identity ⚠️ Open (root gap)
+### 5.15/5.16/5.17/5.18 — Access control & identity ✅ Fixed
 
-The single most-repeated finding across every assessment this session: `src/lib/authz.ts`'s
+The single most-repeated finding across every assessment this session is resolved: `src/lib/authz.ts`'s
 `requireRole`/`requireRoleOrOwner` enforce role correctly and consistently (confirmed live,
-matching OWASP A01) — but there is no identity behind the role. A client-supplied `userId` is
-trusted outright (OWASP A07). 5.17 doesn't even apply in the usual sense — there's no
-authentication information (password, token, credential) to protect, because there's no
-authentication step at all. 5.18's access-*rights* are fine (role-scoped, fail closed on
-missing/invalid id); access *provisioning* is a direct database write, no request/approval
-process — reasonable for a reference implementation, a real gap for a production baseline.
+matching OWASP A01), and now there *is* a real identity behind the role — Keycloak (OIDC) via
+Auth.js, resolving to a server-verified `userId` instead of a client-supplied one (OWASP A07). 5.17
+is delegated to Keycloak as the IdP: the demo realm sets no password policy and all 5 seeded users
+share one password (`Demo1234!`) — a deliberate demo simplification, not a production posture.
+5.18's access-*rights* are fine (role-scoped, fail closed on missing/invalid id); access
+*provisioning* is still a direct database write (`prisma/seed.ts`), no request/approval process —
+reasonable for a reference implementation, a real gap for a production baseline.
 
 ### 5.19/5.20/5.22 — Supplier relationships ➖ Out of scope (HDAB establishment)
 
@@ -199,7 +203,7 @@ code fix (a stored, enforced field), not a process question, so it stays in scop
 | 8.2 Privileged access rights | ✅ Clean | ≈ OWASP A01 — role-scoped, no privilege-escalation path found |
 | 8.3 Information access restriction | ✅ Clean | ≈ OWASP A01 |
 | 8.4 Access to source code | ✅ Deliberate | Repo is intentionally public (MIT-licensed) — a choice, not an oversight |
-| 8.5 Secure authentication | ⚠️ Open (root gap) | ≈ OWASP A07 — see 5.15–5.18 above |
+| 8.5 Secure authentication | ✅ Fixed | ≈ OWASP A07 — see 5.15–5.18 above |
 | 8.6 Capacity management | ℹ️ N/A | Not modeled — reasonable for this scope |
 | 8.7 Malware protection | ⚠️ Partial | See below |
 | 8.8 Management of technical vulnerabilities | ✅ Fixed | `npm audit` clean, now enforced on every push via `.github/workflows/ci.yml` |
@@ -266,17 +270,19 @@ rather than moving to HDAB-establishment.
 ## Bottom line
 
 Tightened to application code plus its three explicit exclusions (datacenter, health-data
-content, HDAB-establishment process), this assessment resolves cleanly. **In scope and mostly
-already covered by the OWASP doc**: no real authentication behind an otherwise correctly-enforced
-role system (5.15–5.18/8.5) — the single highest-leverage item remaining — plus a handful of small,
-concrete repo-level facts: no data-classification scheme (5.9/5.12/5.13), unvalidated attachment
-content (8.7), and the retention-deadline-computed-not-enforced finding (5.33/8.10). Dependency
-pinning and CI (5.21, 8.8, 8.29), backup/restore (5.30/8.13), and the evidence-source half of
-incident management are now fixed: every mutation now leaves a trace — status transitions, other
-successful case-workflow actions, and rejected/unauthorized attempts alike (5.28/8.15).
-Cryptography, injection-safety, and environment separation are clean. **Everything else this
-document names is out of scope, and correctly so**: an operating HDAB's incident-response process,
-training, documented procedures, change-approval process, and monitoring operations
+content, HDAB-establishment process), this assessment resolves cleanly. **The single
+highest-leverage item every prior revision named is now fixed**: real authentication (Keycloak/
+OIDC) behind the already-correctly-enforced role system (5.15–5.18/8.5). What remains open is a
+handful of small, concrete repo-level facts: no data-classification scheme (5.9/5.12/5.13),
+unvalidated attachment content (8.7), the retention-deadline-computed-not-enforced finding
+(5.33/8.10), and — new this revision — no password policy/MFA configured in the Keycloak demo
+realm (5.17/8.5, delegated-but-unconfigured, not a code gap). Dependency pinning and CI (5.21, 8.8,
+8.29), backup/restore (5.30/8.13), and the evidence-source half of incident management are also
+fixed: every mutation now leaves a trace — status transitions, other successful case-workflow
+actions, and rejected/unauthorized attempts alike (5.28/8.15). Cryptography, injection-safety, and
+environment separation are clean. **Everything else this document names is out of scope, and
+correctly so**: an operating HDAB's incident-response process, training, documented procedures,
+change-approval process, and monitoring operations
 (5.1/5.2/5.4–5.8/5.10/5.11/5.19/5.20/5.22/5.24–5.27/5.29/5.32/5.37, all of People, 8.16, the process half of
 8.32) belong to *establishing that organization*, not to building this application — a distinction
 worth keeping sharp, since conflating the two is exactly what would make a future real assessment
@@ -289,10 +295,12 @@ overstate what a codebase review can actually tell you.
    and 8.8/8.25/8.29 above.
 2. ~~**Small, concrete, code-level**: backup/restore for the application's own Postgres data
    (5.30/8.13).~~ **Done** — see 5.30/8.13 above.
-3. **Small, concrete, code-level, still open**: a lightweight data-classification field
+3. ~~**The real fix, shared with every other assessment this session**: real authentication —
+   resolves 5.15–5.18 and 8.5.~~ **Done** — see 5.15–5.18/8.5 above.
+4. **Small, concrete, code-level, still open**: a lightweight data-classification field
    (5.9/5.12/5.13); content validation on the `Attachment` import path (8.7).
-4. **The real fix, shared with every other assessment this session**: real authentication —
-   resolves 5.15–5.18 and 8.5.
+5. **Before any real (non-demo) rollout**: enable a password policy and MFA in the Keycloak realm
+   (5.17/8.5).
 5. **Close the loop on deletion**: make the retention deadline a stored, enforced field rather
    than a display-time computation (5.33/8.10).
 

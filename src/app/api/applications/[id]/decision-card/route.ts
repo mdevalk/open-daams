@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
+import { actingUserId } from '@/auth';
 
 /**
  * PATCH /api/applications/[id]/decision-card
@@ -11,14 +12,14 @@ import { requireRole } from '@/lib/authz';
  * same endpoint, no separate "timeout" path (mirrors how the also-unimplemented-
  * as-cron 4-week AWAITING_ADDITIONAL_INFORMATION no-response case is handled:
  * surfaced as overdue, completed via the normal action).
- * body: { status: 'ACCEPTED' | 'DECLINED', actingUserId, comment? }
+ * body: { status: 'ACCEPTED' | 'DECLINED', comment? }
  */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const body = await req.json();
 
-    const auth = await requireRole(body.actingUserId, ['APPLICANT', 'CASE_HANDLER', 'ADMIN']);
+    const auth = await requireRole(await actingUserId(), ['APPLICANT', 'CASE_HANDLER', 'ADMIN']);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     if (body.status !== 'ACCEPTED' && body.status !== 'DECLINED') {
@@ -49,7 +50,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       prisma.applicationLog.create({
         data: {
           applicationId: id,
-          userId: body.actingUserId,
+          userId: auth.user.id,
           fromStatus: application.status,
           toStatus: body.status === 'DECLINED' ? 'WITHDRAWN' : application.status,
           action: body.status === 'ACCEPTED' ? 'Pre-permit accepted' : 'Pre-permit declined — application withdrawn',

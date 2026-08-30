@@ -12,6 +12,7 @@ import {
 import { signDecisionCard } from '@/lib/permit-signing';
 import { generateDecisionPdf } from '@/lib/generate-decision-pdf';
 import { findActingUser } from '@/lib/authz';
+import { actingUserId } from '@/auth';
 
 /**
  * Derives the next sequential decision id for the given year from the
@@ -224,12 +225,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   try {
     const { id } = await params;
     const body = await req.json();
-    // body: { toStatus, actingUserId, comment, decisionOutcome? }
+    // body: { toStatus, comment, decisionOutcome? }
 
     const application = await prisma.application.findUnique({ where: { id }, include: { feeEstimate: true } });
     if (!application) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-    const found = await findActingUser(body.actingUserId);
+    const found = await findActingUser(await actingUserId());
     if (!found.ok) return NextResponse.json({ error: found.error }, { status: found.status });
 
     const feeEstimateAccepted = application.feeEstimate?.status === 'ACCEPTED';

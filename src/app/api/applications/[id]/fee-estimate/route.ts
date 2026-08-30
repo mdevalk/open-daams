@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { FinancialLineCategory } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
+import { actingUserId } from '@/auth';
 import { LINE_CATEGORY_META } from '@/lib/financial-line-items';
 
 const MANAGE_ROLES = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'] as const;
@@ -31,14 +32,14 @@ function buildLineItemsCreate(items: LineItemInput[], applicationId: string) {
  * Create or update the cost estimate sent to the applicant during
  * assessment, before a decision is made (TEHDAS2 D6.3 §6.5, EHDS Art. 62(5)).
  * body: { lineItems: {category, amount, description?}[], speOperatorId?, speTypeId?,
- *          notes?, currency?, actingUserId }
+ *          notes?, currency? }
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const body = await req.json();
 
-    const auth = await requireRole(body.actingUserId, [...MANAGE_ROLES]);
+    const auth = await requireRole(await actingUserId(), [...MANAGE_ROLES]);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const application = await prisma.application.findUnique({ where: { id } });
@@ -85,14 +86,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 /**
  * PATCH /api/applications/[id]/fee-estimate
  * Record the applicant's response to a pending cost estimate.
- * body: { status: 'ACCEPTED' | 'REJECTED', actingUserId }
+ * body: { status: 'ACCEPTED' | 'REJECTED' }
  */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const body = await req.json();
 
-    const auth = await requireRole(body.actingUserId, [...MANAGE_ROLES]);
+    const auth = await requireRole(await actingUserId(), [...MANAGE_ROLES]);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     if (body.status !== 'ACCEPTED' && body.status !== 'REJECTED') {

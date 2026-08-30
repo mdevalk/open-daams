@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
+import { actingUserId } from '@/auth';
 
 /** Builds the `data:` object for prisma.speOperator.update() from a PATCH body. */
 export function buildSpeOperatorUpdateData(body: Record<string, unknown>) {
@@ -66,14 +67,14 @@ async function upsertPrimaryContact(id: string, body: Record<string, unknown>) {
  * contracts with (ADMIN-only).
  * body: { name?, contactEmail?, contactPhone?, speProviderId?, address?, businessId?,
  *         vatNumber?, invoiceType?, invoiceReferenceNumber?, eInvoiceAddress?, operatorId?,
- *         peppolCode?, actingUserId }
+ *         peppolCode? }
  */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const body = await req.json();
 
-    const auth = await requireRole(body.actingUserId, ['ADMIN']);
+    const auth = await requireRole(await actingUserId(), ['ADMIN']);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     await upsertPrimaryContact(id, body);
@@ -113,14 +114,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
  * by any SPE provisioning order, or if it still has SPE types registered —
  * the schema cascades on delete, so without this guard removing an operator
  * would silently wipe its whole type/price catalogue.
- * body: { actingUserId }
+ * (no request body needed)
  */
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const body = await req.json().catch(() => ({}));
 
-    const auth = await requireRole(body.actingUserId, ['ADMIN']);
+    const auth = await requireRole(await actingUserId(), ['ADMIN']);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const speOperator = await prisma.speOperator.findUnique({

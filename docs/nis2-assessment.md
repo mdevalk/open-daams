@@ -2,7 +2,7 @@
 
 _Snapshot date: 2026-08-13 (updated same day: dependency pinning + CI landed; rejected/
 unauthorized attempts and the remaining case-workflow actions now logged; database backup/restore
-now exists)._
+now exists). Revised 2026-08-30: (i)/(j) re-assessed following the Keycloak/OIDC integration._
 
 This assesses the open-daams codebase against **NIS2** (Directive (EU) 2022/2555), as transposed
 into Dutch law via the *Cyberbeveiligingswet* (Cbw). It complements `docs/owasp-top10-assessment.md`
@@ -10,8 +10,9 @@ and `docs/bio2-assessment.md` — NIS2 Art. 21(2)'s ten measures are largely the
 facts as those two documents, read through NIS2's coarser lens; this doc cross-references both
 rather than re-deriving their evidence.
 
-> **Framing.** Same as the other assessments: test data only, authentication stubbed — written
-> against the bar a real deployment would need to clear, not a certification.
+> **Framing.** Same as the other assessments: test data only; authentication is now real
+> (Keycloak/OIDC) but scoped to 5 seeded demo identities, not a production identity provider —
+> written against the bar a real deployment would need to clear, not a certification.
 >
 > **Scope boundary — narrower than `docs/bio2-assessment.md`'s, read carefully**: this assesses
 > the **application code only**. Three things are explicitly out of scope, not silently omitted:
@@ -45,8 +46,8 @@ rather than re-deriving their evidence.
 | (f) Effectiveness assessment | ✅ Fixed, code slice only | `.github/workflows/ci.yml` runs the test suite on every push; broader assessment process remains out of scope (procedural) | 5.35/5.36 |
 | (g) Cyber hygiene & training | ➖ Out of scope (procedural) | Training program — organizational | 6.3 |
 | (h) Cryptography | ✅ Clean | Ed25519 signing (OWASP A02); TLS termination is a deployment concern | 8.24 |
-| (i) HR security, access control, asset management | ⚠️ Open (root gap), code slice only | Role enforcement real and consistent; no identity behind the role — HR-security aspects out of scope (procedural) | 5.15–5.18, 8.2/8.3 |
-| (j) MFA / secure comms | ❌ Not present | No authentication at all — downstream of (i)'s root gap; emergency-communication systems out of scope (procedural) | 8.5, 8.20/8.21 |
+| (i) HR security, access control, asset management | ✅ Fixed, code slice only | Role enforcement real and consistent, now backed by a real Keycloak-verified identity; HR-security aspects out of scope (procedural) | 5.15–5.18, 8.2/8.3 |
+| (j) MFA / secure comms | ◑ Delegated, not enabled | Keycloak (the IdP) supports MFA; not configured in the demo realm. Secure comms (CSP/HSTS) already covered under A05/A10 | 8.5, 8.20/8.21 |
 
 ## Findings
 
@@ -120,30 +121,33 @@ signing, public JWKS never exposes the private key. TLS/HTTPS itself is a deploy
 an application-code one — HSTS is sent unconditionally (OWASP A05) but has no effect until TLS
 terminates in front of the app.
 
-### (i) HR security, access control, asset management ⚠️ Open (root gap) — code slice only
+### (i) HR security, access control, asset management ✅ Fixed — code slice only
 
-The finding every assessment this session converges on: `src/lib/authz.ts`'s
+The root gap every assessment this session previously converged on is closed: `src/lib/authz.ts`'s
 `requireRole`/`requireRoleOrOwner` enforce role correctly and consistently (OWASP A01,
-`docs/bio2-assessment.md` 5.15–5.18) — but there's no real identity behind the client-supplied
-`userId` (OWASP A07). **Out of scope**: the HR-security aspects of this measure (screening,
-onboarding/offboarding process) are procedural (BIO2's People theme, 6.x).
+`docs/bio2-assessment.md` 5.15–5.18), and now receive a real, Keycloak-verified identity (OWASP
+A07) instead of a client-supplied `userId`. **Out of scope**: the HR-security aspects of this
+measure (screening, onboarding/offboarding process) are procedural (BIO2's People theme, 6.x).
 
-### (j) MFA / secure communications ❌ Not present
+### (j) MFA / secure communications ◑ Delegated, not enabled
 
-No authentication exists at all, so multi-factor authentication can't yet be a meaningful
-question — entirely downstream of (i)'s root gap, not an independent finding. Secure
-communications at the application-network layer (CSP headers, hardcoded outbound host) are already
-covered under OWASP A05/A10 and `docs/bio2-assessment.md` 8.20/8.21. **Out of scope**: secure
-emergency-communication systems (procedural/operational).
+Real authentication now exists (Keycloak), so multi-factor authentication is a meaningful question
+for the first time — but it isn't turned on: the demo realm (`keycloak/realm-export.json`)
+configures no OTP/WebAuthn requirement. Keycloak itself supports MFA; enabling it is a realm-config
+change, not an application-code one. Secure communications at the application-network layer (CSP
+headers, hardcoded outbound host) are already covered under OWASP A05/A10 and
+`docs/bio2-assessment.md` 8.20/8.21. **Out of scope**: secure emergency-communication systems
+(procedural/operational).
 
 ## Bottom line
 
 Narrowed to the application code only, this assessment resolves into two clean groups. **In
-scope, checkable, and mostly already covered by the OWASP/BIO2 docs**: no real authentication
-behind an otherwise correctly-enforced role system (i)/(j) — the single remaining highest-leverage
-item. Dependency pinning (d), CI enforcement of `npm audit`/tests (e)/(f), and backup/restore for
-the application's own database (c) — previously the other items in this group — are all now fixed.
-Cryptography (h) is clean.
+scope, checkable, and now fixed**: real authentication behind the already-correctly-enforced role
+system (i) — the single highest-leverage item every assessment this session previously named.
+Dependency pinning (d), CI enforcement of `npm audit`/tests (e)/(f), and backup/restore for the
+application's own database (c) are also fixed. Cryptography (h) is clean. The one remaining
+code-slice item is (j): Keycloak supports MFA but the demo realm doesn't enable it — a config
+change, not a missing feature.
 **Explicitly out of scope, and correctly so given this is an application-only review**:
 risk-analysis/policy documents (a), incident-*response* process and the Art. 23 CSIRT-reporting
 chain (b), training programs (g), vendor-risk process (d), HR-security process (i), and
@@ -157,8 +161,10 @@ tried.
    `npm audit` + `npm run test` on every push (e, f).~~ **Done** — see (d)/(e)/(f) above.
 2. ~~**Small, concrete**: add backup/restore for the application's own Postgres data (c).~~
    **Done** — see (c) above.
-3. **The real fix, shared with every other assessment this session**: real authentication —
-   resolves (i) and unblocks (j). The only remaining item on this list.
+3. ~~**The real fix, shared with every other assessment this session**: real authentication —
+   resolves (i) and unblocks (j).~~ **Done** — see (i) above.
+4. **Remaining, config not code**: enable MFA in the Keycloak realm (j) before any real (non-demo)
+   rollout.
 
 Everything else this document names as out of scope (a, the procedural half of b, g, the
 procedural half of d, the procedural half of i, the procedural half of j) is a separate,

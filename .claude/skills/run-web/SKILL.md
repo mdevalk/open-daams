@@ -79,11 +79,18 @@ Screenshots land in `/tmp/shots/` (override: `SCREENSHOT_DIR`). Base URL default
 
 - **Routes are locale-prefixed.** `nav /` redirects to `/nl` (the default locale). Use
   `nav /en/applications`, not `nav /applications`.
-- **No real login.** Identity is simulated via a `?userId=<id>` query param (the `UserSwitcher`
-  component), not a login flow. Append it directly to the path when a specific role matters, e.g.
-  `nav /en/applications/<id>?userId=<a DECISION_MAKER's id>` to see decision/permit actions. Look
-  up ids with `docker exec hdab-nl-daams-db-1 psql -U postgres -d hdab_daams -c 'select id, role
-  from "User";'` if you don't have one handy.
+- **Real login via Keycloak.** Every page except `/[locale]/public` requires a session — visiting
+  one unauthenticated redirects to `/api/auth/signin`. Drive the flow with `click-text "Sign in
+  with Keycloak"`, then `fill #username <email>`, `fill #password Demo1234!`, `click #kc-login`
+  on Keycloak's own hosted login page (all 5 seeded demo users share that password — see
+  `keycloak/realm-export.json`). To act as a different role without a second login, a real ADMIN
+  (`admin@hdab.nl`) has an "Act as" `<select>` in the header (`AuthStatus` component) — set its
+  `.value` and dispatch a native `change` event via `eval`, e.g. `eval (() => { const s =
+  document.querySelector('select'); const opt = Array.from(s.options).find(o =>
+  o.text.includes('Case handler')); s.value = opt.value; s.dispatchEvent(new Event('change', {
+  bubbles: true })); })()` — the native-select `change` event reaches React's handler fine (unlike
+  text inputs, see below). Look up user ids with `docker exec open-daams-db-1 psql -U postgres -d
+  hdab_daams -c 'select id, role from "User";'` if you need one directly.
 - **Forms are React-controlled inputs.** Always use `fill`/`type`, never `eval` to set
   `element.value` directly — that bypasses React's `onChange` and the form won't see the input.
 - **Every page is dynamically rendered** (`searchParams`/`force-dynamic` throughout

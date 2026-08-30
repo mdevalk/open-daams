@@ -133,20 +133,26 @@ See `docs/hdeu-payload-sample.md` for a sample payload.
 | ORM | Prisma |
 | Database | PostgreSQL |
 | Testing | Vitest (unit tests for the pure `src/lib/` logic) |
-| Authentication | Stub (`userId` via the request body) — production requires DigiD/eHerkenning |
+| Authentication | Keycloak (OIDC), JWT sessions — real login for the seeded demo identities; production requires DigiD/eHerkenning |
 
 ---
 
 ## Roadmap towards production
 
-1. **Authentication**: DigiD for applicants, eHerkenning for organisations, SAML/OIDC for HDAB
-   staff — still the single biggest gap; see the security assessment docs for what cascades
-   from it.
+1. **Authentication**: ~~DigiD for applicants, eHerkenning for organisations, SAML/OIDC for HDAB
+   staff — still the single biggest gap~~ — **partially done**: real OIDC login via Keycloak
+   (`src/auth.ts`, self-provisioned realm in `keycloak/realm-export.json`) replaces the former
+   client-supplied `userId`; every page now requires a session except the public register
+   (`src/proxy.ts`). An ADMIN can "Act as" any seeded user for demo/support purposes, gated by a
+   real role check re-validated server-side on every switch. Still missing for production:
+   DigiD for applicants and eHerkenning for organisations — Keycloak currently authenticates the
+   same closed set of seeded demo identities uniformly, not real citizen/business identity
+   providers.
 2. **Authorisation**: ~~case-level RBAC (an applicant only sees their own applications)~~ —
-   **partially done**: several previously fully-open routes (application detail, attachments,
-   decision-card PDFs, the internal permit record) now require a staff role *or* ownership of
-   the specific record (`requireRoleOrOwner`); still no session backing the claimed identity
-   itself.
+   **done**: several previously fully-open routes (application detail, attachments,
+   decision-card PDFs, the internal permit record) require a staff role *or* ownership of the
+   specific record (`requireRoleOrOwner`), and the claimed identity is now backed by a real
+   Keycloak session rather than a client-supplied value (see item 1).
 3. **Notifications**: email/MijnOverheid on status changes.
 4. **Document management**: attachment storage with real byte content already exists (populated
    from NCP imports); an applicant-facing upload UI is out of DAAMS scope (front office/WP6, per

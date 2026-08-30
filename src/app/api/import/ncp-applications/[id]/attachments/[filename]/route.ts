@@ -3,9 +3,10 @@ import AdmZip from 'adm-zip';
 import { getNcpApplicationDetail, guessAttachmentMimeType, resolveAttachmentBytes } from '@/lib/ncp-client';
 import { fileResponse } from '@/lib/http';
 import { requireRole } from '@/lib/authz';
+import { actingUserId } from '@/auth';
 
 /**
- * GET /api/import/ncp-applications/[id]/attachments/[filename]?userId=
+ * GET /api/import/ncp-applications/[id]/attachments/[filename]
  *
  * Lets a case handler inspect one file from an NCP application's detail
  * archive before deciding to import it — used for the queue's "View JSON"
@@ -17,7 +18,7 @@ import { requireRole } from '@/lib/authz';
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string; filename: string }> }) {
   const { id, filename } = await params;
 
-  const auth = await requireRole(req.nextUrl.searchParams.get('userId'), ['CASE_HANDLER', 'ADMIN']);
+  const auth = await requireRole(await actingUserId(), ['CASE_HANDLER', 'ADMIN']);
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   try {

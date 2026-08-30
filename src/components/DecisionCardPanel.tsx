@@ -39,7 +39,7 @@ export function DecisionCardPanel({ application, currentUser }: Props) {
 
   if (!application.decisionOutcome || !application.decisionId) return null;
 
-  const pdfHref = `/api/applications/${application.id}/decision-card/pdf?userId=${currentUser.id}`;
+  const pdfHref = `/api/applications/${application.id}/decision-card/pdf`;
 
   async function respond(status: 'ACCEPTED' | 'DECLINED') {
     setLoading(true);

@@ -415,8 +415,16 @@
     "feeAdditional": "Additional services",
     "feeDataHolder": "Data holder fee(s)"
   },
-  "userSwitcher": {
-    "label": "Acting as"
+  "auth": {
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "signedInAs": "Signed in as {name}",
+    "actAsSelf": "Myself (no impersonation)",
+    "actingAs": "Acting as {name} ({role})",
+    "stop": "Stop",
+    "welcomeEyebrow": "Test environment",
+    "welcomeSubtitle": "Sign in to continue to the DAAMS portal.",
+    "signInCta": "Sign in with Keycloak"
   },
   "roles": {
     "APPLICANT": "Applicant",

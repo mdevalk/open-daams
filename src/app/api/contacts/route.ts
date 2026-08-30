@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
+import { actingUserId } from '@/auth';
 
 const OWNER_FIELD = {
   DataUser: 'dataUserId',
@@ -14,13 +15,13 @@ type OwnerType = keyof typeof OWNER_FIELD;
  * POST /api/contacts
  * Create a contact for a masterdata owner (ADMIN-only).
  * body: { ownerType: 'DataUser'|'DataHolder'|'SpeOperator'|'SpeProvider', ownerId,
- *         name?, email?, phone?, role?, actingUserId }
+ *         name?, email?, phone?, role? }
  */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    const auth = await requireRole(body.actingUserId, ['ADMIN']);
+    const auth = await requireRole(await actingUserId(), ['ADMIN']);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const ownerType = body.ownerType as OwnerType;

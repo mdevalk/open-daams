@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
+import { actingUserId } from '@/auth';
 import { signPermit, groupDatasetsByHolder, type GrantedDatasetGroup } from '@/lib/permit-signing';
 import { regenerateStoredPermitPdf } from '@/lib/permit-pdf-store';
 import { generateSampleDid } from '@/lib/did';
@@ -276,9 +277,9 @@ async function persistGrantedDatasetsAndAuthorizedPersons(
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    // body: { applicationId, validFrom, validUntil, issuedByUserId }
+    // body: { applicationId, validFrom, validUntil }
 
-    const auth = await requireRole(body.issuedByUserId, ['DECISION_MAKER', 'ADMIN']);
+    const auth = await requireRole(await actingUserId(), ['DECISION_MAKER', 'ADMIN']);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     if (!body.outputControllerContactId) {
@@ -379,13 +380,13 @@ export async function POST(req: NextRequest) {
       storageLocationsByDataset,
       researcher,
       outputController,
-      body.issuedByUserId,
+      auth.user.id,
     );
 
     await prisma.dataPermitLog.create({
       data: {
         permitId: permit.id,
-        userId: body.issuedByUserId,
+        userId: auth.user.id,
         toStatus: 'GRANTED',
         action: 'Permit issued',
       },

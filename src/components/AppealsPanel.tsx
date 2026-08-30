@@ -153,7 +153,7 @@ export function AppealsPanel({ applicationId, appeals, canManage, currentUserId 
             )}
             {appeal.signedAt && (
               <a
-                href={`/api/appeals/${appeal.id}/pdf?userId=${currentUserId}`}
+                href={`/api/appeals/${appeal.id}/pdf`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-xs text-[#01689b] hover:underline inline-block"
@@ -167,7 +167,7 @@ export function AppealsPanel({ applicationId, appeals, canManage, currentUserId 
                 {appeal.attachments.map((a) => (
                   <li key={a.id}>
                     <a
-                      href={`/api/attachments/${a.id}?userId=${currentUserId}`}
+                      href={`/api/attachments/${a.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-[#01689b] hover:underline"

@@ -2,20 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
+import { actingUserId } from '@/auth';
 
 /**
  * POST /api/spe-operators/[id]/types
  * Register a new SPE type (tier/product) offered by this operator, e.g.
  * "Standard" with its own setup and monthly fee (Masterdata, ADMIN-only).
  * Selected per permit at issuance to pre-fill the SPE fee fields.
- * body: { name, setupFee, monthlyFee, actingUserId }
+ * body: { name, setupFee, monthlyFee }
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const body = await req.json();
 
-    const auth = await requireRole(body.actingUserId, ['ADMIN']);
+    const auth = await requireRole(await actingUserId(), ['ADMIN']);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     if (!body.name || !String(body.name).trim()) {

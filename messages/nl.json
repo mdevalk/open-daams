@@ -415,8 +415,16 @@
     "feeAdditional": "Aanvullende diensten",
     "feeDataHolder": "Kosten gegevenshouder(s)"
   },
-  "userSwitcher": {
-    "label": "Actief als"
+  "auth": {
+    "signIn": "Inloggen",
+    "signOut": "Uitloggen",
+    "signedInAs": "Ingelogd als {name}",
+    "actAsSelf": "Zelf (geen impersonatie)",
+    "actingAs": "Optredend als {name} ({role})",
+    "stop": "Stop",
+    "welcomeEyebrow": "Testomgeving",
+    "welcomeSubtitle": "Log in om verder te gaan naar het DAAMS-portaal.",
+    "signInCta": "Inloggen met Keycloak"
   },
   "roles": {
     "APPLICANT": "Aanvrager",

@@ -1,20 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parseHdeuPayload, createApplicationFromHdeuPayload } from '@/lib/hdeu';
 import { requireRole } from '@/lib/authz';
+import { actingUserId } from '@/auth';
 
 /**
- * POST /api/import/hdeu?userId=
+ * POST /api/import/hdeu
  *
  * Accepts a HealthData@EU NCP JSON payload and registers it as a new
  * cross-border application in SUBMITTED state, decision clock starting from
  * this national DAAMS's own import time (R8.0.7 — see
  * createApplicationFromHdeuPayload). This is a staff-initiated UI action
  * (the "Import application" form), not an externally-triggered webhook —
- * `userId` is a query param, not a body field, since the body is the raw
+ * the acting user comes from the session, since the body is the raw
  * external payload verbatim.
  */
 export async function POST(req: NextRequest) {
-  const auth = await requireRole(req.nextUrl.searchParams.get('userId'), ['CASE_HANDLER', 'ADMIN']);
+  const auth = await requireRole(await actingUserId(), ['CASE_HANDLER', 'ADMIN']);
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   let body: unknown;

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
+import { actingUserId } from '@/auth';
 
 /**
  * GET /api/spe-providers
@@ -16,13 +17,13 @@ export async function GET() {
 /**
  * POST /api/spe-providers
  * Register a new SPE provider (Masterdata, ADMIN-only).
- * body: { name, contactEmail?, contactPhone?, actingUserId }
+ * body: { name, contactEmail?, contactPhone? }
  */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    const auth = await requireRole(body.actingUserId, ['ADMIN']);
+    const auth = await requireRole(await actingUserId(), ['ADMIN']);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     if (!body.name || !String(body.name).trim()) {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
+import { actingUserId } from '@/auth';
 
 const OWNER_FIELD = {
   DataUser: 'dataUserId',
@@ -34,14 +35,14 @@ export function buildContactUpdateData(body: Record<string, unknown>) {
  * PATCH /api/contacts/[id]
  * Update a contact's name/email/phone/role, and/or reassign its owner
  * (ADMIN-only).
- * body: { name?, email?, phone?, role?, ownerType?, ownerId?, actingUserId }
+ * body: { name?, email?, phone?, role?, ownerType?, ownerId? }
  */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const body = await req.json();
 
-    const auth = await requireRole(body.actingUserId, ['ADMIN']);
+    const auth = await requireRole(await actingUserId(), ['ADMIN']);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const contact = await prisma.contact.update({
@@ -77,14 +78,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
  * Remove a contact (ADMIN-only). No referential-integrity blockers — Contact
  * isn't referenced elsewhere (see its schema comment: deliberately no live FK
  * from other tables into it).
- * body: { actingUserId }
+ * (no request body needed)
  */
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const body = await req.json().catch(() => ({}));
 
-    const auth = await requireRole(body.actingUserId, ['ADMIN']);
+    const auth = await requireRole(await actingUserId(), ['ADMIN']);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const contact = await prisma.contact.findUnique({ where: { id } });

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
+import { actingUserId } from '@/auth';
 import { snapshotLineItems, calculateDueDate, nextInvoiceNumber, sumLineItems } from '@/lib/invoice';
 
 /**
@@ -15,7 +16,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const { id } = await params;
     const body = await req.json();
 
-    const authz = await requireRole(body.actingUserId, ['DECISION_MAKER', 'ADMIN']);
+    const authz = await requireRole(await actingUserId(), ['DECISION_MAKER', 'ADMIN']);
     if (!authz.ok) return NextResponse.json({ error: authz.error }, { status: authz.status });
 
     const feeEstimate = await prisma.feeEstimate.findUnique({

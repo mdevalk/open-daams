@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
+import { actingUserId } from '@/auth';
 
 export type CompletenessItem = {
   key: string;
@@ -13,14 +14,14 @@ export type CompletenessItem = {
  * POST /api/applications/[id]/completeness-check
  * Create or update the structured completeness check (TEHDAS2 D6.3 Ch. 5,
  * Annex 7/8), distinct from the substantive assessment that follows it.
- * body: { items: CompletenessItem[], result: 'PENDING'|'COMPLETE'|'INCOMPLETE', checkedById, remarks? }
+ * body: { items: CompletenessItem[], result: 'PENDING'|'COMPLETE'|'INCOMPLETE', remarks? }
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const body = await req.json();
 
-    const auth = await requireRole(body.checkedById, ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN']);
+    const auth = await requireRole(await actingUserId(), ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN']);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const application = await prisma.application.findUnique({ where: { id } });

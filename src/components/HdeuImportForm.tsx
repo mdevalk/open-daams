@@ -22,7 +22,7 @@ function buildSamplePayload(): string {
   );
 }
 
-export function HdeuImportForm({ locale, actingUserId }: { locale?: string; actingUserId: string }) {
+export function HdeuImportForm({ locale }: { locale?: string }) {
   const t = useTranslations('hdeuImportForm');
   const router = useRouter();
   const applicationHref = (id: string) => (locale ? `/${locale}/applications/${id}` : `/applications/${id}`);
@@ -56,7 +56,7 @@ export function HdeuImportForm({ locale, actingUserId }: { locale?: string; acti
         return;
       }
 
-      const res = await fetch(`/api/import/hdeu?userId=${actingUserId}`, {
+      const res = await fetch('/api/import/hdeu', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(parsed),

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { findActingUser } from '@/lib/authz';
+import { actingUserId } from '@/auth';
 
 const STAFF_ROLES = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN', 'DATA_HOLDER'];
 
@@ -9,7 +10,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   try {
     const body = await req.json();
 
-    const found = await findActingUser(body.authorId);
+    const found = await findActingUser(await actingUserId());
     if (!found.ok) return NextResponse.json({ error: found.error }, { status: found.status });
     const author = found.user;
 

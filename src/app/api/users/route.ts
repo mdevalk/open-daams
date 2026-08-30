@@ -1,16 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { findActingUser } from '@/lib/authz';
+import { actingUserId } from '@/auth';
 
 /**
- * GET /api/users?userId=
+ * GET /api/users
  * No legitimate caller needs more than id/name/role (the UI always fetches
  * user lists server-side via Prisma directly) — require a resolvable acting
  * user and never return email/dataUserId here.
  */
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
-    const auth = await findActingUser(req.nextUrl.searchParams.get('userId'));
+    const auth = await findActingUser(await actingUserId());
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const users = await prisma.user.findMany({

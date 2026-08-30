@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
+import { actingUserId } from '@/auth';
 
 /**
  * PATCH /api/invoices/[invoiceId]
- * body: { actingUserId, action: 'mark_paid' | 'cancel' }
+ * body: { action: 'mark_paid' | 'cancel' }
  *
  * Generic invoice status update, covering both provisional invoices
  * (issued from an accepted fee estimate, no permit yet) and final invoices
@@ -19,7 +20,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ in
     if (!invoice) return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
 
     if (body.action === 'mark_paid') {
-      const authz = await requireRole(body.actingUserId, ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN']);
+      const authz = await requireRole(await actingUserId(),['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN']);
       if (!authz.ok) return NextResponse.json({ error: authz.error }, { status: authz.status });
       if (invoice.status !== 'ISSUED') {
         return NextResponse.json({ error: `Cannot mark a ${invoice.status} invoice as paid` }, { status: 422 });
@@ -41,7 +42,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ in
     }
 
     if (body.action === 'cancel') {
-      const authz = await requireRole(body.actingUserId, ['DECISION_MAKER', 'ADMIN']);
+      const authz = await requireRole(await actingUserId(),['DECISION_MAKER', 'ADMIN']);
       if (!authz.ok) return NextResponse.json({ error: authz.error }, { status: authz.status });
       if (invoice.status === 'PAID') {
         return NextResponse.json({ error: 'Cannot cancel a paid invoice' }, { status: 422 });

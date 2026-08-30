@@ -75,7 +75,7 @@ describe('AppealsPanel — read-only rendering', () => {
       />,
     );
     const link = screen.getByText('downloadDecisionPdf');
-    expect(link).toHaveAttribute('href', '/api/appeals/appeal-1/pdf?userId=u-1');
+    expect(link).toHaveAttribute('href', '/api/appeals/appeal-1/pdf');
   });
 
   it('lists attachments as download links', () => {
@@ -88,7 +88,7 @@ describe('AppealsPanel — read-only rendering', () => {
       />,
     );
     const link = screen.getByText(/evidence.pdf/);
-    expect(link).toHaveAttribute('href', '/api/attachments/att-1?userId=u-1');
+    expect(link).toHaveAttribute('href', '/api/attachments/att-1');
   });
 });
 

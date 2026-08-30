@@ -78,10 +78,13 @@ explicit about for a compliance-themed demo.
 
 ## Cross-cutting / correctness flags
 
-1. **No real authentication.** `src/lib/authz.ts` trusts a client-supplied `userId`. This is
-   not only a deployment concern: Art. 57 assumes the HDAB controls who does what, so the RBAC
-   is presentational until real identity is added. `authz.ts` is the single centralization
-   point where real auth would slot in.
+1. **Real authentication — FIXED (2026-08-30).** `src/lib/authz.ts` previously trusted a
+   client-supplied `userId`; RBAC is now backed by a real Keycloak (OIDC) session, resolved
+   server-side via `src/auth.ts`'s `actingUserId()` before reaching `authz.ts` unchanged — the
+   single centralization point real auth was always meant to slot into. Art. 57 assumes the HDAB
+   controls who does what; that's now enforceable rather than presentational. Residual: Keycloak
+   authenticates 5 seeded demo identities against a self-provisioned local realm, not DigiD
+   (applicants) / eHerkenning (organisations) — see `docs/architecture.md`'s roadmap.
 
 2. **Article-number citations — FIXED (2026-07-08).** The UI previously carried leftover
    draft-proposal numbering: `Art. 46` for the data access application / decision deadline
@@ -120,10 +123,9 @@ explicit about for a compliance-themed demo.
 
 ## Suggested priorities
 
-For a demo meant to illustrate the DAAMS concept, the highest-value addition is:
-
-1. **Real authentication** — replace the trusted-client-`userId` model in `src/lib/authz.ts`
-   (flag 1) so the RBAC and audit trail become meaningful.
+For a demo meant to illustrate the DAAMS concept, the previous highest-value addition — real
+authentication (flag 1) — is now done. Next highest-value: DigiD/eHerkenning to replace Keycloak's
+closed demo-identity set for a real (non-demo) rollout.
 
 The dataset catalogue **and** dataset selection against it (Art. 77–80) are **out of open-daams
 scope** — the catalogue is a separate adjacent deliverable and selection happens in the central

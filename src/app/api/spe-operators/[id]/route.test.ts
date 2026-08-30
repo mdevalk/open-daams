@@ -11,6 +11,10 @@ vi.mock('@/lib/db', () => ({
   },
 }));
 
+vi.mock('@/auth', () => ({
+  actingUserId: vi.fn().mockResolvedValue('mock-acting-user-id'),
+}));
+
 import { prisma } from '@/lib/db';
 import { PATCH, buildSpeOperatorUpdateData, describeSpeOperatorChanges } from './route';
 

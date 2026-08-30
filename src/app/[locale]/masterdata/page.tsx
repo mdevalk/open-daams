@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { prisma } from '@/lib/db';
-import { UserSwitcher } from '@/components/UserSwitcher';
+import { requireCurrentUser } from '@/lib/current-user';
 import { MasterdataManager } from '@/components/MasterdataManager';
 import { MasterdataAuditLog } from '@/components/MasterdataAuditLog';
 import { ContactsManager } from '@/components/ContactsManager';
@@ -15,17 +15,17 @@ export default async function MasterdataPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ tab?: string; userId?: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }) {
   const { locale } = await params;
-  const { tab: queryTab, userId: queryUserId } = await searchParams;
+  const { tab: queryTab } = await searchParams;
   const tab: Tab = TABS.includes(queryTab as Tab) ? (queryTab as Tab) : 'data-holders';
+  const currentUser = await requireCurrentUser(locale);
 
   const t = await getTranslations({ locale, namespace: 'masterdata' });
 
-  const [users, dataHolders, speOperators, speProviders, dataUsers, applicantBillingDetailsList, auditLogEntries, contacts] =
+  const [dataHolders, speOperators, speProviders, dataUsers, applicantBillingDetailsList, auditLogEntries, contacts] =
     await Promise.all([
-      prisma.user.findMany({ orderBy: { name: 'asc' } }),
       prisma.dataHolder.findMany({ orderBy: { name: 'asc' }, include: { contacts: true } }),
       prisma.speOperator.findMany({
         include: { speProvider: { select: { name: true } }, types: { orderBy: { name: 'asc' } }, contacts: true },
@@ -76,13 +76,6 @@ export default async function MasterdataPage({
     ...du,
     billingDetails: billingDetailsByDataUserId.get(du.id) ?? null,
   }));
-
-  const currentUser =
-    (queryUserId ? users.find((u) => u.id === queryUserId) : null) ??
-    users.find((u) => u.role === 'ADMIN') ??
-    users[0];
-
-  if (!currentUser) return null;
 
   const isAdmin = currentUser.role === 'ADMIN';
 
@@ -152,7 +145,7 @@ export default async function MasterdataPage({
             {TABS.map((tabKey) => (
               <a
                 key={tabKey}
-                href={`/${locale}/masterdata?tab=${tabKey}${queryUserId ? `&userId=${queryUserId}` : ''}`}
+                href={`/${locale}/masterdata?tab=${tabKey}`}
                 aria-current={tab === tabKey ? 'page' : undefined}
                 className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
                   tab === tabKey
@@ -190,7 +183,6 @@ export default async function MasterdataPage({
         </div>
 
         <div className="space-y-4">
-          <UserSwitcher users={users} currentUserId={currentUser.id} />
           {isAdmin && <MasterdataAuditLog entries={auditLogEntries} locale={locale} />}
         </div>
       </div>

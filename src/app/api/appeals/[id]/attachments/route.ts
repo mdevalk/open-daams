@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
+import { actingUserId } from '@/auth';
 
 /**
  * POST /api/appeals/[id]/attachments
@@ -9,14 +10,14 @@ import { requireRole } from '@/lib/authz';
  * channels outside DAAMS, so this is where the resulting paperwork (the
  * appellant's written objection, a court ruling, etc.) gets saved and
  * linked to the application record.
- * body: { filename, mimeType, content (base64), actingUserId }
+ * body: { filename, mimeType, content (base64) }
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const body = await req.json();
 
-    const auth = await requireRole(body.actingUserId, ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN']);
+    const auth = await requireRole(await actingUserId(), ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN']);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const appeal = await prisma.appeal.findUnique({ where: { id } });

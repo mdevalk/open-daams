@@ -1,0 +1,89 @@
+{
+  "realm": "daams",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "roles": {
+    "realm": [
+      { "name": "APPLICANT", "description": "Data access applicant" },
+      { "name": "CASE_HANDLER", "description": "HDAB case handler" },
+      { "name": "DECISION_MAKER", "description": "HDAB decision maker" },
+      { "name": "DATA_HOLDER", "description": "Data holder representative" },
+      { "name": "ADMIN", "description": "HDAB administrator" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "daams-app",
+      "name": "open-daams",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "daams-app-secret",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["http://localhost:3000/api/auth/callback/keycloak", "http://localhost:3000"],
+      "webOrigins": ["http://localhost:3000"],
+      "baseUrl": "http://localhost:3000",
+      "attributes": {
+        "post.logout.redirect.uris": "+"
+      }
+    }
+  ],
+  "users": [
+    {
+      "username": "researcher@umcu.nl",
+      "email": "researcher@umcu.nl",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "A.",
+      "lastName": "de Vries",
+      "credentials": [{ "type": "password", "value": "Demo1234!", "temporary": false }],
+      "realmRoles": ["APPLICANT"]
+    },
+    {
+      "username": "analyst@rivm.nl",
+      "email": "analyst@rivm.nl",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "M.",
+      "lastName": "Jansen",
+      "credentials": [{ "type": "password", "value": "Demo1234!", "temporary": false }],
+      "realmRoles": ["APPLICANT"]
+    },
+    {
+      "username": "casehandler@hdab.nl",
+      "email": "casehandler@hdab.nl",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "S.",
+      "lastName": "Bakker",
+      "credentials": [{ "type": "password", "value": "Demo1234!", "temporary": false }],
+      "realmRoles": ["CASE_HANDLER"]
+    },
+    {
+      "username": "director@hdab.nl",
+      "email": "director@hdab.nl",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "P.",
+      "lastName": "van den Berg",
+      "credentials": [{ "type": "password", "value": "Demo1234!", "temporary": false }],
+      "realmRoles": ["DECISION_MAKER"]
+    },
+    {
+      "username": "admin@hdab.nl",
+      "email": "admin@hdab.nl",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "R.",
+      "lastName": "de Groot",
+      "credentials": [{ "type": "password", "value": "Demo1234!", "temporary": false }],
+      "realmRoles": ["ADMIN"]
+    }
+  ]
+}

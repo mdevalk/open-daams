@@ -415,8 +415,16 @@
     "feeAdditional": "Services supplémentaires",
     "feeDataHolder": "Frais détenteur(s) de données"
   },
-  "userSwitcher": {
-    "label": "Agissant en tant que"
+  "auth": {
+    "signIn": "Se connecter",
+    "signOut": "Se déconnecter",
+    "signedInAs": "Connecté en tant que {name}",
+    "actAsSelf": "Moi-même (pas d'emprunt d'identité)",
+    "actingAs": "Agissant en tant que {name} ({role})",
+    "stop": "Arrêter",
+    "welcomeEyebrow": "Environnement de test",
+    "welcomeSubtitle": "Connectez-vous pour continuer vers le portail DAAMS.",
+    "signInCta": "Se connecter avec Keycloak"
   },
   "roles": {
     "APPLICANT": "Demandeur",

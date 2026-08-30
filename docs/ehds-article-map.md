@@ -1,6 +1,7 @@
 # EHDS article map — DAAMS-relevant articles
 
-_Snapshot date: 2026-08-07 (previous snapshot: 2026-07-14)._
+_Snapshot date: 2026-08-07 (previous snapshot: 2026-07-14). Revised 2026-08-30: Art. 57 moved to
+✅ following the Keycloak/OIDC authentication integration._
 
 This maps the articles of the **EHDS Regulation (EU) 2025/327** (Chapter IV — secondary use)
 that are relevant to a **DAAMS** (Data Access Application Management System) to their
@@ -34,7 +35,7 @@ purely institutional articles — are listed separately as out of DAAMS scope.
 |---|---|:---:|---|
 | 52 | Intellectual property rights and trade secrets | ✗ | placeholder only in the permit PDF |
 | 53 | Purposes for which electronic health data can be processed for secondary use | ✅ | `purposeCategory` on the application |
-| 57 | Tasks of health data access bodies | ◑ | workflow + expanded audit trail present (application/permit/SPE-provisioning transitions, plus reference-data changes); role checks now enforced server-side on reads as well as writes, but still no real authentication — RBAC trusts a client-supplied user id |
+| 57 | Tasks of health data access bodies | ✅ | workflow + expanded audit trail present (application/permit/SPE-provisioning transitions, plus reference-data changes); role checks enforced server-side on reads and writes, now backed by real Keycloak (OIDC) authentication — RBAC trusts a server-verified session, not a client-supplied user id |
 | 58 | Obligations of health data access bodies towards natural persons | ◑ | public register yes; broader information duties no |
 | 60 | Duties of health data holders | ◑ | `DataExtractionRequest` tracking; data holder simulated |
 | 61 | Duties of health data users | ◑ | stated in the permit; not tracked or enforced |
@@ -49,7 +50,7 @@ purely institutional articles — are listed separately as out of DAAMS scope.
 | 75 | HealthData@EU | ◑ | calls the real National Dispatcher OpenAPI on the HDAB-NL test environment when configured, falling back to fixture data otherwise; no retry/logging of failed exchanges |
 | 76 | Access to cross-border registries or databases of electronic health data for secondary use | ✗ | permit-PDF note only |
 
-**Summary:** ✅ 5 implemented (53, 62, 67, 68, 69) · ◑ 8 partial/simulated (57, 58, 60, 61, 63,
+**Summary:** ✅ 6 implemented (53, 57, 62, 67, 68, 69) · ◑ 7 partial/simulated (58, 60, 61, 63,
 71, 73, 75) · ✗ 3 not implemented (52, 72, 76).
 
 Pattern: the core workflow (application → decision → permit → fees) is complete; everything that
