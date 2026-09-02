@@ -3,7 +3,11 @@
 _Snapshot date: 2026-08-13 (updated same day: dependency pinning + CI landed; scope tightened to
 exclude service-management/HDAB-establishment processes; rejected/unauthorized attempts and the
 remaining case-workflow actions now logged; database backup/restore now exists). Revised
-2026-08-30: 5.15–5.18/8.5 re-assessed following the Keycloak/OIDC integration._
+2026-08-30: 5.15–5.18/8.5 re-assessed following the Keycloak/OIDC integration. Revised 2026-09-02
+following a cognitive-complexity refactor pass (security-reviewed, no functional change — see
+`docs/sonarqube-assessment.md`): 5.33's citation updated to its current location, fresh SonarQube
+evidence added to 8.25/8.28, and a newly-disclosed `browserslist` HIGH advisory (unrelated to the
+refactor) caught by CI's `npm audit` gate and fixed same-day (5.21/8.8)._
 
 This assesses the open-daams codebase against **BIO2**, the Dutch public sector's information
 security baseline built on **ISO/IEC 27002:2022** — a structurally different control set from the
@@ -150,6 +154,18 @@ A06, a non-reproducible-build gap) are now pinned to exact versions, confirmed a
 scheduled/periodic scan (nothing catches a newly-disclosed CVE on an otherwise-unchanged dependency
 until the next push), but a real step up from the previous "only if someone runs it by hand" state.
 
+**2026-09-02 — the gate did its job.** Re-checking `npm audit` directly (not just assuming the
+08-13 result still held) surfaced a HIGH-severity advisory disclosed since then: `browserslist`
+<=4.28.6 (unbounded memory growth; prototype-write crash), pulled in transitively via
+`autoprefixer`/`eslint-plugin-react-hooks`→`@babel/core` — a dev dependency, not in the
+production bundle, but present in the full tree CI's `npm audit --audit-level=moderate` checks.
+This would have failed the next push's CI run. Fixed same-day via `npm audit fix` (bumps
+`browserslist` 4.28.4→4.28.8 and its own small chain — `update-browserslist-db`, `node-releases`,
+`caniuse-lite` — no `package.json` pins touched, confirmed a behavioural no-op: `tsc` clean,
+536/536 tests unchanged). Net takeaway: this is evidence the control *works*, not a lapse — the
+whole point of running `npm audit` on every push is to catch exactly this kind of
+newly-disclosed, time-sensitive finding before it ships.
+
 ### 5.24–5.27 — Incident management process ➖ Out of scope (HDAB establishment)
 
 Planning, event assessment/decision, response, and post-incident learning are all organizational
@@ -190,10 +206,11 @@ full GDPR/AVG-specific assessment was scoped for a separate effort and isn't rep
 ### 5.33 — Protection of records ⚠️ Open
 
 The permit detail page shows a "Retention deadline (Art. 68(12))"
-(`src/app/[locale]/permits/[id]/page.tsx:164`) — but it's `addMonths(permit.validUntil, 6)`,
-computed **at display time**, not a stored field, and nothing enforces or acts on it when the date
-passes. The obligation is correctly surfaced to staff; nothing currently executes on it. This is a
-code fix (a stored, enforced field), not a process question, so it stays in scope.
+(derived in `src/lib/permit.ts`'s `derivePermitDisplayFlags`/`addMonths`, displayed at
+`src/app/[locale]/permits/[id]/page.tsx:325`) — but it's computed **at display time**, not a
+stored field, and nothing enforces or acts on it when the date passes. The obligation is correctly
+surfaced to staff; nothing currently executes on it. This is a code fix (a stored, enforced
+field), not a process question, so it stays in scope.
 
 ## Technological (8.1–8.34)
 
@@ -206,7 +223,7 @@ code fix (a stored, enforced field), not a process question, so it stays in scop
 | 8.5 Secure authentication | ✅ Fixed | ≈ OWASP A07 — see 5.15–5.18 above |
 | 8.6 Capacity management | ℹ️ N/A | Not modeled — reasonable for this scope |
 | 8.7 Malware protection | ⚠️ Partial | See below |
-| 8.8 Management of technical vulnerabilities | ✅ Fixed | `npm audit` clean, now enforced on every push via `.github/workflows/ci.yml` |
+| 8.8 Management of technical vulnerabilities | ✅ Fixed | `npm audit` clean, now enforced on every push via `.github/workflows/ci.yml` — a newly-disclosed advisory was caught and fixed 2026-09-02, see 5.21 |
 | 8.9 Configuration management | ✅ Clean | `.env`/`.env.example`; no infrastructure-as-code, reasonable for this scope |
 | 8.10 Information deletion | ⚠️ Open | Same as 5.33 — application/permit metadata only, not health-data content |
 | 8.11 Data masking | ➖ Out of scope | Health-data content — DAAMS never handles it |
@@ -226,7 +243,7 @@ code fix (a stored, enforced field), not a process question, so it stays in scop
 | 8.25 Secure development life cycle | ✅ Clean | See below |
 | 8.26 Application security requirements | ✅ Clean | ≈ OWASP A03 — typed queries, no injection surface |
 | 8.27 Secure system architecture and engineering | ✅ Clean | Same evidence as 8.26 |
-| 8.28 Secure coding | ✅ Clean | Same evidence as 8.26 |
+| 8.28 Secure coding | ✅ Clean | Same evidence as 8.26, plus SonarQube static analysis — see 8.25 |
 | 8.29 Security testing in development/acceptance | ✅ Fixed | `npm run test` now runs on every push via `.github/workflows/ci.yml` |
 | 8.30 Outsourced development | ℹ️ N/A | Not outsourced |
 | 8.31 Separation of dev/test/production | ✅ Real | See below |
@@ -249,7 +266,14 @@ stays in scope, unlike 8.16's operational monitoring.
 Strong on the static-analysis side (typed Prisma queries throughout, zero raw SQL/`eval`, per
 OWASP A03) and on environment separation (8.31, below). The automated-testing gap noted here
 previously — no CI running `npm run test`/`npm audit` on any change — is now closed by
-`.github/workflows/ci.yml`, which runs both on every push and pull request.
+`.github/workflows/ci.yml`, which runs both on every push and pull request. Independent
+corroboration from a different tool: two fresh SonarQube Community Edition scans this revision
+(full detail in `docs/sonarqube-assessment.md`) both report 0 bugs, 0 vulnerabilities, 0 security
+hotspots (Reliability/Security/Security Review all rating A) — and a dedicated pass this session
+drove the CRITICAL-severity cognitive-complexity backlog from 9 findings down to 1 (the one
+remaining is a JSX-structural page explicitly deferred and tracked openly, not hidden), with code
+smells down from 268 to 255. Same evidence applies to 8.26–8.28 below (8.26/8.27 previously cited
+OWASP A03 alone).
 
 ### 8.31 — Separation of development, test and production ✅ Real
 
@@ -280,7 +304,11 @@ realm (5.17/8.5, delegated-but-unconfigured, not a code gap). Dependency pinning
 8.29), backup/restore (5.30/8.13), and the evidence-source half of incident management are also
 fixed: every mutation now leaves a trace — status transitions, other successful case-workflow
 actions, and rejected/unauthorized attempts alike (5.28/8.15). Cryptography, injection-safety, and
-environment separation are clean. **Everything else this document names is out of scope, and
+environment separation are clean. New this revision: a fresh, independent SonarQube pass
+corroborates the secure-coding findings (0 bugs/vulnerabilities/hotspots across two scans,
+CRITICAL cognitive-complexity findings 9 → 1, 8.25/8.28), and the CI `npm audit` gate caught and
+fixed a newly-disclosed HIGH advisory same-day (5.21/8.8) — the control doing exactly what it's
+for. **Everything else this document names is out of scope, and
 correctly so**: an operating HDAB's incident-response process, training, documented procedures,
 change-approval process, and monitoring operations
 (5.1/5.2/5.4–5.8/5.10/5.11/5.19/5.20/5.22/5.24–5.27/5.29/5.32/5.37, all of People, 8.16, the process half of
@@ -301,7 +329,7 @@ overstate what a codebase review can actually tell you.
    (5.9/5.12/5.13); content validation on the `Attachment` import path (8.7).
 5. **Before any real (non-demo) rollout**: enable a password policy and MFA in the Keycloak realm
    (5.17/8.5).
-5. **Close the loop on deletion**: make the retention deadline a stored, enforced field rather
+6. **Close the loop on deletion**: make the retention deadline a stored, enforced field rather
    than a display-time computation (5.33/8.10).
 
 Everything named "out of scope (HDAB establishment)" above is a separate, organizational
