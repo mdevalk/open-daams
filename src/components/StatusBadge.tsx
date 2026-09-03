@@ -2,7 +2,6 @@
 
 import { useTranslations } from 'next-intl';
 import { Application } from '@prisma/client';
-import { STATUS_COLORS } from '@/lib/workflow';
 import { cn } from '@/lib/utils';
 
 type Props = Pick<Application, 'status'>;

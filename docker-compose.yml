@@ -21,6 +21,17 @@ services:
     volumes:
       - keycloak_data:/opt/keycloak/data
       - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+  sonarqube:
+    image: sonarqube:community
+    ports:
+      - '19000:9000'
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
 volumes:
   pgdata:
   keycloak_data:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:

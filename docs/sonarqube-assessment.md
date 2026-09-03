@@ -12,7 +12,10 @@ Reliability rating didn't move. Re-run three more times 2026-09-03 (same day) cl
 remaining MQR Reliability issues in three batches (9 MEDIUM-severity mechanical fixes, 4
 LOW-severity mechanical fixes, then the one remaining `S8786` regex rewrite) — MQR Reliability
 rating **C → A**. Re-run once more 2026-09-03 (same day) after resolving the 3 duplication clusters
-plus the `S6582`/`S9020` code smells — duplication 4.3% → **2.8%**, code smells 175 → **145**._
+plus the `S6582`/`S9020` code smells — duplication 4.3% → **2.8%**, code smells 175 → **145**.
+Re-run once more 2026-09-03 (same day) after a final zero-risk sweep — 3 unused imports removed
+(`S1128`), 2 duplicate imports merged (`S3863`), 3 built-in imports given the `node:` protocol
+prefix (`S7772`) — code smells 145 → **137**._
 
 This is a static-analysis assessment of the open-daams codebase against **SonarQube Community
 Edition**'s default TypeScript/JavaScript rule set — bugs, vulnerabilities, security hotspots,
@@ -39,24 +42,25 @@ this one is closer to code-quality/maintainability), same "assessment, not certi
 
 ## Summary
 
-| Metric | Result (2026-08-21) | Result (2026-08-30, Keycloak) | Result (2026-08-30, S3776 pass) | Result (2026-09-03, JSX split) | Result (2026-09-03, S9011 pass) | Result (2026-09-03, MQR closure) | Result (2026-09-03, dup/S6582/S9020) |
-|---|---|---|---|---|---|---|---|
-| Bugs | **0** (Reliability A) | **0** (Reliability A) | **0** (Reliability A) | **0** (Reliability A) | **0** (Reliability A, legacy model) | **0** (Reliability A, both models) | **0** (Reliability A, both models) |
-| Vulnerabilities | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) |
-| Security hotspots | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) |
-| Maintainability rating | **A** | **A** | **A** | **A** | **A** | **A** | **A** |
-| MQR Reliability rating | n/a | n/a | n/a | n/a | C | A | A |
-| Code smells | 252 | 268 | 255 | 266 | 189 | 175 | **145** |
-| — of which CRITICAL severity | 8 | 9 | 1 | **0** | 0 | 0 | 0 |
-| Cognitive-complexity issues (rule S3776) | 8 | 9 | 1 | **0** | 0 | 0 | 0 |
-| Button-`type` issues (rule S9011) | n/a | 77 | 77 | 77 | **0** | 0 | 0 |
-| MQR Reliability-impact issues | n/a | n/a | n/a | n/a | 91 → 14 | 0 | 0 |
-| Optional-chaining issues (rule S6582) | 8 | 8 | 8 | 8 | 8 | 8 | **0** |
-| Testing Library style (rule S9020) | 20 | 23 | 23 | 23 | 23 | 23 | **0** |
-| Duplicated lines | 2.8% | 4.6% | 4.5% | 4.3% | 4.3% | 4.3% | **2.8%** |
-| Test coverage (line, via lcov) | ~45-48%* | 46.0% | 47.7% | 49.1% | 49.1% | 49.2% | 50.5% |
-| Lines of code analyzed | ~15,400 | 16,369 | 16,659 | 16,913 | 16,940 | 16,958 | 17,057 |
-| Maintainability debt (`sqale_index`) | ~1,193 min (~19.9h) | 1,257 min (~21.0h) | 1,143 min (~19.1h) | 1,184 min (~19.7h) | 1,030 min (~17.2h) | 933 min (~15.6h) | **783 min (~13.1h)** |
+| Metric | Result (2026-08-21) | Result (2026-08-30, Keycloak) | Result (2026-08-30, S3776 pass) | Result (2026-09-03, JSX split) | Result (2026-09-03, S9011 pass) | Result (2026-09-03, MQR closure) | Result (2026-09-03, dup/S6582/S9020) | Result (2026-09-03, zero-risk sweep) |
+|---|---|---|---|---|---|---|---|---|
+| Bugs | **0** (Reliability A) | **0** (Reliability A) | **0** (Reliability A) | **0** (Reliability A) | **0** (Reliability A, legacy model) | **0** (Reliability A, both models) | **0** (Reliability A, both models) | **0** (Reliability A, both models) |
+| Vulnerabilities | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) |
+| Security hotspots | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) |
+| Maintainability rating | **A** | **A** | **A** | **A** | **A** | **A** | **A** | **A** |
+| MQR Reliability rating | n/a | n/a | n/a | n/a | C | A | A | A |
+| Code smells | 252 | 268 | 255 | 266 | 189 | 175 | 145 | **137** |
+| — of which CRITICAL severity | 8 | 9 | 1 | **0** | 0 | 0 | 0 | 0 |
+| Cognitive-complexity issues (rule S3776) | 8 | 9 | 1 | **0** | 0 | 0 | 0 | 0 |
+| Button-`type` issues (rule S9011) | n/a | 77 | 77 | 77 | **0** | 0 | 0 | 0 |
+| MQR Reliability-impact issues | n/a | n/a | n/a | n/a | 91 → 14 | 0 | 0 | 0 |
+| Optional-chaining issues (rule S6582) | 8 | 8 | 8 | 8 | 8 | 8 | **0** | 0 |
+| Testing Library style (rule S9020) | 20 | 23 | 23 | 23 | 23 | 23 | **0** | 0 |
+| Unused/duplicate imports, missing `node:` prefix | n/a | n/a | n/a | n/a | n/a | n/a | 8 | **0** |
+| Duplicated lines | 2.8% | 4.6% | 4.5% | 4.3% | 4.3% | 4.3% | **2.8%** | 2.8% |
+| Test coverage (line, via lcov) | ~45-48%* | 46.0% | 47.7% | 49.1% | 49.1% | 49.2% | 50.5% | 50.5% |
+| Lines of code analyzed | ~15,400 | 16,369 | 16,659 | 16,913 | 16,940 | 16,958 | 17,057 | 17,057 |
+| Maintainability debt (`sqale_index`) | ~1,193 min (~19.9h) | 1,257 min (~21.0h) | 1,143 min (~19.1h) | 1,184 min (~19.7h) | 1,030 min (~17.2h) | 933 min (~15.6h) | 783 min (~13.1h) | **763 min (~12.7h)** |
 
 \* Coverage fluctuates a few points run-to-run depending on which files were touched most recently
 in the same session; treat it as "mid-to-high 40s%," not a fixed number.
@@ -84,10 +88,13 @@ ones, then the one remaining `S8786` regex rewrite — taking MQR Reliability is
 rating **C → A**. A final same-day pass then resolved the 3 documented duplication clusters (new
 `handleChecklistUpdate()`/`updateInvoiceStatus()` helpers and a generic `<LogTable>` component) plus
 all 8 `S6582` and all 23 `S9020` findings — duplication 4.3% → **2.8%** (back to the pre-Keycloak
-baseline), code smells 175 → **145**, and `sqale_index` reaching its lowest point across every run
-in this doc.
+baseline), code smells 175 → 145, and `sqale_index` down further. A final same-day sweep then closed
+3 more genuinely zero-risk findings — 3 unused imports (`S1128`, confirmed unreferenced anywhere
+else in each file), 2 duplicate imports merged into one (`S3863`), 3 built-in Node imports given the
+`node:` protocol prefix (`S7772`, a no-op at runtime) — taking code smells 145 → **137** and
+`sqale_index` to its lowest point across every run in this doc.
 
-## Where the 145 code smells concentrate
+## Where the 137 code smells concentrate
 
 Only two rules are left with any real count. `S6759` (readonly props, 80) is deliberately untouched
 — see "What's not worth chasing" below for why. Everything else this project has actively targeted
@@ -272,8 +279,9 @@ on a reference-implementation project.
 This is a community-built, unofficial EHDS/TEHDAS2 reference implementation (see the project
 README's own disclaimer), not a production app under a maintainability SLA. Every structural
 category this doc has tracked is now closed: cognitive complexity, button-type, the whole MQR
-Reliability tail, and duplication are all at zero/baseline — every rating (legacy and MQR, all three
-qualities) is A. What's left (145 code smells) is deliberately not being chased further:
+Reliability tail, duplication, and every genuinely zero-risk mechanical finding are all at
+zero/baseline — every rating (legacy and MQR, all three qualities) is A. What's left (137 code
+smells) is deliberately not being chased further:
 
 - **`S6759` (80, readonly props) — skipped on purpose, not an oversight.** This isn't a defect, it's
   a style convention the codebase has consistently *not* adopted anywhere — including every

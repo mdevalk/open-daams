@@ -1,8 +1,8 @@
 import * as ed from '@noble/ed25519';
 import { sha512 } from '@noble/hashes/sha512';
 import { concatBytes } from '@noble/hashes/utils';
-import { readFileSync } from 'fs';
-import path from 'path';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { AppealStatus, DataPermitStatus, DecisionOutcome } from '@prisma/client';
 import { formatPermitId } from './permit';
 

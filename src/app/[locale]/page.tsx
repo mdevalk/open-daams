@@ -1,9 +1,8 @@
 import { prisma } from '@/lib/db';
 import { ApplicationCard } from '@/components/ApplicationCard';
 import { ApplicationStatus } from '@prisma/client';
-import { cn } from '@/lib/utils';
 import { getTranslations } from 'next-intl/server';
-import { formatDate, daysUntil } from '@/lib/utils';
+import { cn, formatDate, daysUntil } from '@/lib/utils';
 import { formatPermitId } from '@/lib/permit';
 import { CHANGE_TYPE_LABELS } from '@/lib/permit-change';
 

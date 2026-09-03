@@ -1,4 +1,4 @@
-import { randomBytes } from 'crypto';
+import { randomBytes } from 'node:crypto';
 
 // Bitcoin/base58btc alphabet — excludes 0/O/I/l to avoid visual ambiguity,
 // same alphabet a real did:key multibase encoding would use.
