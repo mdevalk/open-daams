@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { requireRole } from '@/lib/authz';
-import { actingUserId } from '@/auth';
+import { updateInvoiceStatus } from '@/lib/invoice';
 
 /**
  * PATCH /api/invoices/[invoiceId]
@@ -19,51 +18,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ in
     const invoice = await prisma.invoice.findUnique({ where: { id: invoiceId } });
     if (!invoice) return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
 
-    if (body.action === 'mark_paid') {
-      const authz = await requireRole(await actingUserId(),['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN']);
-      if (!authz.ok) return NextResponse.json({ error: authz.error }, { status: authz.status });
-      if (invoice.status !== 'ISSUED') {
-        return NextResponse.json({ error: `Cannot mark a ${invoice.status} invoice as paid` }, { status: 422 });
-      }
-      const updated = await prisma.invoice.update({
-        where: { id: invoiceId },
-        data: { status: 'PAID', paidAt: new Date() },
-      });
-      await prisma.auditLog.create({
-        data: {
-          userId: authz.user.id,
-          entityType: 'Invoice',
-          entityId: invoiceId,
-          action: `Invoice marked paid: ${invoice.invoiceNumber}`,
-          comment: null,
-        },
-      });
-      return NextResponse.json(updated);
-    }
-
-    if (body.action === 'cancel') {
-      const authz = await requireRole(await actingUserId(),['DECISION_MAKER', 'ADMIN']);
-      if (!authz.ok) return NextResponse.json({ error: authz.error }, { status: authz.status });
-      if (invoice.status === 'PAID') {
-        return NextResponse.json({ error: 'Cannot cancel a paid invoice' }, { status: 422 });
-      }
-      const updated = await prisma.invoice.update({
-        where: { id: invoiceId },
-        data: { status: 'CANCELLED' },
-      });
-      await prisma.auditLog.create({
-        data: {
-          userId: authz.user.id,
-          entityType: 'Invoice',
-          entityId: invoiceId,
-          action: `Invoice cancelled: ${invoice.invoiceNumber}`,
-          comment: null,
-        },
-      });
-      return NextResponse.json(updated);
-    }
-
-    return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
+    return await updateInvoiceStatus(invoice, body.action);
   } catch (e) {
     console.error('Failed to update invoice', e);
     const message = e instanceof Error ? e.message : 'Failed to update invoice';

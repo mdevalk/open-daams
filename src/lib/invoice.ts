@@ -1,4 +1,8 @@
-import type { FinancialLineItem, InvoiceRecipientType, InvoiceStatus, Prisma } from '@prisma/client';
+import type { FinancialLineItem, Invoice, InvoiceRecipientType, InvoiceStatus, Prisma } from '@prisma/client';
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
+import { requireRole } from '@/lib/authz';
+import { actingUserId } from '@/auth';
 
 export type SourceLineItem = Pick<
   FinancialLineItem,
@@ -163,4 +167,55 @@ export function buildInvoiceStatusSums(
 
 export function resolveActiveTab(rawTab: string | undefined): 'estimates' | 'invoices' {
   return rawTab === 'invoices' ? 'invoices' : 'estimates';
+}
+
+// Shared PATCH handler for /invoices/[invoiceId] and
+// /permits/[id]/invoices/[invoiceId] — same two actions, differing only in
+// how the caller looks up + scopes the invoice beforehand.
+export async function updateInvoiceStatus(invoice: Invoice, action: unknown): Promise<NextResponse> {
+  if (action === 'mark_paid') {
+    const authz = await requireRole(await actingUserId(), ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN']);
+    if (!authz.ok) return NextResponse.json({ error: authz.error }, { status: authz.status });
+    if (invoice.status !== 'ISSUED') {
+      return NextResponse.json({ error: `Cannot mark a ${invoice.status} invoice as paid` }, { status: 422 });
+    }
+    const updated = await prisma.invoice.update({
+      where: { id: invoice.id },
+      data: { status: 'PAID', paidAt: new Date() },
+    });
+    await prisma.auditLog.create({
+      data: {
+        userId: authz.user.id,
+        entityType: 'Invoice',
+        entityId: invoice.id,
+        action: `Invoice marked paid: ${invoice.invoiceNumber}`,
+        comment: null,
+      },
+    });
+    return NextResponse.json(updated);
+  }
+
+  if (action === 'cancel') {
+    const authz = await requireRole(await actingUserId(), ['DECISION_MAKER', 'ADMIN']);
+    if (!authz.ok) return NextResponse.json({ error: authz.error }, { status: authz.status });
+    if (invoice.status === 'PAID') {
+      return NextResponse.json({ error: 'Cannot cancel a paid invoice' }, { status: 422 });
+    }
+    const updated = await prisma.invoice.update({
+      where: { id: invoice.id },
+      data: { status: 'CANCELLED' },
+    });
+    await prisma.auditLog.create({
+      data: {
+        userId: authz.user.id,
+        entityType: 'Invoice',
+        entityId: invoice.id,
+        action: `Invoice cancelled: ${invoice.invoiceNumber}`,
+        comment: null,
+      },
+    });
+    return NextResponse.json(updated);
+  }
+
+  return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
 }

@@ -124,6 +124,6 @@ describe('TrustedDataHolderPanel — editing (CASE_HANDLER)', () => {
     fireEvent.click(screen.getByText('edit'));
     fireEvent.click(screen.getByText('save'));
 
-    await waitFor(() => expect(screen.getByText('Not allowed')).toBeInTheDocument());
+    expect(await screen.findByText('Not allowed')).toBeInTheDocument();
   });
 });

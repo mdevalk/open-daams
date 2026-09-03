@@ -11,7 +11,8 @@ CRITICAL. Re-run again 2026-09-03 (same day) after a sweep adding `type="button"
 Reliability rating didn't move. Re-run three more times 2026-09-03 (same day) closing all 14
 remaining MQR Reliability issues in three batches (9 MEDIUM-severity mechanical fixes, 4
 LOW-severity mechanical fixes, then the one remaining `S8786` regex rewrite) — MQR Reliability
-rating **C → A**._
+rating **C → A**. Re-run once more 2026-09-03 (same day) after resolving the 3 duplication clusters
+plus the `S6582`/`S9020` code smells — duplication 4.3% → **2.8%**, code smells 175 → **145**._
 
 This is a static-analysis assessment of the open-daams codebase against **SonarQube Community
 Edition**'s default TypeScript/JavaScript rule set — bugs, vulnerabilities, security hotspots,
@@ -38,22 +39,24 @@ this one is closer to code-quality/maintainability), same "assessment, not certi
 
 ## Summary
 
-| Metric | Result (2026-08-21) | Result (2026-08-30, Keycloak) | Result (2026-08-30, S3776 pass) | Result (2026-09-03, JSX split) | Result (2026-09-03, S9011 pass) | Result (2026-09-03, MQR closure) |
-|---|---|---|---|---|---|---|
-| Bugs | **0** (Reliability A) | **0** (Reliability A) | **0** (Reliability A) | **0** (Reliability A) | **0** (Reliability A, legacy model) | **0** (Reliability A, both models) |
-| Vulnerabilities | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) |
-| Security hotspots | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) |
-| Maintainability rating | **A** | **A** | **A** | **A** | **A** | **A** |
-| MQR Reliability rating | n/a | n/a | n/a | n/a | C | **A** |
-| Code smells | 252 | 268 | 255 | 266 | 189 | **175** |
-| — of which CRITICAL severity | 8 | 9 | 1 | **0** | 0 | 0 |
-| Cognitive-complexity issues (rule S3776) | 8 | 9 | 1 | **0** | 0 | 0 |
-| Button-`type` issues (rule S9011) | n/a | 77 | 77 | 77 | **0** | 0 |
-| MQR Reliability-impact issues | n/a | n/a | n/a | n/a | 91 → 14 | **0** |
-| Duplicated lines | 2.8% | 4.6% | 4.5% | 4.3% | 4.3% | 4.3% |
-| Test coverage (line, via lcov) | ~45-48%* | 46.0% | 47.7% | 49.1% | 49.1% | 49.2% |
-| Lines of code analyzed | ~15,400 | 16,369 | 16,659 | 16,913 | 16,940 | 16,958 |
-| Maintainability debt (`sqale_index`) | ~1,193 min (~19.9h) | 1,257 min (~21.0h) | 1,143 min (~19.1h) | 1,184 min (~19.7h) | 1,030 min (~17.2h) | **933 min (~15.6h)** |
+| Metric | Result (2026-08-21) | Result (2026-08-30, Keycloak) | Result (2026-08-30, S3776 pass) | Result (2026-09-03, JSX split) | Result (2026-09-03, S9011 pass) | Result (2026-09-03, MQR closure) | Result (2026-09-03, dup/S6582/S9020) |
+|---|---|---|---|---|---|---|---|
+| Bugs | **0** (Reliability A) | **0** (Reliability A) | **0** (Reliability A) | **0** (Reliability A) | **0** (Reliability A, legacy model) | **0** (Reliability A, both models) | **0** (Reliability A, both models) |
+| Vulnerabilities | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) |
+| Security hotspots | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) |
+| Maintainability rating | **A** | **A** | **A** | **A** | **A** | **A** | **A** |
+| MQR Reliability rating | n/a | n/a | n/a | n/a | C | A | A |
+| Code smells | 252 | 268 | 255 | 266 | 189 | 175 | **145** |
+| — of which CRITICAL severity | 8 | 9 | 1 | **0** | 0 | 0 | 0 |
+| Cognitive-complexity issues (rule S3776) | 8 | 9 | 1 | **0** | 0 | 0 | 0 |
+| Button-`type` issues (rule S9011) | n/a | 77 | 77 | 77 | **0** | 0 | 0 |
+| MQR Reliability-impact issues | n/a | n/a | n/a | n/a | 91 → 14 | 0 | 0 |
+| Optional-chaining issues (rule S6582) | 8 | 8 | 8 | 8 | 8 | 8 | **0** |
+| Testing Library style (rule S9020) | 20 | 23 | 23 | 23 | 23 | 23 | **0** |
+| Duplicated lines | 2.8% | 4.6% | 4.5% | 4.3% | 4.3% | 4.3% | **2.8%** |
+| Test coverage (line, via lcov) | ~45-48%* | 46.0% | 47.7% | 49.1% | 49.1% | 49.2% | 50.5% |
+| Lines of code analyzed | ~15,400 | 16,369 | 16,659 | 16,913 | 16,940 | 16,958 | 17,057 |
+| Maintainability debt (`sqale_index`) | ~1,193 min (~19.9h) | 1,257 min (~21.0h) | 1,143 min (~19.1h) | 1,184 min (~19.7h) | 1,030 min (~17.2h) | 933 min (~15.6h) | **783 min (~13.1h)** |
 
 \* Coverage fluctuates a few points run-to-run depending on which files were touched most recently
 in the same session; treat it as "mid-to-high 40s%," not a fixed number.
@@ -78,24 +81,27 @@ down further — but revealed the MQR Reliability rating was C (91 issues), unaf
 "Reliability A." Three more same-day passes then closed that out entirely (see "Multi-Quality Mode
 ratings" below for the full breakdown): the 9 mechanical MEDIUM-severity fixes, then 4 LOW-severity
 ones, then the one remaining `S8786` regex rewrite — taking MQR Reliability issues 91 → 0 and the
-rating **C → A**, with `sqale_index` reaching its lowest point across every run in this doc.
+rating **C → A**. A final same-day pass then resolved the 3 documented duplication clusters (new
+`handleChecklistUpdate()`/`updateInvoiceStatus()` helpers and a generic `<LogTable>` component) plus
+all 8 `S6582` and all 23 `S9020` findings — duplication 4.3% → **2.8%** (back to the pre-Keycloak
+baseline), code smells 175 → **145**, and `sqale_index` reaching its lowest point across every run
+in this doc.
 
-## Where the 175 code smells concentrate
+## Where the 145 code smells concentrate
 
-`S3776`, `S9011`, and the six MQR-Reliability rules below are the ones this project has actively
-driven down; all are now at zero. The rest are essentially flat, since none of the structural passes
-(extracting logic into helpers, splitting JSX into section components, adding button `type`
-attributes, the MQR closure) touches readonly-prop typing or test-file assertion style:
+Only two rules are left with any real count. `S6759` (readonly props, 80) is deliberately untouched
+— see "What's not worth chasing" below for why. Everything else this project has actively targeted
+is now at zero:
 
-| Rule | Count (08-21) | Count (08-30, Keycloak) | Count (08-30, S3776 pass) | Count (09-03, JSX split) | Count (09-03, S9011 pass) | Count (09-03, MQR closure) | What it flags |
-|---|---|---|---|---|---|---|---|
-| `typescript:S6759` | 57 | 60 | 65 | 79 | 79 | 79 | React component props not typed `Readonly<...>` — pre-existing convention across the codebase; unaffected by any of the later passes (none added new components) |
-| `typescript:S9020` | 20 | 23 | 23 | 23 | 23 | 23 | Testing Library `find*` vs `get*`/`query*` misuse (test files) — unchanged |
-| `typescript:S3358` | 27 | 29 | 18 | 18 | 18 | 18 | Nested ternary operators (readability) — unchanged since the 08-30 pass's guard-clause extraction dropped it |
-| `typescript:S6582` | 8 | 8 | 8 | 8 | 8 | 8 | Optional-chaining preference — unchanged |
-| `typescript:S9011` | 70 | 77 | 77 | 77 | **0** | 0 | `<button>` elements missing an explicit `type` attribute. Fixed 2026-09-03: `type="button"` added to all 77 — verified none sit inside an actual `<form>`, so `type="submit"` was never the right call for any of them |
-| `typescript:S7773`/`S8786`/`S6853`/`S7758`/`S7781` | n/a | n/a | n/a | n/a | 14 | **0** | The MQR-Reliability-impact tail — see "Multi-Quality Mode ratings" below for the full breakdown and fix approach for each |
-| `typescript:S3776` | 8 | 9 | 1 | **0** | 0 | 0 | Cognitive complexity over the default threshold of 15 — see below |
+| Rule | Count (08-21) | Count (08-30, Keycloak) | Count (08-30, S3776 pass) | Count (09-03, JSX split) | Count (09-03, S9011 pass) | Count (09-03, MQR closure) | Count (09-03, dup/S6582/S9020) | What it flags |
+|---|---|---|---|---|---|---|---|---|
+| `typescript:S6759` | 57 | 60 | 65 | 79 | 79 | 79 | **80** | React component props not typed `Readonly<...>` — pre-existing convention across the codebase, deliberately left alone (see below); the +1 is the new `LogTable.tsx` shared component following that same existing convention |
+| `typescript:S3358` | 27 | 29 | 18 | 18 | 18 | 18 | 18 | Nested ternary operators (readability) — not yet in scope for a dedicated pass |
+| `typescript:S9020` | 20 | 23 | 23 | 23 | 23 | 23 | **0** | Testing Library `find*` vs `get*`/`query*` misuse (test files). Fixed 2026-09-03: all 23 were the identical `waitFor(() => expect(screen.getByText(...)).toBeInTheDocument())` shape, mechanically rewritten to `expect(await screen.findByText(...)).toBeInTheDocument()`; 5 files' now-unused `waitFor` import removed |
+| `typescript:S6582` | 8 | 8 | 8 | 8 | 8 | 8 | **0** | Optional-chaining preference. Fixed 2026-09-03: all 8 were the `!x \|\| !x.y` (or `!x \|\| x.y !== id`) guard-clause shape, which is safe to rewrite as `!x?.y` regardless of `x`'s type (unlike the riskier `x && x.y` → `x?.y` direction, where a falsy-but-defined `x` changes behavior) |
+| `typescript:S9011` | 70 | 77 | 77 | 77 | **0** | 0 | 0 | `<button>` elements missing an explicit `type` attribute. Fixed 2026-09-03: `type="button"` added to all 77 — verified none sit inside an actual `<form>`, so `type="submit"` was never the right call for any of them |
+| `typescript:S7773`/`S8786`/`S6853`/`S7758`/`S7781` | n/a | n/a | n/a | n/a | 14 | **0** | 0 | The MQR-Reliability-impact tail — see "Multi-Quality Mode ratings" below for the full breakdown and fix approach for each |
+| `typescript:S3776` | 8 | 9 | 1 | **0** | 0 | 0 | 0 | Cognitive complexity over the default threshold of 15 — see below |
 
 The remainder (`S7776` array-as-Set for existence checks, `S6551`, `S4624`, and a long tail of
 1-3-count rules) are minor, scattered findings not worth a dedicated pass.
@@ -225,46 +231,58 @@ fresh-project rescan each: `tsc --noEmit` clean, full test suite unaffected (554
 `software_quality_reliability_rating` **C → A** on the final rescan — MQR now agrees with the legacy
 model across all three qualities (Reliability, Security, Maintainability all A).
 
-## Duplication (4.3% overall — unchanged by the last two passes, still up from 2.8% pre-Keycloak)
+## Duplication (2.8% overall — all 3 documented clusters resolved, back to the pre-Keycloak level)
 
-All three clusters below are unchanged from the Keycloak re-run (verified directly against each
-file's own duplication measure) — neither the S3776 pass nor the 09-03 JSX-split pass touched any
-of them; the drift between 4.6% and 4.3% across those two passes is just the denominator effect of
-net new lines with zero new duplication. The one Keycloak-era cluster below is a direct,
-understandable side effect of that session's own mechanical migration (~44 API routes swapping
-their `userId` source for `await actingUserId()`), not a sloppy new pattern:
+The three clusters tracked since the Keycloak re-run were fixed 2026-09-03, each exactly the way
+this doc had already recommended:
 
-- **New**: `src/app/api/applications/[id]/completeness-check/route.ts` and
-  `.../assessment-check/route.ts` — 76.2% duplicated (the single highest cluster now). These two
-  routes were already near-identical (parallel handlers for two similar checklist types); making
-  their one differing line — how the acting user id is sourced — identical across both as part of
-  the mechanical migration removed the last real difference the duplication detector could key off.
-  A shared `handleChecklistUpdate()` helper parameterized by checklist type would resolve this.
-  The same effect shows up, smaller, in `data-holders/[id]/route.ts` (32.2%),
-  `spe-operators/[id]/route.ts` (31.8%), and `contacts/[id]/route.ts` (31.5%) — all PATCH/DELETE
-  handler pairs that already shared a `build<X>UpdateData()` helper from an earlier pass, now also
-  sharing the identical acting-user-id line.
-- **Unchanged**: `src/app/api/invoices/[invoiceId]/route.ts` and
-  `src/app/api/permits/[id]/invoices/[invoiceId]/route.ts` — 69.9%/68.9% duplicated (was 70-71%).
-  Diffed directly: near-identical `PATCH` handlers, the only real difference is the permit-scoped
-  one adds an `invoice.permitId !== id` ownership check. A shared `updateInvoiceStatus()` helper
-  would resolve this in well under an hour.
-- **Unchanged**: `AuditLogTable.tsx` / `SecurityLogTable.tsx` / `IntegrationLogTable.tsx` —
-  53.7%/48.8%/35.8% duplicated (was 49-54%). Same table/`thead`/`tbody` wrapper markup in all
-  three, differing only in columns and per-row cell content — a good candidate for a shared
-  generic `<LogTable columns={...} rows={...}>` component now that three concrete usages exist.
+- **`completeness-check`/`assessment-check` routes** (was 76.2% duplicated) — extracted into
+  `handleChecklistUpdate(req, id, { delegate, auditLabel, kind })` in new `src/lib/checklist.ts`,
+  parameterized by the Prisma delegate (`completenessCheck`/`assessmentCheck` — schema-verified
+  structurally identical, see `prisma/schema.prisma`) and the two Dutch audit-label strings. Each
+  route is now a 3-line call. One TypeScript wrinkle: calling a method on a union of two generic
+  Prisma delegates isn't allowed even when the underlying models match, so the upsert call needs one
+  narrow, documented type cast — noted inline in `checklist.ts`. 6 new unit tests
+  (`checklist.test.ts`) plus a manual browser verification (checked all items, added remarks,
+  submitted, confirmed the state round-tripped through a page reload).
+- **The two invoice `PATCH` routes** (was 69.9%/68.9% duplicated) — extracted into
+  `updateInvoiceStatus(invoice, action)`, added to the existing `src/lib/invoice.ts` (already the
+  established home for invoice domain logic, including database calls — see `auth-helpers.ts` for
+  the same "domain file, not purity" precedent). Each route now just looks up + scopes the invoice
+  (the permit-scoped one keeps its extra `invoice.permitId !== id` check) and delegates the rest.
+  6 new unit tests (`invoice.test.ts`) covering every branch (both actions × permitted/rejected/
+  wrong-status, plus the unknown-action case).
+- **`AuditLogTable.tsx`/`SecurityLogTable.tsx`/`IntegrationLogTable.tsx`** (was 53.7%/48.8%/35.8%
+  duplicated) — extracted a generic `<LogTable rows={...} columns={[{key, header, render,
+  className}]} emptyMessage={...}>` shell (new `src/components/LogTable.tsx`). Each table keeps its
+  own translations, column set, and per-cell rendering (badges, links, fallback dashes); only the
+  wrapper `<div>`/`<table>`/`<thead>`/`<tbody>` markup and empty-state are shared. All 10 pre-existing
+  tests across the three tables pass unchanged, confirming identical rendering.
 
-The remaining duplication (53 files show some, most in the single digits) is scattered and not
-worth chasing to zero on a reference-implementation project.
+Verified with a fresh-project rescan: duplication 4.3% → **2.8%** (`AuditLogTable.tsx` itself now
+measures 0.0%, down from 53.7%), and — since these three clusters accounted for most of the
+post-Keycloak increase — this brings the project back in line with the 2.8% pre-Keycloak baseline
+from the very first assessment.
+
+The remaining duplication (scattered, mostly single digits per file) is not worth chasing to zero
+on a reference-implementation project.
 
 ## What's not worth chasing
 
 This is a community-built, unofficial EHDS/TEHDAS2 reference implementation (see the project
-README's own disclaimer), not a production app under a maintainability SLA. Driving the 175
-remaining code smells to zero — especially the 79 readonly-prop findings, real but low-severity and
-mostly mechanical — is churn for its own sake past a certain point. The recommendation from this
-assessment is updated again: cognitive complexity, button-type, and the whole MQR Reliability tail
-are now all fully closed (see above) — every rating (legacy and MQR, all three qualities) is A. Next
-up, if anything: the duplication clusters above (three, one of them a direct consequence of the
-userId→session migration); treat the rest as opportunistic ("touch a file, fix it while you're
-there") rather than a dedicated pass.
+README's own disclaimer), not a production app under a maintainability SLA. Every structural
+category this doc has tracked is now closed: cognitive complexity, button-type, the whole MQR
+Reliability tail, and duplication are all at zero/baseline — every rating (legacy and MQR, all three
+qualities) is A. What's left (145 code smells) is deliberately not being chased further:
+
+- **`S6759` (80, readonly props) — skipped on purpose, not an oversight.** This isn't a defect, it's
+  a style convention the codebase has consistently *not* adopted anywhere — including every
+  component added across this whole session's work, `LogTable.tsx` included. Converting it
+  piecemeal as part of a maintainability cleanup would leave the codebase in a worse, inconsistent
+  state than either extreme. Adopting `Readonly<...>` project-wide is a legitimate call to make, but
+  it's a deliberate convention decision, not a bug fix — not folded in here.
+- **`S3358` (18, nested ternaries)** — the one item from the earlier priority list not yet actioned.
+  Real readability value, needs individual judgment (extract into a named variable/function, same
+  technique as the cognitive-complexity work), unlike the mechanical sweeps done so far.
+- **The long tail (scattered 1-3-count rules)** — not worth a dedicated pass regardless; fine
+  opportunistically ("touch a file, fix it while you're there").

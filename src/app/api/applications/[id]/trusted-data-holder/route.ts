@@ -22,7 +22,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     let dataHolder = null;
     if (trustedDataHolderId) {
       dataHolder = await prisma.dataHolder.findUnique({ where: { id: trustedDataHolderId } });
-      if (!dataHolder || !dataHolder.isTrusted) {
+      if (!dataHolder?.isTrusted) {
         return NextResponse.json({ error: 'That data holder is not marked as trusted' }, { status: 422 });
       }
     }

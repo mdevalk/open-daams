@@ -24,7 +24,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       select: { pdf: true, application: { select: { applicantId: true } } },
     });
 
-    if (!appeal || !appeal.pdf) {
+    if (!appeal?.pdf) {
       return new NextResponse('Not found', { status: 404 });
     }
 

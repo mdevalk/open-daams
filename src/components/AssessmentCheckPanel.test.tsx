@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import { AssessmentCheckPanel } from './AssessmentCheckPanel';
 
@@ -81,7 +81,7 @@ describe('AssessmentCheckPanel — marking complete', () => {
 
     fireEvent.click(screen.getByText('markComplete'));
 
-    await waitFor(() => expect(screen.getByText('resultCOMPLETE')).toBeInTheDocument());
+    expect(await screen.findByText('resultCOMPLETE')).toBeInTheDocument();
     expect(refresh).toHaveBeenCalled();
 
     const fetchMock = vi.mocked(fetch);
@@ -102,7 +102,7 @@ describe('AssessmentCheckPanel — marking complete', () => {
 
     document.querySelectorAll('input[type="checkbox"]').forEach((cb) => fireEvent.click(cb));
     fireEvent.click(screen.getByText('markComplete'));
-    await waitFor(() => expect(screen.getByText('resultCOMPLETE')).toBeInTheDocument());
+    expect(await screen.findByText('resultCOMPLETE')).toBeInTheDocument();
 
     expect(screen.getByText('markComplete')).toBeDisabled();
     const fetchMock = vi.mocked(fetch);

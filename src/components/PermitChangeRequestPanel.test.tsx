@@ -124,7 +124,7 @@ describe('PermitChangeRequestPanel — submitting a new change request', () => {
     fireEvent.change(screen.getByPlaceholderText('justificationPlaceholder'), { target: { value: 'x' } });
     fireEvent.click(screen.getByText('submit'));
 
-    await waitFor(() => expect(screen.getByText('Justification too short')).toBeInTheDocument());
+    expect(await screen.findByText('Justification too short')).toBeInTheDocument();
     expect(refresh).not.toHaveBeenCalled();
   });
 });

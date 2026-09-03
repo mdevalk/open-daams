@@ -167,6 +167,6 @@ describe('AppealsPanel — management actions (canManage)', () => {
 
     fireEvent.click(screen.getByText('→ UNDER_REVIEW'));
 
-    await waitFor(() => expect(screen.getByText('Not allowed')).toBeInTheDocument());
+    expect(await screen.findByText('Not allowed')).toBeInTheDocument();
   });
 });

@@ -46,7 +46,7 @@ export async function GET(
       },
     });
 
-    if (!permit || !permit.application.decisionPublishedAt) {
+    if (!permit?.application.decisionPublishedAt) {
       return NextResponse.json({ error: 'Not found' }, { status: 404, headers: CORS_HEADERS });
     }
 

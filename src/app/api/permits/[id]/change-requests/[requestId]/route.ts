@@ -457,7 +457,7 @@ export async function PATCH(
       where: { id: requestId },
       include: CHANGE_REQUEST_INCLUDE,
     });
-    if (!request || request.permitId !== id) {
+    if (request?.permitId !== id) {
       return NextResponse.json({ error: 'Change request not found' }, { status: 404 });
     }
     if (request.status !== 'REQUESTED') {

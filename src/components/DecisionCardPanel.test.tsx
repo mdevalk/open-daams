@@ -111,7 +111,7 @@ describe('DecisionCardPanel — positive decision, pending acceptance', () => {
 
     fireEvent.click(screen.getByText('decline'));
 
-    await waitFor(() => expect(screen.getByText('Forbidden')).toBeInTheDocument());
+    expect(await screen.findByText('Forbidden')).toBeInTheDocument();
   });
 });
 

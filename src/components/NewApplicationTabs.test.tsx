@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import type { ComponentProps } from 'react';
 import { NewApplicationTabs } from './NewApplicationTabs';
@@ -50,7 +50,7 @@ describe('NewApplicationTabs — switching tabs', () => {
 
     fireEvent.click(screen.getByText('NCP'));
     expect(screen.queryByText('importButton')).not.toBeInTheDocument();
-    await waitFor(() => expect(screen.getByText('refresh')).toBeInTheDocument());
+    expect(await screen.findByText('refresh')).toBeInTheDocument();
   });
 
   it('marks the active tab button with aria-current="page"', () => {

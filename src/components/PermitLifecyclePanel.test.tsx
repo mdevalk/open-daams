@@ -100,6 +100,6 @@ describe('PermitLifecyclePanel — confirming a transition', () => {
     fireEvent.click(screen.getByText('expire'));
     fireEvent.click(screen.getByText('confirm: EXPIRED'));
 
-    await waitFor(() => expect(screen.getByText('Not allowed')).toBeInTheDocument());
+    expect(await screen.findByText('Not allowed')).toBeInTheDocument();
   });
 });

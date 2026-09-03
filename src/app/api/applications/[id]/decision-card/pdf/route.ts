@@ -30,7 +30,7 @@ export async function GET(
       select: { decisionCardPdf: true, decisionId: true, applicantId: true },
     });
 
-    if (!application || !application.decisionCardPdf || !application.decisionId) {
+    if (!application?.decisionCardPdf || !application?.decisionId) {
       return new NextResponse('Not found', { status: 404 });
     }
 

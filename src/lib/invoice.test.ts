@@ -1,4 +1,17 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+vi.mock('@/lib/db', () => ({
+  prisma: {
+    invoice: { update: vi.fn() },
+    auditLog: { create: vi.fn() },
+  },
+}));
+vi.mock('@/auth', () => ({ actingUserId: vi.fn() }));
+vi.mock('@/lib/authz', () => ({ requireRole: vi.fn() }));
+
+import { prisma } from '@/lib/db';
+import { actingUserId } from '@/auth';
+import { requireRole } from '@/lib/authz';
 import {
   snapshotLineItems,
   sumLineItems,
@@ -11,8 +24,21 @@ import {
   buildInvoiceStatusCounts,
   buildInvoiceStatusSums,
   resolveActiveTab,
+  updateInvoiceStatus,
   type SourceLineItem,
 } from '@/lib/invoice';
+
+const update = vi.mocked(prisma.invoice.update);
+const auditCreate = vi.mocked(prisma.auditLog.create);
+const mockActingUserId = vi.mocked(actingUserId);
+const mockRequireRole = vi.mocked(requireRole);
+
+beforeEach(() => {
+  update.mockReset();
+  auditCreate.mockReset();
+  mockActingUserId.mockReset();
+  mockRequireRole.mockReset();
+});
 
 describe('snapshotLineItems', () => {
   it('copies category/glCode/description/amount/currency/applicationId/dataHolderId, dropping identity fields', () => {
@@ -259,5 +285,63 @@ describe('resolveActiveTab', () => {
     expect(resolveActiveTab(undefined)).toBe('estimates');
     expect(resolveActiveTab('estimates')).toBe('estimates');
     expect(resolveActiveTab('bogus')).toBe('estimates');
+  });
+});
+
+function makeInvoice(overrides: Partial<{ id: string; status: string; invoiceNumber: string }> = {}) {
+  return { id: 'inv-1', status: 'ISSUED', invoiceNumber: 'INV-NL-2026-0001', ...overrides } as never;
+}
+
+describe('updateInvoiceStatus', () => {
+  it('returns the authz error, unmodified, when mark_paid is not permitted', async () => {
+    mockRequireRole.mockResolvedValue({ ok: false, status: 403, error: 'not allowed' });
+    const res = await updateInvoiceStatus(makeInvoice(), 'mark_paid');
+    expect(res.status).toBe(403);
+    expect(await res.json()).toEqual({ error: 'not allowed' });
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it('rejects mark_paid on an invoice that is not ISSUED', async () => {
+    mockRequireRole.mockResolvedValue({ ok: true, user: { id: 'u1', role: 'ADMIN', name: 'A', email: 'a@b.c' } });
+    const res = await updateInvoiceStatus(makeInvoice({ status: 'CANCELLED' }), 'mark_paid');
+    expect(res.status).toBe(422);
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it('marks an ISSUED invoice paid and writes an audit log entry', async () => {
+    mockRequireRole.mockResolvedValue({ ok: true, user: { id: 'u1', role: 'ADMIN', name: 'A', email: 'a@b.c' } });
+    update.mockResolvedValue(makeInvoice({ status: 'PAID' }));
+    const res = await updateInvoiceStatus(makeInvoice(), 'mark_paid');
+    expect(res.status).toBe(200);
+    expect(update).toHaveBeenCalledWith({
+      where: { id: 'inv-1' },
+      data: { status: 'PAID', paidAt: expect.any(Date) },
+    });
+    expect(auditCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({ userId: 'u1', entityType: 'Invoice', entityId: 'inv-1' }),
+    });
+  });
+
+  it('rejects cancelling a PAID invoice', async () => {
+    mockRequireRole.mockResolvedValue({ ok: true, user: { id: 'u1', role: 'ADMIN', name: 'A', email: 'a@b.c' } });
+    const res = await updateInvoiceStatus(makeInvoice({ status: 'PAID' }), 'cancel');
+    expect(res.status).toBe(422);
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it('cancels a non-PAID invoice and writes an audit log entry', async () => {
+    mockRequireRole.mockResolvedValue({ ok: true, user: { id: 'u1', role: 'DECISION_MAKER', name: 'A', email: 'a@b.c' } });
+    update.mockResolvedValue(makeInvoice({ status: 'CANCELLED' }));
+    const res = await updateInvoiceStatus(makeInvoice(), 'cancel');
+    expect(res.status).toBe(200);
+    expect(update).toHaveBeenCalledWith({ where: { id: 'inv-1' }, data: { status: 'CANCELLED' } });
+    expect(auditCreate).toHaveBeenCalled();
+  });
+
+  it('rejects an unknown action without touching authz or the database', async () => {
+    const res = await updateInvoiceStatus(makeInvoice(), 'delete');
+    expect(res.status).toBe(400);
+    expect(mockRequireRole).not.toHaveBeenCalled();
+    expect(update).not.toHaveBeenCalled();
   });
 });

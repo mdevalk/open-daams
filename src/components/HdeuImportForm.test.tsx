@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import { HdeuImportForm } from './HdeuImportForm';
 
@@ -60,7 +60,7 @@ describe('HdeuImportForm — submit', () => {
     });
     fireEvent.click(screen.getByText('importButton'));
 
-    await waitFor(() => expect(screen.getByText('✗ invalidJson')).toBeInTheDocument());
+    expect(await screen.findByText('✗ invalidJson')).toBeInTheDocument();
     expect(fetch).not.toHaveBeenCalled();
   });
 
@@ -79,7 +79,7 @@ describe('HdeuImportForm — submit', () => {
     });
     fireEvent.click(screen.getByText('importButton'));
 
-    await waitFor(() => expect(screen.getByText('✓ importSuccess')).toBeInTheDocument());
+    expect(await screen.findByText('✓ importSuccess')).toBeInTheDocument();
     expect(screen.getByText('HDAB-2026-0099')).toBeInTheDocument();
 
     const fetchMock = vi.mocked(fetch);
@@ -107,7 +107,7 @@ describe('HdeuImportForm — submit', () => {
     });
     fireEvent.click(screen.getByText('importButton'));
 
-    await waitFor(() => expect(screen.getByText('✗ Validation failed')).toBeInTheDocument());
+    expect(await screen.findByText('✗ Validation failed')).toBeInTheDocument();
     expect(screen.getByText('title is required')).toBeInTheDocument();
     expect(screen.getByText('legalBasis is required')).toBeInTheDocument();
   });

@@ -247,7 +247,7 @@ export function FeeEstimatePanel({ application, currentUser, speOperators, dataH
         </div>
       )}
 
-      {estimate && estimate.status === 'ACCEPTED' && (
+      {estimate?.status === 'ACCEPTED' && (
         <div className="border-t border-gray-100 pt-3">
           {estimate.invoice && (
             <div className="flex items-center justify-between mb-1">

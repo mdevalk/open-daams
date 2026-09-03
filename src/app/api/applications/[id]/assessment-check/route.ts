@@ -1,7 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
-import { requireRole } from '@/lib/authz';
-import { actingUserId } from '@/auth';
+import { handleChecklistUpdate } from '@/lib/checklist';
 
 export type AssessmentItem = {
   key: string;
@@ -17,67 +16,10 @@ export type AssessmentItem = {
  * body: { items: AssessmentItem[], result: 'PENDING'|'COMPLETE'|'INCOMPLETE', remarks? }
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  try {
-    const { id } = await params;
-    const body = await req.json();
-
-    const auth = await requireRole(await actingUserId(), ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN']);
-    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
-
-    const application = await prisma.application.findUnique({ where: { id } });
-    if (!application) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-
-    if (!Array.isArray(body.items)) {
-      return NextResponse.json({ error: 'items must be an array' }, { status: 422 });
-    }
-
-    const result = body.result ?? 'PENDING';
-    const isDecision = result === 'COMPLETE' || result === 'INCOMPLETE';
-    const now = new Date();
-
-    const checkData = {
-      items: body.items,
-      result,
-      remarks: body.remarks || null,
-      checkedById: auth.user.id,
-      checkedAt: isDecision ? now : null,
-    };
-
-    // An assessment decision (Volledig/Onvolledig) is recorded immutably in
-    // the application history with actor + check selection, since the
-    // AssessmentCheck row itself is overwritten on each save.
-    const passed = (body.items as AssessmentItem[]).filter((i) => i.passed).map((i) => i.label);
-    const notPassed = (body.items as AssessmentItem[]).filter((i) => !i.passed).map((i) => i.label);
-    const auditComment =
-      `Inhoudelijke beoordeling (${passed.length}/${body.items.length} afgevinkt).` +
-      (notPassed.length ? ` Niet afgevinkt: ${notPassed.join('; ')}.` : '') +
-      (body.remarks ? ` Opmerking: ${body.remarks}` : '');
-
-    const [check] = await prisma.$transaction([
-      prisma.assessmentCheck.upsert({
-        where: { applicationId: id },
-        create: { applicationId: id, ...checkData },
-        update: checkData,
-      }),
-      ...(isDecision
-        ? [
-            prisma.applicationLog.create({
-              data: {
-                applicationId: id,
-                userId: auth.user.id,
-                toStatus: application.status,
-                action: result === 'COMPLETE' ? 'Inhoudelijke beoordeling: volledig' : 'Inhoudelijke beoordeling: onvolledig',
-                comment: auditComment,
-              },
-            }),
-          ]
-        : []),
-    ]);
-
-    return NextResponse.json(check, { status: 201 });
-  } catch (e) {
-    console.error('Failed to save assessment check', e);
-    const message = e instanceof Error ? e.message : 'Failed to save assessment check';
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+  const { id } = await params;
+  return handleChecklistUpdate(req, id, {
+    delegate: prisma.assessmentCheck,
+    auditLabel: 'Inhoudelijke beoordeling',
+    kind: 'assessment check',
+  });
 }

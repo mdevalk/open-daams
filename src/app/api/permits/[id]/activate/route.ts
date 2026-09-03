@@ -37,7 +37,7 @@ export async function POST(
     if (pending.effectiveAt.getTime() > Date.now()) {
       return NextResponse.json({ error: 'The effective date has not been reached yet' }, { status: 422 });
     }
-    if (!pending.previousPermit || !pending.previousPermit.isCurrent) {
+    if (!pending.previousPermit?.isCurrent) {
       return NextResponse.json(
         { error: 'The predecessor permit is no longer current — cannot activate' },
         { status: 409 },
