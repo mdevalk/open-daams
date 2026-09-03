@@ -78,6 +78,7 @@ export function PermitLifecyclePanel({ permitId, permitStatus, currentUserId, cu
 
           return (
             <button
+              type="button"
               key={tr.to}
               onClick={() => setSelectedTransition(isSelected ? null : tr.to)}
               className={`w-full text-left rounded border px-3 py-2 text-sm transition-colors ${
@@ -111,6 +112,7 @@ export function PermitLifecyclePanel({ permitId, permitStatus, currentUserId, cu
           </div>
           {error && <p className="text-xs text-red-600">{error}</p>}
           <button
+            type="button"
             disabled={
               loading ||
               (selectedTransition === 'REVOKED' && !revokeReason.trim())

@@ -8,9 +8,23 @@ import { regenerateStoredPermitPdf } from '@/lib/permit-pdf-store';
 import { generateSampleDid } from '@/lib/did';
 
 // urn:objectstore:bucket:<slug> — lowercase, non-alphanumerics collapsed to
-// single hyphens, trimmed.
+// single hyphens, trimmed. Character-scan rather than regex to avoid the
+// unanchored-quantifier shape SonarQube flags for super-linear backtracking
+// (S8786), even though this input is trusted masterdata, not attacker-facing.
 function slugify(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'dataset';
+  let result = '';
+  let pendingHyphen = false;
+  for (const char of value.toLowerCase()) {
+    const isAlphanumeric = (char >= 'a' && char <= 'z') || (char >= '0' && char <= '9');
+    if (isAlphanumeric) {
+      if (pendingHyphen && result.length > 0) result += '-';
+      pendingHyphen = false;
+      result += char;
+    } else {
+      pendingHyphen = true;
+    }
+  }
+  return result || 'dataset';
 }
 
 /**
@@ -28,7 +42,7 @@ async function generatePermitNumber(year: number): Promise<string> {
     where: { permitNumber: { startsWith: prefix } },
     orderBy: { permitNumber: 'desc' },
   });
-  const lastSeq = last ? parseInt(last.permitNumber.slice(prefix.length), 10) || 0 : 0;
+  const lastSeq = last ? Number.parseInt(last.permitNumber.slice(prefix.length), 10) || 0 : 0;
   return `${prefix}${String(lastSeq + 1).padStart(4, '0')}`;
 }
 

@@ -111,20 +111,20 @@ export function DecisionCardPanel({ application, currentUser }: Props) {
           <div className="flex gap-3 pt-1">
             {canRespondAsApplicant && (
               <>
-                <button disabled={loading} onClick={() => respond('ACCEPTED')} className="text-xs font-medium text-emerald-700 hover:underline">
+                <button type="button" disabled={loading} onClick={() => respond('ACCEPTED')} className="text-xs font-medium text-emerald-700 hover:underline">
                   {t('accept')}
                 </button>
-                <button disabled={loading} onClick={() => respond('DECLINED')} className="text-xs font-medium text-red-700 hover:underline">
+                <button type="button" disabled={loading} onClick={() => respond('DECLINED')} className="text-xs font-medium text-red-700 hover:underline">
                   {t('decline')}
                 </button>
               </>
             )}
             {canActOnBehalf && (
               <>
-                <button disabled={loading} onClick={() => respond('ACCEPTED')} className="text-xs font-medium text-emerald-700 hover:underline">
+                <button type="button" disabled={loading} onClick={() => respond('ACCEPTED')} className="text-xs font-medium text-emerald-700 hover:underline">
                   {t('recordAcceptance')}
                 </button>
-                <button disabled={loading} onClick={() => respond('DECLINED')} className="text-xs font-medium text-red-700 hover:underline">
+                <button type="button" disabled={loading} onClick={() => respond('DECLINED')} className="text-xs font-medium text-red-700 hover:underline">
                   {overdue ? t('markNoResponse') : t('recordDecline')}
                 </button>
               </>

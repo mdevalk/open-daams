@@ -356,11 +356,11 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
                 )}
                 {hasBillingDetails && renderBillingFields(editBilling, setEditBilling)}
                 <div className="flex gap-2">
-                  <button disabled={loading || !editName.trim() || editPhoneInvalid} onClick={() => saveEdit(entity.id)}
+                  <button type="button" disabled={loading || !editName.trim() || editPhoneInvalid} onClick={() => saveEdit(entity.id)}
                     className="rounded px-3 py-1.5 text-xs font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50">
                     {t('save')}
                   </button>
-                  <button disabled={loading} onClick={() => setEditingId(null)}
+                  <button type="button" disabled={loading} onClick={() => setEditingId(null)}
                     className="rounded px-3 py-1.5 text-xs border border-gray-300 hover:bg-gray-50">
                     {t('cancel')}
                   </button>
@@ -416,8 +416,8 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
                 </div>
                 {isAdmin && (
                   <div className="flex gap-2 flex-shrink-0">
-                    <button onClick={() => startEdit(entity)} className="text-xs text-[#01689b] hover:underline">{t('edit')}</button>
-                    <button disabled={loading} onClick={() => deleteEntity(entity.id)} className="text-xs text-red-600 hover:underline">{t('delete')}</button>
+                    <button type="button" onClick={() => startEdit(entity)} className="text-xs text-[#01689b] hover:underline">{t('edit')}</button>
+                    <button type="button" disabled={loading} onClick={() => deleteEntity(entity.id)} className="text-xs text-red-600 hover:underline">{t('delete')}</button>
                   </div>
                 )}
               </div>
@@ -469,18 +469,18 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
             )}
             {hasBillingDetails && renderBillingFields(newBilling, setNewBilling)}
             <div className="flex gap-2">
-              <button disabled={loading || !newName.trim() || newPhoneInvalid} onClick={submitNew}
+              <button type="button" disabled={loading || !newName.trim() || newPhoneInvalid} onClick={submitNew}
                 className="rounded px-3 py-1.5 text-xs font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50">
                 {loading ? t('save') : t('addNew')}
               </button>
-              <button disabled={loading} onClick={() => setShowAddForm(false)}
+              <button type="button" disabled={loading} onClick={() => setShowAddForm(false)}
                 className="rounded px-3 py-1.5 text-xs border border-gray-300 hover:bg-gray-50">
                 {t('cancel')}
               </button>
             </div>
           </div>
         ) : (
-          <button onClick={() => setShowAddForm(true)} className="text-sm text-[#01689b] hover:underline font-medium">
+          <button type="button" onClick={() => setShowAddForm(true)} className="text-sm text-[#01689b] hover:underline font-medium">
             + {t('addNew')}
           </button>
         )

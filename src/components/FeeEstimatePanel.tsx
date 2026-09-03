@@ -266,10 +266,10 @@ export function FeeEstimatePanel({ application, currentUser, speOperators, dataH
               </p>
               {canManage && estimate.invoice.status === 'ISSUED' && (
                 <div className="flex gap-3 pt-1">
-                  <button disabled={loading} onClick={() => updateInvoice(estimate.invoice!.id, 'mark_paid')} className="text-xs text-emerald-700 hover:underline">
+                  <button type="button" disabled={loading} onClick={() => updateInvoice(estimate.invoice!.id, 'mark_paid')} className="text-xs text-emerald-700 hover:underline">
                     {t('markPaid')}
                   </button>
-                  <button disabled={loading} onClick={() => updateInvoice(estimate.invoice!.id, 'cancel')} className="text-xs text-red-600 hover:underline">
+                  <button type="button" disabled={loading} onClick={() => updateInvoice(estimate.invoice!.id, 'cancel')} className="text-xs text-red-600 hover:underline">
                     {t('cancel')}
                   </button>
                 </div>
@@ -277,7 +277,7 @@ export function FeeEstimatePanel({ application, currentUser, speOperators, dataH
             </div>
           ) : (
             canIssueInvoice ? (
-              <button disabled={loading} onClick={issueProvisionalInvoice} className="text-xs text-[#01689b] hover:underline">
+              <button type="button" disabled={loading} onClick={issueProvisionalInvoice} className="text-xs text-[#01689b] hover:underline">
                 {t('issueProvisionalInvoice')}
               </button>
             ) : (
@@ -324,12 +324,12 @@ export function FeeEstimatePanel({ application, currentUser, speOperators, dataH
                 onChange={(e) => updateRow(row.key, { description: e.target.value })}
                 className="flex-1 rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
               />
-              <button onClick={() => removeRow(row.key)} className="text-xs text-red-600 hover:underline px-1 py-1.5" aria-label={t('removeRow')}>
+              <button type="button" onClick={() => removeRow(row.key)} className="text-xs text-red-600 hover:underline px-1 py-1.5" aria-label={t('removeRow')}>
                 ✕
               </button>
             </div>
           ))}
-          <button onClick={addRow} className="text-xs text-[#01689b] hover:underline">
+          <button type="button" onClick={addRow} className="text-xs text-[#01689b] hover:underline">
             + {t('addRow')}
           </button>
 
@@ -395,12 +395,12 @@ export function FeeEstimatePanel({ application, currentUser, speOperators, dataH
               className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
           </div>
           <div className="flex gap-2">
-            <button disabled={loading} onClick={sendEstimate}
+            <button type="button" disabled={loading} onClick={sendEstimate}
               className="flex-1 rounded px-3 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors">
               {loading ? t('loading') : t('sendEstimate')}
             </button>
             {estimate && (
-              <button disabled={loading} onClick={() => setEditing(false)}
+              <button type="button" disabled={loading} onClick={() => setEditing(false)}
                 className="rounded px-3 py-2 text-sm border border-gray-300 hover:bg-gray-50">
                 {t('cancel')}
               </button>
@@ -411,15 +411,15 @@ export function FeeEstimatePanel({ application, currentUser, speOperators, dataH
 
       {canManage && estimate && !showForm && (
         <div className="flex gap-2">
-          <button onClick={() => setEditing(true)} className="text-xs text-[#01689b] hover:underline">
+          <button type="button" onClick={() => setEditing(true)} className="text-xs text-[#01689b] hover:underline">
             {t('edit')}
           </button>
           {estimate.status === 'PENDING' && (
             <>
-              <button disabled={loading} onClick={() => respond('ACCEPTED')} className="text-xs text-emerald-700 hover:underline">
+              <button type="button" disabled={loading} onClick={() => respond('ACCEPTED')} className="text-xs text-emerald-700 hover:underline">
                 {t('markAccepted')}
               </button>
-              <button disabled={loading} onClick={() => respond('REJECTED')} className="text-xs text-red-700 hover:underline">
+              <button type="button" disabled={loading} onClick={() => respond('REJECTED')} className="text-xs text-red-700 hover:underline">
                 {t('markRejected')}
               </button>
             </>

@@ -228,6 +228,6 @@ async function generateReferenceNumber(year: number): Promise<string> {
     where: { referenceNumber: { startsWith: prefix } },
     orderBy: { referenceNumber: 'desc' },
   });
-  const lastSeq = last ? parseInt(last.referenceNumber.slice(prefix.length), 10) || 0 : 0;
+  const lastSeq = last ? Number.parseInt(last.referenceNumber.slice(prefix.length), 10) || 0 : 0;
   return `${prefix}${String(lastSeq + 1).padStart(4, '0')}`;
 }

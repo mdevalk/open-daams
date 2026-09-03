@@ -74,6 +74,7 @@ export function DeadlineExtensionPanel({ application, currentUser, embedded }: P
         {error && <p className="text-xs text-red-600">{error}</p>}
         <div className="flex gap-2">
           <button
+            type="button"
             disabled={loading || !reason.trim()}
             onClick={submit}
             className="flex-1 rounded px-3 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors"
@@ -81,6 +82,7 @@ export function DeadlineExtensionPanel({ application, currentUser, embedded }: P
             {loading ? t('loading') : t('confirmButton')}
           </button>
           <button
+            type="button"
             disabled={loading}
             onClick={() => { setEditing(false); setError(null); }}
             className="rounded px-3 py-2 text-sm border border-gray-300 hover:bg-gray-50"
@@ -93,6 +95,7 @@ export function DeadlineExtensionPanel({ application, currentUser, embedded }: P
   } else if (viewState === 'embedded-prompt') {
     body = (
       <button
+        type="button"
         onClick={() => setEditing(true)}
         className="w-full text-left rounded border px-4 py-3 text-sm transition-colors border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-800"
       >
@@ -102,7 +105,7 @@ export function DeadlineExtensionPanel({ application, currentUser, embedded }: P
     );
   } else if (viewState === 'prompt') {
     body = (
-      <button onClick={() => setEditing(true)} className="text-xs text-[#01689b] hover:underline">
+      <button type="button" onClick={() => setEditing(true)} className="text-xs text-[#01689b] hover:underline">
         {t('extendButton')}
       </button>
     );

@@ -85,6 +85,7 @@ export function TransitionPanel({ application, currentUser, children }: Props) {
 
           return (
             <button
+              type="button"
               key={`${t.to}-${i}`}
               onClick={() => setSelected(isSelected ? null : t)}
               className={`w-full text-left rounded border px-4 py-3 text-sm transition-colors ${baseStyle}`}
@@ -115,6 +116,7 @@ export function TransitionPanel({ application, currentUser, children }: Props) {
             <p role="alert" className="mt-1 text-xs text-[#d52b1e]">{error}</p>
           )}
           <button
+            type="button"
             disabled={loading}
             onClick={submit}
             className="mt-2 w-full rounded px-4 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors"

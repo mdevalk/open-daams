@@ -99,7 +99,7 @@ export default async function PermitPrintPage({
           <span className="save-hint">
             Kies ‘Opslaan als PDF’ in het printvenster om te downloaden.
           </span>
-          <button onClick={() => window.print()}>Afdrukken / PDF opslaan</button>
+          <button type="button" onClick={() => window.print()}>Afdrukken / PDF opslaan</button>
         </div>
 
         <div className="page">

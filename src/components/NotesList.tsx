@@ -63,6 +63,7 @@ export function NotesList({
             </label>
           )}
           <button
+            type="button"
             disabled={saving || !content.trim()}
             onClick={addNote}
             className="ml-auto rounded-lg bg-gray-800 px-3 py-1.5 text-sm text-white hover:bg-gray-700 disabled:opacity-50"

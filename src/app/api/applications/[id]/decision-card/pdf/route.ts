@@ -37,7 +37,7 @@ export async function GET(
     const auth = await requireRoleOrOwner(await actingUserId(), [...STAFF_ROLES], application.applicantId);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-    const filename = `besluit-${application.decisionId.replace(/\//g, '-')}.pdf`;
+    const filename = `besluit-${application.decisionId.replaceAll('/', '-')}.pdf`;
 
     return fileResponse(Buffer.from(application.decisionCardPdf), filename, {
       mimeType: 'application/pdf',

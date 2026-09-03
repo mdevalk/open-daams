@@ -6,7 +6,12 @@ authentication integration (~1,000 net new lines across ~100 files) — 8 → 9 
 2026-08-30 (same day, second pass) after a dedicated cognitive-complexity pass covering 7 of the
 9 open findings (8 issues; `applications/[id]/page.tsx` explicitly deferred, see below) — 9 → 1
 CRITICAL. Re-run 2026-09-03 after the deferred structural split of that one remaining file — 1 → **0**
-CRITICAL._
+CRITICAL. Re-run again 2026-09-03 (same day) after a sweep adding `type="button"` to all 77
+`S9011` findings — code smells 266 → 189; see "Multi-Quality Mode ratings" below for why the
+Reliability rating didn't move. Re-run three more times 2026-09-03 (same day) closing all 14
+remaining MQR Reliability issues in three batches (9 MEDIUM-severity mechanical fixes, 4
+LOW-severity mechanical fixes, then the one remaining `S8786` regex rewrite) — MQR Reliability
+rating **C → A**._
 
 This is a static-analysis assessment of the open-daams codebase against **SonarQube Community
 Edition**'s default TypeScript/JavaScript rule set — bugs, vulnerabilities, security hotspots,
@@ -33,19 +38,22 @@ this one is closer to code-quality/maintainability), same "assessment, not certi
 
 ## Summary
 
-| Metric | Result (2026-08-21) | Result (2026-08-30, Keycloak) | Result (2026-08-30, S3776 pass) | Result (2026-09-03, JSX split) |
-|---|---|---|---|---|
-| Bugs | **0** (Reliability A) | **0** (Reliability A) | **0** (Reliability A) | **0** (Reliability A) |
-| Vulnerabilities | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) |
-| Security hotspots | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) |
-| Maintainability rating | **A** | **A** | **A** | **A** |
-| Code smells | 252 | 268 | 255 | 266 |
-| — of which CRITICAL severity | 8 | 9 | 1 | **0** |
-| Cognitive-complexity issues (rule S3776) | 8 | 9 | 1 | **0** |
-| Duplicated lines | 2.8% | 4.6% | 4.5% | 4.3% |
-| Test coverage (line, via lcov) | ~45-48%* | 46.0% | 47.7% | 49.1% |
-| Lines of code analyzed | ~15,400 | 16,369 | 16,659 | 16,913 |
-| Maintainability debt (`sqale_index`) | ~1,193 min (~19.9h) | 1,257 min (~21.0h) | 1,143 min (~19.1h) | 1,184 min (~19.7h) |
+| Metric | Result (2026-08-21) | Result (2026-08-30, Keycloak) | Result (2026-08-30, S3776 pass) | Result (2026-09-03, JSX split) | Result (2026-09-03, S9011 pass) | Result (2026-09-03, MQR closure) |
+|---|---|---|---|---|---|---|
+| Bugs | **0** (Reliability A) | **0** (Reliability A) | **0** (Reliability A) | **0** (Reliability A) | **0** (Reliability A, legacy model) | **0** (Reliability A, both models) |
+| Vulnerabilities | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) |
+| Security hotspots | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) |
+| Maintainability rating | **A** | **A** | **A** | **A** | **A** | **A** |
+| MQR Reliability rating | n/a | n/a | n/a | n/a | C | **A** |
+| Code smells | 252 | 268 | 255 | 266 | 189 | **175** |
+| — of which CRITICAL severity | 8 | 9 | 1 | **0** | 0 | 0 |
+| Cognitive-complexity issues (rule S3776) | 8 | 9 | 1 | **0** | 0 | 0 |
+| Button-`type` issues (rule S9011) | n/a | 77 | 77 | 77 | **0** | 0 |
+| MQR Reliability-impact issues | n/a | n/a | n/a | n/a | 91 → 14 | **0** |
+| Duplicated lines | 2.8% | 4.6% | 4.5% | 4.3% | 4.3% | 4.3% |
+| Test coverage (line, via lcov) | ~45-48%* | 46.0% | 47.7% | 49.1% | 49.1% | 49.2% |
+| Lines of code analyzed | ~15,400 | 16,369 | 16,659 | 16,913 | 16,940 | 16,958 |
+| Maintainability debt (`sqale_index`) | ~1,193 min (~19.9h) | 1,257 min (~21.0h) | 1,143 min (~19.1h) | 1,184 min (~19.7h) | 1,030 min (~17.2h) | **933 min (~15.6h)** |
 
 \* Coverage fluctuates a few points run-to-run depending on which files were touched most recently
 in the same session; treat it as "mid-to-high 40s%," not a fixed number.
@@ -58,32 +66,39 @@ one — `applications/[id]/page.tsx` (29), explicitly deferred, see below — i.
 to 1, added real new test coverage (+1.7pp) rather than just moving code around, and — as a side
 effect of extracting branching logic into named helpers — also *reduced* two other smells that
 weren't directly targeted: nested ternaries (S3358) 29 → 18, and `sqale_index` debt actually
-dropped below even the pre-Keycloak 08-21 baseline. The 2026-09-03 pass then closed the one
-deliberately-deferred file — see below — taking CRITICAL findings from 1 to **0**. Verified against
-a freshly recreated SonarQube project (not a same-project rescan) to rule out the stale-issue
-display quirk noted under Method above; code smells (266), duplication (4.3%), and `sqale_index`
-(1,184 min) all stay in the same range as the prior pass, since a structural JSX split moves code
-around rather than removing or adding much of it.
+dropped below even the pre-Keycloak 08-21 baseline. The 2026-09-03 JSX-split pass then closed the
+one deliberately-deferred file — see below — taking CRITICAL findings from 1 to **0**. Verified
+against a freshly recreated SonarQube project (not a same-project rescan) to rule out the
+stale-issue display quirk noted under Method above; code smells (266), duplication (4.3%), and
+`sqale_index` (1,184 min) all stayed in the same range as the prior pass, since a structural JSX
+split moves code around rather than removing or adding much of it. A same-day follow-up pass then
+added `type="button"` to all 77 `S9011` findings (verified none sit inside an actual `<form>`, so
+none needed `type="submit"` instead — see below), taking code smells 266 → 189 and `sqale_index`
+down further — but revealed the MQR Reliability rating was C (91 issues), unaffected by legacy-model
+"Reliability A." Three more same-day passes then closed that out entirely (see "Multi-Quality Mode
+ratings" below for the full breakdown): the 9 mechanical MEDIUM-severity fixes, then 4 LOW-severity
+ones, then the one remaining `S8786` regex rewrite — taking MQR Reliability issues 91 → 0 and the
+rating **C → A**, with `sqale_index` reaching its lowest point across every run in this doc.
 
-## Where the 266 code smells concentrate
+## Where the 175 code smells concentrate
 
-Five rules still account for the bulk of all findings. `S3776` is the one rule this project has
-been actively driving down across passes, and the 2026-09-03 pass took it to zero; the others are
-essentially flat, since neither this pass's technique (splitting JSX into named section components)
-nor the prior one (extracting logic into named helper functions) touches button `type` attributes
-or test-file assertion style:
+`S3776`, `S9011`, and the six MQR-Reliability rules below are the ones this project has actively
+driven down; all are now at zero. The rest are essentially flat, since none of the structural passes
+(extracting logic into helpers, splitting JSX into section components, adding button `type`
+attributes, the MQR closure) touches readonly-prop typing or test-file assertion style:
 
-| Rule | Count (08-21) | Count (08-30, Keycloak) | Count (08-30, S3776 pass) | Count (09-03, JSX split) | What it flags |
-|---|---|---|---|---|---|
-| `typescript:S9011` | 70 | 77 | 77 | 77 | `<button>` elements missing an explicit `type` attribute (defaults to `submit` inside a `<form>` — a real, if usually low-impact, footgun). Untouched by either pass — no button markup was added or changed |
-| `typescript:S6759` | 57 | 60 | 65 | 79 | React component props not typed `Readonly<...>` — pre-existing convention across the codebase; the +14 is the 14 new section sub-components the 09-03 pass extracted from `applications/[id]/page.tsx`, which follow the same existing (non-`Readonly`) convention as everything around them (including the page's own pre-existing `Field` helper) rather than introducing a new one |
-| `typescript:S9020` | 20 | 23 | 23 | 23 | Testing Library `find*` vs `get*`/`query*` misuse (test files) — unchanged |
-| `typescript:S3358` | 27 | 29 | 18 | 18 | Nested ternary operators (readability) — unchanged by this pass; the 08-30 pass's guard-clause extraction is what dropped this earlier |
-| `typescript:S6582` | 8 | 8 | 8 | 8 | Optional-chaining preference — unchanged |
-| `typescript:S3776` | 8 | 9 | 1 | **0** | Cognitive complexity over the default threshold of 15 — see below |
+| Rule | Count (08-21) | Count (08-30, Keycloak) | Count (08-30, S3776 pass) | Count (09-03, JSX split) | Count (09-03, S9011 pass) | Count (09-03, MQR closure) | What it flags |
+|---|---|---|---|---|---|---|---|
+| `typescript:S6759` | 57 | 60 | 65 | 79 | 79 | 79 | React component props not typed `Readonly<...>` — pre-existing convention across the codebase; unaffected by any of the later passes (none added new components) |
+| `typescript:S9020` | 20 | 23 | 23 | 23 | 23 | 23 | Testing Library `find*` vs `get*`/`query*` misuse (test files) — unchanged |
+| `typescript:S3358` | 27 | 29 | 18 | 18 | 18 | 18 | Nested ternary operators (readability) — unchanged since the 08-30 pass's guard-clause extraction dropped it |
+| `typescript:S6582` | 8 | 8 | 8 | 8 | 8 | 8 | Optional-chaining preference — unchanged |
+| `typescript:S9011` | 70 | 77 | 77 | 77 | **0** | 0 | `<button>` elements missing an explicit `type` attribute. Fixed 2026-09-03: `type="button"` added to all 77 — verified none sit inside an actual `<form>`, so `type="submit"` was never the right call for any of them |
+| `typescript:S7773`/`S8786`/`S6853`/`S7758`/`S7781` | n/a | n/a | n/a | n/a | 14 | **0** | The MQR-Reliability-impact tail — see "Multi-Quality Mode ratings" below for the full breakdown and fix approach for each |
+| `typescript:S3776` | 8 | 9 | 1 | **0** | 0 | 0 | Cognitive complexity over the default threshold of 15 — see below |
 
-The remainder (`S7776` array-as-Set for existence checks, `S6551`, `S7773`, `S4624`, and a long
-tail of 1-3-count rules) are minor, scattered findings not worth a dedicated pass.
+The remainder (`S7776` array-as-Set for existence checks, `S6551`, `S4624`, and a long tail of
+1-3-count rules) are minor, scattered findings not worth a dedicated pass.
 
 ## Cognitive complexity (S3776) — fully resolved
 
@@ -154,6 +169,62 @@ single biggest outlier by a wide margin) and is now down to **0** after six fix 
 None. The list above (six passes, 20 → 0) covers every cognitive-complexity finding this project
 has had since the first assessment.
 
+## Multi-Quality Mode ratings — resolved (C → A)
+
+This local instance has `sonar.multi-quality-mode.enabled = true`, discovered 2026-09-03 by
+comparing the SonarQube UI's project-overview card against this doc's own API-sourced numbers: the
+UI showed **Reliability C** while the legacy `reliability_rating` metric (issues typed `BUG` only)
+said **A** with 0 bugs — both correct, just answering different questions. Under MQR, any issue can
+carry a per-quality *impact* independent of its legacy type/severity, so `CODE_SMELL`-typed issues
+can (and here, do) drag the Reliability or Security rating down even with zero legacy bugs or
+vulnerabilities. The MQR-specific metric keys are `software_quality_{reliability,security,
+maintainability}_rating` (plus `_issues` for counts) — distinct from the legacy `reliability_rating`
+/`security_rating`/`sqale_rating` this doc used through the 09-03 JSX-split row above. **Anyone
+pointing an external tool (e.g. ICTU quality-time) at this instance should check which metric key
+it requests** — the two models can disagree by a full letter grade.
+
+The 2026-09-03 S9011 pass (77 → 0) was chosen partly *because* `S9011` was 77 of the 91
+Reliability-impacting issues MQR reported at the time. After the fix, `software_quality_
+reliability_issues` dropped 91 → 14 — but `software_quality_reliability_rating` **stayed at C**,
+unchanged. Reason: SonarQube's rating (both legacy and MQR) is driven by the *worst* severity
+present, not a count. 10 of the remaining 14 were still MEDIUM severity, and even one MEDIUM-severity
+issue holds a C regardless of how many LOW ones are also cleared:
+
+| Rule | Count | Severity | What it flags | Fix |
+|---|---|---|---|---|
+| `typescript:S7773` | 6 | MEDIUM | Prefer `Number.parseInt` over the global equivalent | Mechanical: `parseInt` → `Number.parseInt` (identical function, per spec) at all 6 call sites (3× `ncp-client.ts`, 3× API route sequence-number generators) |
+| `typescript:S8786` | 3 | MEDIUM | Regex susceptible to non-linear (catastrophic) backtracking | Traced each individually rather than batching (see below) — 2 of the 3 had a genuine quadratic shape, 1 didn't |
+| `typescript:S6853` | 1 | MEDIUM | `<label>` missing an associated form control | `NewApplicationForm.tsx`'s radio-option label nests its visible text two `<div>`/`<p>` levels deep, which the static checker's text-detection didn't recurse into (the text *is* genuinely there and accessible at runtime — verified this isn't a real a11y bug). Added an explicit `aria-label` directly on the `<input>` as a belt-and-suspenders fix, satisfying the rule without restructuring the visible layout |
+| `typescript:S7758` | 1 | LOW | Prefer Unicode-aware string methods | Mechanical: `String.fromCharCode(b)` → `String.fromCodePoint(b)` while building a base64 string byte-by-byte from a `Uint8Array` — byte values are always 0-255, identical behavior for both functions in that range |
+| `typescript:S7781` | 3 | LOW | Prefer `replaceAll()` over `replace()` with a global regex | Mechanical: `.replace(/\//g, '-')` → `.replaceAll('/', '-')` at 3 filename-sanitizing call sites (decision-card PDF, permit JSON, permit PDF routes) — functionally identical, skips invoking the regex engine entirely for a single-literal-character match |
+
+**The `S8786` findings, individually:**
+- Two (`PermitChangeRequestPanel.tsx`, both `pathname.replace(/[^/]+$/, id)`, swapping the trailing
+  path segment to navigate to a different permit version) had a *real* quadratic shape: the trailing
+  `$` anchor forces the regex engine to backtrack-and-recheck "am I exactly at the end?" at every
+  candidate match length, at every starting position, for any input that doesn't cleanly match.
+  Fixed by replacing both with a small `replaceLastPathSegment()` helper using `lastIndexOf('/')` +
+  `slice()` — no regex at all, verified byte-for-byte identical to the original across edge cases
+  (empty string, no trailing segment, string ending in `/`, no slash anywhere) with a standalone
+  comparison script before touching the component.
+- One (`slugify()` in `api/permits/route.ts`, building `urn:objectstore:bucket:<slug>` references)
+  did *not* have that shape: its pattern (`/[^a-z0-9]+/g`) has nothing mandatory following the
+  quantified group, so a match either succeeds immediately or fails in O(1) — there's no
+  backtrack-and-retry scenario, unlike the `$`-anchored pair above. This one is very likely
+  SonarQube's static heuristic flagging "any unanchored quantified group" structurally rather than a
+  proven worst-case complexity issue, and the input (data holder/dataset masterdata names) isn't
+  attacker-facing either way. Fixed anyway, on request, by rewriting `slugify()` as a character-scan
+  loop instead of a regex chain — genuinely eliminates the concern regardless of whether it was a
+  real bug, verified against the original across 24 cases (empty/whitespace-only/unicode/emoji/mixed
+  case/a 1000-char stress string) with zero mismatches, plus the existing `route.test.ts` assertions
+  on the generated `urn:` strings still pass unchanged.
+
+All three batches (the 9 MEDIUM fixes; the 4 LOW fixes; the `S8786` rewrite) were verified with a
+fresh-project rescan each: `tsc --noEmit` clean, full test suite unaffected (554/554 every time),
+0 new CRITICAL/BLOCKER findings. `software_quality_reliability_issues` went 14 → 5 → 1 → **0**, and
+`software_quality_reliability_rating` **C → A** on the final rescan — MQR now agrees with the legacy
+model across all three qualities (Reliability, Security, Maintainability all A).
+
 ## Duplication (4.3% overall — unchanged by the last two passes, still up from 2.8% pre-Keycloak)
 
 All three clusters below are unchanged from the Keycloak re-run (verified directly against each
@@ -189,10 +260,11 @@ worth chasing to zero on a reference-implementation project.
 ## What's not worth chasing
 
 This is a community-built, unofficial EHDS/TEHDAS2 reference implementation (see the project
-README's own disclaimer), not a production app under a maintainability SLA. Driving the 266 code
-smells to zero — especially the 77 button-`type` and 79 readonly-prop findings, both real but
-low-severity and mostly mechanical — is churn for its own sake past a certain point. The
-recommendation from this assessment is updated again: the cognitive-complexity list is now fully
-closed (see above), so it's no longer a priority at all; fix the duplication clusters above (three,
-one of them a direct consequence of the userId→session migration) next, and treat the rest as
-opportunistic ("touch a file, fix it while you're there") rather than a dedicated pass.
+README's own disclaimer), not a production app under a maintainability SLA. Driving the 175
+remaining code smells to zero — especially the 79 readonly-prop findings, real but low-severity and
+mostly mechanical — is churn for its own sake past a certain point. The recommendation from this
+assessment is updated again: cognitive complexity, button-type, and the whole MQR Reliability tail
+are now all fully closed (see above) — every rating (legacy and MQR, all three qualities) is A. Next
+up, if anything: the duplication clusters above (three, one of them a direct consequence of the
+userId→session migration); treat the rest as opportunistic ("touch a file, fix it while you're
+there") rather than a dedicated pass.

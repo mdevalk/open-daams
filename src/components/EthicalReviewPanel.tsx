@@ -135,11 +135,11 @@ export function EthicalReviewPanel({ application, currentUser }: Props) {
             </>
           )}
           <div className="flex gap-2">
-            <button disabled={loading} onClick={save}
+            <button type="button" disabled={loading} onClick={save}
               className="flex-1 rounded px-3 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors">
               {loading ? t("saving") : t("save")}
             </button>
-            <button disabled={loading} onClick={() => setEditing(false)} className="rounded px-3 py-2 text-sm border border-gray-300 hover:bg-gray-50">
+            <button type="button" disabled={loading} onClick={() => setEditing(false)} className="rounded px-3 py-2 text-sm border border-gray-300 hover:bg-gray-50">
               {t("cancel")}
             </button>
           </div>
@@ -147,7 +147,7 @@ export function EthicalReviewPanel({ application, currentUser }: Props) {
       )}
 
       {canManage && !editing && (
-        <button onClick={() => setEditing(true)} className="text-xs text-[#01689b] hover:underline">
+        <button type="button" onClick={() => setEditing(true)} className="text-xs text-[#01689b] hover:underline">
           {t("edit")}
         </button>
       )}

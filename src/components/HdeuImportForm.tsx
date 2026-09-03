@@ -84,6 +84,7 @@ export function HdeuImportForm({ locale }: { locale?: string }) {
       <div className="flex gap-2">
         {(['paste', 'file'] as const).map((m) => (
           <button
+            type="button"
             key={m}
             onClick={() => setMode(m)}
             className={`rounded-lg px-4 py-1.5 text-sm font-medium border ${
@@ -96,6 +97,7 @@ export function HdeuImportForm({ locale }: { locale?: string }) {
           </button>
         ))}
         <button
+          type="button"
           onClick={loadSample}
           className="ml-auto text-sm text-blue-600 hover:underline"
         >
@@ -205,6 +207,7 @@ export function HdeuImportForm({ locale }: { locale?: string }) {
       )}
 
       <button
+        type="button"
         disabled={loading || !json.trim()}
         onClick={submit}
         className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"

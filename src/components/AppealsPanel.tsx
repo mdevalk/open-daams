@@ -103,7 +103,7 @@ export function AppealsPanel({ applicationId, appeals, canManage, currentUserId 
     try {
       const buf = await file.arrayBuffer();
       let binary = '';
-      new Uint8Array(buf).forEach((b) => { binary += String.fromCharCode(b); });
+      new Uint8Array(buf).forEach((b) => { binary += String.fromCodePoint(b); });
       const content = btoa(binary);
       const res = await fetch(`/api/appeals/${appealId}/attachments`, {
         method: 'POST',
@@ -124,7 +124,7 @@ export function AppealsPanel({ applicationId, appeals, canManage, currentUserId 
       <div className="flex items-center justify-between">
         <h2 className="font-semibold text-gray-900 text-sm">{t('title')}</h2>
         {canManage && !showForm && (
-          <button onClick={() => setShowForm(true)} className="text-xs text-[#01689b] hover:underline">
+          <button type="button" onClick={() => setShowForm(true)} className="text-xs text-[#01689b] hover:underline">
             + {t('register')}
           </button>
         )}
@@ -198,6 +198,7 @@ export function AppealsPanel({ applicationId, appeals, canManage, currentUserId 
               <div className="flex gap-2 pt-1">
                 {NEXT_STATUSES[appeal.status].map((next) => (
                   <button
+                    type="button"
                     key={next}
                     disabled={loading}
                     onClick={() => updateStatus(appeal.id, next)}
@@ -231,11 +232,11 @@ export function AppealsPanel({ applicationId, appeals, canManage, currentUserId 
               className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
           </div>
           <div className="flex gap-2">
-            <button disabled={loading || !submittedBy.trim() || !grounds.trim()} onClick={submitAppeal}
+            <button type="button" disabled={loading || !submittedBy.trim() || !grounds.trim()} onClick={submitAppeal}
               className="flex-1 rounded px-3 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors">
               {loading ? t('loading') : t('register')}
             </button>
-            <button disabled={loading} onClick={() => setShowForm(false)} className="rounded px-3 py-2 text-sm border border-gray-300 hover:bg-gray-50">
+            <button type="button" disabled={loading} onClick={() => setShowForm(false)} className="rounded px-3 py-2 text-sm border border-gray-300 hover:bg-gray-50">
               {t('cancel')}
             </button>
           </div>

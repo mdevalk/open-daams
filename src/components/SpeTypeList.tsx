@@ -138,8 +138,8 @@ export function SpeTypeList({ speOperatorId, types, isAdmin, currentUserId, edit
                       <input type="number" step="0.01" value={editMonthlyFee} onChange={(e) => setEditMonthlyFee(e.target.value)} placeholder={t('monthlyFee')} className={`${fieldCls} w-20 text-right`} />
                     </td>
                     <td className="py-1 pl-2 whitespace-nowrap">
-                      <button disabled={loading || !editName.trim()} onClick={() => saveEdit(type.id)} className="text-[#01689b] hover:underline">{t('save')}</button>
-                      <button disabled={loading} onClick={() => setEditingId(null)} className="ml-2 text-gray-500 hover:underline">{t('cancel')}</button>
+                      <button type="button" disabled={loading || !editName.trim()} onClick={() => saveEdit(type.id)} className="text-[#01689b] hover:underline">{t('save')}</button>
+                      <button type="button" disabled={loading} onClick={() => setEditingId(null)} className="ml-2 text-gray-500 hover:underline">{t('cancel')}</button>
                     </td>
                   </>
                 ) : (
@@ -149,8 +149,8 @@ export function SpeTypeList({ speOperatorId, types, isAdmin, currentUserId, edit
                     <td className="py-1 px-2 text-right text-gray-700">€{String(type.monthlyFee)}</td>
                     {editable && isAdmin && (
                       <td className="py-1 pl-2 whitespace-nowrap">
-                        <button onClick={() => startEdit(type)} className="text-[#01689b] hover:underline">{t('edit')}</button>
-                        <button disabled={loading} onClick={() => deleteType(type.id)} className="ml-2 text-red-600 hover:underline">{t('delete')}</button>
+                        <button type="button" onClick={() => startEdit(type)} className="text-[#01689b] hover:underline">{t('edit')}</button>
+                        <button type="button" disabled={loading} onClick={() => deleteType(type.id)} className="ml-2 text-red-600 hover:underline">{t('delete')}</button>
                       </td>
                     )}
                   </>
@@ -169,8 +169,8 @@ export function SpeTypeList({ speOperatorId, types, isAdmin, currentUserId, edit
                   <input type="number" step="0.01" value={newMonthlyFee} onChange={(e) => setNewMonthlyFee(e.target.value)} placeholder={t('monthlyFee')} className={`${fieldCls} w-20 text-right`} />
                 </td>
                 <td className="py-1 pl-2 whitespace-nowrap">
-                  <button disabled={loading || !newName.trim()} onClick={submitNew} className="text-[#01689b] hover:underline">{t('addTypeSubmit')}</button>
-                  <button disabled={loading} onClick={() => setShowAdd(false)} className="ml-2 text-gray-500 hover:underline">{t('cancel')}</button>
+                  <button type="button" disabled={loading || !newName.trim()} onClick={submitNew} className="text-[#01689b] hover:underline">{t('addTypeSubmit')}</button>
+                  <button type="button" disabled={loading} onClick={() => setShowAdd(false)} className="ml-2 text-gray-500 hover:underline">{t('cancel')}</button>
                 </td>
               </tr>
             )}
@@ -179,7 +179,7 @@ export function SpeTypeList({ speOperatorId, types, isAdmin, currentUserId, edit
       )}
 
       {editable && isAdmin && !showAdd && (
-        <button onClick={() => setShowAdd(true)} className="text-xs text-[#01689b] hover:underline">+ {t('addType')}</button>
+        <button type="button" onClick={() => setShowAdd(true)} className="text-xs text-[#01689b] hover:underline">+ {t('addType')}</button>
       )}
     </div>
   );

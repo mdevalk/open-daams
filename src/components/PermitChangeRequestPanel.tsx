@@ -7,6 +7,16 @@ import { DataPermitStatus, PermitChangeType, PermitChangeStatus } from '@prisma/
 import { CHANGE_STATUS_COLORS, requestableTypes, buildChangeRequestDecisionBody, resolveChangeRequestNavigation } from '@/lib/permit-change';
 import { formatDate, readErrorMessage } from '@/lib/utils';
 
+// Swaps the trailing path segment (this permit's id) for another version's id,
+// e.g. "/en/permits/abc" -> "/en/permits/xyz". Avoids a trailing-`$`-anchored
+// regex (`/[^/]+$/`), which SonarQube flags for super-linear backtracking on
+// pathological non-matching input.
+function replaceLastPathSegment(pathname: string, segment: string): string {
+  const lastSlash = pathname.lastIndexOf('/');
+  if (lastSlash === pathname.length - 1) return pathname;
+  return pathname.slice(0, lastSlash + 1) + segment;
+}
+
 type ChangeRequest = {
   id: string;
   type: PermitChangeType;
@@ -78,7 +88,7 @@ export function PermitChangeRequestPanel({
         body: JSON.stringify({ actingUserId: currentUserId }),
       });
       if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
-      router.push(pathname.replace(/[^/]+$/, pendingVersion.id));
+      router.push(replaceLastPathSegment(pathname, pendingVersion.id));
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : terr('unexpected'));
     } finally {
@@ -159,7 +169,7 @@ export function PermitChangeRequestPanel({
       setOutputControllerAffiliation('');
       const navigation = resolveChangeRequestNavigation(data, permitId);
       if (navigation.type === 'push') {
-        router.push(pathname.replace(/[^/]+$/, navigation.permitId));
+        router.push(replaceLastPathSegment(pathname, navigation.permitId));
       } else {
         router.refresh();
       }
@@ -185,6 +195,7 @@ export function PermitChangeRequestPanel({
           {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
           {canDecide && (
             <button
+              type="button"
               disabled={loading || new Date(pendingVersion.effectiveAt).getTime() > Date.now()}
               onClick={activate}
               className="mt-2 rounded px-3 py-1.5 text-xs font-semibold text-white bg-amber-700 hover:bg-amber-800 disabled:opacity-50"
@@ -278,6 +289,7 @@ export function PermitChangeRequestPanel({
                   />
                   <div className="flex gap-2">
                     <button
+                      type="button"
                       disabled={loading || (r.type === 'RENEWAL' && !newValidUntil)}
                       onClick={() => decide(r, 'APPROVED')}
                       className="flex-1 rounded px-3 py-1.5 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50"
@@ -285,6 +297,7 @@ export function PermitChangeRequestPanel({
                       {t('approve')}
                     </button>
                     <button
+                      type="button"
                       disabled={loading}
                       onClick={() => decide(r, 'REJECTED')}
                       className="flex-1 rounded px-3 py-1.5 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50"
@@ -292,6 +305,7 @@ export function PermitChangeRequestPanel({
                       {t('reject')}
                     </button>
                     <button
+                      type="button"
                       disabled={loading}
                       onClick={() => setDecideFor(null)}
                       className="rounded px-3 py-1.5 text-sm border border-gray-300 hover:bg-gray-50"
@@ -302,6 +316,7 @@ export function PermitChangeRequestPanel({
                 </div>
               ) : (
                 <button
+                  type="button"
                   onClick={() => {
                     setDecideFor(r.id);
                     setDecisionComment('');
@@ -341,6 +356,7 @@ export function PermitChangeRequestPanel({
             className={inputCls}
           />
           <button
+            type="button"
             disabled={loading || !newType || !justification.trim()}
             onClick={submitRequest}
             className="w-full rounded px-3 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors"

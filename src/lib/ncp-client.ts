@@ -809,7 +809,7 @@ function buildCohortEntry(
     informationProviderPhone: formatPhone(entry.informationProviderPhone),
     informationProviderSameAsContactPerson: entry.informationProviderSameAsContactPerson,
     whyNeedDataOfaWholePopulation: entry.whyNeedDataOfaWholePopulation,
-    size: entry.sizeOfTheStudyCohort ? parseInt(entry.sizeOfTheStudyCohort, 10) || undefined : undefined,
+    size: entry.sizeOfTheStudyCohort ? Number.parseInt(entry.sizeOfTheStudyCohort, 10) || undefined : undefined,
     sizeIsEstimate: estimateFlag(entry.sizeOfTheStudyCohortEstimationOrExact),
     sizeJustification: entry.whyNeedStudyCohortOfThisSize,
     regionsSeekForData: entry.regionsSeekForData,
@@ -853,7 +853,7 @@ export function buildControlEntry(entry: NcpSection6Entry, countryId: string): H
       ? entry.variablesForDataExtraction[0]?.id
       : undefined,
     matchingCriteria: entry.extractionCriteriaForControls,
-    size: entry.sizeOfControlGroup ? parseInt(entry.sizeOfControlGroup, 10) || undefined : undefined,
+    size: entry.sizeOfControlGroup ? Number.parseInt(entry.sizeOfControlGroup, 10) || undefined : undefined,
     sizeIsEstimate: estimateFlag(entry.sizeOfControlGroupEstimationOrExact),
     controlsPerCohortPerson: entry.controlsPerPersonInStudyCohort,
     inclusionCriteria: entry.inclusionCriteriaForControls,
@@ -893,7 +893,7 @@ export function buildRelativeEntry(entry: NcpSection6Entry, countryId: string): 
     variablesAttachmentId: Array.isArray(entry.variablesForDataExtractionRelatives)
       ? entry.variablesForDataExtractionRelatives[0]?.id
       : undefined,
-    size: entry.sizeOfRelativesGroup ? parseInt(entry.sizeOfRelativesGroup, 10) || undefined : undefined,
+    size: entry.sizeOfRelativesGroup ? Number.parseInt(entry.sizeOfRelativesGroup, 10) || undefined : undefined,
     sizeIsEstimate: estimateFlag(entry.sizeOfRelativesGroupEstimateOrExact),
     priorPermitIssuer: entry.previouslyIssuedPermitIssuerRelatives,
     willDataBeExtractedSimultaneously: yesNo(entry.willDataForRelativesBeExtractedSimultaneously),

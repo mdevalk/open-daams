@@ -135,6 +135,7 @@ export function AssessmentCheckPanel({ applicationId, currentUserId, canManage, 
 
           {canManage && (
             <button
+              type="button"
               disabled={loading || result === 'COMPLETE'}
               onClick={markComplete}
               className="w-full rounded px-3 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 transition-colors"

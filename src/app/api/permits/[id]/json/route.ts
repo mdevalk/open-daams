@@ -50,7 +50,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         : null,
       outputController: { affiliation: outputControllerRow.affiliation, did: outputControllerRow.did },
     });
-    const filename = `${document.permitId.replace(/\//g, '-')}.json`;
+    const filename = `${document.permitId.replaceAll('/', '-')}.json`;
 
     return new NextResponse(JSON.stringify(document, null, 2), {
       status: 200,

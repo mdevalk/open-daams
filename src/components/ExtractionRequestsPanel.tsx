@@ -85,7 +85,7 @@ export function ExtractionRequestsPanel({ applicationId, currentUserId, requests
       <div className="flex items-center justify-between">
         <h2 className="font-semibold text-gray-900 text-sm">{t('title')}</h2>
         {canManage && !showForm && (
-          <button onClick={() => setShowForm(true)} className="text-xs text-[#01689b] hover:underline">
+          <button type="button" onClick={() => setShowForm(true)} className="text-xs text-[#01689b] hover:underline">
             + {t('registerRequest')}
           </button>
         )}
@@ -114,6 +114,7 @@ export function ExtractionRequestsPanel({ applicationId, currentUserId, requests
               <div className="flex gap-2 pt-1">
                 {NEXT_STATUSES[r.status].map((next) => (
                   <button
+                    type="button"
                     key={next}
                     disabled={loading}
                     onClick={() => updateStatus(r.id, next)}
@@ -146,11 +147,11 @@ export function ExtractionRequestsPanel({ applicationId, currentUserId, requests
               className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
           </div>
           <div className="flex gap-2">
-            <button disabled={loading || !dataHolderId || !datasetDescription.trim()} onClick={submitRequest}
+            <button type="button" disabled={loading || !dataHolderId || !datasetDescription.trim()} onClick={submitRequest}
               className="flex-1 rounded px-3 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors">
               {loading ? t('loading') : t('registerRequest')}
             </button>
-            <button disabled={loading} onClick={() => setShowForm(false)} className="rounded px-3 py-2 text-sm border border-gray-300 hover:bg-gray-50">
+            <button type="button" disabled={loading} onClick={() => setShowForm(false)} className="rounded px-3 py-2 text-sm border border-gray-300 hover:bg-gray-50">
               {t('cancel')}
             </button>
           </div>

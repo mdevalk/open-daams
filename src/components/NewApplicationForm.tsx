@@ -148,6 +148,7 @@ export function NewApplicationForm({
                 required
                 checked={type === opt.value}
                 onChange={() => setType(opt.value as AppType)}
+                aria-label={opt.label}
                 className="mt-0.5"
               />
               <div>

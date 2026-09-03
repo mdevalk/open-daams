@@ -77,6 +77,7 @@ export function InvoicePanel({
           )}
           {canIssue && (
             <button
+              type="button"
               disabled={loading || !hasInvoiceableAmounts}
               onClick={issueInvoices}
               title={hasInvoiceableAmounts ? undefined : t('issueDisabled')}

@@ -26,7 +26,7 @@ async function generateDecisionId(year: number): Promise<string> {
     where: { decisionId: { startsWith: prefix } },
     orderBy: { decisionId: 'desc' },
   });
-  const lastSeq = last ? parseInt(last.decisionId!.slice(prefix.length), 10) || 0 : 0;
+  const lastSeq = last ? Number.parseInt(last.decisionId!.slice(prefix.length), 10) || 0 : 0;
   return `${prefix}${String(lastSeq + 1).padStart(4, '0')}`;
 }
 

@@ -111,7 +111,7 @@ export function SpeProvisioningPanel({
 
       {!order && (
         canManage ? (
-          <button disabled={loading} onClick={requestProvisioning} className="text-xs text-[#01689b] hover:underline">
+          <button type="button" disabled={loading} onClick={requestProvisioning} className="text-xs text-[#01689b] hover:underline">
             {t('request')}
           </button>
         ) : (
@@ -138,6 +138,7 @@ export function SpeProvisioningPanel({
               <div className="flex flex-wrap gap-2">
                 {SPE_TRANSITIONS[order.status].map((tr) => (
                   <button
+                    type="button"
                     key={tr.to}
                     disabled={loading}
                     onClick={() => setPendingTo(pendingTo === tr.to ? null : tr.to)}
@@ -180,6 +181,7 @@ export function SpeProvisioningPanel({
                     className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
                   />
                   <button
+                    type="button"
                     disabled={loading}
                     onClick={() => transition(pendingTo)}
                     className="rounded px-3 py-1.5 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors"

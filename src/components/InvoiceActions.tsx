@@ -41,6 +41,7 @@ export function InvoiceActions({
       {error && <p className="text-xs text-red-600">{error}</p>}
       <div className="flex gap-3">
         <button
+          type="button"
           disabled={loading}
           onClick={() => updateInvoice('mark_paid')}
           className="text-sm text-emerald-700 hover:underline disabled:opacity-50"
@@ -48,6 +49,7 @@ export function InvoiceActions({
           {t('markPaid')}
         </button>
         <button
+          type="button"
           disabled={loading}
           onClick={() => updateInvoice('cancel')}
           className="text-sm text-red-600 hover:underline disabled:opacity-50"
