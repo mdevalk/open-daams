@@ -168,11 +168,12 @@ separate tag on the entry — the folder *is* the tag, so there's nowhere for th
 
 `src/lib/capabilities/index.ts` is the one file allowed to know about all capabilities at once —
 it aggregates every capability's `capability.ts` + `registry.ts` into a flat, capability-labelled
-list for tooling. `npm run requirements:coverage` reads that aggregation and reports, per use
-case, one of **not started** / **implemented, untested** / **verified** (module resolves + a
-sibling `<module>.test.ts` exists), grouped by capability — plus a pivot by requirement ID. This is
-*verification* coverage (is there a test that would fail if the behavior broke), distinct from the
-traceability doc's own ✅/◑/✗/⏳/— *implementation* status, which stays a human judgment call the
+list for tooling. `npm run requirements:coverage` reads that aggregation and (re)writes
+[`docs/use-case-coverage.md`](./use-case-coverage.md) — generated, not hand-maintained — reporting,
+per use case, one of **not started** / **implemented, untested** / **verified** (module resolves +
+a sibling `<module>.test.ts` exists), grouped by capability — plus a pivot by requirement ID. This
+is *verification* coverage (is there a test that would fail if the behavior broke), distinct from
+the traceability doc's own ✅/◑/✗/⏳/— *implementation* status, which stays a human judgment call the
 script doesn't touch.
 
 If a use case ever genuinely needs to serve two capabilities at once (none of the ~27 identified so
