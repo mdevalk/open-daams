@@ -137,6 +137,51 @@ See `docs/hdeu-payload-sample.md` for a sample payload.
 
 ---
 
+## Capability-driven, use-case-centric testing
+
+`src/lib/capabilities/<name>/` is the primary structure for business-orchestration logic
+extracted out of API route handlers. A **capability** (e.g. `permit-lifecycle`) is a durable
+statement of what the business needs to be able to do — stable across D6.4 revisions — and is a
+self-describing folder:
+
+- `capability.ts` — its id, human-readable name, and description.
+- `registry.ts` — that capability's own backlog: every use case identified under it, **whether or
+  not it's been built yet**. Each entry carries the D6.4 `Rx.x.x` requirement IDs it satisfies
+  (`satisfies`, filled in once actually implemented) and a `module` pointer that's `null` until
+  extracted. Adding a newly identified use case means adding a row here first, not writing code
+  first.
+- the use-case implementations themselves, once they exist, as plain files directly inside the
+  capability folder (e.g. `checklist-checks.ts`) — no extra `use-cases/` subfolder layer.
+  "Use case" isn't given its own structural tier: it's a necessary unit of granularity (see below),
+  but not a durable one the way capability is, so it doesn't earn a permanent place in the folder
+  hierarchy. Each is a plain function (no `NextRequest`/`NextResponse` in its signature) taking
+  typed params and returning a typed `{ ok: true, data } | { ok: false, status, error }` result.
+  Route handlers become thin translators: parse the request, call the use case, map the result to
+  HTTP. This makes the orchestration directly unit-testable (no HTTP mocking) and separates it from
+  route wiring, which only needs its own test where the HTTP contract itself is at risk.
+
+A **use case stays the atomic, testable, requirement-tagged unit** — capability groups several of
+them, it doesn't replace the granularity: `permit-lifecycle` alone bundles six operations
+(issue/amend/renew/activate/revoke/provision-SPE) with no shared code. Because a use case's module
+lives physically inside its owning capability's folder, capability membership doesn't need a
+separate tag on the entry — the folder *is* the tag, so there's nowhere for the two to drift apart.
+
+`src/lib/capabilities/index.ts` is the one file allowed to know about all capabilities at once —
+it aggregates every capability's `capability.ts` + `registry.ts` into a flat, capability-labelled
+list for tooling. `npm run requirements:coverage` reads that aggregation and reports, per use
+case, one of **not started** / **implemented, untested** / **verified** (module resolves + a
+sibling `<module>.test.ts` exists), grouped by capability — plus a pivot by requirement ID. This is
+*verification* coverage (is there a test that would fail if the behavior broke), distinct from the
+traceability doc's own ✅/◑/✗/⏳/— *implementation* status, which stays a human judgment call the
+script doesn't touch.
+
+If a use case ever genuinely needs to serve two capabilities at once (none of the ~27 identified so
+far do — the one apparent case, permit revocation-appeal, resolved to a single owning capability,
+`permit-lifecycle`, not `appeals`), the extension point is a `secondaryCapabilityIds` field read by
+the aggregator, not a restructuring of where the file lives.
+
+---
+
 ## Roadmap towards production
 
 1. **Authentication**: ~~DigiD for applicants, eHerkenning for organisations, SAML/OIDC for HDAB

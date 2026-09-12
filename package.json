@@ -17,7 +17,8 @@
     "db:studio": "prisma studio",
     "db:backup": "sh scripts/backup-db.sh",
     "db:restore": "sh scripts/restore-db.sh",
-    "generate-signing-key": "tsx scripts/generate-signing-key.ts"
+    "generate-signing-key": "tsx scripts/generate-signing-key.ts",
+    "requirements:coverage": "tsx scripts/requirements-coverage.ts"
   },
   "dependencies": {
     "@noble/ed25519": "^2.3.0",

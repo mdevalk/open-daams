@@ -1,6 +1,6 @@
-import { NextRequest } from 'next/server';
-import { prisma } from '@/lib/db';
-import { handleChecklistUpdate } from '@/lib/checklist';
+import { NextRequest, NextResponse } from 'next/server';
+import { completeSubstantiveAssessment } from '@/lib/capabilities/application-lifecycle/checklist-checks';
+import { actingUserId } from '@/auth';
 
 export type AssessmentItem = {
   key: string;
@@ -17,9 +17,9 @@ export type AssessmentItem = {
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  return handleChecklistUpdate(req, id, {
-    delegate: prisma.assessmentCheck,
-    auditLabel: 'Inhoudelijke beoordeling',
-    kind: 'assessment check',
-  });
+  const body = await req.json();
+  const result = await completeSubstantiveAssessment(await actingUserId(), id, body);
+  return result.ok
+    ? NextResponse.json(result.data, { status: result.status })
+    : NextResponse.json({ error: result.error }, { status: result.status });
 }

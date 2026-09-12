@@ -1,6 +1,6 @@
-import { NextRequest } from 'next/server';
-import { prisma } from '@/lib/db';
-import { handleChecklistUpdate } from '@/lib/checklist';
+import { NextRequest, NextResponse } from 'next/server';
+import { completePreScreeningCheck } from '@/lib/capabilities/application-lifecycle/checklist-checks';
+import { actingUserId } from '@/auth';
 
 export type CompletenessItem = {
   key: string;
@@ -17,9 +17,9 @@ export type CompletenessItem = {
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  return handleChecklistUpdate(req, id, {
-    delegate: prisma.completenessCheck,
-    auditLabel: 'Volledigheidscontrole',
-    kind: 'completeness check',
-  });
+  const body = await req.json();
+  const result = await completePreScreeningCheck(await actingUserId(), id, body);
+  return result.ok
+    ? NextResponse.json(result.data, { status: result.status })
+    : NextResponse.json({ error: result.error }, { status: result.status });
 }
