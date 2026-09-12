@@ -5,7 +5,7 @@ import { Application, User } from '@prisma/client';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { readErrorMessage } from '@/lib/utils';
-import { isDeadlineExtensionHidden, deadlineExtensionViewState } from '@/lib/deadline-extension';
+import { isDeadlineExtensionHidden, deadlineExtensionViewState } from '@/lib/capabilities/application-lifecycle/deadline-extension';
 
 type Props = {
   application: Pick<Application, 'id' | 'status' | 'deadlineExtended' | 'deadlineExtensionReason'>;

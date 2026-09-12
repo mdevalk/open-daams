@@ -1,5 +1,5 @@
 import { useTranslations } from 'next-intl';
-import { deadlineStatus } from '@/lib/workflow';
+import { deadlineStatus } from '@/lib/capabilities/application-lifecycle/workflow';
 import { formatDate } from '@/lib/utils';
 
 function daysUntil(date: Date | null): number | null {

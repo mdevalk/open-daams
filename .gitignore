@@ -7,6 +7,7 @@ backups/
 .next/
 node_modules/
 coverage/
+.scannerwork/
 next-env.d.ts
 npm-debug.log*
 *.tsbuildinfo

@@ -13,9 +13,9 @@ import {
   resolveCurrentAndPendingVersion,
   derivePermitDisplayFlags,
   formatSpeOperatorLabel,
-} from '@/lib/permit';
+} from '@/lib/capabilities/permit-lifecycle/permit';
 import { groupDatasetsByHolder } from '@/lib/permit-signing';
-import { determineOutstandingInvoiceGroups } from '@/lib/invoice';
+import { determineOutstandingInvoiceGroups } from '@/lib/capabilities/fee-invoicing/invoice';
 import { formatDate, formatDateTime, purposeLabel, serializePrisma } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';

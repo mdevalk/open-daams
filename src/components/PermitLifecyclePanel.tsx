@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { DataPermitStatus, UserRole } from '@prisma/client';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { PERMIT_TRANSITIONS } from '@/lib/permit';
+import { PERMIT_TRANSITIONS } from '@/lib/capabilities/permit-lifecycle/permit';
 import { readErrorMessage } from '@/lib/utils';
 
 type Props = {

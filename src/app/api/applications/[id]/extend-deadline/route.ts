@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
 import { actingUserId } from '@/auth';
-import { calculateDecisionDeadline } from '@/lib/workflow';
+import { calculateDecisionDeadline } from '@/lib/capabilities/application-lifecycle/workflow';
 
 const MANAGE_ROLES = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'] as const;
 

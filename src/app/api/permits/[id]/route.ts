@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { PERMIT_TRANSITIONS } from '@/lib/permit';
+import { PERMIT_TRANSITIONS } from '@/lib/capabilities/permit-lifecycle/permit';
 import { DataPermitStatus } from '@prisma/client';
-import { regenerateStoredPermitPdf } from '@/lib/permit-pdf-store';
+import { regenerateStoredPermitPdf } from '@/lib/capabilities/permit-lifecycle/permit-pdf-store';
 import { requireRole, findActingUser } from '@/lib/authz';
 import { actingUserId } from '@/auth';
 

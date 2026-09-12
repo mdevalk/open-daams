@@ -4,7 +4,7 @@ import {
   resolveCurrentAndPendingVersion,
   derivePermitDisplayFlags,
   formatSpeOperatorLabel,
-} from '@/lib/permit';
+} from '@/lib/capabilities/permit-lifecycle/permit';
 
 describe('formatPermitId', () => {
   it('shows the bare permit number for version 1', () => {

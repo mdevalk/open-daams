@@ -17,7 +17,7 @@ import {
   createRequestedDatasets,
   describeOtherCountryHdabContacts,
   type HdeuStudyCohort,
-} from '@/lib/hdeu';
+} from '@/lib/capabilities/external-ingestion/hdeu';
 import samplePayload from './poc-demo-hdeu-payload.json';
 
 const findFirst = vi.mocked(prisma.application.findFirst);

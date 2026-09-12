@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { updateInvoiceStatus } from '@/lib/invoice';
+import { updateInvoiceStatus } from '@/lib/capabilities/fee-invoicing/invoice';
 
 /**
  * PATCH /api/invoices/[invoiceId]

@@ -8,7 +8,7 @@ import {
   nextInvoiceNumber,
   sumLineItems,
   determineOutstandingInvoiceGroups,
-} from '@/lib/invoice';
+} from '@/lib/capabilities/fee-invoicing/invoice';
 
 /**
  * GET  /api/permits/[id]/invoices  — list invoices for a permit

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import pocDemoPayload from '@/lib/poc-demo-hdeu-payload.json';
+import pocDemoPayload from '@/lib/capabilities/external-ingestion/poc-demo-hdeu-payload.json';
 
 // Real NCP application 6a70b4d104db074a00fd905d (HDAB-2026-0008), mapped
 // through mapNcpDetailZipToHdeuPayload — title is overridden so it reads as

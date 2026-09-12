@@ -1,6 +1,6 @@
 import { DataPermit, Application } from '@prisma/client';
 import { useTranslations } from 'next-intl';
-import { PERMIT_STATUS_COLORS, formatPermitId } from '@/lib/permit';
+import { PERMIT_STATUS_COLORS, formatPermitId } from '@/lib/capabilities/permit-lifecycle/permit';
 import { formatDate } from '@/lib/utils';
 
 type Props = {

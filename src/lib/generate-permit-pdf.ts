@@ -1,10 +1,10 @@
 import { PDFDocument, rgb, StandardFonts, PDFFont, PDFPage } from 'pdf-lib';
 import { DataPermitStatus, FinancialLineCategory } from '@prisma/client';
 import { APP_NAME } from './branding';
-import { formatPermitId } from './permit';
+import { formatPermitId } from './capabilities/permit-lifecycle/permit';
 import { buildDigitalPermitDocument, groupDatasetsByHolder, type DatasetEntry, type GrantedDatasetGroup } from './permit-signing';
 import { formatDateNumeric } from './utils';
-import { LINE_CATEGORY_META } from './financial-line-items';
+import { LINE_CATEGORY_META } from './capabilities/fee-invoicing/financial-line-items';
 
 // Layout follows TEHDAS2 D6.3 "Guideline for Health Data Access Bodies on the
 // procedures and formats for data access", Annex 9 - Data permit template

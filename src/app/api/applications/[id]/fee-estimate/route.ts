@@ -3,7 +3,7 @@ import type { FinancialLineCategory } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
 import { actingUserId } from '@/auth';
-import { LINE_CATEGORY_META } from '@/lib/financial-line-items';
+import { LINE_CATEGORY_META } from '@/lib/capabilities/fee-invoicing/financial-line-items';
 
 const MANAGE_ROLES = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'] as const;
 

@@ -4,7 +4,7 @@ import { concatBytes } from '@noble/hashes/utils';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { AppealStatus, DataPermitStatus, DecisionOutcome } from '@prisma/client';
-import { formatPermitId } from './permit';
+import { formatPermitId } from './capabilities/permit-lifecycle/permit';
 
 // Required by @noble/ed25519 v2's sync sign/verify (no Web Crypto dependency).
 // sha512Sync receives the message in parts that must be hashed as one; sha512

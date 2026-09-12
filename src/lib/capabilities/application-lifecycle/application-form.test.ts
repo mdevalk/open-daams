@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildApplicationCreateBody, type ApplicationFormState } from '@/lib/application-form';
+import { buildApplicationCreateBody, type ApplicationFormState } from '@/lib/capabilities/application-lifecycle/application-form';
 
 const APPLICANT_USER = { id: 'u-2', role: 'APPLICANT' } as const;
 const CASE_HANDLER_USER = { id: 'u-1', role: 'CASE_HANDLER' } as const;

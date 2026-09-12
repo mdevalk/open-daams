@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { prisma } from '@/lib/db';
-import { PERMIT_STATUS_COLORS, formatPermitId } from '@/lib/permit';
+import { PERMIT_STATUS_COLORS, formatPermitId } from '@/lib/capabilities/permit-lifecycle/permit';
 import { DataPermitStatus, Prisma } from '@prisma/client';
 import { formatDate } from '@/lib/utils';
 

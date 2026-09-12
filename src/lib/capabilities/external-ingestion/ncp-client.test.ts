@@ -9,7 +9,7 @@ import {
   buildRelativeEntry,
   buildInvoicingDetails,
   buildSection3Fields,
-} from '@/lib/ncp-client';
+} from '@/lib/capabilities/external-ingestion/ncp-client';
 
 describe('guessAttachmentMimeType', () => {
   it('maps known extensions to their content type', () => {

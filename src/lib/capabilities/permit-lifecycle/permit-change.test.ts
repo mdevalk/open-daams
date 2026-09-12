@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { requestableTypes, buildChangeRequestDecisionBody, resolveChangeRequestNavigation } from '@/lib/permit-change';
+import { requestableTypes, buildChangeRequestDecisionBody, resolveChangeRequestNavigation } from '@/lib/capabilities/permit-lifecycle/permit-change';
 
 describe('requestableTypes', () => {
   it('allows amendment and renewal on a granted permit', () => {

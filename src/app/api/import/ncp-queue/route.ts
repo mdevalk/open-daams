@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { getNcpApplicationList } from '@/lib/ncp-client';
-import { logNcpCall } from '@/lib/ncp-log';
+import { getNcpApplicationList } from '@/lib/capabilities/external-ingestion/ncp-client';
+import { logNcpCall } from '@/lib/capabilities/external-ingestion/ncp-log';
 
 /**
  * GET /api/import/ncp-queue

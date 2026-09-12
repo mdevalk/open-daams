@@ -3,10 +3,10 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
 import { actingUserId } from '@/auth';
-import { DECIDE_ROLES, APPROVAL_EFFECT } from '@/lib/permit-change';
+import { DECIDE_ROLES, APPROVAL_EFFECT } from '@/lib/capabilities/permit-lifecycle/permit-change';
 import { signPermit, groupDatasetsByHolder } from '@/lib/permit-signing';
-import { regenerateStoredPermitPdf } from '@/lib/permit-pdf-store';
-import { generateSampleDid } from '@/lib/did';
+import { regenerateStoredPermitPdf } from '@/lib/capabilities/permit-lifecycle/permit-pdf-store';
+import { generateSampleDid } from '@/lib/capabilities/permit-lifecycle/did';
 
 const CHANGE_REQUEST_INCLUDE = {
   permit: {

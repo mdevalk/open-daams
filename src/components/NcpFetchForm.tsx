@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl';
 
 import { useEffect, useState } from 'react';
-import { NcpApplicationSummary } from '@/lib/ncp-client';
+import { NcpApplicationSummary } from '@/lib/capabilities/external-ingestion/ncp-client';
 import { readErrorMessage } from '@/lib/utils';
 
 type ImportResult =

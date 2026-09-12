@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { regenerateStoredPermitPdf } from '@/lib/permit-pdf-store';
+import { regenerateStoredPermitPdf } from '@/lib/capabilities/permit-lifecycle/permit-pdf-store';
 import { fileResponse } from '@/lib/http';
 
 export const dynamic = 'force-dynamic';

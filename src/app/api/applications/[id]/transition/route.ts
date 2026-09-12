@@ -8,9 +8,9 @@ import {
   calculatePermitAcceptanceDeadline,
   transitionLogLabel,
   TRANSITIONS,
-} from '@/lib/workflow';
+} from '@/lib/capabilities/application-lifecycle/workflow';
 import { signDecisionCard } from '@/lib/permit-signing';
-import { generateDecisionPdf } from '@/lib/generate-decision-pdf';
+import { generateDecisionPdf } from '@/lib/capabilities/application-lifecycle/generate-decision-pdf';
 import { findActingUser } from '@/lib/authz';
 import { actingUserId } from '@/auth';
 

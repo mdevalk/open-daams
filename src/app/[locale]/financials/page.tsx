@@ -2,14 +2,14 @@ import { getTranslations } from 'next-intl/server';
 import { prisma } from '@/lib/db';
 import { InvoiceStatus, FeeEstimateStatus, InvoiceRecipientType } from '@prisma/client';
 import { formatDateTime } from '@/lib/utils';
-import { formatPermitId } from '@/lib/permit';
+import { formatPermitId } from '@/lib/capabilities/permit-lifecycle/permit';
 import {
   groupInvoicesByPermitOrApplication,
   buildInvoiceWhereClause,
   buildInvoiceStatusCounts,
   buildInvoiceStatusSums,
   resolveActiveTab,
-} from '@/lib/invoice';
+} from '@/lib/capabilities/fee-invoicing/invoice';
 
 export const dynamic = 'force-dynamic';
 

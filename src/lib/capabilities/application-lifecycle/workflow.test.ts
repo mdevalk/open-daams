@@ -7,8 +7,8 @@ import {
   calculatePermitAcceptanceDeadline,
   deadlineStatus,
   transitionLogLabel,
-} from '@/lib/workflow';
-import nlMessages from '../../messages/nl.json';
+} from '@/lib/capabilities/application-lifecycle/workflow';
+import nlMessages from '../../../../messages/nl.json';
 
 describe('getAvailableTransitions', () => {
   it('only returns transitions the given role is allowed to take', () => {

@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { User } from '@prisma/client';
 import { useRouter } from 'next/navigation';
-import { buildApplicationCreateBody } from '@/lib/application-form';
+import { buildApplicationCreateBody } from '@/lib/capabilities/application-lifecycle/application-form';
 
 const PURPOSE_VALUES = ['PUBLIC_HEALTH', 'POLICY_MAKING', 'STATISTICS', 'EDUCATION', 'SCIENTIFIC_RESEARCH', 'CARE_IMPROVEMENT'] as const;
 

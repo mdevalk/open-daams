@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import AdmZip from 'adm-zip';
-import { getNcpApplicationDetail, guessAttachmentMimeType, resolveAttachmentBytes } from '@/lib/ncp-client';
+import { getNcpApplicationDetail, guessAttachmentMimeType, resolveAttachmentBytes } from '@/lib/capabilities/external-ingestion/ncp-client';
 import { fileResponse } from '@/lib/http';
 import { requireRole } from '@/lib/authz';
 import { actingUserId } from '@/auth';

@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl';
 
 import { useState } from 'react';
 import { Application, FeeEstimate, User } from '@prisma/client';
-import { getAvailableTransitions, Transition } from '@/lib/workflow';
+import { getAvailableTransitions, Transition } from '@/lib/capabilities/application-lifecycle/workflow';
 import { useRouter } from 'next/navigation';
 import { readErrorMessage } from '@/lib/utils';
 

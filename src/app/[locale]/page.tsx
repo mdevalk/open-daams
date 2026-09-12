@@ -3,8 +3,8 @@ import { ApplicationCard } from '@/components/ApplicationCard';
 import { ApplicationStatus } from '@prisma/client';
 import { getTranslations } from 'next-intl/server';
 import { cn, formatDate, daysUntil } from '@/lib/utils';
-import { formatPermitId } from '@/lib/permit';
-import { CHANGE_TYPE_LABELS } from '@/lib/permit-change';
+import { formatPermitId } from '@/lib/capabilities/permit-lifecycle/permit';
+import { CHANGE_TYPE_LABELS } from '@/lib/capabilities/permit-lifecycle/permit-change';
 
 export const dynamic = 'force-dynamic';
 

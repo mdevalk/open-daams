@@ -7,8 +7,8 @@
  * stored verbatim in hdeuRawPayload.
  */
 
-import { prisma } from './db';
-import { calculateDecisionDeadline } from './workflow';
+import { prisma } from '@/lib/db';
+import { calculateDecisionDeadline } from '@/lib/capabilities/application-lifecycle/workflow';
 
 // TEHDAS2 D6.3 Annex 5 §6.1-6.3 — one entry per country x role (cohort, its
 // controls, its relatives), matching the StudyCohort model 1:1. See

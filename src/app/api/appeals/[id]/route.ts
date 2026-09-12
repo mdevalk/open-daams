@@ -4,7 +4,7 @@ import { AppealStatus } from '@prisma/client';
 import { requireRole } from '@/lib/authz';
 import { actingUserId } from '@/auth';
 import { signAppealDecision } from '@/lib/permit-signing';
-import { generateAppealDecisionPdf } from '@/lib/generate-appeal-decision-pdf';
+import { generateAppealDecisionPdf } from '@/lib/capabilities/appeals/generate-appeal-decision-pdf';
 
 const TERMINAL_STATUSES: AppealStatus[] = ['UPHELD', 'REJECTED', 'WITHDRAWN'];
 // UPHELD/REJECTED are decisions on the merits and get a formal signed

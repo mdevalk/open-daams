@@ -26,7 +26,7 @@ import {
   resolveActiveTab,
   updateInvoiceStatus,
   type SourceLineItem,
-} from '@/lib/invoice';
+} from '@/lib/capabilities/fee-invoicing/invoice';
 
 const update = vi.mocked(prisma.invoice.update);
 const auditCreate = vi.mocked(prisma.auditLog.create);

@@ -21,7 +21,7 @@ import { StudyCohortExplorer } from '@/components/StudyCohortExplorer';
 import type { CompletenessItem } from '@/app/api/applications/[id]/completeness-check/route';
 import type { AssessmentItem } from '@/app/api/applications/[id]/assessment-check/route';
 import { formatDate, formatDateTime, purposeLabel, serializePrisma } from '@/lib/utils';
-import { formatPermitId } from '@/lib/permit';
+import { formatPermitId } from '@/lib/capabilities/permit-lifecycle/permit';
 import { groupDatasetsByHolder } from '@/lib/permit-signing';
 
 export const dynamic = 'force-dynamic';

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getNcpApplicationDetail, mapNcpDetailZipToHdeuPayload, NcpDetailMappingError } from '@/lib/ncp-client';
-import { createApplicationFromHdeuPayload } from '@/lib/hdeu';
+import { getNcpApplicationDetail, mapNcpDetailZipToHdeuPayload, NcpDetailMappingError } from '@/lib/capabilities/external-ingestion/ncp-client';
+import { createApplicationFromHdeuPayload } from '@/lib/capabilities/external-ingestion/hdeu';
 import { requireRole } from '@/lib/authz';
-import { logNcpCall } from '@/lib/ncp-log';
+import { logNcpCall } from '@/lib/capabilities/external-ingestion/ncp-log';
 import { actingUserId } from '@/auth';
 
 /**

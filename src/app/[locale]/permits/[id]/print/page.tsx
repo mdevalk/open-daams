@@ -3,7 +3,7 @@ import { headers } from 'next/headers';
 import { prisma } from '@/lib/db';
 import { PrintTrigger } from '@/components/PrintTrigger';
 import { getTranslations } from 'next-intl/server';
-import { formatPermitId } from '@/lib/permit';
+import { formatPermitId } from '@/lib/capabilities/permit-lifecycle/permit';
 import { APP_NAME } from '@/lib/branding';
 import { formatDateNumeric as fmt } from '@/lib/utils';
 

@@ -5,7 +5,7 @@ import { NextRequest } from 'next/server';
 // exactly instead of just asserting shape — same non-determinism problem
 // signPermit's tests solve differently (a disposable real keypair); here the
 // value itself is opaque, so a fixed mock is simplest.
-vi.mock('@/lib/did', () => ({
+vi.mock('@/lib/capabilities/permit-lifecycle/did', () => ({
   generateSampleDid: vi.fn(() => 'did:key:zfixed'),
 }));
 

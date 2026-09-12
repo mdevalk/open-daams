@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
 import { actingUserId } from '@/auth';
-import { SPE_TRANSITIONS } from '@/lib/spe';
+import { SPE_TRANSITIONS } from '@/lib/capabilities/permit-lifecycle/spe';
 import { SpeProvisioningStatus } from '@prisma/client';
 
 const MANAGE_ROLES = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'] as const;

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
 import { actingUserId } from '@/auth';
-import { REQUEST_ROLES, requestableTypes } from '@/lib/permit-change';
+import { REQUEST_ROLES, requestableTypes } from '@/lib/capabilities/permit-lifecycle/permit-change';
 import { PermitChangeType } from '@prisma/client';
 
 /**

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
 import { actingUserId } from '@/auth';
-import { DECIDE_ROLES } from '@/lib/permit-change';
+import { DECIDE_ROLES } from '@/lib/capabilities/permit-lifecycle/permit-change';
 
 /**
  * POST /api/permits/[id]/activate

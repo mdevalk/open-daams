@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { parseHdeuPayload, createApplicationFromHdeuPayload } from '@/lib/hdeu';
+import { parseHdeuPayload, createApplicationFromHdeuPayload } from '@/lib/capabilities/external-ingestion/hdeu';
 import { requireRole } from '@/lib/authz';
 import { actingUserId } from '@/auth';
 

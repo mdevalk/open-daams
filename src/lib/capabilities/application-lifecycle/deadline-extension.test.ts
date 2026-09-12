@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isDeadlineExtensionHidden, deadlineExtensionViewState } from '@/lib/deadline-extension';
+import { isDeadlineExtensionHidden, deadlineExtensionViewState } from '@/lib/capabilities/application-lifecycle/deadline-extension';
 
 describe('isDeadlineExtensionHidden', () => {
   it('hides on a final status regardless of role or extension state', () => {

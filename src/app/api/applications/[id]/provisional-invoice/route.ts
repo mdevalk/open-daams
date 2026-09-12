@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
 import { actingUserId } from '@/auth';
-import { snapshotLineItems, calculateDueDate, nextInvoiceNumber, sumLineItems } from '@/lib/invoice';
+import { snapshotLineItems, calculateDueDate, nextInvoiceNumber, sumLineItems } from '@/lib/capabilities/fee-invoicing/invoice';
 
 /**
  * POST /api/applications/[id]/provisional-invoice

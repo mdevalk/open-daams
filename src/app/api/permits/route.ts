@@ -4,8 +4,8 @@ import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
 import { actingUserId } from '@/auth';
 import { signPermit, groupDatasetsByHolder, type GrantedDatasetGroup } from '@/lib/permit-signing';
-import { regenerateStoredPermitPdf } from '@/lib/permit-pdf-store';
-import { generateSampleDid } from '@/lib/did';
+import { regenerateStoredPermitPdf } from '@/lib/capabilities/permit-lifecycle/permit-pdf-store';
+import { generateSampleDid } from '@/lib/capabilities/permit-lifecycle/did';
 
 // urn:objectstore:bucket:<slug> — lowercase, non-alphanumerics collapsed to
 // single hyphens, trimmed. Character-scan rather than regex to avoid the

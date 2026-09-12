@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Application, User } from '@prisma/client';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { deadlineStatus } from '@/lib/workflow';
+import { deadlineStatus } from '@/lib/capabilities/application-lifecycle/workflow';
 import { formatDate, readErrorMessage } from '@/lib/utils';
 
 type Props = {

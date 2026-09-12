@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { SpeProvisioningStatus } from '@prisma/client';
-import { SPE_STATUS_COLORS, SPE_TRANSITIONS } from '@/lib/spe';
+import { SPE_STATUS_COLORS, SPE_TRANSITIONS } from '@/lib/capabilities/permit-lifecycle/spe';
 import { readErrorMessage, formatDateTime } from '@/lib/utils';
 
 type Order = {
