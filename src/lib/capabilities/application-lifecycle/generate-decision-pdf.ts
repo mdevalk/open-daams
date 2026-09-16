@@ -1,6 +1,6 @@
 import { DecisionOutcome } from '@prisma/client';
 import { addWeeks } from 'date-fns';
-import { Doc, C, fmt } from '@/lib/generate-permit-pdf';
+import { Doc, C, fmt } from '@/lib/pdf-doc';
 import { APP_NAME } from '@/lib/branding';
 
 // The decision card (D6.4 §9.2): a positive decision gets an unsigned

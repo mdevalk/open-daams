@@ -1,5 +1,5 @@
 import { AppealStatus } from '@prisma/client';
-import { Doc, C, fmt } from '@/lib/generate-permit-pdf';
+import { Doc, C, fmt } from '@/lib/pdf-doc';
 import { APP_NAME } from '@/lib/branding';
 
 // The formal, signed decision on an appeal (D6.4 R10.0.6) — generated once,
