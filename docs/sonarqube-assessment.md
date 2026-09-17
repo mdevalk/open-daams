@@ -15,7 +15,15 @@ rating **C → A**. Re-run once more 2026-09-03 (same day) after resolving the 3
 plus the `S6582`/`S9020` code smells — duplication 4.3% → **2.8%**, code smells 175 → **145**.
 Re-run once more 2026-09-03 (same day) after a final zero-risk sweep — 3 unused imports removed
 (`S1128`), 2 duplicate imports merged (`S3863`), 3 built-in imports given the `node:` protocol
-prefix (`S7772`) — code smells 145 → **137**._
+prefix (`S7772`) — code smells 145 → **137**. Re-run 2026-09-16 after the capability-driven
+architecture work (domain files relocated into `src/lib/capabilities/<name>/`, the use-case
+backlog moved to a new flat `use-cases/registry.ts` at the repo root, and `generate-permit-pdf.ts`
+split into a shared `src/lib/pdf-doc.ts` toolkit + permit-specific rendering) — mostly a
+relocation, not new logic, so ratings were expected to hold; the split's new `pdf-doc.ts` did
+introduce 3 new-code issues (a nested template literal, a missed `String.raw`, a missed
+`export...from` re-export opportunity) that failed the quality gate's "zero new issues" condition
+— fixed immediately (see below) — code smells 137 → 138 (transient) → **135**, `sqale_index` down
+to 748 min (~12.5h), every rating (legacy and MQR) still **A**._
 
 This is a static-analysis assessment of the open-daams codebase against **SonarQube Community
 Edition**'s default TypeScript/JavaScript rule set — bugs, vulnerabilities, security hotspots,
@@ -42,25 +50,26 @@ this one is closer to code-quality/maintainability), same "assessment, not certi
 
 ## Summary
 
-| Metric | Result (2026-08-21) | Result (2026-08-30, Keycloak) | Result (2026-08-30, S3776 pass) | Result (2026-09-03, JSX split) | Result (2026-09-03, S9011 pass) | Result (2026-09-03, MQR closure) | Result (2026-09-03, dup/S6582/S9020) | Result (2026-09-03, zero-risk sweep) |
-|---|---|---|---|---|---|---|---|---|
-| Bugs | **0** (Reliability A) | **0** (Reliability A) | **0** (Reliability A) | **0** (Reliability A) | **0** (Reliability A, legacy model) | **0** (Reliability A, both models) | **0** (Reliability A, both models) | **0** (Reliability A, both models) |
-| Vulnerabilities | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) |
-| Security hotspots | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) |
-| Maintainability rating | **A** | **A** | **A** | **A** | **A** | **A** | **A** | **A** |
-| MQR Reliability rating | n/a | n/a | n/a | n/a | C | A | A | A |
-| Code smells | 252 | 268 | 255 | 266 | 189 | 175 | 145 | **137** |
-| — of which CRITICAL severity | 8 | 9 | 1 | **0** | 0 | 0 | 0 | 0 |
-| Cognitive-complexity issues (rule S3776) | 8 | 9 | 1 | **0** | 0 | 0 | 0 | 0 |
-| Button-`type` issues (rule S9011) | n/a | 77 | 77 | 77 | **0** | 0 | 0 | 0 |
-| MQR Reliability-impact issues | n/a | n/a | n/a | n/a | 91 → 14 | 0 | 0 | 0 |
-| Optional-chaining issues (rule S6582) | 8 | 8 | 8 | 8 | 8 | 8 | **0** | 0 |
-| Testing Library style (rule S9020) | 20 | 23 | 23 | 23 | 23 | 23 | **0** | 0 |
-| Unused/duplicate imports, missing `node:` prefix | n/a | n/a | n/a | n/a | n/a | n/a | 8 | **0** |
-| Duplicated lines | 2.8% | 4.6% | 4.5% | 4.3% | 4.3% | 4.3% | **2.8%** | 2.8% |
-| Test coverage (line, via lcov) | ~45-48%* | 46.0% | 47.7% | 49.1% | 49.1% | 49.2% | 50.5% | 50.5% |
-| Lines of code analyzed | ~15,400 | 16,369 | 16,659 | 16,913 | 16,940 | 16,958 | 17,057 | 17,057 |
-| Maintainability debt (`sqale_index`) | ~1,193 min (~19.9h) | 1,257 min (~21.0h) | 1,143 min (~19.1h) | 1,184 min (~19.7h) | 1,030 min (~17.2h) | 933 min (~15.6h) | 783 min (~13.1h) | **763 min (~12.7h)** |
+| Metric | Result (2026-08-21) | Result (2026-08-30, Keycloak) | Result (2026-08-30, S3776 pass) | Result (2026-09-03, JSX split) | Result (2026-09-03, S9011 pass) | Result (2026-09-03, MQR closure) | Result (2026-09-03, dup/S6582/S9020) | Result (2026-09-03, zero-risk sweep) | Result (2026-09-16, capability restructuring) |
+|---|---|---|---|---|---|---|---|---|---|
+| Bugs | **0** (Reliability A) | **0** (Reliability A) | **0** (Reliability A) | **0** (Reliability A) | **0** (Reliability A, legacy model) | **0** (Reliability A, both models) | **0** (Reliability A, both models) | **0** (Reliability A, both models) | **0** (Reliability A, both models) |
+| Vulnerabilities | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) |
+| Security hotspots | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) |
+| Maintainability rating | **A** | **A** | **A** | **A** | **A** | **A** | **A** | **A** | **A** |
+| MQR Reliability rating | n/a | n/a | n/a | n/a | C | A | A | A | A |
+| Code smells | 252 | 268 | 255 | 266 | 189 | 175 | 145 | **137** | 138 (transient) → **135** |
+| — of which CRITICAL severity | 8 | 9 | 1 | **0** | 0 | 0 | 0 | 0 | 0 |
+| Cognitive-complexity issues (rule S3776) | 8 | 9 | 1 | **0** | 0 | 0 | 0 | 0 | 0 |
+| Button-`type` issues (rule S9011) | n/a | 77 | 77 | 77 | **0** | 0 | 0 | 0 | 0 |
+| MQR Reliability-impact issues | n/a | n/a | n/a | n/a | 91 → 14 | 0 | 0 | 0 | 0 |
+| Optional-chaining issues (rule S6582) | 8 | 8 | 8 | 8 | 8 | 8 | **0** | 0 | 0 |
+| Testing Library style (rule S9020) | 20 | 23 | 23 | 23 | 23 | 23 | **0** | 0 | 0 |
+| Unused/duplicate imports, missing `node:` prefix | n/a | n/a | n/a | n/a | n/a | n/a | 8 | **0** | 0 |
+| New-code quality gate | n/a | n/a | n/a | n/a | n/a | n/a | n/a | OK | FAILED (3 new issues) → **OK** |
+| Duplicated lines | 2.8% | 4.6% | 4.5% | 4.3% | 4.3% | 4.3% | **2.8%** | 2.8% | 2.8% |
+| Test coverage (line, via lcov) | ~45-48%* | 46.0% | 47.7% | 49.1% | 49.1% | 49.2% | 50.5% | 50.5% | 50.5% |
+| Lines of code analyzed | ~15,400 | 16,369 | 16,659 | 16,913 | 16,940 | 16,958 | 17,057 | 17,057 | 16,973 |
+| Maintainability debt (`sqale_index`) | ~1,193 min (~19.9h) | 1,257 min (~21.0h) | 1,143 min (~19.1h) | 1,184 min (~19.7h) | 1,030 min (~17.2h) | 933 min (~15.6h) | 783 min (~13.1h) | 763 min (~12.7h) | **748 min (~12.5h)** |
 
 \* Coverage fluctuates a few points run-to-run depending on which files were touched most recently
 in the same session; treat it as "mid-to-high 40s%," not a fixed number.
@@ -94,24 +103,27 @@ else in each file), 2 duplicate imports merged into one (`S3863`), 3 built-in No
 `node:` protocol prefix (`S7772`, a no-op at runtime) — taking code smells 145 → **137** and
 `sqale_index` to its lowest point across every run in this doc.
 
-## Where the 137 code smells concentrate
+## Where the 135 code smells concentrate
 
 Only two rules are left with any real count. `S6759` (readonly props, 80) is deliberately untouched
 — see "What's not worth chasing" below for why. Everything else this project has actively targeted
 is now at zero:
 
-| Rule | Count (08-21) | Count (08-30, Keycloak) | Count (08-30, S3776 pass) | Count (09-03, JSX split) | Count (09-03, S9011 pass) | Count (09-03, MQR closure) | Count (09-03, dup/S6582/S9020) | What it flags |
-|---|---|---|---|---|---|---|---|---|
-| `typescript:S6759` | 57 | 60 | 65 | 79 | 79 | 79 | **80** | React component props not typed `Readonly<...>` — pre-existing convention across the codebase, deliberately left alone (see below); the +1 is the new `LogTable.tsx` shared component following that same existing convention |
-| `typescript:S3358` | 27 | 29 | 18 | 18 | 18 | 18 | 18 | Nested ternary operators (readability) — not yet in scope for a dedicated pass |
-| `typescript:S9020` | 20 | 23 | 23 | 23 | 23 | 23 | **0** | Testing Library `find*` vs `get*`/`query*` misuse (test files). Fixed 2026-09-03: all 23 were the identical `waitFor(() => expect(screen.getByText(...)).toBeInTheDocument())` shape, mechanically rewritten to `expect(await screen.findByText(...)).toBeInTheDocument()`; 5 files' now-unused `waitFor` import removed |
-| `typescript:S6582` | 8 | 8 | 8 | 8 | 8 | 8 | **0** | Optional-chaining preference. Fixed 2026-09-03: all 8 were the `!x \|\| !x.y` (or `!x \|\| x.y !== id`) guard-clause shape, which is safe to rewrite as `!x?.y` regardless of `x`'s type (unlike the riskier `x && x.y` → `x?.y` direction, where a falsy-but-defined `x` changes behavior) |
-| `typescript:S9011` | 70 | 77 | 77 | 77 | **0** | 0 | 0 | `<button>` elements missing an explicit `type` attribute. Fixed 2026-09-03: `type="button"` added to all 77 — verified none sit inside an actual `<form>`, so `type="submit"` was never the right call for any of them |
-| `typescript:S7773`/`S8786`/`S6853`/`S7758`/`S7781` | n/a | n/a | n/a | n/a | 14 | **0** | 0 | The MQR-Reliability-impact tail — see "Multi-Quality Mode ratings" below for the full breakdown and fix approach for each |
-| `typescript:S3776` | 8 | 9 | 1 | **0** | 0 | 0 | 0 | Cognitive complexity over the default threshold of 15 — see below |
+| Rule | Count (08-21) | Count (08-30, Keycloak) | Count (08-30, S3776 pass) | Count (09-03, JSX split) | Count (09-03, S9011 pass) | Count (09-03, MQR closure) | Count (09-03, dup/S6582/S9020) | Count (09-16, capability restructuring) | What it flags |
+|---|---|---|---|---|---|---|---|---|---|
+| `typescript:S6759` | 57 | 60 | 65 | 79 | 79 | 79 | **80** | 80 | React component props not typed `Readonly<...>` — pre-existing convention across the codebase, deliberately left alone (see below); the +1 at 09-03 was the new `LogTable.tsx` shared component following that same existing convention |
+| `typescript:S3358` | 27 | 29 | 18 | 18 | 18 | 18 | 18 | 18 | Nested ternary operators (readability) — not yet in scope for a dedicated pass |
+| `typescript:S9020` | 20 | 23 | 23 | 23 | 23 | 23 | **0** | 0 | Testing Library `find*` vs `get*`/`query*` misuse (test files). Fixed 2026-09-03: all 23 were the identical `waitFor(() => expect(screen.getByText(...)).toBeInTheDocument())` shape, mechanically rewritten to `expect(await screen.findByText(...)).toBeInTheDocument()`; 5 files' now-unused `waitFor` import removed |
+| `typescript:S6582` | 8 | 8 | 8 | 8 | 8 | 8 | **0** | 0 | Optional-chaining preference. Fixed 2026-09-03: all 8 were the `!x \|\| !x.y` (or `!x \|\| x.y !== id`) guard-clause shape, which is safe to rewrite as `!x?.y` regardless of `x`'s type (unlike the riskier `x && x.y` → `x?.y` direction, where a falsy-but-defined `x` changes behavior) |
+| `typescript:S9011` | 70 | 77 | 77 | 77 | **0** | 0 | 0 | 0 | `<button>` elements missing an explicit `type` attribute. Fixed 2026-09-03: `type="button"` added to all 77 — verified none sit inside an actual `<form>`, so `type="submit"` was never the right call for any of them |
+| `typescript:S7773`/`S8786`/`S6853`/`S7758`/`S7781` | n/a | n/a | n/a | n/a | 14 | **0** | 0 | 0 | The MQR-Reliability-impact tail — see "Multi-Quality Mode ratings" below for the full breakdown and fix approach for each |
+| `typescript:S3776` | 8 | 9 | 1 | **0** | 0 | 0 | 0 | 0 | Cognitive complexity over the default threshold of 15 — see below |
+| `typescript:S7776` | n/a | n/a | n/a | n/a | n/a | n/a | n/a | 9 | Prefer a `Set` + `.has()` over an array literal for repeated existence checks (role-list/status-list guards across several components and routes) — not previously broken out as its own row; grown from the "long tail" bucket below, not yet in scope for a dedicated pass |
 
-The remainder (`S7776` array-as-Set for existence checks, `S6551`, `S4624`, and a long tail of
-1-3-count rules) are minor, scattered findings not worth a dedicated pass.
+The remainder (`S6551`, `S4624` (5 pre-existing occurrences elsewhere — `permit-signing.ts`,
+`utils.ts` ×2, `hdeu.ts`, `ncp-client.ts`; the new `pdf-doc.ts` occurrence introduced by the
+09-16 restructuring was fixed immediately, see below), and a long tail of 1-3-count rules) are
+minor, scattered findings not worth a dedicated pass.
 
 ## Cognitive complexity (S3776) — fully resolved
 
@@ -273,6 +285,34 @@ from the very first assessment.
 
 The remaining duplication (scattered, mostly single digits per file) is not worth chasing to zero
 on a reference-implementation project.
+
+## 2026-09-16 — capability restructuring, new-code quality gate
+
+The bulk of the change since 09-03 was structural, not a targeted quality pass: domain files moved
+from flat `src/lib/` into `src/lib/capabilities/<name>/` folders organized by business capability,
+the use-case/requirement-traceability backlog moved to a new flat `use-cases/registry.ts` at the
+repo root (outside `src/`, since it's planning data rather than application code — see
+`docs/architecture.md`), and `generate-permit-pdf.ts` was split into a generic shared
+`src/lib/pdf-doc.ts` toolkit (the `Doc`/`C`/`fmt` primitives, used by three different document
+generators) plus permit-specific rendering that moved into `src/lib/capabilities/permit-lifecycle/`.
+Net effect on the metrics tracked in this doc was small and mostly positive: `ncloc` actually
+dropped slightly (17,057 → 16,973 — consolidating 12 small per-capability metadata files into 3
+flat ones removed a little boilerplate), `sqale_index` dropped further (763 → 748 min), and every
+rating stayed **A**.
+
+The one real event: this local instance enforces a **new-code quality gate** (zero new issues,
+&lt;3% new duplication, ≥80% new coverage, checked against the previous-version baseline) —
+`pdf-doc.ts`, being new code, tripped the "zero new issues" condition with 3 findings:
+
+| Rule | Severity | Location | Issue | Fix |
+|---|---|---|---|---|
+| `typescript:S4624` | MAJOR | `pdf-doc.ts:41` | Nested template literal (a per-character `\u{...}` template built inside another template's interpolation) | Extracted the `.map()` result to its own `WINANSI_CODEPOINTS` constant first, so the outer template only interpolates a plain string |
+| `typescript:S7780` | MINOR | `pdf-doc.ts:41` | Manual `\\u{...}` double-backslash escaping where `String.raw` avoids it | Rewrote the per-character template as `` String.raw`\u{${...}}` `` |
+| `typescript:S7763` | MINOR | `pdf-doc.ts:55` | `export const fmt = formatDateNumeric` reassignment where a direct re-export reads more clearly | Rewrote as `export { formatDateNumeric as fmt } from './utils'`, dropping the now-unneeded separate import |
+
+All three fixed the same session they were found; verified with `tsc --noEmit` (clean), the full
+test suite (567/567, unchanged), and a fresh rescan — new-code issues 3 → **0**, gate **FAILED →
+OK**. Total code smells: 137 (09-03 baseline) → 138 (transient, mid-restructuring) → **135**.
 
 ## What's not worth chasing
 

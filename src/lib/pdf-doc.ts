@@ -1,6 +1,6 @@
 import { PDFDocument, rgb, StandardFonts, PDFFont, PDFPage } from 'pdf-lib';
 import { APP_NAME } from './branding';
-import { formatDateNumeric } from './utils';
+export { formatDateNumeric as fmt } from './utils';
 
 // Generic PDF-building toolkit shared by every capability that renders a document (permit,
 // decision, appeal) — colors, text sanitization, page layout, and the Doc primitive itself.
@@ -38,10 +38,8 @@ const WINANSI_REPLACEMENTS: Record<string, string> = {
 // Built from WINANSI_REPLACEMENTS' own keys so every mapped character is
 // actually matched — a hand-duplicated character class silently drops
 // replacements added to the map but not the regex (as happened with '•').
-const WINANSI_REPLACEMENT_PATTERN = new RegExp(
-  `[${Object.keys(WINANSI_REPLACEMENTS).map((ch) => `\\u{${ch.codePointAt(0)!.toString(16)}}`).join('')}]`,
-  'gu',
-);
+const WINANSI_CODEPOINTS = Object.keys(WINANSI_REPLACEMENTS).map((ch) => String.raw`\u{${ch.codePointAt(0)!.toString(16)}}`);
+const WINANSI_REPLACEMENT_PATTERN = new RegExp(`[${WINANSI_CODEPOINTS.join('')}]`, 'gu');
 
 function sanitizeText(str: string): string {
   const replaced = str.replace(WINANSI_REPLACEMENT_PATTERN, (ch) => WINANSI_REPLACEMENTS[ch] ?? ch);
@@ -51,8 +49,6 @@ function sanitizeText(str: string): string {
   // eslint-disable-next-line no-control-regex
   return replaced.replace(/[^\x00-\xFF€]/g, '?');
 }
-
-export const fmt = formatDateNumeric;
 
 export const PW = 595; // A4 width in points
 const PH = 842; // A4 height in points
