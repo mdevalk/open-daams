@@ -17,11 +17,23 @@ import { prisma } from '@/lib/db';
 import { PATCH, resolveOutputController, resolveEffectiveDate } from './route';
 
 const findUnique = vi.mocked(prisma.user.findUnique);
-const changeRequestFindUnique = vi.mocked(prisma.permitChangeRequest.findUnique);
+const changeRequestFindUnique = vi.mocked(
+  prisma.permitChangeRequest.findUnique,
+);
 const authzFailureLogCreate = vi.mocked(prisma.authzFailureLog.create);
 
-const DECISION_MAKER = { id: 'u-1', role: 'DECISION_MAKER' as const, name: 'D. Maker', email: 'dm@hdab.nl' };
-const APPLICANT = { id: 'u-2', role: 'APPLICANT' as const, name: 'A. de Vries', email: 'researcher@umcu.nl' };
+const DECISION_MAKER = {
+  id: 'u-1',
+  role: 'DECISION_MAKER' as const,
+  name: 'D. Maker',
+  email: 'dm@hdab.nl',
+};
+const APPLICANT = {
+  id: 'u-2',
+  role: 'APPLICANT' as const,
+  name: 'A. de Vries',
+  email: 'researcher@umcu.nl',
+};
 
 beforeEach(() => {
   findUnique.mockReset();
@@ -67,27 +79,39 @@ describe('resolveOutputController', () => {
     const expectedError = {
       ok: false,
       status: 422,
-      error: 'Both outputControllerName and outputControllerAffiliation are required to change the output controller',
+      error:
+        'Both outputControllerName and outputControllerAffiliation are required to change the output controller',
     };
 
-    expect(resolveOutputController(request, permit, { outputControllerName: 'New Controller' })).toEqual(
-      expectedError,
-    );
-    expect(resolveOutputController(request, permit, { outputControllerAffiliation: 'New Org' })).toEqual(
-      expectedError,
-    );
+    expect(
+      resolveOutputController(request, permit, {
+        outputControllerName: 'New Controller',
+      }),
+    ).toEqual(expectedError);
+    expect(
+      resolveOutputController(request, permit, {
+        outputControllerAffiliation: 'New Org',
+      }),
+    ).toEqual(expectedError);
   });
 
   it('carries the existing output controller forward unchanged for non-AMENDMENT types, ignoring body fields', () => {
     const permit = permitWith([existingOutputController]);
-    const body = { outputControllerName: 'Should be ignored', outputControllerAffiliation: 'Should be ignored' };
+    const body = {
+      outputControllerName: 'Should be ignored',
+      outputControllerAffiliation: 'Should be ignored',
+    };
 
     for (const type of ['RENEWAL', 'REVOCATION_APPEAL']) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const request = { type } as any;
       expect(resolveOutputController(request, permit, body)).toEqual({
         ok: true,
-        outputController: { name: 'Existing OC', affiliation: 'HDAB-NL', did: 'did:key:zexisting' },
+        outputController: {
+          name: 'Existing OC',
+          affiliation: 'HDAB-NL',
+          did: 'did:key:zexisting',
+        },
       });
     }
   });
@@ -107,7 +131,9 @@ describe('resolveOutputController', () => {
   it('fails with a 500 when the existing output controller row has no did', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const request = { type: 'AMENDMENT' } as any;
-    const permit = permitWith([{ role: 'OUTPUT_CONTROLLER', did: null, name: 'X', affiliation: 'Y' }]);
+    const permit = permitWith([
+      { role: 'OUTPUT_CONTROLLER', did: null, name: 'X', affiliation: 'Y' },
+    ]);
 
     expect(resolveOutputController(request, permit, {})).toEqual({
       ok: false,
@@ -124,7 +150,11 @@ describe('resolveEffectiveDate', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const request = { type: 'AMENDMENT' } as any;
 
-    const result = resolveEffectiveDate(request, { effectiveDate: future.toISOString() }, now);
+    const result = resolveEffectiveDate(
+      request,
+      { effectiveDate: future.toISOString() },
+      now,
+    );
 
     expect(result).toEqual({ requestedEffectiveDate: future, deferred: true });
   });
@@ -135,7 +165,11 @@ describe('resolveEffectiveDate', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const request = { type: 'AMENDMENT' } as any;
 
-    const result = resolveEffectiveDate(request, { effectiveDate: past.toISOString() }, now);
+    const result = resolveEffectiveDate(
+      request,
+      { effectiveDate: past.toISOString() },
+      now,
+    );
 
     expect(result).toEqual({ requestedEffectiveDate: past, deferred: false });
   });
@@ -145,7 +179,10 @@ describe('resolveEffectiveDate', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const request = { type: 'AMENDMENT' } as any;
 
-    expect(resolveEffectiveDate(request, {}, now)).toEqual({ requestedEffectiveDate: null, deferred: false });
+    expect(resolveEffectiveDate(request, {}, now)).toEqual({
+      requestedEffectiveDate: null,
+      deferred: false,
+    });
   });
 
   it('non-AMENDMENT types never defer, even with a future effectiveDate in the body', () => {
@@ -155,7 +192,11 @@ describe('resolveEffectiveDate', () => {
     for (const type of ['RENEWAL', 'REVOCATION_APPEAL']) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const request = { type } as any;
-      const result = resolveEffectiveDate(request, { effectiveDate: future.toISOString() }, now);
+      const result = resolveEffectiveDate(
+        request,
+        { effectiveDate: future.toISOString() },
+        now,
+      );
       expect(result).toEqual({ requestedEffectiveDate: null, deferred: false });
     }
   });
@@ -163,18 +204,25 @@ describe('resolveEffectiveDate', () => {
 
 describe('PATCH /api/permits/[id]/change-requests/[requestId]', () => {
   function callPatch(body: unknown) {
-    const req = new NextRequest('http://localhost/api/permits/p-1/change-requests/cr-1', {
-      method: 'PATCH',
-      body: JSON.stringify(body),
+    const req = new NextRequest(
+      'http://localhost/api/permits/p-1/change-requests/cr-1',
+      {
+        method: 'PATCH',
+        body: JSON.stringify(body),
+      },
+    );
+    return PATCH(req, {
+      params: Promise.resolve({ id: 'p-1', requestId: 'cr-1' }),
     });
-    return PATCH(req, { params: Promise.resolve({ id: 'p-1', requestId: 'cr-1' }) });
   }
 
   it('rejects an invalid decision value with a 400', async () => {
     const res = await callPatch({ decision: 'MAYBE', actingUserId: 'u-1' });
 
     expect(res.status).toBe(400);
-    expect(await res.json()).toEqual({ error: 'decision must be APPROVED or REJECTED' });
+    expect(await res.json()).toEqual({
+      error: 'decision must be APPROVED or REJECTED',
+    });
     expect(prisma.permitChangeRequest.findUnique).not.toHaveBeenCalled();
   });
 
@@ -184,14 +232,19 @@ describe('PATCH /api/permits/[id]/change-requests/[requestId]', () => {
     const res = await callPatch({ decision: 'APPROVED', actingUserId: 'u-2' });
 
     expect(res.status).toBe(403);
-    expect(await res.json()).toEqual({ error: 'Role APPLICANT is not permitted to perform this action' });
+    expect(await res.json()).toEqual({
+      error: 'Role APPLICANT is not permitted to perform this action',
+    });
     expect(prisma.permitChangeRequest.findUnique).not.toHaveBeenCalled();
   });
 
   it('rejects an unknown acting user with a 401', async () => {
     findUnique.mockResolvedValue(null);
 
-    const res = await callPatch({ decision: 'APPROVED', actingUserId: 'ghost' });
+    const res = await callPatch({
+      decision: 'APPROVED',
+      actingUserId: 'ghost',
+    });
 
     expect(res.status).toBe(401);
     expect(await res.json()).toEqual({ error: 'Acting user not found' });
@@ -209,7 +262,11 @@ describe('PATCH /api/permits/[id]/change-requests/[requestId]', () => {
 
   it('returns 404 when the change request belongs to a different permit', async () => {
     findUnique.mockResolvedValue(DECISION_MAKER as never);
-    changeRequestFindUnique.mockResolvedValue({ id: 'cr-1', permitId: 'other-permit', status: 'REQUESTED' } as never);
+    changeRequestFindUnique.mockResolvedValue({
+      id: 'cr-1',
+      permitId: 'other-permit',
+      status: 'REQUESTED',
+    } as never);
 
     const res = await callPatch({ decision: 'APPROVED', actingUserId: 'u-1' });
 
@@ -219,12 +276,18 @@ describe('PATCH /api/permits/[id]/change-requests/[requestId]', () => {
 
   it('returns 422 when the request has already been decided', async () => {
     findUnique.mockResolvedValue(DECISION_MAKER as never);
-    changeRequestFindUnique.mockResolvedValue({ id: 'cr-1', permitId: 'p-1', status: 'APPROVED' } as never);
+    changeRequestFindUnique.mockResolvedValue({
+      id: 'cr-1',
+      permitId: 'p-1',
+      status: 'APPROVED',
+    } as never);
 
     const res = await callPatch({ decision: 'APPROVED', actingUserId: 'u-1' });
 
     expect(res.status).toBe(422);
-    expect(await res.json()).toEqual({ error: 'This request has already been decided' });
+    expect(await res.json()).toEqual({
+      error: 'This request has already been decided',
+    });
   });
 
   it('returns 422 when the permit version has been superseded', async () => {
@@ -240,7 +303,9 @@ describe('PATCH /api/permits/[id]/change-requests/[requestId]', () => {
     const res = await callPatch({ decision: 'APPROVED', actingUserId: 'u-1' });
 
     expect(res.status).toBe(422);
-    expect(await res.json()).toEqual({ error: 'This permit version has been superseded' });
+    expect(await res.json()).toEqual({
+      error: 'This permit version has been superseded',
+    });
   });
 
   it('returns 422 for a RENEWAL approval without newValidUntil', async () => {
@@ -256,6 +321,8 @@ describe('PATCH /api/permits/[id]/change-requests/[requestId]', () => {
     const res = await callPatch({ decision: 'APPROVED', actingUserId: 'u-1' });
 
     expect(res.status).toBe(422);
-    expect(await res.json()).toEqual({ error: 'A new validUntil date is required to approve a renewal' });
+    expect(await res.json()).toEqual({
+      error: 'A new validUntil date is required to approve a renewal',
+    });
   });
 });

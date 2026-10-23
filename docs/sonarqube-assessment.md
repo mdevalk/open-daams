@@ -41,35 +41,35 @@ this one is closer to code-quality/maintainability), same "assessment, not certi
 > with real coverage data from `npx vitest run --coverage` (the `lcov` reporter already configured
 > in `vitest.config.mts`). **Not wired into CI** — this is a manual, occasional check, not a build
 > gate. One methodological note worth flagging for anyone repeating this: SonarQube's issue-tracker
-> can display **stale** per-function complexity numbers when re-analyzing the *same* project after a
+> can display **stale** per-function complexity numbers when re-analyzing the _same_ project after a
 > structural fix (it appears to carry forward the previous issue's message text under some
 > conditions — seen again on the 2026-09-03 run) — always delete and recreate the project (`POST
-> /api/projects/delete`, then rescan — SonarQube auto-provisions the project on the next analysis)
+/api/projects/delete`, then rescan — SonarQube auto-provisions the project on the next analysis)
 > before trusting a "did this fix actually work" comparison; a same-project rescan is fine for
 > headline/aggregate metrics.
 
 ## Summary
 
-| Metric | Result (2026-08-21) | Result (2026-08-30, Keycloak) | Result (2026-08-30, S3776 pass) | Result (2026-09-03, JSX split) | Result (2026-09-03, S9011 pass) | Result (2026-09-03, MQR closure) | Result (2026-09-03, dup/S6582/S9020) | Result (2026-09-03, zero-risk sweep) | Result (2026-09-16, capability restructuring) |
-|---|---|---|---|---|---|---|---|---|---|
-| Bugs | **0** (Reliability A) | **0** (Reliability A) | **0** (Reliability A) | **0** (Reliability A) | **0** (Reliability A, legacy model) | **0** (Reliability A, both models) | **0** (Reliability A, both models) | **0** (Reliability A, both models) | **0** (Reliability A, both models) |
-| Vulnerabilities | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) | **0** (Security A) |
-| Security hotspots | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) | **0** (Security Review A) |
-| Maintainability rating | **A** | **A** | **A** | **A** | **A** | **A** | **A** | **A** | **A** |
-| MQR Reliability rating | n/a | n/a | n/a | n/a | C | A | A | A | A |
-| Code smells | 252 | 268 | 255 | 266 | 189 | 175 | 145 | **137** | 138 (transient) → **135** |
-| — of which CRITICAL severity | 8 | 9 | 1 | **0** | 0 | 0 | 0 | 0 | 0 |
-| Cognitive-complexity issues (rule S3776) | 8 | 9 | 1 | **0** | 0 | 0 | 0 | 0 | 0 |
-| Button-`type` issues (rule S9011) | n/a | 77 | 77 | 77 | **0** | 0 | 0 | 0 | 0 |
-| MQR Reliability-impact issues | n/a | n/a | n/a | n/a | 91 → 14 | 0 | 0 | 0 | 0 |
-| Optional-chaining issues (rule S6582) | 8 | 8 | 8 | 8 | 8 | 8 | **0** | 0 | 0 |
-| Testing Library style (rule S9020) | 20 | 23 | 23 | 23 | 23 | 23 | **0** | 0 | 0 |
-| Unused/duplicate imports, missing `node:` prefix | n/a | n/a | n/a | n/a | n/a | n/a | 8 | **0** | 0 |
-| New-code quality gate | n/a | n/a | n/a | n/a | n/a | n/a | n/a | OK | FAILED (3 new issues) → **OK** |
-| Duplicated lines | 2.8% | 4.6% | 4.5% | 4.3% | 4.3% | 4.3% | **2.8%** | 2.8% | 2.8% |
-| Test coverage (line, via lcov) | ~45-48%* | 46.0% | 47.7% | 49.1% | 49.1% | 49.2% | 50.5% | 50.5% | 50.5% |
-| Lines of code analyzed | ~15,400 | 16,369 | 16,659 | 16,913 | 16,940 | 16,958 | 17,057 | 17,057 | 16,973 |
-| Maintainability debt (`sqale_index`) | ~1,193 min (~19.9h) | 1,257 min (~21.0h) | 1,143 min (~19.1h) | 1,184 min (~19.7h) | 1,030 min (~17.2h) | 933 min (~15.6h) | 783 min (~13.1h) | 763 min (~12.7h) | **748 min (~12.5h)** |
+| Metric                                           | Result (2026-08-21)       | Result (2026-08-30, Keycloak) | Result (2026-08-30, S3776 pass) | Result (2026-09-03, JSX split) | Result (2026-09-03, S9011 pass)     | Result (2026-09-03, MQR closure)   | Result (2026-09-03, dup/S6582/S9020) | Result (2026-09-03, zero-risk sweep) | Result (2026-09-16, capability restructuring) |
+| ------------------------------------------------ | ------------------------- | ----------------------------- | ------------------------------- | ------------------------------ | ----------------------------------- | ---------------------------------- | ------------------------------------ | ------------------------------------ | --------------------------------------------- |
+| Bugs                                             | **0** (Reliability A)     | **0** (Reliability A)         | **0** (Reliability A)           | **0** (Reliability A)          | **0** (Reliability A, legacy model) | **0** (Reliability A, both models) | **0** (Reliability A, both models)   | **0** (Reliability A, both models)   | **0** (Reliability A, both models)            |
+| Vulnerabilities                                  | **0** (Security A)        | **0** (Security A)            | **0** (Security A)              | **0** (Security A)             | **0** (Security A)                  | **0** (Security A)                 | **0** (Security A)                   | **0** (Security A)                   | **0** (Security A)                            |
+| Security hotspots                                | **0** (Security Review A) | **0** (Security Review A)     | **0** (Security Review A)       | **0** (Security Review A)      | **0** (Security Review A)           | **0** (Security Review A)          | **0** (Security Review A)            | **0** (Security Review A)            | **0** (Security Review A)                     |
+| Maintainability rating                           | **A**                     | **A**                         | **A**                           | **A**                          | **A**                               | **A**                              | **A**                                | **A**                                | **A**                                         |
+| MQR Reliability rating                           | n/a                       | n/a                           | n/a                             | n/a                            | C                                   | A                                  | A                                    | A                                    | A                                             |
+| Code smells                                      | 252                       | 268                           | 255                             | 266                            | 189                                 | 175                                | 145                                  | **137**                              | 138 (transient) → **135**                     |
+| — of which CRITICAL severity                     | 8                         | 9                             | 1                               | **0**                          | 0                                   | 0                                  | 0                                    | 0                                    | 0                                             |
+| Cognitive-complexity issues (rule S3776)         | 8                         | 9                             | 1                               | **0**                          | 0                                   | 0                                  | 0                                    | 0                                    | 0                                             |
+| Button-`type` issues (rule S9011)                | n/a                       | 77                            | 77                              | 77                             | **0**                               | 0                                  | 0                                    | 0                                    | 0                                             |
+| MQR Reliability-impact issues                    | n/a                       | n/a                           | n/a                             | n/a                            | 91 → 14                             | 0                                  | 0                                    | 0                                    | 0                                             |
+| Optional-chaining issues (rule S6582)            | 8                         | 8                             | 8                               | 8                              | 8                                   | 8                                  | **0**                                | 0                                    | 0                                             |
+| Testing Library style (rule S9020)               | 20                        | 23                            | 23                              | 23                             | 23                                  | 23                                 | **0**                                | 0                                    | 0                                             |
+| Unused/duplicate imports, missing `node:` prefix | n/a                       | n/a                           | n/a                             | n/a                            | n/a                                 | n/a                                | 8                                    | **0**                                | 0                                             |
+| New-code quality gate                            | n/a                       | n/a                           | n/a                             | n/a                            | n/a                                 | n/a                                | n/a                                  | OK                                   | FAILED (3 new issues) → **OK**                |
+| Duplicated lines                                 | 2.8%                      | 4.6%                          | 4.5%                            | 4.3%                           | 4.3%                                | 4.3%                               | **2.8%**                             | 2.8%                                 | 2.8%                                          |
+| Test coverage (line, via lcov)                   | ~45-48%*                  | 46.0%                         | 47.7%                           | 49.1%                          | 49.1%                               | 49.2%                              | 50.5%                                | 50.5%                                | 50.5%                                         |
+| Lines of code analyzed                           | ~15,400                   | 16,369                        | 16,659                          | 16,913                         | 16,940                              | 16,958                             | 17,057                               | 17,057                               | 16,973                                        |
+| Maintainability debt (`sqale_index`)             | ~1,193 min (~19.9h)       | 1,257 min (~21.0h)            | 1,143 min (~19.1h)              | 1,184 min (~19.7h)             | 1,030 min (~17.2h)                  | 933 min (~15.6h)                   | 783 min (~13.1h)                     | 763 min (~12.7h)                     | **748 min (~12.5h)**                          |
 
 \* Coverage fluctuates a few points run-to-run depending on which files were touched most recently
 in the same session; treat it as "mid-to-high 40s%," not a fixed number.
@@ -80,7 +80,7 @@ reliability/security ratings stay A across every re-run so far, Keycloak integra
 one — `applications/[id]/page.tsx` (29), explicitly deferred, see below — i.e. 8 findings across
 7 files (`StudyCohortExplorer.tsx` alone carried 2 of the 9). It took CRITICAL findings from 9 down
 to 1, added real new test coverage (+1.7pp) rather than just moving code around, and — as a side
-effect of extracting branching logic into named helpers — also *reduced* two other smells that
+effect of extracting branching logic into named helpers — also _reduced_ two other smells that
 weren't directly targeted: nested ternaries (S3358) 29 → 18, and `sqale_index` debt actually
 dropped below even the pre-Keycloak 08-21 baseline. The 2026-09-03 JSX-split pass then closed the
 one deliberately-deferred file — see below — taking CRITICAL findings from 1 to **0**. Verified
@@ -109,16 +109,16 @@ Only two rules are left with any real count. `S6759` (readonly props, 80) is del
 — see "What's not worth chasing" below for why. Everything else this project has actively targeted
 is now at zero:
 
-| Rule | Count (08-21) | Count (08-30, Keycloak) | Count (08-30, S3776 pass) | Count (09-03, JSX split) | Count (09-03, S9011 pass) | Count (09-03, MQR closure) | Count (09-03, dup/S6582/S9020) | Count (09-16, capability restructuring) | What it flags |
-|---|---|---|---|---|---|---|---|---|---|
-| `typescript:S6759` | 57 | 60 | 65 | 79 | 79 | 79 | **80** | 80 | React component props not typed `Readonly<...>` — pre-existing convention across the codebase, deliberately left alone (see below); the +1 at 09-03 was the new `LogTable.tsx` shared component following that same existing convention |
-| `typescript:S3358` | 27 | 29 | 18 | 18 | 18 | 18 | 18 | 18 | Nested ternary operators (readability) — not yet in scope for a dedicated pass |
-| `typescript:S9020` | 20 | 23 | 23 | 23 | 23 | 23 | **0** | 0 | Testing Library `find*` vs `get*`/`query*` misuse (test files). Fixed 2026-09-03: all 23 were the identical `waitFor(() => expect(screen.getByText(...)).toBeInTheDocument())` shape, mechanically rewritten to `expect(await screen.findByText(...)).toBeInTheDocument()`; 5 files' now-unused `waitFor` import removed |
-| `typescript:S6582` | 8 | 8 | 8 | 8 | 8 | 8 | **0** | 0 | Optional-chaining preference. Fixed 2026-09-03: all 8 were the `!x \|\| !x.y` (or `!x \|\| x.y !== id`) guard-clause shape, which is safe to rewrite as `!x?.y` regardless of `x`'s type (unlike the riskier `x && x.y` → `x?.y` direction, where a falsy-but-defined `x` changes behavior) |
-| `typescript:S9011` | 70 | 77 | 77 | 77 | **0** | 0 | 0 | 0 | `<button>` elements missing an explicit `type` attribute. Fixed 2026-09-03: `type="button"` added to all 77 — verified none sit inside an actual `<form>`, so `type="submit"` was never the right call for any of them |
-| `typescript:S7773`/`S8786`/`S6853`/`S7758`/`S7781` | n/a | n/a | n/a | n/a | 14 | **0** | 0 | 0 | The MQR-Reliability-impact tail — see "Multi-Quality Mode ratings" below for the full breakdown and fix approach for each |
-| `typescript:S3776` | 8 | 9 | 1 | **0** | 0 | 0 | 0 | 0 | Cognitive complexity over the default threshold of 15 — see below |
-| `typescript:S7776` | n/a | n/a | n/a | n/a | n/a | n/a | n/a | 9 | Prefer a `Set` + `.has()` over an array literal for repeated existence checks (role-list/status-list guards across several components and routes) — not previously broken out as its own row; grown from the "long tail" bucket below, not yet in scope for a dedicated pass |
+| Rule                                               | Count (08-21) | Count (08-30, Keycloak) | Count (08-30, S3776 pass) | Count (09-03, JSX split) | Count (09-03, S9011 pass) | Count (09-03, MQR closure) | Count (09-03, dup/S6582/S9020) | Count (09-16, capability restructuring) | What it flags                                                                                                                                                                                                                                                                                                            |
+| -------------------------------------------------- | ------------- | ----------------------- | ------------------------- | ------------------------ | ------------------------- | -------------------------- | ------------------------------ | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `typescript:S6759`                                 | 57            | 60                      | 65                        | 79                       | 79                        | 79                         | **80**                         | 80                                      | React component props not typed `Readonly<...>` — pre-existing convention across the codebase, deliberately left alone (see below); the +1 at 09-03 was the new `LogTable.tsx` shared component following that same existing convention                                                                                  |
+| `typescript:S3358`                                 | 27            | 29                      | 18                        | 18                       | 18                        | 18                         | 18                             | 18                                      | Nested ternary operators (readability) — not yet in scope for a dedicated pass                                                                                                                                                                                                                                           |
+| `typescript:S9020`                                 | 20            | 23                      | 23                        | 23                       | 23                        | 23                         | **0**                          | 0                                       | Testing Library `find*` vs `get*`/`query*` misuse (test files). Fixed 2026-09-03: all 23 were the identical `waitFor(() => expect(screen.getByText(...)).toBeInTheDocument())` shape, mechanically rewritten to `expect(await screen.findByText(...)).toBeInTheDocument()`; 5 files' now-unused `waitFor` import removed |
+| `typescript:S6582`                                 | 8             | 8                       | 8                         | 8                        | 8                         | 8                          | **0**                          | 0                                       | Optional-chaining preference. Fixed 2026-09-03: all 8 were the `!x \|\| !x.y` (or `!x \|\| x.y !== id`) guard-clause shape, which is safe to rewrite as `!x?.y` regardless of `x`'s type (unlike the riskier `x && x.y` → `x?.y` direction, where a falsy-but-defined `x` changes behavior)                              |
+| `typescript:S9011`                                 | 70            | 77                      | 77                        | 77                       | **0**                     | 0                          | 0                              | 0                                       | `<button>` elements missing an explicit `type` attribute. Fixed 2026-09-03: `type="button"` added to all 77 — verified none sit inside an actual `<form>`, so `type="submit"` was never the right call for any of them                                                                                                   |
+| `typescript:S7773`/`S8786`/`S6853`/`S7758`/`S7781` | n/a           | n/a                     | n/a                       | n/a                      | 14                        | **0**                      | 0                              | 0                                       | The MQR-Reliability-impact tail — see "Multi-Quality Mode ratings" below for the full breakdown and fix approach for each                                                                                                                                                                                                |
+| `typescript:S3776`                                 | 8             | 9                       | 1                         | **0**                    | 0                         | 0                          | 0                              | 0                                       | Cognitive complexity over the default threshold of 15 — see below                                                                                                                                                                                                                                                        |
+| `typescript:S7776`                                 | n/a           | n/a                     | n/a                       | n/a                      | n/a                       | n/a                        | n/a                            | 9                                       | Prefer a `Set` + `.has()` over an array literal for repeated existence checks (role-list/status-list guards across several components and routes) — not previously broken out as its own row; grown from the "long tail" bucket below, not yet in scope for a dedicated pass                                             |
 
 The remainder (`S6551`, `S4624` (5 pre-existing occurrences elsewhere — `permit-signing.ts`,
 `utils.ts` ×2, `hdeu.ts`, `ncp-client.ts`; the new `pdf-doc.ts` occurrence introduced by the
@@ -200,7 +200,7 @@ This local instance has `sonar.multi-quality-mode.enabled = true`, discovered 20
 comparing the SonarQube UI's project-overview card against this doc's own API-sourced numbers: the
 UI showed **Reliability C** while the legacy `reliability_rating` metric (issues typed `BUG` only)
 said **A** with 0 bugs — both correct, just answering different questions. Under MQR, any issue can
-carry a per-quality *impact* independent of its legacy type/severity, so `CODE_SMELL`-typed issues
+carry a per-quality _impact_ independent of its legacy type/severity, so `CODE_SMELL`-typed issues
 can (and here, do) drag the Reliability or Security rating down even with zero legacy bugs or
 vulnerabilities. The MQR-specific metric keys are `software_quality_{reliability,security,
 maintainability}_rating` (plus `_issues` for counts) — distinct from the legacy `reliability_rating`
@@ -208,24 +208,25 @@ maintainability}_rating` (plus `_issues` for counts) — distinct from the legac
 pointing an external tool (e.g. ICTU quality-time) at this instance should check which metric key
 it requests** — the two models can disagree by a full letter grade.
 
-The 2026-09-03 S9011 pass (77 → 0) was chosen partly *because* `S9011` was 77 of the 91
+The 2026-09-03 S9011 pass (77 → 0) was chosen partly _because_ `S9011` was 77 of the 91
 Reliability-impacting issues MQR reported at the time. After the fix, `software_quality_
 reliability_issues` dropped 91 → 14 — but `software_quality_reliability_rating` **stayed at C**,
-unchanged. Reason: SonarQube's rating (both legacy and MQR) is driven by the *worst* severity
+unchanged. Reason: SonarQube's rating (both legacy and MQR) is driven by the _worst_ severity
 present, not a count. 10 of the remaining 14 were still MEDIUM severity, and even one MEDIUM-severity
 issue holds a C regardless of how many LOW ones are also cleared:
 
-| Rule | Count | Severity | What it flags | Fix |
-|---|---|---|---|---|
-| `typescript:S7773` | 6 | MEDIUM | Prefer `Number.parseInt` over the global equivalent | Mechanical: `parseInt` → `Number.parseInt` (identical function, per spec) at all 6 call sites (3× `ncp-client.ts`, 3× API route sequence-number generators) |
-| `typescript:S8786` | 3 | MEDIUM | Regex susceptible to non-linear (catastrophic) backtracking | Traced each individually rather than batching (see below) — 2 of the 3 had a genuine quadratic shape, 1 didn't |
-| `typescript:S6853` | 1 | MEDIUM | `<label>` missing an associated form control | `NewApplicationForm.tsx`'s radio-option label nests its visible text two `<div>`/`<p>` levels deep, which the static checker's text-detection didn't recurse into (the text *is* genuinely there and accessible at runtime — verified this isn't a real a11y bug). Added an explicit `aria-label` directly on the `<input>` as a belt-and-suspenders fix, satisfying the rule without restructuring the visible layout |
-| `typescript:S7758` | 1 | LOW | Prefer Unicode-aware string methods | Mechanical: `String.fromCharCode(b)` → `String.fromCodePoint(b)` while building a base64 string byte-by-byte from a `Uint8Array` — byte values are always 0-255, identical behavior for both functions in that range |
-| `typescript:S7781` | 3 | LOW | Prefer `replaceAll()` over `replace()` with a global regex | Mechanical: `.replace(/\//g, '-')` → `.replaceAll('/', '-')` at 3 filename-sanitizing call sites (decision-card PDF, permit JSON, permit PDF routes) — functionally identical, skips invoking the regex engine entirely for a single-literal-character match |
+| Rule               | Count | Severity | What it flags                                               | Fix                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ------------------ | ----- | -------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `typescript:S7773` | 6     | MEDIUM   | Prefer `Number.parseInt` over the global equivalent         | Mechanical: `parseInt` → `Number.parseInt` (identical function, per spec) at all 6 call sites (3× `ncp-client.ts`, 3× API route sequence-number generators)                                                                                                                                                                                                                                                            |
+| `typescript:S8786` | 3     | MEDIUM   | Regex susceptible to non-linear (catastrophic) backtracking | Traced each individually rather than batching (see below) — 2 of the 3 had a genuine quadratic shape, 1 didn't                                                                                                                                                                                                                                                                                                         |
+| `typescript:S6853` | 1     | MEDIUM   | `<label>` missing an associated form control                | `NewApplicationForm.tsx`'s radio-option label nests its visible text two `<div>`/`<p>` levels deep, which the static checker's text-detection didn't recurse into (the text _is_ genuinely there and accessible at runtime — verified this isn't a real a11y bug). Added an explicit `aria-label` directly on the `<input>` as a belt-and-suspenders fix, satisfying the rule without restructuring the visible layout |
+| `typescript:S7758` | 1     | LOW      | Prefer Unicode-aware string methods                         | Mechanical: `String.fromCharCode(b)` → `String.fromCodePoint(b)` while building a base64 string byte-by-byte from a `Uint8Array` — byte values are always 0-255, identical behavior for both functions in that range                                                                                                                                                                                                   |
+| `typescript:S7781` | 3     | LOW      | Prefer `replaceAll()` over `replace()` with a global regex  | Mechanical: `.replace(/\//g, '-')` → `.replaceAll('/', '-')` at 3 filename-sanitizing call sites (decision-card PDF, permit JSON, permit PDF routes) — functionally identical, skips invoking the regex engine entirely for a single-literal-character match                                                                                                                                                           |
 
 **The `S8786` findings, individually:**
+
 - Two (`PermitChangeRequestPanel.tsx`, both `pathname.replace(/[^/]+$/, id)`, swapping the trailing
-  path segment to navigate to a different permit version) had a *real* quadratic shape: the trailing
+  path segment to navigate to a different permit version) had a _real_ quadratic shape: the trailing
   `$` anchor forces the regex engine to backtrack-and-recheck "am I exactly at the end?" at every
   candidate match length, at every starting position, for any input that doesn't cleanly match.
   Fixed by replacing both with a small `replaceLastPathSegment()` helper using `lastIndexOf('/')` +
@@ -233,7 +234,7 @@ issue holds a C regardless of how many LOW ones are also cleared:
   (empty string, no trailing segment, string ending in `/`, no slash anywhere) with a standalone
   comparison script before touching the component.
 - One (`slugify()` in `api/permits/route.ts`, building `urn:objectstore:bucket:<slug>` references)
-  did *not* have that shape: its pattern (`/[^a-z0-9]+/g`) has nothing mandatory following the
+  did _not_ have that shape: its pattern (`/[^a-z0-9]+/g`) has nothing mandatory following the
   quantified group, so a match either succeeds immediately or fails in O(1) — there's no
   backtrack-and-retry scenario, unlike the `$`-anchored pair above. This one is very likely
   SonarQube's static heuristic flagging "any unanchored quantified group" structurally rather than a
@@ -273,7 +274,7 @@ this doc had already recommended:
   wrong-status, plus the unknown-action case).
 - **`AuditLogTable.tsx`/`SecurityLogTable.tsx`/`IntegrationLogTable.tsx`** (was 53.7%/48.8%/35.8%
   duplicated) — extracted a generic `<LogTable rows={...} columns={[{key, header, render,
-  className}]} emptyMessage={...}>` shell (new `src/components/LogTable.tsx`). Each table keeps its
+className}]} emptyMessage={...}>` shell (new `src/components/LogTable.tsx`). Each table keeps its
   own translations, column set, and per-cell rendering (badges, links, fallback dashes); only the
   wrapper `<div>`/`<table>`/`<thead>`/`<tbody>` markup and empty-state are shared. All 10 pre-existing
   tests across the three tables pass unchanged, confirming identical rendering.
@@ -304,11 +305,11 @@ The one real event: this local instance enforces a **new-code quality gate** (ze
 &lt;3% new duplication, ≥80% new coverage, checked against the previous-version baseline) —
 `pdf-doc.ts`, being new code, tripped the "zero new issues" condition with 3 findings:
 
-| Rule | Severity | Location | Issue | Fix |
-|---|---|---|---|---|
-| `typescript:S4624` | MAJOR | `pdf-doc.ts:41` | Nested template literal (a per-character `\u{...}` template built inside another template's interpolation) | Extracted the `.map()` result to its own `WINANSI_CODEPOINTS` constant first, so the outer template only interpolates a plain string |
-| `typescript:S7780` | MINOR | `pdf-doc.ts:41` | Manual `\\u{...}` double-backslash escaping where `String.raw` avoids it | Rewrote the per-character template as `` String.raw`\u{${...}}` `` |
-| `typescript:S7763` | MINOR | `pdf-doc.ts:55` | `export const fmt = formatDateNumeric` reassignment where a direct re-export reads more clearly | Rewrote as `export { formatDateNumeric as fmt } from './utils'`, dropping the now-unneeded separate import |
+| Rule               | Severity | Location        | Issue                                                                                                      | Fix                                                                                                                                  |
+| ------------------ | -------- | --------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `typescript:S4624` | MAJOR    | `pdf-doc.ts:41` | Nested template literal (a per-character `\u{...}` template built inside another template's interpolation) | Extracted the `.map()` result to its own `WINANSI_CODEPOINTS` constant first, so the outer template only interpolates a plain string |
+| `typescript:S7780` | MINOR    | `pdf-doc.ts:41` | Manual `\\u{...}` double-backslash escaping where `String.raw` avoids it                                   | Rewrote the per-character template as `` String.raw`\u{${...}}` ``                                                                   |
+| `typescript:S7763` | MINOR    | `pdf-doc.ts:55` | `export const fmt = formatDateNumeric` reassignment where a direct re-export reads more clearly            | Rewrote as `export { formatDateNumeric as fmt } from './utils'`, dropping the now-unneeded separate import                           |
 
 All three fixed the same session they were found; verified with `tsc --noEmit` (clean), the full
 test suite (567/567, unchanged), and a fresh rescan — new-code issues 3 → **0**, gate **FAILED →
@@ -324,7 +325,7 @@ zero/baseline — every rating (legacy and MQR, all three qualities) is A. What'
 smells) is deliberately not being chased further:
 
 - **`S6759` (80, readonly props) — skipped on purpose, not an oversight.** This isn't a defect, it's
-  a style convention the codebase has consistently *not* adopted anywhere — including every
+  a style convention the codebase has consistently _not_ adopted anywhere — including every
   component added across this whole session's work, `LogTable.tsx` included. Converting it
   piecemeal as part of a maintainability cleanup would leave the codebase in a worse, inconsistent
   state than either extreme. Adopting `Readonly<...>` project-wide is a legitimate call to make, but

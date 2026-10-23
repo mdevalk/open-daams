@@ -9,7 +9,13 @@ const REASON_KEY: Record<string, string> = {
   role_not_permitted: 'reasonRoleNotPermitted',
 };
 
-export async function SecurityLogTable({ entries, locale }: { entries: AuthzFailureLog[]; locale: string }) {
+export async function SecurityLogTable({
+  entries,
+  locale,
+}: {
+  entries: AuthzFailureLog[];
+  locale: string;
+}) {
   const t = await getTranslations({ locale, namespace: 'securityLog' });
 
   return (

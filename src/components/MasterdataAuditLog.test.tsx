@@ -35,7 +35,10 @@ describe('MasterdataAuditLog', () => {
   });
 
   it('renders an entry action, actor name, and no comment when comment is null', async () => {
-    const element = await MasterdataAuditLog({ entries: [makeEntry()], locale: 'nl' });
+    const element = await MasterdataAuditLog({
+      entries: [makeEntry()],
+      locale: 'nl',
+    });
     render(element);
 
     expect(screen.getByText('Updated data holder')).toBeInTheDocument();
@@ -44,11 +47,15 @@ describe('MasterdataAuditLog', () => {
 
   it('renders the comment when present', async () => {
     const element = await MasterdataAuditLog({
-      entries: [makeEntry({ comment: 'Corrected VAT number after applicant request' })],
+      entries: [
+        makeEntry({ comment: 'Corrected VAT number after applicant request' }),
+      ],
       locale: 'nl',
     });
     render(element);
 
-    expect(screen.getByText('Corrected VAT number after applicant request')).toBeInTheDocument();
+    expect(
+      screen.getByText('Corrected VAT number after applicant request'),
+    ).toBeInTheDocument();
   });
 });

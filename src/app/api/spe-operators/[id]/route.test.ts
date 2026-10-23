@@ -16,12 +16,21 @@ vi.mock('@/auth', () => ({
 }));
 
 import { prisma } from '@/lib/db';
-import { PATCH, buildSpeOperatorUpdateData, describeSpeOperatorChanges } from './route';
+import {
+  PATCH,
+  buildSpeOperatorUpdateData,
+  describeSpeOperatorChanges,
+} from './route';
 
 const findUnique = vi.mocked(prisma.user.findUnique);
 const logCreate = vi.mocked(prisma.authzFailureLog.create);
 
-const APPLICANT = { id: 'u-2', role: 'APPLICANT' as const, name: 'A. de Vries', email: 'researcher@umcu.nl' };
+const APPLICANT = {
+  id: 'u-2',
+  role: 'APPLICANT' as const,
+  name: 'A. de Vries',
+  email: 'researcher@umcu.nl',
+};
 
 beforeEach(() => {
   findUnique.mockReset();
@@ -57,7 +66,9 @@ describe('buildSpeOperatorUpdateData', () => {
   });
 
   it('includes only the field present when only name is set', () => {
-    expect(buildSpeOperatorUpdateData({ name: 'Acme' })).toEqual({ name: 'Acme' });
+    expect(buildSpeOperatorUpdateData({ name: 'Acme' })).toEqual({
+      name: 'Acme',
+    });
   });
 
   it('returns an empty object for an empty body', () => {
@@ -66,7 +77,10 @@ describe('buildSpeOperatorUpdateData', () => {
 });
 
 describe('describeSpeOperatorChanges', () => {
-  const baseSpeOperator = { name: 'Acme SPE', speProvider: null as { name: string } | null };
+  const baseSpeOperator = {
+    name: 'Acme SPE',
+    speProvider: null as { name: string } | null,
+  };
 
   it('lists all messages when every field changed', () => {
     const body = {
@@ -83,7 +97,12 @@ describe('describeSpeOperatorChanges', () => {
       operatorId: 'op-1',
       peppolCode: '0106:123',
     };
-    expect(describeSpeOperatorChanges(body, { ...baseSpeOperator, speProvider: { name: 'Provider Co' } })).toEqual([
+    expect(
+      describeSpeOperatorChanges(body, {
+        ...baseSpeOperator,
+        speProvider: { name: 'Provider Co' },
+      }),
+    ).toEqual([
       'name',
       'contact email',
       'contact phone',
@@ -100,12 +119,18 @@ describe('describeSpeOperatorChanges', () => {
   });
 
   it('reports the resolved provider name when speProviderId changed and a provider is set', () => {
-    const changes = describeSpeOperatorChanges({ speProviderId: 'sp-1' }, { ...baseSpeOperator, speProvider: { name: 'Provider Co' } });
+    const changes = describeSpeOperatorChanges(
+      { speProviderId: 'sp-1' },
+      { ...baseSpeOperator, speProvider: { name: 'Provider Co' } },
+    );
     expect(changes).toEqual(['SPE provider set to Provider Co']);
   });
 
   it('reports the provider as cleared when speProviderId changed and speOperator.speProvider is null', () => {
-    const changes = describeSpeOperatorChanges({ speProviderId: null }, { ...baseSpeOperator, speProvider: null });
+    const changes = describeSpeOperatorChanges(
+      { speProviderId: null },
+      { ...baseSpeOperator, speProvider: null },
+    );
     expect(changes).toEqual(['SPE provider cleared']);
   });
 
@@ -125,22 +150,30 @@ describe('PATCH /api/spe-operators/[id]', () => {
   it('rejects a non-ADMIN acting user with the authz failure status and error', async () => {
     findUnique.mockResolvedValue(APPLICANT as never);
 
-    const res = await PATCH(makeRequest({ actingUserId: 'u-2', name: 'New Name' }), {
-      params: Promise.resolve({ id: 'op-1' }),
-    });
+    const res = await PATCH(
+      makeRequest({ actingUserId: 'u-2', name: 'New Name' }),
+      {
+        params: Promise.resolve({ id: 'op-1' }),
+      },
+    );
 
     expect(res.status).toBe(403);
     const json = await res.json();
-    expect(json).toEqual({ error: 'Role APPLICANT is not permitted to perform this action' });
+    expect(json).toEqual({
+      error: 'Role APPLICANT is not permitted to perform this action',
+    });
     expect(prisma.speOperator.update).not.toHaveBeenCalled();
   });
 
   it('rejects an unknown acting user with a 401', async () => {
     findUnique.mockResolvedValue(null);
 
-    const res = await PATCH(makeRequest({ actingUserId: 'ghost', name: 'New Name' }), {
-      params: Promise.resolve({ id: 'op-1' }),
-    });
+    const res = await PATCH(
+      makeRequest({ actingUserId: 'ghost', name: 'New Name' }),
+      {
+        params: Promise.resolve({ id: 'op-1' }),
+      },
+    );
 
     expect(res.status).toBe(401);
     const json = await res.json();

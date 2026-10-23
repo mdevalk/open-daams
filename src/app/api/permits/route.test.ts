@@ -25,7 +25,12 @@ vi.mock('@/auth', () => ({
 }));
 
 import { prisma } from '@/lib/db';
-import { POST, buildStorageLocations, resolveResearcher, resolveSpeSelection } from './route';
+import {
+  POST,
+  buildStorageLocations,
+  resolveResearcher,
+  resolveSpeSelection,
+} from './route';
 
 const userFindUnique = vi.mocked(prisma.user.findUnique);
 const authzFailureLogCreate = vi.mocked(prisma.authzFailureLog.create);
@@ -34,8 +39,18 @@ const speOperatorFindUnique = vi.mocked(prisma.speOperator.findUnique);
 const speTypeFindUnique = vi.mocked(prisma.speType.findUnique);
 const contactFindUnique = vi.mocked(prisma.contact.findUnique);
 
-const DECISION_MAKER = { id: 'u-1', role: 'DECISION_MAKER' as const, name: 'D. Maker', email: 'dm@hdab.nl' };
-const APPLICANT = { id: 'u-2', role: 'APPLICANT' as const, name: 'A. de Vries', email: 'researcher@umcu.nl' };
+const DECISION_MAKER = {
+  id: 'u-1',
+  role: 'DECISION_MAKER' as const,
+  name: 'D. Maker',
+  email: 'dm@hdab.nl',
+};
+const APPLICANT = {
+  id: 'u-2',
+  role: 'APPLICANT' as const,
+  name: 'A. de Vries',
+  email: 'researcher@umcu.nl',
+};
 const OUTPUT_CONTROLLER_CONTACT = {
   id: 'contact-1',
   name: 'Output Controller',
@@ -162,7 +177,11 @@ describe('resolveSpeSelection', () => {
 
   it('skips both lookups when the fee estimate has no speOperatorId/speTypeId', async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const feeEstimate = { speOperatorId: null, speTypeId: null, lineItems: [] } as any;
+    const feeEstimate = {
+      speOperatorId: null,
+      speTypeId: null,
+      lineItems: [],
+    } as any;
 
     const result = await resolveSpeSelection(feeEstimate);
 
@@ -178,7 +197,10 @@ describe('resolveSpeSelection', () => {
       name: 'RIVM SPE Operations',
       speProvider: { name: 'Acme Cloud' },
     } as never);
-    speTypeFindUnique.mockResolvedValue({ id: 'type-1', name: 'Enterprise' } as never);
+    speTypeFindUnique.mockResolvedValue({
+      id: 'type-1',
+      name: 'Enterprise',
+    } as never);
 
     const feeEstimate = {
       speOperatorId: 'op-1',
@@ -230,14 +252,19 @@ describe('POST /api/permits', () => {
     const res = await callPost({ ...VALID_BODY, issuedByUserId: 'u-2' });
 
     expect(res.status).toBe(403);
-    expect(await res.json()).toEqual({ error: 'Role APPLICANT is not permitted to perform this action' });
+    expect(await res.json()).toEqual({
+      error: 'Role APPLICANT is not permitted to perform this action',
+    });
     expect(applicationFindUnique).not.toHaveBeenCalled();
   });
 
   it('rejects a missing outputControllerContactId with a 422', async () => {
     userFindUnique.mockResolvedValue(DECISION_MAKER as never);
 
-    const res = await callPost({ ...VALID_BODY, outputControllerContactId: '' });
+    const res = await callPost({
+      ...VALID_BODY,
+      outputControllerContactId: '',
+    });
 
     expect(res.status).toBe(422);
     expect(await res.json()).toEqual({
@@ -253,7 +280,9 @@ describe('POST /api/permits', () => {
     const res = await callPost(VALID_BODY);
 
     expect(res.status).toBe(404);
-    expect(await res.json()).toEqual({ error: 'Output controller contact not found' });
+    expect(await res.json()).toEqual({
+      error: 'Output controller contact not found',
+    });
     expect(applicationFindUnique).not.toHaveBeenCalled();
   });
 
@@ -269,12 +298,17 @@ describe('POST /api/permits', () => {
 
   it('returns 422 when the application decision outcome is not POSITIVE', async () => {
     userFindUnique.mockResolvedValue(DECISION_MAKER as never);
-    applicationFindUnique.mockResolvedValue({ decisionOutcome: 'NEGATIVE', dataPermits: [] } as never);
+    applicationFindUnique.mockResolvedValue({
+      decisionOutcome: 'NEGATIVE',
+      dataPermits: [],
+    } as never);
 
     const res = await callPost(VALID_BODY);
 
     expect(res.status).toBe(422);
-    expect(await res.json()).toEqual({ error: 'Permit can only be issued for a positive decision' });
+    expect(await res.json()).toEqual({
+      error: 'Permit can only be issued for a positive decision',
+    });
   });
 
   it('returns 409 when a permit has already been issued for this application', async () => {
@@ -287,6 +321,8 @@ describe('POST /api/permits', () => {
     const res = await callPost(VALID_BODY);
 
     expect(res.status).toBe(409);
-    expect(await res.json()).toEqual({ error: 'A permit has already been issued for this application' });
+    expect(await res.json()).toEqual({
+      error: 'A permit has already been issued for this application',
+    });
   });
 });

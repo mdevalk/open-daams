@@ -11,13 +11,17 @@ import { actingUserId } from '@/auth';
  * Selected per permit at issuance to pre-fill the SPE fee fields.
  * body: { name, setupFee, monthlyFee }
  */
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await params;
     const body = await req.json();
 
     const auth = await requireRole(await actingUserId(), ['ADMIN']);
-    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+    if (!auth.ok)
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     if (!body.name || !String(body.name).trim()) {
       return NextResponse.json({ error: 'name is required' }, { status: 422 });
@@ -25,14 +29,29 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const setupFee = Number(body.setupFee);
     const monthlyFee = Number(body.monthlyFee);
     if (!Number.isFinite(setupFee) || !Number.isFinite(monthlyFee)) {
-      return NextResponse.json({ error: 'setupFee and monthlyFee must be numbers' }, { status: 422 });
+      return NextResponse.json(
+        { error: 'setupFee and monthlyFee must be numbers' },
+        { status: 422 },
+      );
     }
 
-    const speOperator = await prisma.speOperator.findUnique({ where: { id }, select: { name: true } });
-    if (!speOperator) return NextResponse.json({ error: 'SPE operator not found' }, { status: 404 });
+    const speOperator = await prisma.speOperator.findUnique({
+      where: { id },
+      select: { name: true },
+    });
+    if (!speOperator)
+      return NextResponse.json(
+        { error: 'SPE operator not found' },
+        { status: 404 },
+      );
 
     const type = await prisma.speType.create({
-      data: { speOperatorId: id, name: String(body.name).trim(), setupFee, monthlyFee },
+      data: {
+        speOperatorId: id,
+        name: String(body.name).trim(),
+        setupFee,
+        monthlyFee,
+      },
     });
 
     await prisma.auditLog.create({
@@ -46,11 +65,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     return NextResponse.json(type, { status: 201 });
   } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
-      return NextResponse.json({ error: 'This operator already has a type with that name' }, { status: 409 });
+    if (
+      e instanceof Prisma.PrismaClientKnownRequestError &&
+      e.code === 'P2002'
+    ) {
+      return NextResponse.json(
+        { error: 'This operator already has a type with that name' },
+        { status: 409 },
+      );
     }
     console.error('Failed to create SPE type', e);
-    const message = e instanceof Error ? e.message : 'Failed to create SPE type';
+    const message =
+      e instanceof Error ? e.message : 'Failed to create SPE type';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

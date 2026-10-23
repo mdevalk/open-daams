@@ -6,17 +6,25 @@ export function cn(...inputs: ClassValue[]) {
 
 export function formatDate(date: Date | string | null | undefined): string {
   if (!date) return '—';
-  return new Intl.DateTimeFormat('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' }).format(
-    new Date(date),
-  );
+  return new Intl.DateTimeFormat('nl-NL', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date(date));
 }
 
 // Numeric DD-MM-YYYY form, used for formal documents (the permit PDF and its
 // print page) — deliberately distinct from formatDate's short-month form used
 // for casual in-app display.
-export function formatDateNumeric(date: Date | string | null | undefined): string {
+export function formatDateNumeric(
+  date: Date | string | null | undefined,
+): string {
   if (!date) return '—';
-  return new Date(date).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  return new Date(date).toLocaleDateString('nl-NL', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
 }
 
 export function formatDateTime(date: Date | string | null | undefined): string {
@@ -47,7 +55,10 @@ export function serializePrisma<T>(value: T): T {
   return JSON.parse(JSON.stringify(value));
 }
 
-export async function readErrorMessage(res: Response, fallback: string): Promise<string> {
+export async function readErrorMessage(
+  res: Response,
+  fallback: string,
+): Promise<string> {
   try {
     const data = await res.json();
     return data?.error ?? fallback;
@@ -79,7 +90,9 @@ export function cohortFormationLabel(code?: string | null): string | undefined {
   return map[code] ?? code;
 }
 
-export function extractionMethodLabel(code?: string | null): string | undefined {
+export function extractionMethodLabel(
+  code?: string | null,
+): string | undefined {
   if (!code) return undefined;
   const map: Record<string, string> = {
     RANDOM_SAMPLE: 'Random sample',
@@ -89,7 +102,9 @@ export function extractionMethodLabel(code?: string | null): string | undefined 
   return map[code] ?? code;
 }
 
-export function extractionFrequencyLabel(code?: string | null): string | undefined {
+export function extractionFrequencyLabel(
+  code?: string | null,
+): string | undefined {
   if (!code) return undefined;
   const map: Record<string, string> = {
     ONCE: 'Once',
@@ -98,7 +113,9 @@ export function extractionFrequencyLabel(code?: string | null): string | undefin
   return map[code] ?? code;
 }
 
-export function extractionIntervalLabel(code?: string | null): string | undefined {
+export function extractionIntervalLabel(
+  code?: string | null,
+): string | undefined {
   if (!code) return undefined;
   const map: Record<string, string> = {
     YEARLY: 'Yearly',
@@ -109,10 +126,20 @@ export function extractionIntervalLabel(code?: string | null): string | undefine
   return map[code] ?? code;
 }
 
-type Translator = (key: string, values?: Record<string, string | number | Date>) => string;
+type Translator = (
+  key: string,
+  values?: Record<string, string | number | Date>,
+) => string;
 
-export function yesNoLabel(value: boolean | null | undefined, t: Translator): string | undefined {
-  return value !== null && value !== undefined ? (value ? t('yes') : t('no')) : undefined;
+export function yesNoLabel(
+  value: boolean | null | undefined,
+  t: Translator,
+): string | undefined {
+  return value !== null && value !== undefined
+    ? value
+      ? t('yes')
+      : t('no')
+    : undefined;
 }
 
 export function populationLabel(
@@ -128,7 +155,12 @@ export function dataPeriodLabel(row: {
   dataStartDate: Date | string | null;
   dataEndDate: Date | string | null;
 }): string | undefined {
-  return row.timePeriod || (row.dataStartDate ? `${formatDate(row.dataStartDate)} – ${formatDate(row.dataEndDate)}` : undefined);
+  return (
+    row.timePeriod ||
+    (row.dataStartDate
+      ? `${formatDate(row.dataStartDate)} – ${formatDate(row.dataEndDate)}`
+      : undefined)
+  );
 }
 
 export function extractionIntervalDisplay(row: {
@@ -148,8 +180,13 @@ export function informationProviderLabel(
   },
   t: Translator,
 ): string {
-  if (cohort.informationProviderSameAsContactPerson) return t('sameAsContactPerson');
-  return [cohort.informationProviderName, cohort.informationProviderEmail, cohort.informationProviderPhone]
+  if (cohort.informationProviderSameAsContactPerson)
+    return t('sameAsContactPerson');
+  return [
+    cohort.informationProviderName,
+    cohort.informationProviderEmail,
+    cohort.informationProviderPhone,
+  ]
     .filter(Boolean)
     .join(' · ');
 }
@@ -158,7 +195,8 @@ export function hasBaseSectionData(cohort: {
   hdabContacts: string | null;
   howWillDataBeLinked: string | null;
   dataSubjectsInformed: boolean | null;
-  hasTheStudyCohortBeenFormedBasedOnInformationOfStudyParticipants: boolean | null;
+  hasTheStudyCohortBeenFormedBasedOnInformationOfStudyParticipants:
+    boolean | null;
   doesTheInformedConsentCoverTheRequestedRegistryExtractions: boolean | null;
   confirmThatDataPermitHasBeenGrantedForTheResearchProject: boolean | null;
   howTheStudyCohortWasObtained: string | null;
@@ -170,16 +208,18 @@ export function hasBaseSectionData(cohort: {
 }): boolean {
   return Boolean(
     cohort.hdabContacts ||
-      cohort.howWillDataBeLinked ||
-      cohort.dataSubjectsInformed !== null ||
-      cohort.hasTheStudyCohortBeenFormedBasedOnInformationOfStudyParticipants !== null ||
-      cohort.doesTheInformedConsentCoverTheRequestedRegistryExtractions !== null ||
-      cohort.confirmThatDataPermitHasBeenGrantedForTheResearchProject !== null ||
-      cohort.howTheStudyCohortWasObtained ||
-      cohort.detailsOfHowTheStudyCohortHasBeenFormed ||
-      cohort.whyNeedDataOfaWholePopulation ||
-      cohort.regionsSeekForData ||
-      cohort.informationProviderName ||
-      cohort.informationProviderSameAsContactPerson,
+    cohort.howWillDataBeLinked ||
+    cohort.dataSubjectsInformed !== null ||
+    cohort.hasTheStudyCohortBeenFormedBasedOnInformationOfStudyParticipants !==
+      null ||
+    cohort.doesTheInformedConsentCoverTheRequestedRegistryExtractions !==
+      null ||
+    cohort.confirmThatDataPermitHasBeenGrantedForTheResearchProject !== null ||
+    cohort.howTheStudyCohortWasObtained ||
+    cohort.detailsOfHowTheStudyCohortHasBeenFormed ||
+    cohort.whyNeedDataOfaWholePopulation ||
+    cohort.regionsSeekForData ||
+    cohort.informationProviderName ||
+    cohort.informationProviderSameAsContactPerson,
   );
 }

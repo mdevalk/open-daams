@@ -25,14 +25,14 @@ export default async function NewApplicationPage({
     <div className="max-w-3xl">
       <div className="mb-6">
         <div className="text-sm text-gray-500 mb-2">
-          <a href={`/${locale}/applications`} className="hover:text-gray-900">{t('title')}</a>
+          <a href={`/${locale}/applications`} className="hover:text-gray-900">
+            {t('title')}
+          </a>
           <span className="mx-2">/</span>
           <span className="text-gray-900">{t('new')}</span>
         </div>
         <h1 className="text-2xl font-bold text-gray-900">{t('new')}</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          {t('typeDataAccess')}
-        </p>
+        <p className="text-sm text-gray-500 mt-1">{t('typeDataAccess')}</p>
       </div>
       <NewApplicationTabs
         applicants={applicants}

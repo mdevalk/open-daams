@@ -9,7 +9,11 @@ vi.mock('next-intl', () => ({
 }));
 
 vi.mock('next-auth/react', () => ({
-  useSession: () => ({ data: null, status: 'unauthenticated', update: vi.fn() }),
+  useSession: () => ({
+    data: null,
+    status: 'unauthenticated',
+    update: vi.fn(),
+  }),
   signIn: vi.fn(),
   signOut: vi.fn(),
 }));
@@ -23,10 +27,22 @@ describe('AdminMenu', () => {
 
     fireEvent.click(screen.getByRole('button'));
     expect(screen.getByText('masterdata')).toBeInTheDocument();
-    expect(screen.getByText('masterdata').closest('a')).toHaveAttribute('href', '/nl/masterdata');
-    expect(screen.getByText('auditLog').closest('a')).toHaveAttribute('href', '/nl/audit-log');
-    expect(screen.getByText('securityLog').closest('a')).toHaveAttribute('href', '/nl/security-log');
-    expect(screen.getByText('integrationLog').closest('a')).toHaveAttribute('href', '/nl/integration-log');
+    expect(screen.getByText('masterdata').closest('a')).toHaveAttribute(
+      'href',
+      '/nl/masterdata',
+    );
+    expect(screen.getByText('auditLog').closest('a')).toHaveAttribute(
+      'href',
+      '/nl/audit-log',
+    );
+    expect(screen.getByText('securityLog').closest('a')).toHaveAttribute(
+      'href',
+      '/nl/security-log',
+    );
+    expect(screen.getByText('integrationLog').closest('a')).toHaveAttribute(
+      'href',
+      '/nl/integration-log',
+    );
   });
 
   it('closes the panel when clicking an item, and toggles closed on a second button click', () => {

@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
+import {
+  render,
+  screen,
+  fireEvent,
+  cleanup,
+  waitFor,
+} from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import type { ComponentProps } from 'react';
 import { PermitChangeRequestPanel } from './PermitChangeRequestPanel';
@@ -18,11 +24,15 @@ vi.mock('next/navigation', () => ({
 afterEach(cleanup);
 
 type Requests = ComponentProps<typeof PermitChangeRequestPanel>['requests'];
-type PendingVersion = ComponentProps<typeof PermitChangeRequestPanel>['pendingVersion'];
+type PendingVersion = ComponentProps<
+  typeof PermitChangeRequestPanel
+>['pendingVersion'];
 
 const CURRENT_USER_ID = 'u-decision-maker';
 
-function baseProps(overrides: Partial<ComponentProps<typeof PermitChangeRequestPanel>> = {}) {
+function baseProps(
+  overrides: Partial<ComponentProps<typeof PermitChangeRequestPanel>> = {},
+) {
   return {
     permitId: 'permit-1',
     permitStatus: 'GRANTED',
@@ -58,13 +68,20 @@ function makeRequest(overrides: Record<string, unknown> = {}) {
 beforeEach(() => {
   push.mockReset();
   refresh.mockReset();
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }));
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }),
+  );
 });
 
 describe('PermitChangeRequestPanel — empty / no requestable types', () => {
   it('shows the empty state and no "document new" section when nothing is requestable', () => {
     // EXPIRED isn't in requestableTypes' switch, so it falls to the default: [].
-    render(<PermitChangeRequestPanel {...baseProps({ permitStatus: 'EXPIRED', canRequest: true })} />);
+    render(
+      <PermitChangeRequestPanel
+        {...baseProps({ permitStatus: 'EXPIRED', canRequest: true })}
+      />,
+    );
 
     expect(screen.getByText('empty')).toBeInTheDocument();
     expect(screen.queryByText('documentNew')).not.toBeInTheDocument();
@@ -73,7 +90,11 @@ describe('PermitChangeRequestPanel — empty / no requestable types', () => {
 
 describe('PermitChangeRequestPanel — submitting a new change request', () => {
   it('lets the user pick a type, requires a justification, submits, and resets the form on success', async () => {
-    render(<PermitChangeRequestPanel {...baseProps({ permitStatus: 'GRANTED', canRequest: true })} />);
+    render(
+      <PermitChangeRequestPanel
+        {...baseProps({ permitStatus: 'GRANTED', canRequest: true })}
+      />,
+    );
 
     expect(screen.getByText('documentNew')).toBeInTheDocument();
     const typeSelect = screen.getByDisplayValue('selectType');
@@ -83,7 +104,9 @@ describe('PermitChangeRequestPanel — submitting a new change request', () => {
     fireEvent.change(typeSelect, { target: { value: 'AMENDMENT' } });
     // The type hint (tth) renders once a type is chosen — scoped to the <p>
     // since the <select>'s own <option text='AMENDMENT'> also matches by text.
-    expect(screen.getByText('AMENDMENT', { selector: 'p' })).toBeInTheDocument();
+    expect(
+      screen.getByText('AMENDMENT', { selector: 'p' }),
+    ).toBeInTheDocument();
     expect(submitButton).toBeDisabled(); // justification still empty
 
     fireEvent.change(screen.getByPlaceholderText('justificationPlaceholder'), {
@@ -109,22 +132,37 @@ describe('PermitChangeRequestPanel — submitting a new change request', () => {
 
     // Form resets after a successful submit.
     expect(screen.getByDisplayValue('selectType')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('justificationPlaceholder')).toHaveValue('');
+    expect(screen.getByPlaceholderText('justificationPlaceholder')).toHaveValue(
+      '',
+    );
   });
 
   it('shows the server error message when the request fails', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue({ ok: false, json: async () => ({ error: 'Justification too short' }) }),
+      vi.fn().mockResolvedValue({
+        ok: false,
+        json: async () => ({ error: 'Justification too short' }),
+      }),
     );
 
-    render(<PermitChangeRequestPanel {...baseProps({ permitStatus: 'GRANTED', canRequest: true })} />);
+    render(
+      <PermitChangeRequestPanel
+        {...baseProps({ permitStatus: 'GRANTED', canRequest: true })}
+      />,
+    );
 
-    fireEvent.change(screen.getByDisplayValue('selectType'), { target: { value: 'RENEWAL' } });
-    fireEvent.change(screen.getByPlaceholderText('justificationPlaceholder'), { target: { value: 'x' } });
+    fireEvent.change(screen.getByDisplayValue('selectType'), {
+      target: { value: 'RENEWAL' },
+    });
+    fireEvent.change(screen.getByPlaceholderText('justificationPlaceholder'), {
+      target: { value: 'x' },
+    });
     fireEvent.click(screen.getByText('submit'));
 
-    expect(await screen.findByText('Justification too short')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Justification too short'),
+    ).toBeInTheDocument();
     expect(refresh).not.toHaveBeenCalled();
   });
 });
@@ -138,7 +176,11 @@ describe('PermitChangeRequestPanel — pending version activation', () => {
       effectiveAt: new Date('2020-01-01'),
     };
 
-    render(<PermitChangeRequestPanel {...baseProps({ pendingVersion, canDecide: true })} />);
+    render(
+      <PermitChangeRequestPanel
+        {...baseProps({ pendingVersion, canDecide: true })}
+      />,
+    );
 
     // Exact match: "pendingActivation" vs. the separate "pendingActivationDate" paragraph.
     expect(screen.getByText('pendingActivation')).toBeInTheDocument();
@@ -147,11 +189,16 @@ describe('PermitChangeRequestPanel — pending version activation', () => {
 
     fireEvent.click(activateButton);
 
-    await waitFor(() => expect(push).toHaveBeenCalledWith('/nl/permits/permit-2-pending'));
+    await waitFor(() =>
+      expect(push).toHaveBeenCalledWith('/nl/permits/permit-2-pending'),
+    );
     const fetchMock = vi.mocked(fetch);
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/permits/permit-2-pending/activate',
-      expect.objectContaining({ method: 'POST', body: JSON.stringify({ actingUserId: CURRENT_USER_ID }) }),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ actingUserId: CURRENT_USER_ID }),
+      }),
     );
   });
 
@@ -163,7 +210,11 @@ describe('PermitChangeRequestPanel — pending version activation', () => {
       effectiveAt: new Date('2099-01-01'),
     };
 
-    render(<PermitChangeRequestPanel {...baseProps({ pendingVersion, canDecide: true })} />);
+    render(
+      <PermitChangeRequestPanel
+        {...baseProps({ pendingVersion, canDecide: true })}
+      />,
+    );
 
     expect(screen.getByText('activateNow')).toBeDisabled();
   });
@@ -176,7 +227,11 @@ describe('PermitChangeRequestPanel — pending version activation', () => {
       effectiveAt: new Date('2020-01-01'),
     };
 
-    render(<PermitChangeRequestPanel {...baseProps({ pendingVersion, canDecide: false })} />);
+    render(
+      <PermitChangeRequestPanel
+        {...baseProps({ pendingVersion, canDecide: false })}
+      />,
+    );
 
     expect(screen.queryByText('activateNow')).not.toBeInTheDocument();
   });
@@ -185,13 +240,24 @@ describe('PermitChangeRequestPanel — pending version activation', () => {
 describe('PermitChangeRequestPanel — deciding a RENEWAL request', () => {
   it('requires a new expiry date before approving, then PATCHes the decision and navigates to the new permit version', async () => {
     const requests = [
-      makeRequest({ id: 'req-renewal', type: 'RENEWAL', justification: 'Study extended by a year' }),
+      makeRequest({
+        id: 'req-renewal',
+        type: 'RENEWAL',
+        justification: 'Study extended by a year',
+      }),
     ];
-    render(<PermitChangeRequestPanel {...baseProps({ requests, canDecide: true })} />);
+    render(
+      <PermitChangeRequestPanel
+        {...baseProps({ requests, canDecide: true })}
+      />,
+    );
 
     fireEvent.click(screen.getByText('decide'));
 
-    const dateInput = screen.getByText('newExpiry').closest('div')!.querySelector('input')!;
+    const dateInput = screen
+      .getByText('newExpiry')
+      .closest('div')!
+      .querySelector('input')!;
     const approveButton = screen.getByText('approve');
     expect(approveButton).toBeDisabled();
 
@@ -200,11 +266,16 @@ describe('PermitChangeRequestPanel — deciding a RENEWAL request', () => {
 
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue({ ok: true, json: async () => ({ newPermitId: 'permit-2', pending: false }) }),
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ newPermitId: 'permit-2', pending: false }),
+      }),
     );
     fireEvent.click(approveButton);
 
-    await waitFor(() => expect(push).toHaveBeenCalledWith('/nl/permits/permit-2'));
+    await waitFor(() =>
+      expect(push).toHaveBeenCalledWith('/nl/permits/permit-2'),
+    );
 
     const fetchMock = vi.mocked(fetch);
     expect(fetchMock).toHaveBeenCalledWith(
@@ -227,7 +298,11 @@ describe('PermitChangeRequestPanel — deciding a RENEWAL request', () => {
 describe('PermitChangeRequestPanel — deciding an AMENDMENT request', () => {
   it('offers the SPE operator and output controller fields, lists affiliations alphabetically, and PATCHes them on approval', async () => {
     const requests = [
-      makeRequest({ id: 'req-amendment', type: 'AMENDMENT', justification: 'Swap SPE operator' }),
+      makeRequest({
+        id: 'req-amendment',
+        type: 'AMENDMENT',
+        justification: 'Swap SPE operator',
+      }),
     ];
     const speOperators = [{ id: 'op-1', name: 'SURF Research Cloud' }];
     const dataHolders = [{ id: 'dh-1', name: 'Zorginstelling B' }];
@@ -235,32 +310,54 @@ describe('PermitChangeRequestPanel — deciding an AMENDMENT request', () => {
 
     render(
       <PermitChangeRequestPanel
-        {...baseProps({ requests, canDecide: true, isDataRequest: false, speOperators, dataHolders, dataUsers })}
+        {...baseProps({
+          requests,
+          canDecide: true,
+          isDataRequest: false,
+          speOperators,
+          dataHolders,
+          dataUsers,
+        })}
       />,
     );
 
     fireEvent.click(screen.getByText('decide'));
 
-    const speSelect = screen.getByText('speOperatorUnchanged').closest('select')!;
+    const speSelect = screen
+      .getByText('speOperatorUnchanged')
+      .closest('select')!;
     fireEvent.change(speSelect, { target: { value: 'op-1' } });
 
-    const outputControllerDiv = screen.getByPlaceholderText('outputControllerNameUnchanged').closest('div')!;
+    const outputControllerDiv = screen
+      .getByPlaceholderText('outputControllerNameUnchanged')
+      .closest('div')!;
     const nameInput = outputControllerDiv.querySelector('input[type="text"]')!;
     const affiliationSelect = outputControllerDiv.querySelector('select')!;
 
     // Alphabetical merge of dataHolders + dataUsers: "Universiteit A" before "Zorginstelling B".
-    const optionLabels = Array.from(affiliationSelect.querySelectorAll('option')).map((o) => o.textContent);
-    expect(optionLabels).toEqual(['outputControllerAffiliationUnchanged', 'Universiteit A', 'Zorginstelling B']);
+    const optionLabels = Array.from(
+      affiliationSelect.querySelectorAll('option'),
+    ).map((o) => o.textContent);
+    expect(optionLabels).toEqual([
+      'outputControllerAffiliationUnchanged',
+      'Universiteit A',
+      'Zorginstelling B',
+    ]);
 
     fireEvent.change(nameInput, { target: { value: 'Dr. J. Jansen' } });
-    fireEvent.change(affiliationSelect, { target: { value: 'Zorginstelling B' } });
+    fireEvent.change(affiliationSelect, {
+      target: { value: 'Zorginstelling B' },
+    });
 
     const approveButton = screen.getByText('approve');
     expect(approveButton).not.toBeDisabled(); // no RENEWAL-only restriction applies
 
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue({ ok: true, json: async () => ({ newPermitId: 'permit-1', pending: true }) }),
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ newPermitId: 'permit-1', pending: true }),
+      }),
     );
     fireEvent.click(approveButton);
 
@@ -282,7 +379,11 @@ describe('PermitChangeRequestPanel — deciding an AMENDMENT request', () => {
 
   it('does not render the SPE operator field for a data request', () => {
     const requests = [makeRequest({ id: 'req-amendment', type: 'AMENDMENT' })];
-    render(<PermitChangeRequestPanel {...baseProps({ requests, canDecide: true, isDataRequest: true })} />);
+    render(
+      <PermitChangeRequestPanel
+        {...baseProps({ requests, canDecide: true, isDataRequest: true })}
+      />,
+    );
 
     fireEvent.click(screen.getByText('decide'));
 
@@ -294,7 +395,11 @@ describe('PermitChangeRequestPanel — deciding an AMENDMENT request', () => {
 describe('PermitChangeRequestPanel — rejecting and cancelling', () => {
   it('rejects a request with a comment and refreshes', async () => {
     const requests = [makeRequest({ id: 'req-reject', type: 'AMENDMENT' })];
-    render(<PermitChangeRequestPanel {...baseProps({ requests, canDecide: true, isDataRequest: true })} />);
+    render(
+      <PermitChangeRequestPanel
+        {...baseProps({ requests, canDecide: true, isDataRequest: true })}
+      />,
+    );
 
     fireEvent.click(screen.getByText('decide'));
     fireEvent.change(screen.getByPlaceholderText('decisionNotePlaceholder'), {
@@ -312,14 +417,22 @@ describe('PermitChangeRequestPanel — rejecting and cancelling', () => {
 
   it('hides the decision inputs again when cancel is clicked', () => {
     const requests = [makeRequest({ id: 'req-cancel', type: 'AMENDMENT' })];
-    render(<PermitChangeRequestPanel {...baseProps({ requests, canDecide: true, isDataRequest: true })} />);
+    render(
+      <PermitChangeRequestPanel
+        {...baseProps({ requests, canDecide: true, isDataRequest: true })}
+      />,
+    );
 
     fireEvent.click(screen.getByText('decide'));
-    expect(screen.getByPlaceholderText('decisionNotePlaceholder')).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText('decisionNotePlaceholder'),
+    ).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('cancel'));
 
-    expect(screen.queryByPlaceholderText('decisionNotePlaceholder')).not.toBeInTheDocument();
+    expect(
+      screen.queryByPlaceholderText('decisionNotePlaceholder'),
+    ).not.toBeInTheDocument();
     expect(screen.getByText('decide')).toBeInTheDocument();
   });
 });

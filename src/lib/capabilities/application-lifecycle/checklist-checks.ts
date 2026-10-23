@@ -8,7 +8,8 @@ export type ChecklistItem = {
   comment?: string;
 };
 
-type ChecklistDelegate = typeof prisma.completenessCheck | typeof prisma.assessmentCheck;
+type ChecklistDelegate =
+  typeof prisma.completenessCheck | typeof prisma.assessmentCheck;
 
 export type ChecklistUpdateResult =
   | { ok: true; status: 201; data: unknown }
@@ -24,13 +25,23 @@ async function updateChecklist(
   options: { delegate: ChecklistDelegate; auditLabel: string; kind: string },
 ): Promise<ChecklistUpdateResult> {
   try {
-    const auth = await requireRole(actingUserId, ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN']);
+    const auth = await requireRole(actingUserId, [
+      'CASE_HANDLER',
+      'DECISION_MAKER',
+      'ADMIN',
+    ]);
     if (!auth.ok) return { ok: false, status: auth.status, error: auth.error };
 
-    const application = await prisma.application.findUnique({ where: { id: applicationId } });
+    const application = await prisma.application.findUnique({
+      where: { id: applicationId },
+    });
     if (!application) return { ok: false, status: 404, error: 'Not found' };
 
-    const parsedBody = body as { items?: unknown; result?: string; remarks?: string };
+    const parsedBody = body as {
+      items?: unknown;
+      result?: string;
+      remarks?: string;
+    };
     if (!Array.isArray(parsedBody.items)) {
       return { ok: false, status: 422, error: 'items must be an array' };
     }
@@ -93,19 +104,28 @@ async function updateChecklist(
     return { ok: true, status: 201, data: check };
   } catch (e) {
     console.error(`Failed to save ${options.kind}`, e);
-    const message = e instanceof Error ? e.message : `Failed to save ${options.kind}`;
+    const message =
+      e instanceof Error ? e.message : `Failed to save ${options.kind}`;
     return { ok: false, status: 500, error: message };
   }
 }
 
-export const completePreScreeningCheck = (actingUserId: unknown, applicationId: string, body: unknown) =>
+export const completePreScreeningCheck = (
+  actingUserId: unknown,
+  applicationId: string,
+  body: unknown,
+) =>
   updateChecklist(actingUserId, applicationId, body, {
     delegate: prisma.completenessCheck,
     auditLabel: 'Volledigheidscontrole',
     kind: 'completeness check',
   });
 
-export const completeSubstantiveAssessment = (actingUserId: unknown, applicationId: string, body: unknown) =>
+export const completeSubstantiveAssessment = (
+  actingUserId: unknown,
+  applicationId: string,
+  body: unknown,
+) =>
   updateChecklist(actingUserId, applicationId, body, {
     delegate: prisma.assessmentCheck,
     auditLabel: 'Inhoudelijke beoordeling',

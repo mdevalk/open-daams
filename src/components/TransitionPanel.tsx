@@ -4,12 +4,17 @@ import { useTranslations } from 'next-intl';
 
 import { useState } from 'react';
 import { Application, FeeEstimate, User } from '@prisma/client';
-import { getAvailableTransitions, Transition } from '@/lib/capabilities/application-lifecycle/workflow';
+import {
+  getAvailableTransitions,
+  Transition,
+} from '@/lib/capabilities/application-lifecycle/workflow';
 import { useRouter } from 'next/navigation';
 import { readErrorMessage } from '@/lib/utils';
 
 type Props = {
-  application: Application & { feeEstimate: Pick<FeeEstimate, 'status'> | null };
+  application: Application & {
+    feeEstimate: Pick<FeeEstimate, 'status'> | null;
+  };
   currentUser: User;
   children?: React.ReactNode;
 };
@@ -39,17 +44,21 @@ export function TransitionPanel({ application, currentUser, children }: Props) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/applications/${application.id}/transition`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          toStatus: selected.to,
-          actingUserId: currentUser.id,
-          comment,
-          decisionOutcome: selected.requiresDecisionOutcome ?? null,
-        }),
-      });
-      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
+      const res = await fetch(
+        `/api/applications/${application.id}/transition`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            toStatus: selected.to,
+            actingUserId: currentUser.id,
+            comment,
+            decisionOutcome: selected.requiresDecisionOutcome ?? null,
+          }),
+        },
+      );
+      if (!res.ok)
+        throw new Error(await readErrorMessage(res, terr('requestFailed')));
       setSelected(null);
       setComment('');
       router.refresh();
@@ -71,17 +80,17 @@ export function TransitionPanel({ application, currentUser, children }: Props) {
 
           const positiveStyle = 'border-[#39870c] bg-[#e6f5ea] text-[#1a5c2e]';
           const negativeStyle = 'border-[#d52b1e] bg-[#fce8e6] text-[#7a1711]';
-          const defaultStyle  = 'border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-800';
+          const defaultStyle =
+            'border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-800';
           const selectedStyle = 'border-[#01689b] bg-[#e8f4fb] text-[#154273]';
 
-          const baseStyle =
-            isSelected
-              ? selectedStyle
-              : t.requiresDecisionOutcome === 'POSITIVE'
+          const baseStyle = isSelected
+            ? selectedStyle
+            : t.requiresDecisionOutcome === 'POSITIVE'
               ? positiveStyle
               : t.requiresDecisionOutcome === 'NEGATIVE'
-              ? negativeStyle
-              : defaultStyle;
+                ? negativeStyle
+                : defaultStyle;
 
           return (
             <button
@@ -91,7 +100,9 @@ export function TransitionPanel({ application, currentUser, children }: Props) {
               className={`w-full text-left rounded border px-4 py-3 text-sm transition-colors ${baseStyle}`}
             >
               <p className="font-medium">{tw(`${t.key}.label`)}</p>
-              <p className="text-xs opacity-70 mt-0.5">{tw(`${t.key}.description`)}</p>
+              <p className="text-xs opacity-70 mt-0.5">
+                {tw(`${t.key}.description`)}
+              </p>
             </button>
           );
         })}
@@ -102,8 +113,11 @@ export function TransitionPanel({ application, currentUser, children }: Props) {
         <div className="mt-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             {t('comment')}
-            {selected.requiresDecisionOutcome === 'NEGATIVE' &&
-              <span className="text-[#d52b1e] ml-1">{t('commentRequiredNegative')}</span>}
+            {selected.requiresDecisionOutcome === 'NEGATIVE' && (
+              <span className="text-[#d52b1e] ml-1">
+                {t('commentRequiredNegative')}
+              </span>
+            )}
           </label>
           <textarea
             rows={3}
@@ -113,7 +127,9 @@ export function TransitionPanel({ application, currentUser, children }: Props) {
             className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
           />
           {error && (
-            <p role="alert" className="mt-1 text-xs text-[#d52b1e]">{error}</p>
+            <p role="alert" className="mt-1 text-xs text-[#d52b1e]">
+              {error}
+            </p>
           )}
           <button
             type="button"
@@ -121,7 +137,9 @@ export function TransitionPanel({ application, currentUser, children }: Props) {
             onClick={submit}
             className="mt-2 w-full rounded px-4 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors"
           >
-            {loading ? t('loading') : t('confirmButton', { label: tw(`${selected.key}.label`) })}
+            {loading
+              ? t('loading')
+              : t('confirmButton', { label: tw(`${selected.key}.label`) })}
           </button>
         </div>
       )}

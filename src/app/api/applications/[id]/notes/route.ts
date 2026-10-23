@@ -5,13 +5,20 @@ import { actingUserId } from '@/auth';
 
 const STAFF_ROLES = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN', 'DATA_HOLDER'];
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const { id } = await params;
   try {
     const body = await req.json();
 
     const found = await findActingUser(await actingUserId());
-    if (!found.ok) return NextResponse.json({ error: found.error }, { status: found.status });
+    if (!found.ok)
+      return NextResponse.json(
+        { error: found.error },
+        { status: found.status },
+      );
     const author = found.user;
 
     const note = await prisma.note.create({
@@ -19,7 +26,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         applicationId: id,
         authorId: author.id,
         content: body.content,
-        isInternal: STAFF_ROLES.includes(author.role) ? (body.isInternal ?? false) : false,
+        isInternal: STAFF_ROLES.includes(author.role)
+          ? (body.isInternal ?? false)
+          : false,
       },
       include: { author: { select: { id: true, name: true, role: true } } },
     });

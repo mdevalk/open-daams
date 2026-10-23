@@ -7,8 +7,8 @@ This maps the articles of the **EHDS Regulation (EU) 2025/327** (Chapter IV — 
 that are relevant to a **DAAMS** (Data Access Application Management System) to their
 implementation status in open-daams.
 
-Scope follows the D6.4 definition of a DAAMS — the component responsible for the *submission and
-processing of data access applications and data requests* (plus decision, permit, deadlines,
+Scope follows the D6.4 definition of a DAAMS — the component responsible for the _submission and
+processing of data access applications and data requests_ (plus decision, permit, deadlines,
 appeals/enforcement, mutual recognition, trusted data holders, and cross-border reception).
 Broader EHDS components — the dataset catalogue and data-quality labelling (Art. 77–80) and
 purely institutional articles — are listed separately as out of DAAMS scope.
@@ -19,9 +19,10 @@ purely institutional articles — are listed separately as out of DAAMS scope.
 > authoritative text is the consolidated Official Journal version on EUR-Lex.
 
 > **Companion doc.** This is a flat per-article index. For the narrative verdict + depth ratings
-> + priorities version of the same plain-EHDS scope, see
-> [`ehds-gap-analysis.md`](./ehds-gap-analysis.md); for the TEHDAS2 D6.4-requirement view, see
-> [`d6.4-gap-analysis.md`](./d6.4-gap-analysis.md).
+>
+> - priorities version of the same plain-EHDS scope, see
+>   [`ehds-gap-analysis.md`](./ehds-gap-analysis.md); for the TEHDAS2 D6.4-requirement view, see
+>   [`d6.4-gap-analysis.md`](./d6.4-gap-analysis.md).
 
 ## Legend
 
@@ -31,24 +32,24 @@ purely institutional articles — are listed separately as out of DAAMS scope.
 
 ## DAAMS-relevant articles
 
-| Art. | Title | Impl. | Notes |
-|---|---|:---:|---|
-| 52 | Intellectual property rights and trade secrets | ✗ | placeholder only in the permit PDF |
-| 53 | Purposes for which electronic health data can be processed for secondary use | ✅ | `purposeCategory` on the application |
-| 57 | Tasks of health data access bodies | ✅ | workflow + expanded audit trail present (application/permit/SPE-provisioning transitions, plus reference-data changes); role checks enforced server-side on reads and writes, now backed by real Keycloak (OIDC) authentication — RBAC trusts a server-verified session, not a client-supplied user id |
-| 58 | Obligations of health data access bodies towards natural persons | ◑ | public register yes; broader information duties no |
-| 60 | Duties of health data holders | ◑ | `DataExtractionRequest` tracking; data holder simulated |
-| 61 | Duties of health data users | ◑ | stated in the permit; not tracked or enforced |
-| 62 | Fees | ✅ | `FeeEstimate` + `Invoice` (provisional + final) |
-| 63 | Enforcement by health data access bodies | ◑ | revocation + appeals tracked; no ongoing compliance monitoring |
-| 67 | Health data access applications | ✅ | intake, form, full application lifecycle |
-| 68 | Data permit | ✅ | `DataPermit` + lifecycle + decision deadline (tracks) + PDF |
-| 69 | Health data request | ✅ | request type + tabulation plan |
-| 71 | Right to opt out from the processing of personal electronic health data for secondary use | ◑ | flag + justification; no opt-out register integration |
-| 72 | Simplified procedure for access to electronic health data from a trusted health data holder | ✗ | D6.4 §12's referral/assessment/proposed-decision workflow not implemented; a `DataHolder.isTrusted` registry flag + an application-level selector exist as groundwork, not a workflow implementation — see `d6.4-gap-analysis.md` §12 |
-| 73 | Secure processing environment | ◑ | provisioning status tracked; permits now designate an SPE operator (provider derived from it, never stored redundantly), addressing D6.4 R13.0.1; no real SPE / in-SPE logging |
-| 75 | HealthData@EU | ◑ | calls the real National Dispatcher OpenAPI on the HDAB-NL test environment when configured, falling back to fixture data otherwise; no retry/logging of failed exchanges |
-| 76 | Access to cross-border registries or databases of electronic health data for secondary use | ✗ | permit-PDF note only |
+| Art. | Title                                                                                       | Impl. | Notes                                                                                                                                                                                                                                                                                                  |
+| ---- | ------------------------------------------------------------------------------------------- | :---: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 52   | Intellectual property rights and trade secrets                                              |   ✗   | placeholder only in the permit PDF                                                                                                                                                                                                                                                                     |
+| 53   | Purposes for which electronic health data can be processed for secondary use                |  ✅   | `purposeCategory` on the application                                                                                                                                                                                                                                                                   |
+| 57   | Tasks of health data access bodies                                                          |  ✅   | workflow + expanded audit trail present (application/permit/SPE-provisioning transitions, plus reference-data changes); role checks enforced server-side on reads and writes, now backed by real Keycloak (OIDC) authentication — RBAC trusts a server-verified session, not a client-supplied user id |
+| 58   | Obligations of health data access bodies towards natural persons                            |   ◑   | public register yes; broader information duties no                                                                                                                                                                                                                                                     |
+| 60   | Duties of health data holders                                                               |   ◑   | `DataExtractionRequest` tracking; data holder simulated                                                                                                                                                                                                                                                |
+| 61   | Duties of health data users                                                                 |   ◑   | stated in the permit; not tracked or enforced                                                                                                                                                                                                                                                          |
+| 62   | Fees                                                                                        |  ✅   | `FeeEstimate` + `Invoice` (provisional + final)                                                                                                                                                                                                                                                        |
+| 63   | Enforcement by health data access bodies                                                    |   ◑   | revocation + appeals tracked; no ongoing compliance monitoring                                                                                                                                                                                                                                         |
+| 67   | Health data access applications                                                             |  ✅   | intake, form, full application lifecycle                                                                                                                                                                                                                                                               |
+| 68   | Data permit                                                                                 |  ✅   | `DataPermit` + lifecycle + decision deadline (tracks) + PDF                                                                                                                                                                                                                                            |
+| 69   | Health data request                                                                         |  ✅   | request type + tabulation plan                                                                                                                                                                                                                                                                         |
+| 71   | Right to opt out from the processing of personal electronic health data for secondary use   |   ◑   | flag + justification; no opt-out register integration                                                                                                                                                                                                                                                  |
+| 72   | Simplified procedure for access to electronic health data from a trusted health data holder |   ✗   | D6.4 §12's referral/assessment/proposed-decision workflow not implemented; a `DataHolder.isTrusted` registry flag + an application-level selector exist as groundwork, not a workflow implementation — see `d6.4-gap-analysis.md` §12                                                                  |
+| 73   | Secure processing environment                                                               |   ◑   | provisioning status tracked; permits now designate an SPE operator (provider derived from it, never stored redundantly), addressing D6.4 R13.0.1; no real SPE / in-SPE logging                                                                                                                         |
+| 75   | HealthData@EU                                                                               |   ◑   | calls the real National Dispatcher OpenAPI on the HDAB-NL test environment when configured, falling back to fixture data otherwise; no retry/logging of failed exchanges                                                                                                                               |
+| 76   | Access to cross-border registries or databases of electronic health data for secondary use  |   ✗   | permit-PDF note only                                                                                                                                                                                                                                                                                   |
 
 **Summary:** ✅ 6 implemented (53, 57, 62, 67, 68, 69) · ◑ 7 partial/simulated (58, 60, 61, 63,
 71, 73, 75) · ✗ 3 not implemented (52, 72, 76).
@@ -59,15 +60,15 @@ safeguards (IPR, trusted-data-holder procedure, cross-border registries) are abs
 
 ## Out of DAAMS scope (adjacent EHDS components)
 
-| Art. | Title | Why outside DAAMS |
-|---|---|---|
-| 51 | Minimum categories of electronic health data for secondary use | data-holder / supply side |
-| 55 | Health data access bodies | institutional (establishment of the HDAB) |
-| 59 | Reporting by health data access bodies | institutional reporting |
-| 77 | Dataset description and dataset catalogue | separate WP6 deliverable (catalogue / HealthDCAT-AP) |
-| 78 | Data quality and utility label | metadata/quality, separate component |
-| 79 | EU dataset catalogue | EU infrastructure, separate |
-| 80 | Minimum specifications for datasets of high impact | dataset specification, separate |
+| Art. | Title                                                          | Why outside DAAMS                                    |
+| ---- | -------------------------------------------------------------- | ---------------------------------------------------- |
+| 51   | Minimum categories of electronic health data for secondary use | data-holder / supply side                            |
+| 55   | Health data access bodies                                      | institutional (establishment of the HDAB)            |
+| 59   | Reporting by health data access bodies                         | institutional reporting                              |
+| 77   | Dataset description and dataset catalogue                      | separate WP6 deliverable (catalogue / HealthDCAT-AP) |
+| 78   | Data quality and utility label                                 | metadata/quality, separate component                 |
+| 79   | EU dataset catalogue                                           | EU infrastructure, separate                          |
+| 80   | Minimum specifications for datasets of high impact             | dataset specification, separate                      |
 
 Note: the dataset catalogue (Art. 77–80) is **out of DAAMS scope** — a separate work-package-6
 deliverable (dataset description / catalogue, HealthDCAT-AP), not part of the DAAMS (D6.4). Dataset

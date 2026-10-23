@@ -15,7 +15,10 @@ const OWNER_FIELDS = Object.values(OWNER_FIELD);
 /** Builds the `data:` object for prisma.contact.update() from a PATCH body. */
 export function buildContactUpdateData(body: Record<string, unknown>) {
   const ownerType = body.ownerType as OwnerType | undefined;
-  const reassignOwner = typeof ownerType === 'string' && Object.hasOwn(OWNER_FIELD, ownerType) && body.ownerId;
+  const reassignOwner =
+    typeof ownerType === 'string' &&
+    Object.hasOwn(OWNER_FIELD, ownerType) &&
+    body.ownerId;
 
   return {
     ...(body.name !== undefined ? { name: body.name || null } : {}),
@@ -26,7 +29,12 @@ export function buildContactUpdateData(body: Record<string, unknown>) {
     // establishes at creation. Only touched when the caller is actually
     // reassigning the contact's owner, not on a plain field edit.
     ...(reassignOwner
-      ? Object.fromEntries(OWNER_FIELDS.map((f) => [f, f === OWNER_FIELD[ownerType] ? body.ownerId : null]))
+      ? Object.fromEntries(
+          OWNER_FIELDS.map((f) => [
+            f,
+            f === OWNER_FIELD[ownerType] ? body.ownerId : null,
+          ]),
+        )
       : {}),
   };
 }
@@ -37,13 +45,17 @@ export function buildContactUpdateData(body: Record<string, unknown>) {
  * (ADMIN-only).
  * body: { name?, email?, phone?, role?, ownerType?, ownerId? }
  */
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await params;
     const body = await req.json();
 
     const auth = await requireRole(await actingUserId(), ['ADMIN']);
-    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+    if (!auth.ok)
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const contact = await prisma.contact.update({
       where: { id },
@@ -80,15 +92,20 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
  * from other tables into it).
  * (no request body needed)
  */
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await params;
 
     const auth = await requireRole(await actingUserId(), ['ADMIN']);
-    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+    if (!auth.ok)
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const contact = await prisma.contact.findUnique({ where: { id } });
-    if (!contact) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    if (!contact)
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     await prisma.contact.delete({ where: { id } });
 

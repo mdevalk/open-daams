@@ -16,32 +16,62 @@ const DECIDED_STATUSES: AppealStatus[] = ['UPHELD', 'REJECTED'];
  * Update the status/decision of an in-progress appeal.
  * body: { status, decisionSummary? }
  */
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await params;
     const body = await req.json();
 
-    const auth = await requireRole(await actingUserId(), ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN']);
-    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+    const auth = await requireRole(await actingUserId(), [
+      'CASE_HANDLER',
+      'DECISION_MAKER',
+      'ADMIN',
+    ]);
+    if (!auth.ok)
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const appeal = await prisma.appeal.findUnique({
       where: { id },
-      include: { application: { select: { referenceNumber: true, title: true } } },
+      include: {
+        application: { select: { referenceNumber: true, title: true } },
+      },
     });
-    if (!appeal) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    if (!appeal)
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     const status = body.status as AppealStatus;
-    if (!['SUBMITTED', 'UNDER_REVIEW', 'UPHELD', 'REJECTED', 'WITHDRAWN'].includes(status)) {
+    if (
+      ![
+        'SUBMITTED',
+        'UNDER_REVIEW',
+        'UPHELD',
+        'REJECTED',
+        'WITHDRAWN',
+      ].includes(status)
+    ) {
       return NextResponse.json({ error: 'Invalid status' }, { status: 422 });
     }
 
-    const decisionAt = TERMINAL_STATUSES.includes(status) ? new Date() : appeal.decisionAt;
+    const decisionAt = TERMINAL_STATUSES.includes(status)
+      ? new Date()
+      : appeal.decisionAt;
     const decisionSummary = body.decisionSummary ?? appeal.decisionSummary;
 
-    let signed: { signature: string; signedAt: Date; signingKeyId: string } | null = null;
+    let signed: {
+      signature: string;
+      signedAt: Date;
+      signingKeyId: string;
+    } | null = null;
     let pdf: Buffer | null = null;
     if (DECIDED_STATUSES.includes(status) && decisionAt) {
-      signed = await signAppealDecision({ appealId: id, applicationId: appeal.applicationId, status, decisionAt });
+      signed = await signAppealDecision({
+        appealId: id,
+        applicationId: appeal.applicationId,
+        status,
+        decisionAt,
+      });
       const bytes = await generateAppealDecisionPdf({
         appealId: id,
         status,
@@ -64,7 +94,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         status,
         decisionSummary,
         decisionAt,
-        ...(signed ? { signature: signed.signature, signedAt: signed.signedAt, signingKeyId: signed.signingKeyId } : {}),
+        ...(signed
+          ? {
+              signature: signed.signature,
+              signedAt: signed.signedAt,
+              signingKeyId: signed.signingKeyId,
+            }
+          : {}),
         ...(pdf ? { pdf } : {}),
       },
     });

@@ -12,7 +12,9 @@ export function buildSpeProviderUpdateData(body: Record<string, unknown>) {
 }
 
 /** Builds the human-readable audit-log `changes` list from a PATCH body. */
-export function describeSpeProviderChanges(body: Record<string, unknown>): string[] {
+export function describeSpeProviderChanges(
+  body: Record<string, unknown>,
+): string[] {
   const changes: string[] = [];
   if (body.name !== undefined) changes.push('name');
   if (body.contactEmail !== undefined) changes.push('contact email');
@@ -22,17 +24,29 @@ export function describeSpeProviderChanges(body: Record<string, unknown>): strin
 
 /** Upserts the SPE provider's PRIMARY contact when contactEmail/contactPhone are present in the body. */
 async function upsertPrimaryContact(id: string, body: Record<string, unknown>) {
-  if (body.contactEmail === undefined && body.contactPhone === undefined) return;
+  if (body.contactEmail === undefined && body.contactPhone === undefined)
+    return;
 
-  const existingContact = await prisma.contact.findFirst({ where: { speProviderId: id, role: 'PRIMARY' } });
+  const existingContact = await prisma.contact.findFirst({
+    where: { speProviderId: id, role: 'PRIMARY' },
+  });
   const contactData = {
-    ...(body.contactEmail !== undefined ? { email: (body.contactEmail as string | null | undefined) || null } : {}),
-    ...(body.contactPhone !== undefined ? { phone: (body.contactPhone as string | null | undefined) || null } : {}),
+    ...(body.contactEmail !== undefined
+      ? { email: (body.contactEmail as string | null | undefined) || null }
+      : {}),
+    ...(body.contactPhone !== undefined
+      ? { phone: (body.contactPhone as string | null | undefined) || null }
+      : {}),
   };
   if (existingContact) {
-    await prisma.contact.update({ where: { id: existingContact.id }, data: contactData });
+    await prisma.contact.update({
+      where: { id: existingContact.id },
+      data: contactData,
+    });
   } else {
-    await prisma.contact.create({ data: { speProviderId: id, role: 'PRIMARY', ...contactData } });
+    await prisma.contact.create({
+      data: { speProviderId: id, role: 'PRIMARY', ...contactData },
+    });
   }
 }
 
@@ -41,13 +55,17 @@ async function upsertPrimaryContact(id: string, body: Record<string, unknown>) {
  * Update an SPE provider's masterdata (ADMIN-only).
  * body: { name?, contactEmail?, contactPhone? }
  */
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await params;
     const body = await req.json();
 
     const auth = await requireRole(await actingUserId(), ['ADMIN']);
-    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+    if (!auth.ok)
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     await upsertPrimaryContact(id, body);
 
@@ -71,11 +89,18 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     return NextResponse.json(speProvider);
   } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
-      return NextResponse.json({ error: 'An SPE provider with this name already exists' }, { status: 409 });
+    if (
+      e instanceof Prisma.PrismaClientKnownRequestError &&
+      e.code === 'P2002'
+    ) {
+      return NextResponse.json(
+        { error: 'An SPE provider with this name already exists' },
+        { status: 409 },
+      );
     }
     console.error('Failed to update SPE provider', e);
-    const message = e instanceof Error ? e.message : 'Failed to update SPE provider';
+    const message =
+      e instanceof Error ? e.message : 'Failed to update SPE provider';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
@@ -86,21 +111,31 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
  * by any SPE operator.
  * (no request body needed)
  */
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await params;
 
     const auth = await requireRole(await actingUserId(), ['ADMIN']);
-    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+    if (!auth.ok)
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const speProvider = await prisma.speProvider.findUnique({
       where: { id },
       include: { _count: { select: { operators: true } } },
     });
-    if (!speProvider) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    if (!speProvider)
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     if (speProvider._count.operators > 0) {
-      return NextResponse.json({ error: 'This SPE provider is still referenced and cannot be deleted' }, { status: 409 });
+      return NextResponse.json(
+        {
+          error: 'This SPE provider is still referenced and cannot be deleted',
+        },
+        { status: 409 },
+      );
     }
 
     await prisma.speProvider.delete({ where: { id } });
@@ -117,7 +152,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error('Failed to delete SPE provider', e);
-    const message = e instanceof Error ? e.message : 'Failed to delete SPE provider';
+    const message =
+      e instanceof Error ? e.message : 'Failed to delete SPE provider';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

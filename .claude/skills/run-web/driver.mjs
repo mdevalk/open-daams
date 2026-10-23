@@ -18,8 +18,12 @@ let consoleLog = [];
 
 function attachConsoleCapture() {
   consoleLog = [];
-  page.on('console', (msg) => consoleLog.push({ type: msg.type(), text: msg.text() }));
-  page.on('pageerror', (err) => consoleLog.push({ type: 'pageerror', text: err.message }));
+  page.on('console', (msg) =>
+    consoleLog.push({ type: msg.type(), text: msg.text() }),
+  );
+  page.on('pageerror', (err) =>
+    consoleLog.push({ type: 'pageerror', text: err.message }),
+  );
 }
 
 const COMMANDS = {
@@ -34,7 +38,9 @@ const COMMANDS = {
 
   async nav(p) {
     if (!page) return console.log('ERROR: launch first');
-    const url = p.startsWith('http') ? p : BASE_URL + (p.startsWith('/') ? p : '/' + p);
+    const url = p.startsWith('http')
+      ? p
+      : BASE_URL + (p.startsWith('/') ? p : '/' + p);
     const res = await page.goto(url, { waitUntil: 'domcontentloaded' });
     console.log('nav', url, '→', res ? res.status() : '(no response)');
   },
@@ -48,14 +54,25 @@ const COMMANDS = {
 
   async click(sel) {
     if (!page) return console.log('ERROR: launch first');
-    try { await page.click(sel, { timeout: 10_000 }); console.log('click', sel, '→ OK'); }
-    catch (e) { console.log('click', sel, '→ ERROR:', e.message); }
+    try {
+      await page.click(sel, { timeout: 10_000 });
+      console.log('click', sel, '→ OK');
+    } catch (e) {
+      console.log('click', sel, '→ ERROR:', e.message);
+    }
   },
 
   async 'click-text'(text) {
     if (!page) return console.log('ERROR: launch first');
-    try { await page.getByText(text, { exact: false }).first().click({ timeout: 10_000 }); console.log('click-text', JSON.stringify(text), '→ OK'); }
-    catch (e) { console.log('click-text', JSON.stringify(text), '→ ERROR:', e.message); }
+    try {
+      await page
+        .getByText(text, { exact: false })
+        .first()
+        .click({ timeout: 10_000 });
+      console.log('click-text', JSON.stringify(text), '→ OK');
+    } catch (e) {
+      console.log('click-text', JSON.stringify(text), '→ ERROR:', e.message);
+    }
   },
 
   async fill(rest) {
@@ -64,37 +81,63 @@ const COMMANDS = {
     if (sp === -1) return console.log('usage: fill <selector> <value>');
     const sel = rest.slice(0, sp);
     const value = rest.slice(sp + 1);
-    try { await page.fill(sel, value, { timeout: 10_000 }); console.log('fill', sel, '→ OK'); }
-    catch (e) { console.log('fill', sel, '→ ERROR:', e.message); }
+    try {
+      await page.fill(sel, value, { timeout: 10_000 });
+      console.log('fill', sel, '→ OK');
+    } catch (e) {
+      console.log('fill', sel, '→ ERROR:', e.message);
+    }
   },
 
-  async type(text) { if (page) await page.keyboard.type(text, { delay: 20 }); },
-  async press(key) { if (page) await page.keyboard.press(key); },
+  async type(text) {
+    if (page) await page.keyboard.type(text, { delay: 20 });
+  },
+  async press(key) {
+    if (page) await page.keyboard.press(key);
+  },
 
   async wait(sel) {
     if (!page) return console.log('ERROR: launch first');
-    try { await page.waitForSelector(sel, { timeout: 10_000 }); console.log('found:', sel); }
-    catch { console.log('TIMEOUT:', sel); }
+    try {
+      await page.waitForSelector(sel, { timeout: 10_000 });
+      console.log('found:', sel);
+    } catch {
+      console.log('TIMEOUT:', sel);
+    }
   },
 
   async 'wait-text'(text) {
     if (!page) return console.log('ERROR: launch first');
-    try { await page.getByText(text, { exact: false }).first().waitFor({ timeout: 10_000 }); console.log('found text:', JSON.stringify(text)); }
-    catch { console.log('TIMEOUT waiting for text:', JSON.stringify(text)); }
+    try {
+      await page
+        .getByText(text, { exact: false })
+        .first()
+        .waitFor({ timeout: 10_000 });
+      console.log('found text:', JSON.stringify(text));
+    } catch {
+      console.log('TIMEOUT waiting for text:', JSON.stringify(text));
+    }
   },
 
   async eval(expr) {
     if (!page) return console.log('ERROR: launch first');
-    try { console.log(JSON.stringify(await page.evaluate(expr))); }
-    catch (e) { console.log('ERROR:', e.message); }
+    try {
+      console.log(JSON.stringify(await page.evaluate(expr)));
+    } catch (e) {
+      console.log('ERROR:', e.message);
+    }
   },
 
   async text(sel) {
     if (!page) return console.log('ERROR: launch first');
-    console.log(await page.evaluate(
-      (s) => (s ? document.querySelector(s) : document.body)?.innerText ?? '(null)',
-      sel || null,
-    ));
+    console.log(
+      await page.evaluate(
+        (s) =>
+          (s ? document.querySelector(s) : document.body)?.innerText ??
+          '(null)',
+        sel || null,
+      ),
+    );
   },
 
   async console(arg) {
@@ -102,20 +145,39 @@ const COMMANDS = {
     const rows = onlyErrors
       ? consoleLog.filter((m) => m.type === 'error' || m.type === 'pageerror')
       : consoleLog;
-    if (rows.length === 0) { console.log(onlyErrors ? 'no console errors' : 'no console output'); return; }
+    if (rows.length === 0) {
+      console.log(onlyErrors ? 'no console errors' : 'no console output');
+      return;
+    }
     for (const m of rows) console.log(`[${m.type}] ${m.text}`);
   },
 
   async quit() {
     if (browser) await browser.close().catch(() => {});
-    browser = null; context = null; page = null;
+    browser = null;
+    context = null;
+    page = null;
   },
-  help() { console.log('commands:', Object.keys(COMMANDS).join(', ')); },
+  help() {
+    console.log('commands:', Object.keys(COMMANDS).join(', '));
+  },
 };
 
 const isTTY = process.stdin.isTTY;
-const rl = readline.createInterface({ input: process.stdin, output: process.stdout, prompt: 'driver> ' });
-function safePrompt() { if (isTTY) { try { rl.prompt(); } catch { /* ignore */ } } }
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+  prompt: 'driver> ',
+});
+function safePrompt() {
+  if (isTTY) {
+    try {
+      rl.prompt();
+    } catch {
+      /* ignore */
+    }
+  }
+}
 
 // Piped/heredoc stdin delivers every line before any async command handler
 // resolves — readline's 'line' event doesn't wait for a prior async listener
@@ -136,9 +198,19 @@ rl.on('line', (line) => {
       const rest = sp === -1 ? '' : trimmed.slice(sp + 1);
       if (!cmd) return safePrompt();
       const fn = COMMANDS[cmd];
-      if (!fn) { console.log('unknown:', cmd, '— try: help'); return safePrompt(); }
-      try { await fn(rest); } catch (e) { console.log('ERROR:', e.message); }
-      if (cmd === 'quit') { quitRequested = true; return; }
+      if (!fn) {
+        console.log('unknown:', cmd, '— try: help');
+        return safePrompt();
+      }
+      try {
+        await fn(rest);
+      } catch (e) {
+        console.log('ERROR:', e.message);
+      }
+      if (cmd === 'quit') {
+        quitRequested = true;
+        return;
+      }
       safePrompt();
     } catch (e) {
       console.log('ERROR (line handler):', e.message);

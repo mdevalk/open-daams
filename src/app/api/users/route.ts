@@ -12,7 +12,8 @@ import { actingUserId } from '@/auth';
 export async function GET() {
   try {
     const auth = await findActingUser(await actingUserId());
-    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+    if (!auth.ok)
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const users = await prisma.user.findMany({
       select: { id: true, name: true, role: true },

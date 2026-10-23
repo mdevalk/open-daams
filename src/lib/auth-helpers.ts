@@ -14,7 +14,9 @@ export async function resolveSignInClaims(
 ): Promise<void> {
   if (!account || !profile?.email) return;
 
-  const user = await prisma.user.findUnique({ where: { email: profile.email } });
+  const user = await prisma.user.findUnique({
+    where: { email: profile.email },
+  });
   if (user) {
     token.internalUserId = user.id;
     token.role = user.role;
@@ -33,7 +35,12 @@ export async function resolveImpersonationUpdate(
   trigger: string | undefined,
   session: unknown,
 ): Promise<void> {
-  if (trigger !== 'update' || !session || typeof session !== 'object' || !('impersonatedUserId' in session)) {
+  if (
+    trigger !== 'update' ||
+    !session ||
+    typeof session !== 'object' ||
+    !('impersonatedUserId' in session)
+  ) {
     return;
   }
 
@@ -42,7 +49,8 @@ export async function resolveImpersonationUpdate(
     : null;
   if (realUser?.role !== 'ADMIN') return;
 
-  const targetId = (session as { impersonatedUserId: string | null }).impersonatedUserId;
+  const targetId = (session as { impersonatedUserId: string | null })
+    .impersonatedUserId;
   if (targetId === null) {
     token.impersonatedUserId = undefined;
     token.impersonatedName = undefined;

@@ -7,7 +7,13 @@ import { UserRole } from '@prisma/client';
 
 type UserOption = { id: string; name: string; role: UserRole };
 
-export function AdminMenu({ locale, users }: { locale: string; users: UserOption[] }) {
+export function AdminMenu({
+  locale,
+  users,
+}: {
+  locale: string;
+  users: UserOption[];
+}) {
   const t = useTranslations('nav');
   const ta = useTranslations('auth');
   const tr = useTranslations('roles');
@@ -21,7 +27,10 @@ export function AdminMenu({ locale, users }: { locale: string; users: UserOption
     if (!open) return;
 
     function onPointerDown(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
         setOpen(false);
       }
     }
@@ -71,7 +80,10 @@ export function AdminMenu({ locale, users }: { locale: string; users: UserOption
   }
 
   return (
-    <div ref={containerRef} className="relative ml-3 pl-3 border-l border-white/20">
+    <div
+      ref={containerRef}
+      className="relative ml-3 pl-3 border-l border-white/20"
+    >
       <button
         ref={buttonRef}
         type="button"
@@ -92,7 +104,9 @@ export function AdminMenu({ locale, users }: { locale: string; users: UserOption
             <div className="px-3 py-2 border-b border-gray-100">
               {session?.user ? (
                 <>
-                  <p className="text-xs text-gray-500">{ta('signedInAs', { name: session.user.name ?? '' })}</p>
+                  <p className="text-xs text-gray-500">
+                    {ta('signedInAs', { name: session.user.name ?? '' })}
+                  </p>
                   {isAdmin && (
                     <label className="mt-2 block relative">
                       <span className="sr-only">{ta('actAsSelf')}</span>
@@ -112,7 +126,10 @@ export function AdminMenu({ locale, users }: { locale: string; users: UserOption
                           </option>
                         ))}
                       </select>
-                      <span aria-hidden="true" className="pointer-events-none absolute right-2 top-1/2 mt-0.5 -translate-y-1/2 text-gray-500 text-xs">
+                      <span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute right-2 top-1/2 mt-0.5 -translate-y-1/2 text-gray-500 text-xs"
+                      >
                         ▾
                       </span>
                     </label>

@@ -39,7 +39,10 @@ export function LogTable<T extends { id: string }>({
           {rows.map((row) => (
             <tr key={row.id} className="border-b border-gray-100 last:border-0">
               {columns.map((col) => (
-                <td key={col.key} className={col.className ?? 'px-4 py-2 text-gray-700'}>
+                <td
+                  key={col.key}
+                  className={col.className ?? 'px-4 py-2 text-gray-700'}
+                >
                   {col.render(row)}
                 </td>
               ))}

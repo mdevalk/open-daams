@@ -11,7 +11,9 @@ import { actingUserId } from '@/auth';
  */
 export async function requireCurrentUser(locale: string) {
   const userId = await actingUserId();
-  const user = userId ? await prisma.user.findUnique({ where: { id: userId } }) : null;
+  const user = userId
+    ? await prisma.user.findUnique({ where: { id: userId } })
+    : null;
   if (!user) redirect(`/api/auth/signin?callbackUrl=/${locale}`);
   return user;
 }

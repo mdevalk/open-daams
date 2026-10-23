@@ -40,18 +40,45 @@ export default async function InvoiceDetailPage({
   const currentUser = await requireCurrentUser(locale);
 
   const t = await getTranslations({ locale, namespace: 'invoices' });
-  const tc = await getTranslations({ locale, namespace: 'financialLineCategory' });
+  const tc = await getTranslations({
+    locale,
+    namespace: 'financialLineCategory',
+  });
 
   const rawInvoice = await prisma.invoice.findUnique({
     where: { id },
     include: {
       permit: {
         include: {
-          application: { select: { referenceNumber: true, title: true, type: true, applicant: { select: { name: true, email: true, dataUser: { select: { name: true } } } } } },
+          application: {
+            select: {
+              referenceNumber: true,
+              title: true,
+              type: true,
+              applicant: {
+                select: {
+                  name: true,
+                  email: true,
+                  dataUser: { select: { name: true } },
+                },
+              },
+            },
+          },
         },
       },
       application: {
-        select: { id: true, referenceNumber: true, title: true, applicant: { select: { name: true, email: true, dataUser: { select: { name: true } } } } },
+        select: {
+          id: true,
+          referenceNumber: true,
+          title: true,
+          applicant: {
+            select: {
+              name: true,
+              email: true,
+              dataUser: { select: { name: true } },
+            },
+          },
+        },
       },
       createdBy: { select: { name: true, role: true } },
       lineItems: true,
@@ -62,14 +89,19 @@ export default async function InvoiceDetailPage({
 
   const invoice = serializePrisma(rawInvoice);
 
-  const canManage = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(currentUser.role);
-  const applicant = invoice.permit?.application?.applicant ?? invoice.application?.applicant;
+  const canManage = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(
+    currentUser.role,
+  );
+  const applicant =
+    invoice.permit?.application?.applicant ?? invoice.application?.applicant;
   const overdue = isOverdue(invoice);
 
   return (
     <div className="space-y-6">
       <div className="text-sm text-gray-500">
-        <a href={`/${locale}/financials`} className="hover:text-gray-900">{t('breadcrumb')}</a>
+        <a href={`/${locale}/financials`} className="hover:text-gray-900">
+          {t('breadcrumb')}
+        </a>
         <span className="mx-2">/</span>
         <span className="text-gray-900 font-mono">{invoice.invoiceNumber}</span>
       </div>
@@ -93,7 +125,9 @@ export default async function InvoiceDetailPage({
         </div>
         <span
           className={`inline-flex items-center rounded px-2 py-1 text-xs font-semibold ${
-            overdue ? 'bg-amber-100 text-amber-700' : STATUS_COLORS[invoice.status]
+            overdue
+              ? 'bg-amber-100 text-amber-700'
+              : STATUS_COLORS[invoice.status]
           }`}
         >
           {overdue ? t('overdue') : t(`status${invoice.status}`)}
@@ -103,41 +137,72 @@ export default async function InvoiceDetailPage({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <section className="rounded-xl border border-gray-200 bg-white p-5">
-            <h2 className="font-semibold text-gray-900 mb-4">{t('detailsTitle')}</h2>
+            <h2 className="font-semibold text-gray-900 mb-4">
+              {t('detailsTitle')}
+            </h2>
             <dl className="grid grid-cols-2 gap-4">
-              <Field label={t('applicant')} value={applicant ? `${applicant.name} (${applicant.dataUser?.name ?? '—'})` : null} />
-              <Field label={t('issuedBy')} value={`${invoice.createdBy.name} (${invoice.createdBy.role})`} />
-              <Field label={t('issuedOn')} value={formatDate(invoice.issuedAt)} />
+              <Field
+                label={t('applicant')}
+                value={
+                  applicant
+                    ? `${applicant.name} (${applicant.dataUser?.name ?? '—'})`
+                    : null
+                }
+              />
+              <Field
+                label={t('issuedBy')}
+                value={`${invoice.createdBy.name} (${invoice.createdBy.role})`}
+              />
+              <Field
+                label={t('issuedOn')}
+                value={formatDate(invoice.issuedAt)}
+              />
               <Field label={t('dueOn')} value={formatDate(invoice.dueAt)} />
-              {invoice.paidAt && <Field label={t('paidOn')} value={formatDate(invoice.paidAt)} />}
+              {invoice.paidAt && (
+                <Field label={t('paidOn')} value={formatDate(invoice.paidAt)} />
+              )}
             </dl>
             {!invoice.permit && invoice.application && (
-              <a href={`/${locale}/applications/${invoice.application.id}`} className="inline-block mt-4 text-sm text-[#01689b] hover:underline">
+              <a
+                href={`/${locale}/applications/${invoice.application.id}`}
+                className="inline-block mt-4 text-sm text-[#01689b] hover:underline"
+              >
                 {t('viewApplication')}
               </a>
             )}
           </section>
 
           <section className="rounded-xl border border-gray-200 bg-white p-5">
-            <h2 className="font-semibold text-gray-900 mb-4">{t('lineItemsTitle')}</h2>
+            <h2 className="font-semibold text-gray-900 mb-4">
+              {t('lineItemsTitle')}
+            </h2>
             <ul className="text-sm divide-y divide-gray-100">
               {invoice.lineItems.map((item) => (
                 <li key={item.id} className="flex justify-between py-2">
-                  <span className="text-gray-700">{tc(item.category)}{item.description ? ` — ${item.description}` : ''}</span>
-                  <span className="font-medium">{String(item.amount)} {invoice.currency}</span>
+                  <span className="text-gray-700">
+                    {tc(item.category)}
+                    {item.description ? ` — ${item.description}` : ''}
+                  </span>
+                  <span className="font-medium">
+                    {String(item.amount)} {invoice.currency}
+                  </span>
                 </li>
               ))}
             </ul>
             <div className="flex justify-between text-base font-semibold border-t border-gray-200 pt-3 mt-1">
               <span>{t('total')}</span>
-              <span>{invoice.totalAmount.toString()} {invoice.currency}</span>
+              <span>
+                {invoice.totalAmount.toString()} {invoice.currency}
+              </span>
             </div>
           </section>
 
           {invoice.notes && (
             <section className="rounded-xl border border-gray-200 bg-white p-5">
               <h2 className="font-semibold text-gray-900 mb-3">{t('notes')}</h2>
-              <p className="text-sm text-gray-700 whitespace-pre-wrap">{invoice.notes}</p>
+              <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                {invoice.notes}
+              </p>
             </section>
           )}
         </div>
@@ -145,16 +210,26 @@ export default async function InvoiceDetailPage({
         <div className="space-y-6">
           {invoice.permit && (
             <section className="rounded-xl border border-gray-200 bg-white p-5">
-              <h2 className="font-semibold text-gray-900 mb-3">{t('permitTitle')}</h2>
-              <a href={`/${locale}/permits/${invoice.permit.id}`} className="block hover:opacity-80 transition-opacity">
+              <h2 className="font-semibold text-gray-900 mb-3">
+                {t('permitTitle')}
+              </h2>
+              <a
+                href={`/${locale}/permits/${invoice.permit.id}`}
+                className="block hover:opacity-80 transition-opacity"
+              >
                 <PermitCard permit={invoice.permit} compact />
               </a>
             </section>
           )}
           {canManage && invoice.status === 'ISSUED' && (
             <section className="rounded-xl border border-gray-200 bg-white p-5">
-              <h2 className="font-semibold text-gray-900 mb-3">{t('panelTitle')}</h2>
-              <InvoiceActions invoiceId={invoice.id} currentUserId={currentUser.id} />
+              <h2 className="font-semibold text-gray-900 mb-3">
+                {t('panelTitle')}
+              </h2>
+              <InvoiceActions
+                invoiceId={invoice.id}
+                currentUserId={currentUser.id}
+              />
             </section>
           )}
         </div>

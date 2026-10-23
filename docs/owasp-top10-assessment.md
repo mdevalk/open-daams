@@ -14,18 +14,18 @@ This is a security assessment of the open-daams codebase mapped to the
 
 ## Summary
 
-| Category | Status | Key finding |
-|---|---|---|
-| **A01 – Broken Access Control** | ✅ Fixed | Previously fully-open reads (application detail, attachments, decision-card PDFs, internal permit record, `/api/users`) now require identity + role/ownership; identity is now session-verified (see A07) |
-| **A02 – Cryptographic Failures** | ✅ Clean | Ed25519 signing (`@noble/ed25519`), key never committed, no hardcoded secrets |
-| **A03 – Injection** | ✅ Clean | All DB access via Prisma's typed query builder; zero raw SQL anywhere |
-| **A04 – Insecure Design** | ✅ Fixed | The former baseline design gap (no real authentication) is closed — see A07; the amplifying factors (open user directory, open sensitive reads) were already closed |
-| **A05 – Security Misconfiguration** | ✅ Fixed | Nonce-based CSP + full security-header set now set in `src/proxy.ts`; error handling remains disciplined |
-| **A06 – Vulnerable Components** | ✅ Fixed | `npm audit`: **0 vulnerabilities**, now enforced on every push via `.github/workflows/ci.yml`; the two previously-`"*"`-pinned dependencies are now pinned to exact versions |
-| **A07 – Identification and Authentication Failures** | ✅ Fixed | Real OIDC login via Keycloak (Auth.js); RBAC now fed a server-verified `userId` from the session instead of a client-supplied one. Scoped to 5 seeded demo identities, not DigiD/eHerkenning |
-| **A08 – Software and Data Integrity Failures** | ℹ️ Note | `verifyPermitSignature` exists but is never called in-app — verification happens in the separate external permit-validator app (by design); dependency pinning gap closed |
-| **A09 – Security Logging and Monitoring Failures** | ✅ Fixed | Rejected/unauthorized attempts (`AuthzFailureLog`) and all case-workflow actions (`AuditLog`) are now logged; no more unlogged mutation paths found |
-| **A10 – Server-Side Request Forgery** | ✅ Clean | The one outbound integration (NCP client) hardcodes host + protocol; no user-controlled host anywhere |
+| Category                                             | Status   | Key finding                                                                                                                                                                                               |
+| ---------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **A01 – Broken Access Control**                      | ✅ Fixed | Previously fully-open reads (application detail, attachments, decision-card PDFs, internal permit record, `/api/users`) now require identity + role/ownership; identity is now session-verified (see A07) |
+| **A02 – Cryptographic Failures**                     | ✅ Clean | Ed25519 signing (`@noble/ed25519`), key never committed, no hardcoded secrets                                                                                                                             |
+| **A03 – Injection**                                  | ✅ Clean | All DB access via Prisma's typed query builder; zero raw SQL anywhere                                                                                                                                     |
+| **A04 – Insecure Design**                            | ✅ Fixed | The former baseline design gap (no real authentication) is closed — see A07; the amplifying factors (open user directory, open sensitive reads) were already closed                                       |
+| **A05 – Security Misconfiguration**                  | ✅ Fixed | Nonce-based CSP + full security-header set now set in `src/proxy.ts`; error handling remains disciplined                                                                                                  |
+| **A06 – Vulnerable Components**                      | ✅ Fixed | `npm audit`: **0 vulnerabilities**, now enforced on every push via `.github/workflows/ci.yml`; the two previously-`"*"`-pinned dependencies are now pinned to exact versions                              |
+| **A07 – Identification and Authentication Failures** | ✅ Fixed | Real OIDC login via Keycloak (Auth.js); RBAC now fed a server-verified `userId` from the session instead of a client-supplied one. Scoped to 5 seeded demo identities, not DigiD/eHerkenning              |
+| **A08 – Software and Data Integrity Failures**       | ℹ️ Note  | `verifyPermitSignature` exists but is never called in-app — verification happens in the separate external permit-validator app (by design); dependency pinning gap closed                                 |
+| **A09 – Security Logging and Monitoring Failures**   | ✅ Fixed | Rejected/unauthorized attempts (`AuthzFailureLog`) and all case-workflow actions (`AuditLog`) are now logged; no more unlogged mutation paths found                                                       |
+| **A10 – Server-Side Request Forgery**                | ✅ Clean | The one outbound integration (NCP client) hardcodes host + protocol; no user-controlled host anywhere                                                                                                     |
 
 ## Findings
 
@@ -33,12 +33,13 @@ This is a security assessment of the open-daams codebase mapped to the
 
 Confirmed live: `GET /api/applications/[id]`, `GET /api/attachments/[id]`,
 `GET /api/applications/[id]/decision-card/pdf`, and the internal `GET /api/permits/[id]` (status
-+ transition log — distinct from the deliberately-public `/pdf`/`/json` export) all previously
-served full content to any caller with the resource id, no identity check of any kind. `GET
+
+- transition log — distinct from the deliberately-public `/pdf`/`/json` export) all previously
+  served full content to any caller with the resource id, no identity check of any kind. `GET
 /api/users` returned every user's `id`/`name`/`email`/`role` unauthenticated.
 
 Fixed via a new `requireRoleOrOwner(userId, allowedRoles, ownerId)` helper in `src/lib/authz.ts`
-(staff role *or* the specific record's own applicant) and `requireRole` on the staff-only routes;
+(staff role _or_ the specific record's own applicant) and `requireRole` on the staff-only routes;
 `/api/users` is now gated and trimmed to `id`/`name`/`role`. `POST /api/applications` and the
 HD@EU/NCP import routes now require the right role, with an ownership check preventing an
 `APPLICANT` from creating an application under someone else's identity.
@@ -50,7 +51,7 @@ Confirmed via the routes' own doc comments, the PDF's footer text instructing ex
 verification, and the JWKS endpoint's existence — gating these would contradict the spec they
 implement.
 
-**Not yet done**: entity-scoped access control for actions *within* a case (e.g. any staff role
+**Not yet done**: entity-scoped access control for actions _within_ a case (e.g. any staff role
 can act on any application/permit, no assignment/ownership boundary between case handlers) —
 assessed as intentional for this back-office domain (national HDAB staff need full-caseload
 visibility), not a gap.
@@ -75,7 +76,7 @@ building interpretable markup — no injection vector there either.
 
 The former core design characteristic — no real authentication, RBAC trusting a client-supplied
 user id — is now closed (see A07): real OIDC login via Keycloak backs every claimed identity. The
-two concrete things that made the old baseline *worse* than even its own documented scope (an open
+two concrete things that made the old baseline _worse_ than even its own documented scope (an open
 user directory usable to harvest valid ids/roles for impersonation, and several sensitive reads
 requiring no identity at all — not even a spoofable one) were already closed as of the A01 fix.
 
@@ -138,7 +139,7 @@ audit trail it previously lacked.
 
 Every page now requires a session except the public transparency register (`src/proxy.ts`,
 optimistic JWT-presence check; real enforcement stays in each route/page as above). Real sign-out
-clears the local session *and* performs Keycloak's RP-initiated logout
+clears the local session _and_ performs Keycloak's RP-initiated logout
 (`src/app/api/auth/keycloak-signout/route.ts`) — Auth.js's own `signOut()` alone only does the
 former, which would otherwise let a subsequent sign-in silently SSO-reauthenticate as the same
 user. An ADMIN can additionally "Act as" any other seeded user (re-validated server-side on every
@@ -173,7 +174,7 @@ would be the stricter option for a higher-trust pipeline.
 `AuditLog` (application-status-transition log) was renamed to `ApplicationLog` for consistency
 with the equivalently-scoped `DataPermitLog`/`SpeProvisioningLog`. A new, separate `AuditLog` now
 covers reference-data (masterdata) CRUD — 12 previously entirely unlogged ADMIN write actions
-across data holders, SPE operators/providers, and data users — with entries recording *what*
+across data holders, SPE operators/providers, and data users — with entries recording _what_
 changed (field names for routine edits, explicit outcome phrasing like "marked as trusted" for
 the two access-control-relevant fields), not just that something did. Three new SPE-type CRUD
 actions (create/update/delete) added this round follow the same logged-by-default pattern.
@@ -186,7 +187,7 @@ human-readable error text, via one shared `logAuthzFailure` helper rather than a
 the ~40 individual call sites. Verified live: triggered all three rejection cases via real `curl`
 calls, confirmed each landed a row, confirmed the new `/security-log` page
 (`src/app/[locale]/security-log/page.tsx`) renders them, then cleaned up the disposable rows.
-Deliberately doesn't capture *which* route was hit — none of these functions receive request
+Deliberately doesn't capture _which_ route was hit — none of these functions receive request
 context today, and threading it through 40 call sites would contradict the fix's own
 "cheap, one shared change" framing; a real enhancement, not part of this fix.
 

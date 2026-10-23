@@ -9,7 +9,11 @@ import { NextResponse } from 'next/server';
 export function fileResponse(
   bytes: Buffer | Uint8Array,
   filename: string,
-  options: { mimeType: string; disposition?: 'inline' | 'attachment'; cacheControl?: string },
+  options: {
+    mimeType: string;
+    disposition?: 'inline' | 'attachment';
+    cacheControl?: string;
+  },
 ): NextResponse {
   const safeFilename = filename.replace(/[\\"]/g, '\\$&');
   const disposition = options.disposition ?? 'attachment';

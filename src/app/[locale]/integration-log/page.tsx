@@ -41,7 +41,9 @@ export default async function IntegrationLogPage({
 
       <form method="GET" className="flex flex-wrap gap-3 items-end">
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">{t('colDirection')}</label>
+          <label className="block text-xs font-medium text-gray-600 mb-1">
+            {t('colDirection')}
+          </label>
           <select
             name="direction"
             defaultValue={direction ?? ''}
@@ -53,7 +55,9 @@ export default async function IntegrationLogPage({
           </select>
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">{t('colOutcome')}</label>
+          <label className="block text-xs font-medium text-gray-600 mb-1">
+            {t('colOutcome')}
+          </label>
           <select
             name="outcome"
             defaultValue={outcome ?? ''}
@@ -64,11 +68,17 @@ export default async function IntegrationLogPage({
             <option value="FAILURE">{t('outcomeFailure')}</option>
           </select>
         </div>
-        <button type="submit" className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-100">
+        <button
+          type="submit"
+          className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-100"
+        >
           {t('filter')}
         </button>
         {(direction || outcome) && (
-          <a href={`/${locale}/integration-log`} className="text-sm text-[#01689b] hover:underline self-end pb-0.5">
+          <a
+            href={`/${locale}/integration-log`}
+            className="text-sm text-[#01689b] hover:underline self-end pb-0.5"
+          >
             {t('clearFilter')}
           </a>
         )}

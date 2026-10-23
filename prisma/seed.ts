@@ -1,4 +1,11 @@
-import { PrismaClient, UserRole, ApplicationType, ApplicationStatus, DecisionOutcome, DecisionTrack } from '@prisma/client';
+import {
+  PrismaClient,
+  UserRole,
+  ApplicationType,
+  ApplicationStatus,
+  DecisionOutcome,
+  DecisionTrack,
+} from '@prisma/client';
 import { addMonths, subDays, subWeeks } from 'date-fns';
 
 const prisma = new PrismaClient();
@@ -7,14 +14,27 @@ async function main() {
   const dataUserNames = ['UMC Utrecht', 'RIVM', 'HDAB-NL'];
   const dataUserIdByName: Record<string, string> = {};
   for (const name of dataUserNames) {
-    const dataUser = await prisma.dataUser.upsert({ where: { name }, update: {}, create: { name } });
+    const dataUser = await prisma.dataUser.upsert({
+      where: { name },
+      update: {},
+      create: { name },
+    });
     dataUserIdByName[name] = dataUser.id;
   }
 
-  const dataHolderNames = ['GP Information Network (LINH)', 'CBS', 'RIVM', 'Vektis'];
+  const dataHolderNames = [
+    'GP Information Network (LINH)',
+    'CBS',
+    'RIVM',
+    'Vektis',
+  ];
   const dataHolderIdByName: Record<string, string> = {};
   for (const name of dataHolderNames) {
-    const dataHolder = await prisma.dataHolder.upsert({ where: { name }, update: {}, create: { name } });
+    const dataHolder = await prisma.dataHolder.upsert({
+      where: { name },
+      update: {},
+      create: { name },
+    });
     dataHolderIdByName[name] = dataHolder.id;
   }
 
@@ -32,27 +52,52 @@ async function main() {
   const applicant1 = await prisma.user.upsert({
     where: { email: 'researcher@umcu.nl' },
     update: {},
-    create: { name: 'Dr. A. de Vries', email: 'researcher@umcu.nl', role: UserRole.APPLICANT, dataUserId: dataUserIdByName['UMC Utrecht'] },
+    create: {
+      name: 'Dr. A. de Vries',
+      email: 'researcher@umcu.nl',
+      role: UserRole.APPLICANT,
+      dataUserId: dataUserIdByName['UMC Utrecht'],
+    },
   });
   const applicant2 = await prisma.user.upsert({
     where: { email: 'analyst@rivm.nl' },
     update: {},
-    create: { name: 'M. Jansen', email: 'analyst@rivm.nl', role: UserRole.APPLICANT, dataUserId: dataUserIdByName['RIVM'] },
+    create: {
+      name: 'M. Jansen',
+      email: 'analyst@rivm.nl',
+      role: UserRole.APPLICANT,
+      dataUserId: dataUserIdByName['RIVM'],
+    },
   });
   const handler = await prisma.user.upsert({
     where: { email: 'casehandler@hdab.nl' },
     update: {},
-    create: { name: 'S. Bakker', email: 'casehandler@hdab.nl', role: UserRole.CASE_HANDLER, dataUserId: dataUserIdByName['HDAB-NL'] },
+    create: {
+      name: 'S. Bakker',
+      email: 'casehandler@hdab.nl',
+      role: UserRole.CASE_HANDLER,
+      dataUserId: dataUserIdByName['HDAB-NL'],
+    },
   });
   const decisionMaker = await prisma.user.upsert({
     where: { email: 'director@hdab.nl' },
     update: {},
-    create: { name: 'P. van den Berg', email: 'director@hdab.nl', role: UserRole.DECISION_MAKER, dataUserId: dataUserIdByName['HDAB-NL'] },
+    create: {
+      name: 'P. van den Berg',
+      email: 'director@hdab.nl',
+      role: UserRole.DECISION_MAKER,
+      dataUserId: dataUserIdByName['HDAB-NL'],
+    },
   });
   await prisma.user.upsert({
     where: { email: 'admin@hdab.nl' },
     update: {},
-    create: { name: 'R. de Groot', email: 'admin@hdab.nl', role: UserRole.ADMIN, dataUserId: dataUserIdByName['HDAB-NL'] },
+    create: {
+      name: 'R. de Groot',
+      email: 'admin@hdab.nl',
+      role: UserRole.ADMIN,
+      dataUserId: dataUserIdByName['HDAB-NL'],
+    },
   });
 
   // App 1: in PROCESSING
@@ -67,13 +112,20 @@ async function main() {
       applicantId: applicant1.id,
       caseHandlerId: handler.id,
       title: 'Cardiovascular risk factors in Dutch primary care 2015-2024',
-      projectDescription: 'Retrospective cohort study analysing long-term trends in cardiovascular risk factor prevalence using routine primary care data.',
+      projectDescription:
+        'Retrospective cohort study analysing long-term trends in cardiovascular risk factor prevalence using routine primary care data.',
       purposeCategory: 'SCIENTIFIC_RESEARCH',
       requestedDatasets: {
         createMany: {
           data: [
-            { dataHolderId: dataHolderIdByName['GP Information Network (LINH)'], name: 'Huisartsenregistratie cardiovasculair risicomanagement' },
-            { dataHolderId: dataHolderIdByName['GP Information Network (LINH)'], name: 'Medicatievoorschriften huisartsenpraktijken (ATC A10)' },
+            {
+              dataHolderId: dataHolderIdByName['GP Information Network (LINH)'],
+              name: 'Huisartsenregistratie cardiovasculair risicomanagement',
+            },
+            {
+              dataHolderId: dataHolderIdByName['GP Information Network (LINH)'],
+              name: 'Medicatievoorschriften huisartsenpraktijken (ATC A10)',
+            },
             {
               dataHolderId: dataHolderIdByName['CBS'],
               name: "Overleden inwoners van Nederland naar doodsoorzaak (uitgebreide lijst van 'drie-teken categorieën'), leeftijd en geslacht",
@@ -82,9 +134,12 @@ async function main() {
           ],
         },
       },
-      requestedVariables: 'Age, sex, BMI, blood pressure, HbA1c, lipid panel, medication records (ATC codes C01-C10)',
-      studyPopulation: 'Adults aged 18-80 registered in Dutch general practices',
-      inclusionCriteria: 'Age 18-80, registered ≥1 year, at least one cardiovascular risk factor recorded',
+      requestedVariables:
+        'Age, sex, BMI, blood pressure, HbA1c, lipid panel, medication records (ATC codes C01-C10)',
+      studyPopulation:
+        'Adults aged 18-80 registered in Dutch general practices',
+      inclusionCriteria:
+        'Age 18-80, registered ≥1 year, at least one cardiovascular risk factor recorded',
       exclusionCriteria: 'Incomplete registration, opt-out from research use',
       dataStartDate: new Date('2015-01-01'),
       dataEndDate: new Date('2024-12-31'),
@@ -110,15 +165,23 @@ async function main() {
       applicantId: applicant2.id,
       caseHandlerId: handler.id,
       title: 'COVID-19 vaccination coverage by municipality 2021-2023',
-      projectDescription: 'Aggregated statistical analysis of COVID-19 vaccination uptake stratified by municipality, age group, and socioeconomic status.',
+      projectDescription:
+        'Aggregated statistical analysis of COVID-19 vaccination uptake stratified by municipality, age group, and socioeconomic status.',
       purposeCategory: 'PUBLIC_HEALTH',
       requestedDatasets: {
         createMany: {
-          data: [{ dataHolderId: dataHolderIdByName['RIVM'], name: 'Praeventis — landelijke vaccinatieregistratie' }],
+          data: [
+            {
+              dataHolderId: dataHolderIdByName['RIVM'],
+              name: 'Praeventis — landelijke vaccinatieregistratie',
+            },
+          ],
         },
       },
-      requestedVariables: 'Vaccination date, vaccine type, municipality code, age group, CBS socioeconomic quintile',
-      studyPopulation: 'Dutch population aged 12+ who were eligible for COVID-19 vaccination',
+      requestedVariables:
+        'Vaccination date, vaccine type, municipality code, age group, CBS socioeconomic quintile',
+      studyPopulation:
+        'Dutch population aged 12+ who were eligible for COVID-19 vaccination',
       inclusionCriteria: 'Age ≥12 at time of vaccination eligibility',
       exclusionCriteria: 'None',
       dataStartDate: new Date('2021-01-01'),
@@ -144,19 +207,28 @@ async function main() {
       status: ApplicationStatus.DRAFT,
       applicantId: applicant1.id,
       title: 'Mental health service utilisation in adolescents post-COVID',
-      projectDescription: 'Analysis of mental health service use among 12-25 year olds in the period 2019-2024.',
+      projectDescription:
+        'Analysis of mental health service use among 12-25 year olds in the period 2019-2024.',
       purposeCategory: 'SCIENTIFIC_RESEARCH',
       requestedDatasets: {
         createMany: {
           data: [
-            { dataHolderId: dataHolderIdByName['Vektis'], name: 'Declaraties geestelijke gezondheidszorg (GGZ)' },
-            { dataHolderId: dataHolderIdByName['GP Information Network (LINH)'], name: 'Huisartsenregistratie verwijzingen GGZ' },
+            {
+              dataHolderId: dataHolderIdByName['Vektis'],
+              name: 'Declaraties geestelijke gezondheidszorg (GGZ)',
+            },
+            {
+              dataHolderId: dataHolderIdByName['GP Information Network (LINH)'],
+              name: 'Huisartsenregistratie verwijzingen GGZ',
+            },
           ],
         },
       },
-      requestedVariables: 'Age, sex, diagnosis codes (ICD-10 F codes), referral pathway, treatment episodes',
+      requestedVariables:
+        'Age, sex, diagnosis codes (ICD-10 F codes), referral pathway, treatment episodes',
       studyPopulation: 'Adolescents and young adults aged 12-25',
-      inclusionCriteria: 'Age 12-25, at least one contact with mental health services',
+      inclusionCriteria:
+        'Age 12-25, at least one contact with mental health services',
       exclusionCriteria: 'Opt-out from research use',
       dataStartDate: new Date('2019-01-01'),
       dataEndDate: new Date('2024-12-31'),
@@ -169,10 +241,31 @@ async function main() {
 
   // Audit logs for app1
   for (const entry of [
-    { from: null, to: ApplicationStatus.DRAFT, action: 'Application created', userId: applicant1.id },
-    { from: ApplicationStatus.DRAFT, to: ApplicationStatus.SUBMITTED, action: 'Application submitted', userId: applicant1.id },
-    { from: ApplicationStatus.SUBMITTED, to: ApplicationStatus.PRE_SCREENING, action: 'Start pre-screening', userId: handler.id },
-    { from: ApplicationStatus.PRE_SCREENING, to: ApplicationStatus.PROCESSING, action: 'Complete pre-screening — proceed to processing', userId: handler.id, comment: 'All mandatory fields complete and consistent.' },
+    {
+      from: null,
+      to: ApplicationStatus.DRAFT,
+      action: 'Application created',
+      userId: applicant1.id,
+    },
+    {
+      from: ApplicationStatus.DRAFT,
+      to: ApplicationStatus.SUBMITTED,
+      action: 'Application submitted',
+      userId: applicant1.id,
+    },
+    {
+      from: ApplicationStatus.SUBMITTED,
+      to: ApplicationStatus.PRE_SCREENING,
+      action: 'Start pre-screening',
+      userId: handler.id,
+    },
+    {
+      from: ApplicationStatus.PRE_SCREENING,
+      to: ApplicationStatus.PROCESSING,
+      action: 'Complete pre-screening — proceed to processing',
+      userId: handler.id,
+      comment: 'All mandatory fields complete and consistent.',
+    },
   ]) {
     await prisma.applicationLog.create({
       data: {
@@ -188,10 +281,32 @@ async function main() {
 
   // Audit logs for app2
   for (const entry of [
-    { from: null, to: ApplicationStatus.DRAFT, action: 'Application created', userId: applicant2.id },
-    { from: ApplicationStatus.DRAFT, to: ApplicationStatus.SUBMITTED, action: 'Application submitted', userId: applicant2.id },
-    { from: ApplicationStatus.SUBMITTED, to: ApplicationStatus.PRE_SCREENING, action: 'Start pre-screening', userId: handler.id },
-    { from: ApplicationStatus.PRE_SCREENING, to: ApplicationStatus.AWAITING_ADDITIONAL_INFORMATION, action: 'Request additional information', userId: handler.id, comment: 'Missing: exact CBS socioeconomic variable codes and aggregation method.' },
+    {
+      from: null,
+      to: ApplicationStatus.DRAFT,
+      action: 'Application created',
+      userId: applicant2.id,
+    },
+    {
+      from: ApplicationStatus.DRAFT,
+      to: ApplicationStatus.SUBMITTED,
+      action: 'Application submitted',
+      userId: applicant2.id,
+    },
+    {
+      from: ApplicationStatus.SUBMITTED,
+      to: ApplicationStatus.PRE_SCREENING,
+      action: 'Start pre-screening',
+      userId: handler.id,
+    },
+    {
+      from: ApplicationStatus.PRE_SCREENING,
+      to: ApplicationStatus.AWAITING_ADDITIONAL_INFORMATION,
+      action: 'Request additional information',
+      userId: handler.id,
+      comment:
+        'Missing: exact CBS socioeconomic variable codes and aggregation method.',
+    },
   ]) {
     await prisma.applicationLog.create({
       data: {
@@ -208,4 +323,6 @@ async function main() {
   console.log('Seed complete.');
 }
 
-main().catch(console.error).finally(() => prisma.$disconnect());
+main()
+  .catch(console.error)
+  .finally(() => prisma.$disconnect());

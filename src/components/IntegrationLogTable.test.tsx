@@ -37,7 +37,10 @@ describe('IntegrationLogTable', () => {
   });
 
   it('renders a row with application link, initiator, and success styling', async () => {
-    const element = await IntegrationLogTable({ entries: [makeEntry()], locale: 'nl' });
+    const element = await IntegrationLogTable({
+      entries: [makeEntry()],
+      locale: 'nl',
+    });
     render(element);
 
     expect(screen.getByText('applications.list')).toBeInTheDocument();

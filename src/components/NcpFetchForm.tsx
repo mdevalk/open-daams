@@ -15,7 +15,8 @@ type NcpQueueEntry = NcpApplicationSummary & {
 };
 
 export function NcpFetchForm({ locale }: { locale?: string }) {
-  const applicationHref = (id: string) => (locale ? `/${locale}/applications/${id}` : `/applications/${id}`);
+  const applicationHref = (id: string) =>
+    locale ? `/${locale}/applications/${id}` : `/applications/${id}`;
   const t = useTranslations('ncpFetchForm');
   const ta = useTranslations('applications');
   const terr = useTranslations('errors');
@@ -67,17 +68,28 @@ export function NcpFetchForm({ locale }: { locale?: string }) {
   async function importEntry(entry: NcpApplicationSummary) {
     setImportingId(entry.applicationId);
     try {
-      const res = await fetch(`/api/import/ncp-applications/${entry.applicationId}`, { method: 'POST' });
+      const res = await fetch(
+        `/api/import/ncp-applications/${entry.applicationId}`,
+        { method: 'POST' },
+      );
       const data = await res.json();
       if (!res.ok) {
         setResults((r) => ({
           ...r,
-          [entry.applicationId]: { ok: false, error: data.error, attachments: data.attachments },
+          [entry.applicationId]: {
+            ok: false,
+            error: data.error,
+            attachments: data.attachments,
+          },
         }));
       } else {
         setResults((r) => ({
           ...r,
-          [entry.applicationId]: { ok: true, ref: data.referenceNumber, id: data.id },
+          [entry.applicationId]: {
+            ok: true,
+            ref: data.referenceNumber,
+            id: data.id,
+          },
         }));
       }
     } finally {
@@ -85,7 +97,8 @@ export function NcpFetchForm({ locale }: { locale?: string }) {
     }
   }
 
-  const pendingCount = entries?.filter((e) => !results[e.applicationId]?.ok).length ?? 0;
+  const pendingCount =
+    entries?.filter((e) => !results[e.applicationId]?.ok).length ?? 0;
 
   return (
     <div className="space-y-5">
@@ -102,11 +115,17 @@ export function NcpFetchForm({ locale }: { locale?: string }) {
         >
           {loading ? t('querying') : t('refresh')}
         </button>
-        {entries && <span className="text-sm text-gray-500">{t('pendingCount', { count: pendingCount })}</span>}
+        {entries && (
+          <span className="text-sm text-gray-500">
+            {t('pendingCount', { count: pendingCount })}
+          </span>
+        )}
       </div>
 
       {loadError && (
-        <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800">{loadError}</div>
+        <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800">
+          {loadError}
+        </div>
       )}
 
       {entries && pendingCount === 0 && !loadError && (
@@ -119,17 +138,26 @@ export function NcpFetchForm({ locale }: { locale?: string }) {
         {entries?.map((entry) => {
           const result = results[entry.applicationId];
           return (
-            <div key={entry.applicationId} className="rounded-xl border border-gray-200 p-4">
+            <div
+              key={entry.applicationId}
+              className="rounded-xl border border-gray-200 p-4"
+            >
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="font-medium text-gray-900">{entry.title}</p>
                   <p className="mt-1 text-xs text-gray-500">
                     {entry.applicationId} · v{entry.version} ·{' '}
-                    <span className="rounded bg-gray-100 px-1.5 py-0.5 font-medium">{entry.status}</span> ·{' '}
-                    {entry.applicationType === 'DATA_ACCESS_APPLICATION' ? ta('typeDataAccess') : ta('typeDataRequest')}
+                    <span className="rounded bg-gray-100 px-1.5 py-0.5 font-medium">
+                      {entry.status}
+                    </span>{' '}
+                    ·{' '}
+                    {entry.applicationType === 'DATA_ACCESS_APPLICATION'
+                      ? ta('typeDataAccess')
+                      : ta('typeDataRequest')}
                   </p>
                   <p className="mt-1 text-xs text-gray-500">
-                    {t('submitted')} {new Date(entry.dateSubmitted).toLocaleString()}
+                    {t('submitted')}{' '}
+                    {new Date(entry.dateSubmitted).toLocaleString()}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
@@ -144,23 +172,34 @@ export function NcpFetchForm({ locale }: { locale?: string }) {
                   <button
                     type="button"
                     onClick={() => importEntry(entry)}
-                    disabled={importingId === entry.applicationId || result?.ok === true}
+                    disabled={
+                      importingId === entry.applicationId || result?.ok === true
+                    }
                     className="rounded-lg bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
                   >
-                    {result?.ok ? t('imported') : importingId === entry.applicationId ? t('importing') : t('import')}
+                    {result?.ok
+                      ? t('imported')
+                      : importingId === entry.applicationId
+                        ? t('importing')
+                        : t('import')}
                   </button>
                 </div>
               </div>
               {result && (
                 <div
                   className={`mt-3 rounded-lg border p-2 text-sm ${
-                    result.ok ? 'border-green-300 bg-green-50 text-green-800' : 'border-red-300 bg-red-50 text-red-800'
+                    result.ok
+                      ? 'border-green-300 bg-green-50 text-green-800'
+                      : 'border-red-300 bg-red-50 text-red-800'
                   }`}
                 >
                   {result.ok ? (
                     <>
                       ✓ {t('importedAs')} <strong>{result.ref}</strong>.{' '}
-                      <a href={applicationHref(result.id)} className="underline hover:text-green-900">
+                      <a
+                        href={applicationHref(result.id)}
+                        className="underline hover:text-green-900"
+                      >
                         {t('openApplication')} →
                       </a>
                     </>

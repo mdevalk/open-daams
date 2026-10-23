@@ -12,7 +12,9 @@ export function buildDataUserUpdateData(body: Record<string, unknown>) {
 }
 
 /** Builds the human-readable audit-log `changes` list from a PATCH body. */
-export function describeDataUserChanges(body: Record<string, unknown>): string[] {
+export function describeDataUserChanges(
+  body: Record<string, unknown>,
+): string[] {
   const changes: string[] = [];
   if (body.name !== undefined) changes.push('name');
   if (body.contactEmail !== undefined) changes.push('contact email');
@@ -22,9 +24,12 @@ export function describeDataUserChanges(body: Record<string, unknown>): string[]
 
 /** Upserts the data user's PRIMARY contact when contactEmail/contactPhone are present in the body. */
 async function upsertPrimaryContact(id: string, body: Record<string, unknown>) {
-  if (body.contactEmail === undefined && body.contactPhone === undefined) return;
+  if (body.contactEmail === undefined && body.contactPhone === undefined)
+    return;
 
-  const existingContact = await prisma.contact.findFirst({ where: { dataUserId: id, role: 'PRIMARY' } });
+  const existingContact = await prisma.contact.findFirst({
+    where: { dataUserId: id, role: 'PRIMARY' },
+  });
   const contactEmail = body.contactEmail as string | null | undefined;
   const contactPhone = body.contactPhone as string | null | undefined;
   const contactData = {
@@ -32,9 +37,14 @@ async function upsertPrimaryContact(id: string, body: Record<string, unknown>) {
     ...(contactPhone !== undefined ? { phone: contactPhone || null } : {}),
   };
   if (existingContact) {
-    await prisma.contact.update({ where: { id: existingContact.id }, data: contactData });
+    await prisma.contact.update({
+      where: { id: existingContact.id },
+      data: contactData,
+    });
   } else {
-    await prisma.contact.create({ data: { dataUserId: id, role: 'PRIMARY', ...contactData } });
+    await prisma.contact.create({
+      data: { dataUserId: id, role: 'PRIMARY', ...contactData },
+    });
   }
 }
 
@@ -43,13 +53,17 @@ async function upsertPrimaryContact(id: string, body: Record<string, unknown>) {
  * Update a data user's masterdata (ADMIN-only).
  * body: { name?, contactEmail?, contactPhone? }
  */
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await params;
     const body = await req.json();
 
     const auth = await requireRole(await actingUserId(), ['ADMIN']);
-    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+    if (!auth.ok)
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     await upsertPrimaryContact(id, body);
 
@@ -73,11 +87,18 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     return NextResponse.json(dataUser);
   } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
-      return NextResponse.json({ error: 'A data user with this name already exists' }, { status: 409 });
+    if (
+      e instanceof Prisma.PrismaClientKnownRequestError &&
+      e.code === 'P2002'
+    ) {
+      return NextResponse.json(
+        { error: 'A data user with this name already exists' },
+        { status: 409 },
+      );
     }
     console.error('Failed to update data user', e);
-    const message = e instanceof Error ? e.message : 'Failed to update data user';
+    const message =
+      e instanceof Error ? e.message : 'Failed to update data user';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
@@ -88,21 +109,29 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
  * any User.
  * (no request body needed)
  */
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await params;
 
     const auth = await requireRole(await actingUserId(), ['ADMIN']);
-    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+    if (!auth.ok)
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const dataUser = await prisma.dataUser.findUnique({
       where: { id },
       include: { _count: { select: { users: true } } },
     });
-    if (!dataUser) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    if (!dataUser)
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     if (dataUser._count.users > 0) {
-      return NextResponse.json({ error: 'This data user is still referenced and cannot be deleted' }, { status: 409 });
+      return NextResponse.json(
+        { error: 'This data user is still referenced and cannot be deleted' },
+        { status: 409 },
+      );
     }
 
     await prisma.dataUser.delete({ where: { id } });
@@ -119,7 +148,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error('Failed to delete data user', e);
-    const message = e instanceof Error ? e.message : 'Failed to delete data user';
+    const message =
+      e instanceof Error ? e.message : 'Failed to delete data user';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

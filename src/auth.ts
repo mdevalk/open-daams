@@ -3,7 +3,10 @@ import type { DefaultSession } from 'next-auth';
 import Keycloak from 'next-auth/providers/keycloak';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@prisma/client';
-import { resolveSignInClaims, resolveImpersonationUpdate } from '@/lib/auth-helpers';
+import {
+  resolveSignInClaims,
+  resolveImpersonationUpdate,
+} from '@/lib/auth-helpers';
 
 type ImpersonationClaims = {
   impersonatedUserId?: string;
@@ -43,7 +46,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     // Postgres, not created on first login.
     async signIn({ profile }) {
       if (!profile?.email) return false;
-      const user = await prisma.user.findUnique({ where: { email: profile.email } });
+      const user = await prisma.user.findUnique({
+        where: { email: profile.email },
+      });
       return !!user;
     },
     // Resolve the Keycloak login to the existing internal User.id once, on
@@ -61,7 +66,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return token;
     },
     async session({ session, token }) {
-      if (token.internalUserId) session.user.internalUserId = token.internalUserId;
+      if (token.internalUserId)
+        session.user.internalUserId = token.internalUserId;
       if (token.role) session.user.role = token.role;
       if (token.impersonatedUserId) {
         session.user.impersonatedUserId = token.impersonatedUserId;

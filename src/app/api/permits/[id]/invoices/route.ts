@@ -26,7 +26,10 @@ import {
  *                                    empty array means nothing was left to
  *                                    invoice, not an error.
  */
-export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  _: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const { id } = await params;
   const invoices = await prisma.invoice.findMany({
     where: { permitId: id },
@@ -36,19 +39,33 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
   return NextResponse.json(invoices);
 }
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await params;
     const body = await req.json();
 
-    const authz = await requireRole(await actingUserId(), ['DECISION_MAKER', 'ADMIN']);
-    if (!authz.ok) return NextResponse.json({ error: authz.error }, { status: authz.status });
+    const authz = await requireRole(await actingUserId(), [
+      'DECISION_MAKER',
+      'ADMIN',
+    ]);
+    if (!authz.ok)
+      return NextResponse.json(
+        { error: authz.error },
+        { status: authz.status },
+      );
 
     const permit = await prisma.dataPermit.findUnique({
       where: { id },
-      include: { lineItems: true, invoices: { select: { recipientType: true, dataHolderId: true } } },
+      include: {
+        lineItems: true,
+        invoices: { select: { recipientType: true, dataHolderId: true } },
+      },
     });
-    if (!permit) return NextResponse.json({ error: 'Permit not found' }, { status: 404 });
+    if (!permit)
+      return NextResponse.json({ error: 'Permit not found' }, { status: 404 });
 
     const groups = determineOutstandingInvoiceGroups({
       lineItems: permit.lineItems,
@@ -60,11 +77,21 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     // Data-holder names aren't frozen anywhere upstream (unlike the permit's
     // own speOperatorName), so look them up once here, at the moment each
     // self-billing invoice's recipientName gets frozen.
-    const holderIds = groups.filter((g) => g.recipientType === 'DATA_HOLDER').map((g) => g.dataHolderId);
-    const holders = holderIds.length > 0 ? await prisma.dataHolder.findMany({ where: { id: { in: holderIds } } }) : [];
+    const holderIds = groups
+      .filter((g) => g.recipientType === 'DATA_HOLDER')
+      .map((g) => g.dataHolderId);
+    const holders =
+      holderIds.length > 0
+        ? await prisma.dataHolder.findMany({ where: { id: { in: holderIds } } })
+        : [];
 
     const now = new Date();
-    const dueAt = calculateDueDate(now, typeof body.paymentTermDays === 'number' ? body.paymentTermDays : undefined);
+    const dueAt = calculateDueDate(
+      now,
+      typeof body.paymentTermDays === 'number'
+        ? body.paymentTermDays
+        : undefined,
+    );
     let sequence = await prisma.invoice.count();
 
     const created = await prisma.$transaction(async (tx) => {
@@ -73,10 +100,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         sequence += 1;
         const lineItems = snapshotLineItems(group.items);
         const totalAmount = sumLineItems(lineItems);
-        const prefix = group.recipientType === 'APPLICANT' ? 'INV-NL' : 'SBI-NL';
+        const prefix =
+          group.recipientType === 'APPLICANT' ? 'INV-NL' : 'SBI-NL';
         const recipientName =
           group.recipientType === 'DATA_HOLDER'
-            ? holders.find((h) => h.id === group.dataHolderId)?.name ?? null
+            ? (holders.find((h) => h.id === group.dataHolderId)?.name ?? null)
             : group.recipientType === 'SPE_OPERATOR'
               ? permit.speOperatorName
               : null;
@@ -87,8 +115,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             permitId: id,
             recipientType: group.recipientType,
             recipientName,
-            dataHolderId: group.recipientType === 'DATA_HOLDER' ? group.dataHolderId : null,
-            speOperatorId: group.recipientType === 'SPE_OPERATOR' ? group.speOperatorId : null,
+            dataHolderId:
+              group.recipientType === 'DATA_HOLDER' ? group.dataHolderId : null,
+            speOperatorId:
+              group.recipientType === 'SPE_OPERATOR'
+                ? group.speOperatorId
+                : null,
             currency: permit.currency,
             lineItems: { create: lineItems },
             totalAmount,

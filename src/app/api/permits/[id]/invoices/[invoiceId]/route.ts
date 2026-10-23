@@ -14,7 +14,9 @@ export async function PATCH(
     const { id, invoiceId } = await params;
     const body = await req.json();
 
-    const invoice = await prisma.invoice.findUnique({ where: { id: invoiceId } });
+    const invoice = await prisma.invoice.findUnique({
+      where: { id: invoiceId },
+    });
     if (invoice?.permitId !== id) {
       return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
     }

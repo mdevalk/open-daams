@@ -8,7 +8,8 @@ const handleI18nRouting = createMiddleware(routing);
 // Every page requires a session except the deliberately-public transparency
 // register and the sign-in page itself — matches with or without a locale
 // prefix, since this runs before next-intl has normalised the path.
-const UNGATED_PATH = /^\/(?:(?:nl|en|fr)\/)?(?:public(?:\/|$)|auth\/signin(?:\/|$))/;
+const UNGATED_PATH =
+  /^\/(?:(?:nl|en|fr)\/)?(?:public(?:\/|$)|auth\/signin(?:\/|$))/;
 
 function localeFromPathname(pathname: string): string {
   const match = /^\/(nl|en|fr)(?:\/|$)/.exec(pathname);
@@ -20,8 +21,14 @@ function applySecurityHeaders(response: NextResponse, csp: string) {
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-  response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains');
+  response.headers.set(
+    'Permissions-Policy',
+    'camera=(), microphone=(), geolocation=()',
+  );
+  response.headers.set(
+    'Strict-Transport-Security',
+    'max-age=63072000; includeSubDomains',
+  );
   return response;
 }
 
@@ -45,24 +52,38 @@ export async function proxy(request: NextRequest) {
     frame-ancestors 'none';
     upgrade-insecure-requests;
   `;
-  const contentSecurityPolicyHeaderValue = cspHeader.replace(/\s{2,}/g, ' ').trim();
+  const contentSecurityPolicyHeaderValue = cspHeader
+    .replace(/\s{2,}/g, ' ')
+    .trim();
 
   // Optimistic check only — cookie presence + signature, no DB call. The
   // real enforcement stays in each page/route via auth() + the unchanged
   // authz.ts (Next's own guidance: never rely on Proxy alone, a matcher
   // change could silently remove this coverage).
   if (!UNGATED_PATH.test(request.nextUrl.pathname)) {
-    const token = await getToken({ req: request, secret: process.env.AUTH_SECRET });
+    const token = await getToken({
+      req: request,
+      secret: process.env.AUTH_SECRET,
+    });
     if (!token) {
       const locale = localeFromPathname(request.nextUrl.pathname);
       const signInUrl = new URL(`/${locale}/auth/signin`, request.url);
-      signInUrl.searchParams.set('callbackUrl', request.nextUrl.pathname + request.nextUrl.search);
-      return applySecurityHeaders(NextResponse.redirect(signInUrl), contentSecurityPolicyHeaderValue);
+      signInUrl.searchParams.set(
+        'callbackUrl',
+        request.nextUrl.pathname + request.nextUrl.search,
+      );
+      return applySecurityHeaders(
+        NextResponse.redirect(signInUrl),
+        contentSecurityPolicyHeaderValue,
+      );
     }
   }
 
   request.headers.set('x-nonce', nonce);
-  request.headers.set('Content-Security-Policy', contentSecurityPolicyHeaderValue);
+  request.headers.set(
+    'Content-Security-Policy',
+    contentSecurityPolicyHeaderValue,
+  );
 
   const response = handleI18nRouting(request);
 

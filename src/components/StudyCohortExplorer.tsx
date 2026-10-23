@@ -31,7 +31,9 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
 function PriorPermitDetails({ row }: { row: StudyCohort }) {
   return (
     <>
-      {[row.priorPermitIssuer, row.priorPermitNumber].filter(Boolean).join(' — ')}
+      {[row.priorPermitIssuer, row.priorPermitNumber]
+        .filter(Boolean)
+        .join(' — ')}
       {row.priorPermitDate && (
         <span className="text-gray-500 font-normal">
           {' '}
@@ -60,26 +62,51 @@ function GroupFields({
   attachmentByNcpId: Map<string, Attachment>;
   extra?: React.ReactNode;
 }) {
-  const variablesAttachment = row.variablesAttachmentId ? attachmentByNcpId.get(row.variablesAttachmentId) : undefined;
+  const variablesAttachment = row.variablesAttachmentId
+    ? attachmentByNcpId.get(row.variablesAttachmentId)
+    : undefined;
   return (
     <>
       <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
-        <Field label={t('cohortFormation')} value={cohortFormationLabel(row.cohortFormationMethod ?? undefined)} />
+        <Field
+          label={t('cohortFormation')}
+          value={cohortFormationLabel(row.cohortFormationMethod ?? undefined)}
+        />
         <Field label={t('population')} value={populationLabel(row, t)} />
         <Field label={t('sizeJustification')} value={row.sizeJustification} />
         <Field label={t('dataPeriod')} value={dataPeriodLabel(row)} />
-        <Field label={t('extractionMethod')} value={extractionMethodLabel(row.extractionMethod ?? undefined)} />
+        <Field
+          label={t('extractionMethod')}
+          value={extractionMethodLabel(row.extractionMethod ?? undefined)}
+        />
         <Field label={t('inclusion')} value={row.inclusionCriteria} />
         <Field label={t('exclusion')} value={row.exclusionCriteria} />
-        <Field label={t('extractionFrequency')} value={extractionFrequencyLabel(row.extractionFrequency ?? undefined)} />
-        <Field label={t('extractionInterval')} value={extractionIntervalDisplay(row)} />
+        <Field
+          label={t('extractionFrequency')}
+          value={extractionFrequencyLabel(row.extractionFrequency ?? undefined)}
+        />
+        <Field
+          label={t('extractionInterval')}
+          value={extractionIntervalDisplay(row)}
+        />
         <Field label={t('orderForExtraction')} value={row.orderForExtraction} />
-        <Field label={t('willDataBeExtractedSimultaneously')} value={yesNoLabel(row.willDataBeExtractedSimultaneously, t)} />
-        <Field label={t('sameAsCohortData')} value={yesNoLabel(row.sameAsCohortData, t)} />
+        <Field
+          label={t('willDataBeExtractedSimultaneously')}
+          value={yesNoLabel(row.willDataBeExtractedSimultaneously, t)}
+        />
+        <Field
+          label={t('sameAsCohortData')}
+          value={yesNoLabel(row.sameAsCohortData, t)}
+        />
         <Field label={t('dataHolders')} value={row.dataHolderIds.join(', ')} />
         <Field label={t('databases')} value={row.databaseIds.join(', ')} />
         <Field label={t('datasets')} value={row.datasetIds.join(', ')} />
-        {row.formedFromPriorPermit && <Field label={t('priorPermit')} value={<PriorPermitDetails row={row} />} />}
+        {row.formedFromPriorPermit && (
+          <Field
+            label={t('priorPermit')}
+            value={<PriorPermitDetails row={row} />}
+          />
+        )}
         {extra}
       </dl>
       {row.variablesAttachmentRef && variablesAttachment && (
@@ -107,30 +134,65 @@ function BaseTabPanel({
 }) {
   return (
     <div className="space-y-3">
-      <p className="text-sm font-semibold text-gray-900">{t('section6BaseHeading', { country })}</p>
+      <p className="text-sm font-semibold text-gray-900">
+        {t('section6BaseHeading', { country })}
+      </p>
       {cohort && hasBaseSectionData(cohort) ? (
         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
           <Field label={t('hdabContacts')} value={cohort.hdabContacts} />
-          <Field label={t('dataLinkingMethod')} value={cohort.howWillDataBeLinked} />
-          <Field label={t('dataSubjectsInformed')} value={yesNoLabel(cohort.dataSubjectsInformed, t)} />
-          <Field label={t('dataSubjectsInformedDetail')} value={cohort.dataSubjectsInformedDetail} />
+          <Field
+            label={t('dataLinkingMethod')}
+            value={cohort.howWillDataBeLinked}
+          />
+          <Field
+            label={t('dataSubjectsInformed')}
+            value={yesNoLabel(cohort.dataSubjectsInformed, t)}
+          />
+          <Field
+            label={t('dataSubjectsInformedDetail')}
+            value={cohort.dataSubjectsInformedDetail}
+          />
           <Field
             label={t('cohortFormedFromParticipantInformation')}
-            value={yesNoLabel(cohort.hasTheStudyCohortBeenFormedBasedOnInformationOfStudyParticipants, t)}
+            value={yesNoLabel(
+              cohort.hasTheStudyCohortBeenFormedBasedOnInformationOfStudyParticipants,
+              t,
+            )}
           />
           <Field
             label={t('consentCoversRegistryExtractions')}
-            value={yesNoLabel(cohort.doesTheInformedConsentCoverTheRequestedRegistryExtractions, t)}
+            value={yesNoLabel(
+              cohort.doesTheInformedConsentCoverTheRequestedRegistryExtractions,
+              t,
+            )}
           />
           <Field
             label={t('dataPermitGrantedForResearchProject')}
-            value={yesNoLabel(cohort.confirmThatDataPermitHasBeenGrantedForTheResearchProject, t)}
+            value={yesNoLabel(
+              cohort.confirmThatDataPermitHasBeenGrantedForTheResearchProject,
+              t,
+            )}
           />
-          <Field label={t('howTheStudyCohortWasObtained')} value={cohort.howTheStudyCohortWasObtained} />
-          <Field label={t('detailsOfHowTheStudyCohortHasBeenFormed')} value={cohort.detailsOfHowTheStudyCohortHasBeenFormed} />
-          <Field label={t('whyNeedDataOfaWholePopulation')} value={cohort.whyNeedDataOfaWholePopulation} />
-          <Field label={t('regionsSeekForData')} value={cohort.regionsSeekForData} />
-          <Field label={t('informationProvider')} value={informationProviderLabel(cohort, t)} />
+          <Field
+            label={t('howTheStudyCohortWasObtained')}
+            value={cohort.howTheStudyCohortWasObtained}
+          />
+          <Field
+            label={t('detailsOfHowTheStudyCohortHasBeenFormed')}
+            value={cohort.detailsOfHowTheStudyCohortHasBeenFormed}
+          />
+          <Field
+            label={t('whyNeedDataOfaWholePopulation')}
+            value={cohort.whyNeedDataOfaWholePopulation}
+          />
+          <Field
+            label={t('regionsSeekForData')}
+            value={cohort.regionsSeekForData}
+          />
+          <Field
+            label={t('informationProvider')}
+            value={informationProviderLabel(cohort, t)}
+          />
         </dl>
       ) : (
         <p className="text-sm text-gray-500">{t('noDataCaptured')}</p>
@@ -152,7 +214,9 @@ function CohortTabPanel({
 }) {
   return (
     <div className="space-y-3">
-      <p className="text-sm font-semibold text-gray-900">{t('section61Heading', { country })}</p>
+      <p className="text-sm font-semibold text-gray-900">
+        {t('section61Heading', { country })}
+      </p>
       {cohort ? (
         <GroupFields row={cohort} t={t} attachmentByNcpId={attachmentByNcpId} />
       ) : (
@@ -177,10 +241,14 @@ function ControlTabPanel({
 }) {
   return (
     <div className="space-y-3">
-      <p className="text-sm font-semibold text-gray-900">{t('section62Heading', { country })}</p>
+      <p className="text-sm font-semibold text-gray-900">
+        {t('section62Heading', { country })}
+      </p>
       <p className="text-sm">
         <span className="text-gray-500">{t('willControlsBeExtracted')}: </span>
-        <span className="font-medium">{includesControls ? t('yes') : t('no')}</span>
+        <span className="font-medium">
+          {includesControls ? t('yes') : t('no')}
+        </span>
       </p>
       {includesControls &&
         (control ? (
@@ -190,8 +258,14 @@ function ControlTabPanel({
             attachmentByNcpId={attachmentByNcpId}
             extra={
               <>
-                <Field label={t('matchingCriteria')} value={control.matchingCriteria} />
-                <Field label={t('controlsPerCohortPerson')} value={control.controlsPerCohortPerson} />
+                <Field
+                  label={t('matchingCriteria')}
+                  value={control.matchingCriteria}
+                />
+                <Field
+                  label={t('controlsPerCohortPerson')}
+                  value={control.controlsPerCohortPerson}
+                />
               </>
             }
           />
@@ -217,10 +291,14 @@ function RelativeTabPanel({
 }) {
   return (
     <div className="space-y-3">
-      <p className="text-sm font-semibold text-gray-900">{t('section63Heading', { country })}</p>
+      <p className="text-sm font-semibold text-gray-900">
+        {t('section63Heading', { country })}
+      </p>
       <p className="text-sm">
         <span className="text-gray-500">{t('willRelativesBeExtracted')}: </span>
-        <span className="font-medium">{includesRelatives ? t('yes') : t('no')}</span>
+        <span className="font-medium">
+          {includesRelatives ? t('yes') : t('no')}
+        </span>
       </p>
       {includesRelatives &&
         (relative ? (
@@ -228,7 +306,12 @@ function RelativeTabPanel({
             row={relative}
             t={t}
             attachmentByNcpId={attachmentByNcpId}
-            extra={<Field label={t('relationshipToSubject')} value={relative.relationshipToSubject} />}
+            extra={
+              <Field
+                label={t('relationshipToSubject')}
+                value={relative.relationshipToSubject}
+              />
+            }
           />
         ) : (
           <p className="text-sm text-gray-500">{t('noDataCaptured')}</p>
@@ -249,14 +332,24 @@ export function StudyCohortExplorer({
   attachments: Attachment[];
 }) {
   const t = useTranslations('applicationDetail');
-  const attachmentByNcpId = new Map(attachments.filter((a) => a.description).map((a) => [a.description as string, a]));
+  const attachmentByNcpId = new Map(
+    attachments
+      .filter((a) => a.description)
+      .map((a) => [a.description as string, a]),
+  );
   const countries = Array.from(new Set(studyCohorts.map((c) => c.countryId)));
   const [country, setCountry] = useState(countries[0]);
   const [tab, setTab] = useState<SubTab>('base');
 
-  const cohort = studyCohorts.find((c) => c.countryId === country && c.role === 'COHORT');
-  const control = studyCohorts.find((c) => c.countryId === country && c.role === 'CONTROL');
-  const relative = studyCohorts.find((c) => c.countryId === country && c.role === 'RELATIVE');
+  const cohort = studyCohorts.find(
+    (c) => c.countryId === country && c.role === 'COHORT',
+  );
+  const control = studyCohorts.find(
+    (c) => c.countryId === country && c.role === 'CONTROL',
+  );
+  const relative = studyCohorts.find(
+    (c) => c.countryId === country && c.role === 'RELATIVE',
+  );
 
   const tabs: { value: SubTab; label: string }[] = [
     { value: 'base', label: t('section6BaseTab') },
@@ -276,7 +369,9 @@ export function StudyCohortExplorer({
               onClick={() => setCountry(c)}
               aria-current={country === c ? 'page' : undefined}
               className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                country === c ? 'bg-[#154273] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                country === c
+                  ? 'bg-[#154273] text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
               {c}
@@ -304,13 +399,34 @@ export function StudyCohortExplorer({
       </div>
 
       <div className="rounded-lg border border-gray-200 p-4">
-        {tab === 'base' && <BaseTabPanel country={country} cohort={cohort} t={t} />}
-        {tab === '6.1' && <CohortTabPanel country={country} cohort={cohort} t={t} attachmentByNcpId={attachmentByNcpId} />}
+        {tab === 'base' && (
+          <BaseTabPanel country={country} cohort={cohort} t={t} />
+        )}
+        {tab === '6.1' && (
+          <CohortTabPanel
+            country={country}
+            cohort={cohort}
+            t={t}
+            attachmentByNcpId={attachmentByNcpId}
+          />
+        )}
         {tab === '6.2' && (
-          <ControlTabPanel country={country} control={control} includesControls={includesControls} t={t} attachmentByNcpId={attachmentByNcpId} />
+          <ControlTabPanel
+            country={country}
+            control={control}
+            includesControls={includesControls}
+            t={t}
+            attachmentByNcpId={attachmentByNcpId}
+          />
         )}
         {tab === '6.3' && (
-          <RelativeTabPanel country={country} relative={relative} includesRelatives={includesRelatives} t={t} attachmentByNcpId={attachmentByNcpId} />
+          <RelativeTabPanel
+            country={country}
+            relative={relative}
+            includesRelatives={includesRelatives}
+            t={t}
+            attachmentByNcpId={attachmentByNcpId}
+          />
         )}
       </div>
     </div>

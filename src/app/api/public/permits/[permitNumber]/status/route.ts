@@ -47,7 +47,10 @@ export async function GET(
     });
 
     if (!permit?.application.decisionPublishedAt) {
-      return NextResponse.json({ error: 'Not found' }, { status: 404, headers: CORS_HEADERS });
+      return NextResponse.json(
+        { error: 'Not found' },
+        { status: 404, headers: CORS_HEADERS },
+      );
     }
 
     return NextResponse.json(
@@ -62,8 +65,15 @@ export async function GET(
       { headers: { 'Cache-Control': 'no-store', ...CORS_HEADERS } },
     );
   } catch (e) {
-    console.error(`Failed to look up public permit status for ${permitNumber}`, e);
-    const message = e instanceof Error ? e.message : 'Failed to look up permit status';
-    return NextResponse.json({ error: message }, { status: 500, headers: CORS_HEADERS });
+    console.error(
+      `Failed to look up public permit status for ${permitNumber}`,
+      e,
+    );
+    const message =
+      e instanceof Error ? e.message : 'Failed to look up permit status';
+    return NextResponse.json(
+      { error: message },
+      { status: 500, headers: CORS_HEADERS },
+    );
   }
 }

@@ -28,13 +28,19 @@ function makeEntry(overrides: Partial<Entries[number]> = {}): Entries[number] {
 
 describe('AuditLogTable', () => {
   it('shows the empty-state message when there are no entries', async () => {
-    const element = await AuditLogTable({ entries: [] as Entries, locale: 'nl' });
+    const element = await AuditLogTable({
+      entries: [] as Entries,
+      locale: 'nl',
+    });
     render(element);
     expect(screen.getByText('empty')).toBeInTheDocument();
   });
 
   it('renders a table row per entry with user, entity, action, and a dash for no comment', async () => {
-    const element = await AuditLogTable({ entries: [makeEntry()] as Entries, locale: 'nl' });
+    const element = await AuditLogTable({
+      entries: [makeEntry()] as Entries,
+      locale: 'nl',
+    });
     render(element);
     expect(screen.getByText('S. Bakker')).toBeInTheDocument();
     expect(screen.getByText(/Application/)).toBeInTheDocument();
@@ -54,7 +60,10 @@ describe('AuditLogTable', () => {
 
   it('renders one row per entry for multiple entries', async () => {
     const element = await AuditLogTable({
-      entries: [makeEntry({ id: 'log-1' }), makeEntry({ id: 'log-2', entityId: 'app-2' })] as Entries,
+      entries: [
+        makeEntry({ id: 'log-1' }),
+        makeEntry({ id: 'log-2', entityId: 'app-2' }),
+      ] as Entries,
       locale: 'nl',
     });
     const { container } = render(element);

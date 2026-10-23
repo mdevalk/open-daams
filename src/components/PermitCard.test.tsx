@@ -24,7 +24,11 @@ function makePermit(overrides: Partial<Permit> = {}): Permit {
     validUntil: '2027-01-01T00:00:00Z',
     revocationReason: null,
     previousPermit: null,
-    application: { referenceNumber: 'REF-001', title: 'Study X', type: 'DATA_ACCESS_APPLICATION' },
+    application: {
+      referenceNumber: 'REF-001',
+      title: 'Study X',
+      type: 'DATA_ACCESS_APPLICATION',
+    },
     ...overrides,
   } as unknown as Permit;
 }
@@ -51,12 +55,21 @@ describe('PermitCard', () => {
 
   it('shows revocation reason only when status is REVOKED', () => {
     const { unmount } = render(
-      <PermitCard permit={makePermit({ status: 'REVOKED', revocationReason: 'Breach of terms' })} />,
+      <PermitCard
+        permit={makePermit({
+          status: 'REVOKED',
+          revocationReason: 'Breach of terms',
+        })}
+      />,
     );
     expect(screen.getByText('Breach of terms')).toBeInTheDocument();
     unmount();
 
-    render(<PermitCard permit={makePermit({ status: 'GRANTED', revocationReason: null })} />);
+    render(
+      <PermitCard
+        permit={makePermit({ status: 'GRANTED', revocationReason: null })}
+      />,
+    );
     expect(screen.queryByText('Breach of terms')).not.toBeInTheDocument();
   });
 
@@ -64,12 +77,19 @@ describe('PermitCard', () => {
     // Give the predecessor a distinct number from the permit's own so the two
     // rendered occurrences of "DP-NL-2025-0001" aren't ambiguous to query.
     const permit = makePermit({
-      previousPermit: { id: 'prev-1', permitNumber: 'DP-NL-2024-0009', version: 1 },
+      previousPermit: {
+        id: 'prev-1',
+        permitNumber: 'DP-NL-2024-0009',
+        version: 1,
+      },
     });
 
     const { unmount } = render(<PermitCard permit={permit} locale="nl" />);
     const predecessorText = screen.getByText('DP-NL-2024-0009');
-    expect(predecessorText.closest('a')).toHaveAttribute('href', '/nl/permits/prev-1');
+    expect(predecessorText.closest('a')).toHaveAttribute(
+      'href',
+      '/nl/permits/prev-1',
+    );
     unmount();
 
     render(<PermitCard permit={permit} />);

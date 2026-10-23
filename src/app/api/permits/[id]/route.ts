@@ -6,51 +6,75 @@ import { regenerateStoredPermitPdf } from '@/lib/capabilities/permit-lifecycle/p
 import { requireRole, findActingUser } from '@/lib/authz';
 import { actingUserId } from '@/auth';
 
-const STAFF_ROLES = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN', 'DATA_HOLDER'] as const;
+const STAFF_ROLES = [
+  'CASE_HANDLER',
+  'DECISION_MAKER',
+  'ADMIN',
+  'DATA_HOLDER',
+] as const;
 
 /**
  * GET /api/permits/[id]  — fetch permit with logs (internal operational detail,
  * staff-only — distinct from the deliberately-public /pdf and /json exports)
  * POST /api/permits/[id] — transition permit status (D6.4 §9.2)
  */
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const { id } = await params;
 
   const auth = await requireRole(await actingUserId(), [...STAFF_ROLES]);
-  if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+  if (!auth.ok)
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const permit = await prisma.dataPermit.findUnique({
     where: { id },
     include: {
-      application: { select: { referenceNumber: true, title: true, type: true } },
+      application: {
+        select: { referenceNumber: true, title: true, type: true },
+      },
       logs: {
         include: { user: { select: { name: true, role: true } } },
         orderBy: { createdAt: 'asc' },
       },
     },
   });
-  if (!permit) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  if (!permit)
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
   return NextResponse.json(permit);
 }
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await params;
     const body = await req.json();
     // body: { toStatus, comment, validUntil? (for RENEWED) }
 
     const permit = await prisma.dataPermit.findUnique({ where: { id } });
-    if (!permit) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    if (!permit)
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     const found = await findActingUser(await actingUserId());
-    if (!found.ok) return NextResponse.json({ error: found.error }, { status: found.status });
+    if (!found.ok)
+      return NextResponse.json(
+        { error: found.error },
+        { status: found.status },
+      );
     const user = found.user;
 
     const available = PERMIT_TRANSITIONS[permit.status] ?? [];
-    const transition = available.find((t) => t.to === body.toStatus && t.requiredRole.includes(user.role));
+    const transition = available.find(
+      (t) => t.to === body.toStatus && t.requiredRole.includes(user.role),
+    );
     if (!transition)
       return NextResponse.json(
-        { error: `Transition to ${body.toStatus} not allowed from ${permit.status} for role ${user.role}` },
+        {
+          error: `Transition to ${body.toStatus} not allowed from ${permit.status} for role ${user.role}`,
+        },
         { status: 422 },
       );
 
@@ -87,7 +111,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json(updated);
   } catch (e) {
     console.error('Failed to transition permit', e);
-    const message = e instanceof Error ? e.message : 'Failed to transition permit';
+    const message =
+      e instanceof Error ? e.message : 'Failed to transition permit';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

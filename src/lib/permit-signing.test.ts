@@ -42,11 +42,18 @@ beforeAll(() => {
   const privateKeyBytes = ed.utils.randomPrivateKey();
   const publicKeyBytes = ed.getPublicKey(privateKeyBytes);
   testPublicKeyBase64Url = toBase64Url(publicKeyBytes);
-  const jwk = { d: toBase64Url(privateKeyBytes), x: testPublicKeyBase64Url, kid: TEST_KID };
+  const jwk = {
+    d: toBase64Url(privateKeyBytes),
+    x: testPublicKeyBase64Url,
+    kid: TEST_KID,
+  };
   vi.mocked(readFileSync).mockReturnValue(JSON.stringify(jwk));
 });
 
-const TEST_OUTPUT_CONTROLLER = { affiliation: 'HDAB-NL', did: 'did:key:ztest-oc' };
+const TEST_OUTPUT_CONTROLLER = {
+  affiliation: 'HDAB-NL',
+  did: 'did:key:ztest-oc',
+};
 
 const BASE_PERMIT: SignablePermit = {
   permitNumber: 'DP-NL-2025-0001',
@@ -65,7 +72,11 @@ describe('groupDatasetsByHolder', () => {
   it('groups flat rows by data holder, preserving row order within a group', () => {
     const rows = [
       { dataHolderName: 'Hospital A', name: 'Dataset 1', url: null },
-      { dataHolderName: 'Hospital B', name: 'Dataset 2', url: 'https://example.com' },
+      {
+        dataHolderName: 'Hospital B',
+        name: 'Dataset 2',
+        url: 'https://example.com',
+      },
       { dataHolderName: 'Hospital A', name: 'Dataset 3', url: null },
     ];
 
@@ -73,14 +84,35 @@ describe('groupDatasetsByHolder', () => {
       {
         dataHolderName: 'Hospital A',
         datasets: [
-          { name: 'Dataset 1', url: null, datasetId: null, catalogId: null, distributions: [], storageLocation: null },
-          { name: 'Dataset 3', url: null, datasetId: null, catalogId: null, distributions: [], storageLocation: null },
+          {
+            name: 'Dataset 1',
+            url: null,
+            datasetId: null,
+            catalogId: null,
+            distributions: [],
+            storageLocation: null,
+          },
+          {
+            name: 'Dataset 3',
+            url: null,
+            datasetId: null,
+            catalogId: null,
+            distributions: [],
+            storageLocation: null,
+          },
         ],
       },
       {
         dataHolderName: 'Hospital B',
         datasets: [
-          { name: 'Dataset 2', url: 'https://example.com', datasetId: null, catalogId: null, distributions: [], storageLocation: null },
+          {
+            name: 'Dataset 2',
+            url: 'https://example.com',
+            datasetId: null,
+            catalogId: null,
+            distributions: [],
+            storageLocation: null,
+          },
         ],
       },
     ]);
@@ -98,7 +130,12 @@ describe('groupDatasetsByHolder', () => {
         url: null,
         datasetId: '24b6a9b2-4519-4f94-8c0f-c4c85f295806',
         catalogId: '6be71aaf-abd3-464f-a417-708b780d4bef',
-        distributions: [{ distributionId: '58501e07-7717-497c-869a-c52826e3bb24', title: null }],
+        distributions: [
+          {
+            distributionId: '58501e07-7717-497c-869a-c52826e3bb24',
+            title: null,
+          },
+        ],
       },
     ];
 
@@ -111,7 +148,12 @@ describe('groupDatasetsByHolder', () => {
             url: null,
             datasetId: '24b6a9b2-4519-4f94-8c0f-c4c85f295806',
             catalogId: '6be71aaf-abd3-464f-a417-708b780d4bef',
-            distributions: [{ distributionId: '58501e07-7717-497c-869a-c52826e3bb24', title: null }],
+            distributions: [
+              {
+                distributionId: '58501e07-7717-497c-869a-c52826e3bb24',
+                title: null,
+              },
+            ],
             storageLocation: null,
           },
         ],
@@ -184,7 +226,10 @@ describe('canonicalPermitPayload', () => {
   });
 
   it('carries the researcher and output controller into the signed payload', () => {
-    const researcher = { affiliation: 'UMC Utrecht', did: 'did:key:ztest-researcher' };
+    const researcher = {
+      affiliation: 'UMC Utrecht',
+      did: 'did:key:ztest-researcher',
+    };
     const payload = canonicalPermitPayload(
       {
         permitNumber: 'DP-NL-2025-0001',
@@ -315,15 +360,26 @@ describe('signPermit / verifyPermitSignature', () => {
     expect(signingKeyId).toBe(TEST_KID);
     expect(signedAt).toBeInstanceOf(Date);
 
-    const valid = await verifyPermitSignature({ ...BASE_PERMIT, signature, signingKeyId });
+    const valid = await verifyPermitSignature({
+      ...BASE_PERMIT,
+      signature,
+      signingKeyId,
+    });
     expect(valid).toBe(true);
   });
 
   it('rejects a signature if the verified payload was tampered with', async () => {
     const { signature, signingKeyId } = await signPermit(BASE_PERMIT);
 
-    const tampered: SignablePermit = { ...BASE_PERMIT, validUntil: new Date('2099-01-01T00:00:00Z') };
-    const valid = await verifyPermitSignature({ ...tampered, signature, signingKeyId });
+    const tampered: SignablePermit = {
+      ...BASE_PERMIT,
+      validUntil: new Date('2099-01-01T00:00:00Z'),
+    };
+    const valid = await verifyPermitSignature({
+      ...tampered,
+      signature,
+      signingKeyId,
+    });
     expect(valid).toBe(false);
   });
 
@@ -339,8 +395,20 @@ describe('signPermit / verifyPermitSignature', () => {
   });
 
   it('rejects when signature or signingKeyId is missing', async () => {
-    expect(await verifyPermitSignature({ ...BASE_PERMIT, signature: null, signingKeyId: TEST_KID })).toBe(false);
-    expect(await verifyPermitSignature({ ...BASE_PERMIT, signature: 'sig', signingKeyId: null })).toBe(false);
+    expect(
+      await verifyPermitSignature({
+        ...BASE_PERMIT,
+        signature: null,
+        signingKeyId: TEST_KID,
+      }),
+    ).toBe(false);
+    expect(
+      await verifyPermitSignature({
+        ...BASE_PERMIT,
+        signature: 'sig',
+        signingKeyId: null,
+      }),
+    ).toBe(false);
   });
 
   it('produces an identical signature regardless of nested object key order (stableStringify)', async () => {
@@ -358,8 +426,14 @@ describe('signPermit / verifyPermitSignature', () => {
       id: 'op-1',
     };
 
-    const first = await signPermit({ ...BASE_PERMIT, speOperator: speOperatorInOneOrder });
-    const second = await signPermit({ ...BASE_PERMIT, speOperator: speOperatorInReverseOrder });
+    const first = await signPermit({
+      ...BASE_PERMIT,
+      speOperator: speOperatorInOneOrder,
+    });
+    const second = await signPermit({
+      ...BASE_PERMIT,
+      speOperator: speOperatorInReverseOrder,
+    });
 
     expect(first.signature).toBe(second.signature);
   });

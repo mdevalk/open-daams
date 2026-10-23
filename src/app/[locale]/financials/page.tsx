@@ -1,6 +1,10 @@
 import { getTranslations } from 'next-intl/server';
 import { prisma } from '@/lib/db';
-import { InvoiceStatus, FeeEstimateStatus, InvoiceRecipientType } from '@prisma/client';
+import {
+  InvoiceStatus,
+  FeeEstimateStatus,
+  InvoiceRecipientType,
+} from '@prisma/client';
 import { formatDateTime } from '@/lib/utils';
 import { formatPermitId } from '@/lib/capabilities/permit-lifecycle/permit';
 import {
@@ -33,11 +37,16 @@ function isOverdue(invoice: { status: InvoiceStatus; dueAt: Date }): boolean {
 }
 
 function recipientLabel(
-  invoice: { recipientType: InvoiceRecipientType; recipientName: string | null },
+  invoice: {
+    recipientType: InvoiceRecipientType;
+    recipientName: string | null;
+  },
   t: (key: string, values?: Record<string, string>) => string,
 ): string {
-  if (invoice.recipientType === 'DATA_HOLDER') return t('recipientDataHolder', { name: invoice.recipientName ?? '—' });
-  if (invoice.recipientType === 'SPE_OPERATOR') return t('recipientSpeOperator', { name: invoice.recipientName ?? '—' });
+  if (invoice.recipientType === 'DATA_HOLDER')
+    return t('recipientDataHolder', { name: invoice.recipientName ?? '—' });
+  if (invoice.recipientType === 'SPE_OPERATOR')
+    return t('recipientSpeOperator', { name: invoice.recipientName ?? '—' });
   return t('recipientApplicant');
 }
 
@@ -46,7 +55,12 @@ export default async function FinancialsPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ tab?: string; status?: string; overdue?: string; permitId?: string }>;
+  searchParams: Promise<{
+    tab?: string;
+    status?: string;
+    overdue?: string;
+    permitId?: string;
+  }>;
 }) {
   const { locale } = await params;
   const { tab: rawTab, status, overdue, permitId } = await searchParams;
@@ -58,7 +72,9 @@ export default async function FinancialsPage({
       <a
         href={`/${locale}/financials`}
         className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${
-          tab === 'estimates' ? 'border-[#154273] text-[#154273]' : 'border-transparent text-gray-500 hover:text-gray-700'
+          tab === 'estimates'
+            ? 'border-[#154273] text-[#154273]'
+            : 'border-transparent text-gray-500 hover:text-gray-700'
         }`}
       >
         {t('tabEstimates')}
@@ -66,7 +82,9 @@ export default async function FinancialsPage({
       <a
         href={`/${locale}/financials?tab=invoices`}
         className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${
-          tab === 'invoices' ? 'border-[#154273] text-[#154273]' : 'border-transparent text-gray-500 hover:text-gray-700'
+          tab === 'invoices'
+            ? 'border-[#154273] text-[#154273]'
+            : 'border-transparent text-gray-500 hover:text-gray-700'
         }`}
       >
         {t('tabInvoices')}
@@ -77,7 +95,16 @@ export default async function FinancialsPage({
   if (tab !== 'invoices') {
     const estimates = await prisma.feeEstimate.findMany({
       include: {
-        application: { select: { id: true, referenceNumber: true, title: true, applicant: { select: { name: true, dataUser: { select: { name: true } } } } } },
+        application: {
+          select: {
+            id: true,
+            referenceNumber: true,
+            title: true,
+            applicant: {
+              select: { name: true, dataUser: { select: { name: true } } },
+            },
+          },
+        },
       },
       orderBy: { sentAt: 'desc' },
     });
@@ -91,7 +118,9 @@ export default async function FinancialsPage({
         {tabs}
         {estimates.length === 0 ? (
           <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
-            <p className="font-medium text-gray-700">{t('estimatesNoResults')}</p>
+            <p className="font-medium text-gray-700">
+              {t('estimatesNoResults')}
+            </p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -103,26 +132,40 @@ export default async function FinancialsPage({
               >
                 <div className="flex items-start justify-between gap-4 mb-3">
                   <div>
-                    <span className="font-mono text-sm font-bold text-gray-900">{estimate.application.referenceNumber}</span>
-                    <p className="text-xs text-gray-500 mt-0.5">{estimate.application.title}</p>
+                    <span className="font-mono text-sm font-bold text-gray-900">
+                      {estimate.application.referenceNumber}
+                    </span>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {estimate.application.title}
+                    </p>
                   </div>
-                  <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold ${ESTIMATE_STATUS_COLORS[estimate.status]}`}>
+                  <span
+                    className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold ${ESTIMATE_STATUS_COLORS[estimate.status]}`}
+                  >
                     {t(`estimateStatus${estimate.status}`)}
                   </span>
                 </div>
                 <div className="grid grid-cols-3 gap-4 text-sm">
                   <div>
                     <p className="text-xs text-gray-500">{t('applicant')}</p>
-                    <p className="font-medium">{estimate.application.applicant.name}</p>
-                    <p className="text-xs text-gray-400">{estimate.application.applicant.dataUser?.name}</p>
+                    <p className="font-medium">
+                      {estimate.application.applicant.name}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {estimate.application.applicant.dataUser?.name}
+                    </p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">{t('amount')}</p>
-                    <p className="font-medium">{estimate.totalAmount.toString()} {estimate.currency}</p>
+                    <p className="font-medium">
+                      {estimate.totalAmount.toString()} {estimate.currency}
+                    </p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">{t('sentOn')}</p>
-                    <p className="font-medium">{formatDateTime(estimate.sentAt)}</p>
+                    <p className="font-medium">
+                      {formatDateTime(estimate.sentAt)}
+                    </p>
                   </div>
                 </div>
               </a>
@@ -141,11 +184,26 @@ export default async function FinancialsPage({
           id: true,
           permitNumber: true,
           version: true,
-          application: { select: { referenceNumber: true, title: true, applicant: { select: { name: true, dataUser: { select: { name: true } } } } } },
+          application: {
+            select: {
+              referenceNumber: true,
+              title: true,
+              applicant: {
+                select: { name: true, dataUser: { select: { name: true } } },
+              },
+            },
+          },
         },
       },
       application: {
-        select: { id: true, referenceNumber: true, title: true, applicant: { select: { name: true, dataUser: { select: { name: true } } } } },
+        select: {
+          id: true,
+          referenceNumber: true,
+          title: true,
+          applicant: {
+            select: { name: true, dataUser: { select: { name: true } } },
+          },
+        },
       },
       createdBy: { select: { name: true, role: true } },
     },
@@ -155,11 +213,18 @@ export default async function FinancialsPage({
   const invoiceGroups = groupInvoicesByPermitOrApplication(invoices);
 
   const counts = await prisma.invoice.groupBy({ by: ['status'], _count: true });
-  const countMap = buildInvoiceStatusCounts(counts.map((c) => ({ status: c.status, _count: c._count })));
+  const countMap = buildInvoiceStatusCounts(
+    counts.map((c) => ({ status: c.status, _count: c._count })),
+  );
   const total = Object.values(countMap).reduce((a, b) => a + b, 0);
-  const overdueCount = await prisma.invoice.count({ where: { status: 'ISSUED', dueAt: { lt: new Date() } } });
+  const overdueCount = await prisma.invoice.count({
+    where: { status: 'ISSUED', dueAt: { lt: new Date() } },
+  });
 
-  const totals = await prisma.invoice.groupBy({ by: ['status'], _sum: { totalAmount: true } });
+  const totals = await prisma.invoice.groupBy({
+    by: ['status'],
+    _sum: { totalAmount: true },
+  });
   const sumByStatus = buildInvoiceStatusSums(totals);
 
   return (
@@ -173,7 +238,10 @@ export default async function FinancialsPage({
       {permitId && (
         <div className="flex items-center justify-between rounded-lg border border-[#154273]/20 bg-[#e8f4fb] px-4 py-2 text-sm text-[#154273]">
           <span>{t('filteredByPermit')}</span>
-          <a href={`/${locale}/financials?tab=invoices`} className="text-xs font-medium hover:underline">
+          <a
+            href={`/${locale}/financials?tab=invoices`}
+            className="text-xs font-medium hover:underline"
+          >
             {t('showAllInvoices')}
           </a>
         </div>
@@ -183,7 +251,9 @@ export default async function FinancialsPage({
         <a
           href={`/${locale}/financials?tab=invoices`}
           className={`rounded-lg border p-4 text-center transition-colors ${
-            !status && !overdue ? 'border-[#154273] bg-[#e8f4fb]' : 'border-gray-200 bg-white hover:bg-gray-50'
+            !status && !overdue
+              ? 'border-[#154273] bg-[#e8f4fb]'
+              : 'border-gray-200 bg-white hover:bg-gray-50'
           }`}
         >
           <p className="text-2xl font-bold text-[#154273]">{total}</p>
@@ -194,17 +264,23 @@ export default async function FinancialsPage({
             key={s}
             href={`/${locale}/financials?tab=invoices&status=${s}`}
             className={`rounded-lg border p-4 text-center transition-colors ${
-              status === s ? 'border-[#154273] bg-[#e8f4fb]' : 'border-gray-200 bg-white hover:bg-gray-50'
+              status === s
+                ? 'border-[#154273] bg-[#e8f4fb]'
+                : 'border-gray-200 bg-white hover:bg-gray-50'
             }`}
           >
-            <p className="text-2xl font-bold text-gray-900">{countMap[s] ?? 0}</p>
+            <p className="text-2xl font-bold text-gray-900">
+              {countMap[s] ?? 0}
+            </p>
             <p className="text-xs text-gray-600 mt-1">{t(`status${s}`)}</p>
           </a>
         ))}
         <a
           href={`/${locale}/financials?tab=invoices&overdue=1`}
           className={`rounded-lg border p-4 text-center transition-colors ${
-            overdue ? 'border-amber-500 bg-amber-50' : 'border-gray-200 bg-white hover:bg-gray-50'
+            overdue
+              ? 'border-amber-500 bg-amber-50'
+              : 'border-gray-200 bg-white hover:bg-gray-50'
           }`}
         >
           <p className="text-2xl font-bold text-amber-600">{overdueCount}</p>
@@ -215,11 +291,15 @@ export default async function FinancialsPage({
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
         <div className="rounded-lg border border-gray-200 bg-white p-3">
           <p className="text-xs text-gray-500">{t('outstandingAmount')}</p>
-          <p className="font-semibold text-gray-900">{(sumByStatus.ISSUED ?? 0).toFixed(2)} EUR</p>
+          <p className="font-semibold text-gray-900">
+            {(sumByStatus.ISSUED ?? 0).toFixed(2)} EUR
+          </p>
         </div>
         <div className="rounded-lg border border-gray-200 bg-white p-3">
           <p className="text-xs text-gray-500">{t('paidAmount')}</p>
-          <p className="font-semibold text-gray-900">{(sumByStatus.PAID ?? 0).toFixed(2)} EUR</p>
+          <p className="font-semibold text-gray-900">
+            {(sumByStatus.PAID ?? 0).toFixed(2)} EUR
+          </p>
         </div>
       </div>
 
@@ -231,16 +311,29 @@ export default async function FinancialsPage({
       ) : (
         <div className="space-y-4">
           {invoiceGroups.map((group) => (
-            <div key={group.key} className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+            <div
+              key={group.key}
+              className="rounded-lg border border-gray-200 bg-white overflow-hidden"
+            >
               <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50">
                 {group.permit ? (
-                  <a href={`/${locale}/permits/${group.permit.id}`} className="font-mono text-sm font-bold text-gray-900 hover:underline">
-                    {formatPermitId(group.permit.permitNumber, group.permit.version)}
+                  <a
+                    href={`/${locale}/permits/${group.permit.id}`}
+                    className="font-mono text-sm font-bold text-gray-900 hover:underline"
+                  >
+                    {formatPermitId(
+                      group.permit.permitNumber,
+                      group.permit.version,
+                    )}
                   </a>
                 ) : (
-                  <span className="font-mono text-sm font-bold text-gray-900">{t('provisional')}</span>
+                  <span className="font-mono text-sm font-bold text-gray-900">
+                    {t('provisional')}
+                  </span>
                 )}
-                <span className="text-xs text-gray-500 ml-2">{group.reference}</span>
+                <span className="text-xs text-gray-500 ml-2">
+                  {group.reference}
+                </span>
               </div>
               <ul className="divide-y divide-gray-100">
                 {group.invoices.map((invoice) => {
@@ -252,8 +345,12 @@ export default async function FinancialsPage({
                         className="flex items-center justify-between gap-4 px-4 py-2.5 hover:bg-gray-50 transition-colors"
                       >
                         <div className="flex items-center gap-2 min-w-0">
-                          <span className="font-mono text-xs font-medium text-gray-700 flex-shrink-0">{invoice.invoiceNumber}</span>
-                          <span className="text-xs text-gray-500 truncate">{recipientLabel(invoice, t)}</span>
+                          <span className="font-mono text-xs font-medium text-gray-700 flex-shrink-0">
+                            {invoice.invoiceNumber}
+                          </span>
+                          <span className="text-xs text-gray-500 truncate">
+                            {recipientLabel(invoice, t)}
+                          </span>
                           {invoice.recipientType !== 'APPLICANT' && (
                             <span className="flex-shrink-0 inline-flex items-center rounded-full bg-purple-100 text-purple-700 px-2 py-0.5 text-xs font-medium">
                               {t('selfBilled')}
@@ -261,13 +358,19 @@ export default async function FinancialsPage({
                           )}
                         </div>
                         <div className="flex items-center gap-3 flex-shrink-0">
-                          <span className="text-sm font-medium text-gray-900">{invoice.totalAmount.toString()} {invoice.currency}</span>
+                          <span className="text-sm font-medium text-gray-900">
+                            {invoice.totalAmount.toString()} {invoice.currency}
+                          </span>
                           <span
                             className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold ${
-                              overdueRow ? 'bg-amber-100 text-amber-700' : STATUS_COLORS[invoice.status]
+                              overdueRow
+                                ? 'bg-amber-100 text-amber-700'
+                                : STATUS_COLORS[invoice.status]
                             }`}
                           >
-                            {overdueRow ? t('overdue') : t(`status${invoice.status}`)}
+                            {overdueRow
+                              ? t('overdue')
+                              : t(`status${invoice.status}`)}
                           </span>
                         </div>
                       </a>

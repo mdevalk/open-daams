@@ -27,12 +27,17 @@ describe('NcpFetchForm — loading the queue', () => {
   it('fetches the queue on mount and renders each entry', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue({ ok: true, json: async () => ({ entries: [entry()] }) }),
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ entries: [entry()] }),
+      }),
     );
 
     render(<NcpFetchForm />);
 
-    expect(await screen.findByText('Registry linkage study')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Registry linkage study'),
+    ).toBeInTheDocument();
     expect(vi.mocked(fetch)).toHaveBeenCalledWith('/api/import/ncp-queue');
     expect(screen.getByText(/pendingCount/)).toBeInTheDocument();
   });
@@ -40,7 +45,10 @@ describe('NcpFetchForm — loading the queue', () => {
   it('shows the load error when the queue request fails', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue({ ok: false, json: async () => ({ error: 'Server unavailable' }) }),
+      vi.fn().mockResolvedValue({
+        ok: false,
+        json: async () => ({ error: 'Server unavailable' }),
+      }),
     );
 
     render(<NcpFetchForm />);
@@ -49,7 +57,12 @@ describe('NcpFetchForm — loading the queue', () => {
   });
 
   it('shows the empty state once loaded with nothing queued', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ entries: [] }) }));
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValue({ ok: true, json: async () => ({ entries: [] }) }),
+    );
 
     render(<NcpFetchForm />);
 
@@ -62,14 +75,23 @@ describe('NcpFetchForm — loading the queue', () => {
       vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({
-          entries: [entry({ alreadyImported: { id: 'app-existing', referenceNumber: 'HDAB-2026-0009' } })],
+          entries: [
+            entry({
+              alreadyImported: {
+                id: 'app-existing',
+                referenceNumber: 'HDAB-2026-0009',
+              },
+            }),
+          ],
         }),
       }),
     );
 
     render(<NcpFetchForm />);
 
-    expect(await screen.findByText('HDAB-2026-0009', { exact: false })).toBeInTheDocument();
+    expect(
+      await screen.findByText('HDAB-2026-0009', { exact: false }),
+    ).toBeInTheDocument();
     expect(screen.getByText('imported')).toBeInTheDocument();
     expect(screen.getByText('imported')).toBeDisabled();
   });
@@ -79,13 +101,18 @@ describe('NcpFetchForm — importing an entry', () => {
   beforeEach(() => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue({ ok: true, json: async () => ({ entries: [entry()] }) }),
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ entries: [entry()] }),
+      }),
     );
   });
 
   it('imports an entry on success and shows the reference number with a link to it', async () => {
     render(<NcpFetchForm />);
-    expect(await screen.findByText('Registry linkage study')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Registry linkage study'),
+    ).toBeInTheDocument();
 
     vi.mocked(fetch).mockResolvedValueOnce({
       ok: true,
@@ -96,18 +123,26 @@ describe('NcpFetchForm — importing an entry', () => {
 
     expect(await screen.findByText('HDAB-2026-0010')).toBeInTheDocument();
     const fetchMock = vi.mocked(fetch);
-    expect(fetchMock).toHaveBeenCalledWith('/api/import/ncp-applications/ncp-app-1', { method: 'POST' });
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/import/ncp-applications/ncp-app-1',
+      { method: 'POST' },
+    );
     const link = screen.getByText(/openApplication/).closest('a')!;
     expect(link).toHaveAttribute('href', '/applications/app-new');
   });
 
   it('shows the import error and offers a link to each failing attachment', async () => {
     render(<NcpFetchForm />);
-    expect(await screen.findByText('Registry linkage study')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Registry linkage study'),
+    ).toBeInTheDocument();
 
     vi.mocked(fetch).mockResolvedValueOnce({
       ok: false,
-      json: async () => ({ error: 'Validation failed', attachments: ['application_metadata.json'] }),
+      json: async () => ({
+        error: 'Validation failed',
+        attachments: ['application_metadata.json'],
+      }),
     } as Response);
 
     fireEvent.click(screen.getByText('import'));
@@ -122,7 +157,9 @@ describe('NcpFetchForm — importing an entry', () => {
 
   it('prefixes application links with the locale when one is given', async () => {
     render(<NcpFetchForm locale="nl" />);
-    expect(await screen.findByText('Registry linkage study')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Registry linkage study'),
+    ).toBeInTheDocument();
 
     vi.mocked(fetch).mockResolvedValueOnce({
       ok: true,

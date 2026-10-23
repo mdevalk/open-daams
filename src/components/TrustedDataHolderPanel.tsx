@@ -17,7 +17,11 @@ type Props = {
   currentUser: { id: string; role: string };
 };
 
-export function TrustedDataHolderPanel({ application, dataHolders, currentUser }: Props) {
+export function TrustedDataHolderPanel({
+  application,
+  dataHolders,
+  currentUser,
+}: Props) {
   const canManage = MANAGE_ROLES.includes(currentUser.role);
   const router = useRouter();
   const t = useTranslations('trustedDataHolder');
@@ -25,18 +29,27 @@ export function TrustedDataHolderPanel({ application, dataHolders, currentUser }
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedId, setSelectedId] = useState(application.trustedDataHolderId ?? '');
+  const [selectedId, setSelectedId] = useState(
+    application.trustedDataHolderId ?? '',
+  );
 
   async function save() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/applications/${application.id}/trusted-data-holder`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ trustedDataHolderId: selectedId || null, actingUserId: currentUser.id }),
-      });
-      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
+      const res = await fetch(
+        `/api/applications/${application.id}/trusted-data-holder`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            trustedDataHolderId: selectedId || null,
+            actingUserId: currentUser.id,
+          }),
+        },
+      );
+      if (!res.ok)
+        throw new Error(await readErrorMessage(res, terr('requestFailed')));
       setEditing(false);
       router.refresh();
     } catch (e: unknown) {
@@ -52,7 +65,9 @@ export function TrustedDataHolderPanel({ application, dataHolders, currentUser }
 
       {!editing && (
         <p className="text-sm">
-          {application.trustedDataHolder ? application.trustedDataHolder.name : (
+          {application.trustedDataHolder ? (
+            application.trustedDataHolder.name
+          ) : (
             <span className="text-gray-500">{t('noneSelected')}</span>
           )}
         </p>
@@ -69,16 +84,29 @@ export function TrustedDataHolderPanel({ application, dataHolders, currentUser }
           >
             <option value="">{t('noneSelected')}</option>
             {dataHolders.map((dh) => (
-              <option key={dh.id} value={dh.id}>{dh.name}</option>
+              <option key={dh.id} value={dh.id}>
+                {dh.name}
+              </option>
             ))}
           </select>
           <div className="flex gap-2">
-            <button type="button" disabled={loading} onClick={save}
-              className="flex-1 rounded px-3 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors">
+            <button
+              type="button"
+              disabled={loading}
+              onClick={save}
+              className="flex-1 rounded px-3 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors"
+            >
               {loading ? t('saving') : t('save')}
             </button>
-            <button type="button" disabled={loading} onClick={() => { setEditing(false); setSelectedId(application.trustedDataHolderId ?? ''); }}
-              className="rounded px-3 py-2 text-sm border border-gray-300 hover:bg-gray-50">
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => {
+                setEditing(false);
+                setSelectedId(application.trustedDataHolderId ?? '');
+              }}
+              className="rounded px-3 py-2 text-sm border border-gray-300 hover:bg-gray-50"
+            >
               {t('cancel')}
             </button>
           </div>
@@ -86,7 +114,11 @@ export function TrustedDataHolderPanel({ application, dataHolders, currentUser }
       )}
 
       {canManage && !editing && (
-        <button type="button" onClick={() => setEditing(true)} className="text-xs text-[#01689b] hover:underline">
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          className="text-xs text-[#01689b] hover:underline"
+        >
           {t('edit')}
         </button>
       )}

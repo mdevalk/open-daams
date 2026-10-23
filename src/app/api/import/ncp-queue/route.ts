@@ -22,11 +22,21 @@ export async function GET() {
     entries = await getNcpApplicationList();
   } catch (e) {
     console.error('Failed to fetch NCP applications list', e);
-    const message = e instanceof Error ? e.message : 'Failed to fetch NCP applications list';
-    await logNcpCall({ direction: 'OUTBOUND', operation: 'applications.list', outcome: 'FAILURE', errorMessage: message });
+    const message =
+      e instanceof Error ? e.message : 'Failed to fetch NCP applications list';
+    await logNcpCall({
+      direction: 'OUTBOUND',
+      operation: 'applications.list',
+      outcome: 'FAILURE',
+      errorMessage: message,
+    });
     return NextResponse.json({ error: message }, { status: 502 });
   }
-  await logNcpCall({ direction: 'OUTBOUND', operation: 'applications.list', outcome: 'SUCCESS' });
+  await logNcpCall({
+    direction: 'OUTBOUND',
+    operation: 'applications.list',
+    outcome: 'SUCCESS',
+  });
 
   try {
     const imported = await prisma.application.findMany({
@@ -40,13 +50,16 @@ export async function GET() {
         const existing = importedById.get(e.applicationId);
         return {
           ...e,
-          alreadyImported: existing ? { id: existing.id, referenceNumber: existing.referenceNumber } : null,
+          alreadyImported: existing
+            ? { id: existing.id, referenceNumber: existing.referenceNumber }
+            : null,
         };
       }),
     });
   } catch (e) {
     console.error('Failed to fetch NCP applications list', e);
-    const message = e instanceof Error ? e.message : 'Failed to fetch NCP applications list';
+    const message =
+      e instanceof Error ? e.message : 'Failed to fetch NCP applications list';
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }

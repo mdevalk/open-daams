@@ -16,12 +16,21 @@ vi.mock('@/auth', () => ({
 }));
 
 import { prisma } from '@/lib/db';
-import { PATCH, buildDataHolderUpdateData, describeDataHolderChanges } from './route';
+import {
+  PATCH,
+  buildDataHolderUpdateData,
+  describeDataHolderChanges,
+} from './route';
 
 const findUnique = vi.mocked(prisma.user.findUnique);
 const logCreate = vi.mocked(prisma.authzFailureLog.create);
 
-const APPLICANT = { id: 'u-2', role: 'APPLICANT' as const, name: 'A. de Vries', email: 'researcher@umcu.nl' };
+const APPLICANT = {
+  id: 'u-2',
+  role: 'APPLICANT' as const,
+  name: 'A. de Vries',
+  email: 'researcher@umcu.nl',
+};
 
 beforeEach(() => {
   findUnique.mockReset();
@@ -57,12 +66,18 @@ describe('buildDataHolderUpdateData', () => {
   });
 
   it('coerces a falsy isTrusted to a boolean rather than dropping it', () => {
-    expect(buildDataHolderUpdateData({ isTrusted: 0 })).toEqual({ isTrusted: false });
-    expect(buildDataHolderUpdateData({ isTrusted: 'yes' })).toEqual({ isTrusted: true });
+    expect(buildDataHolderUpdateData({ isTrusted: 0 })).toEqual({
+      isTrusted: false,
+    });
+    expect(buildDataHolderUpdateData({ isTrusted: 'yes' })).toEqual({
+      isTrusted: true,
+    });
   });
 
   it('includes only the field present when only name is set', () => {
-    expect(buildDataHolderUpdateData({ name: 'Acme' })).toEqual({ name: 'Acme' });
+    expect(buildDataHolderUpdateData({ name: 'Acme' })).toEqual({
+      name: 'Acme',
+    });
   });
 
   it('returns an empty object for an empty body', () => {
@@ -101,7 +116,9 @@ describe('describeDataHolderChanges', () => {
       'Peppol code',
     ]);
 
-    expect(describeDataHolderChanges({ ...bodyTrusted, isTrusted: false })).toContain('un-marked as trusted');
+    expect(
+      describeDataHolderChanges({ ...bodyTrusted, isTrusted: false }),
+    ).toContain('un-marked as trusted');
   });
 
   it('returns an empty array when no fields changed', () => {
@@ -120,22 +137,30 @@ describe('PATCH /api/data-holders/[id]', () => {
   it('rejects a non-ADMIN acting user with the authz failure status and error', async () => {
     findUnique.mockResolvedValue(APPLICANT as never);
 
-    const res = await PATCH(makeRequest({ actingUserId: 'u-2', name: 'New Name' }), {
-      params: Promise.resolve({ id: 'dh-1' }),
-    });
+    const res = await PATCH(
+      makeRequest({ actingUserId: 'u-2', name: 'New Name' }),
+      {
+        params: Promise.resolve({ id: 'dh-1' }),
+      },
+    );
 
     expect(res.status).toBe(403);
     const json = await res.json();
-    expect(json).toEqual({ error: 'Role APPLICANT is not permitted to perform this action' });
+    expect(json).toEqual({
+      error: 'Role APPLICANT is not permitted to perform this action',
+    });
     expect(prisma.dataHolder.update).not.toHaveBeenCalled();
   });
 
   it('rejects an unknown acting user with a 401', async () => {
     findUnique.mockResolvedValue(null);
 
-    const res = await PATCH(makeRequest({ actingUserId: 'ghost', name: 'New Name' }), {
-      params: Promise.resolve({ id: 'dh-1' }),
-    });
+    const res = await PATCH(
+      makeRequest({ actingUserId: 'ghost', name: 'New Name' }),
+      {
+        params: Promise.resolve({ id: 'dh-1' }),
+      },
+    );
 
     expect(res.status).toBe(401);
     const json = await res.json();

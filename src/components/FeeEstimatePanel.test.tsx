@@ -20,7 +20,12 @@ afterEach(cleanup);
 type Application = ComponentProps<typeof FeeEstimatePanel>['application'];
 type CurrentUser = ComponentProps<typeof FeeEstimatePanel>['currentUser'];
 
-const CASE_HANDLER = { id: 'u-1', role: 'CASE_HANDLER', name: 'S. Bakker', email: 'casehandler@hdab.nl' } as unknown as CurrentUser;
+const CASE_HANDLER = {
+  id: 'u-1',
+  role: 'CASE_HANDLER',
+  name: 'S. Bakker',
+  email: 'casehandler@hdab.nl',
+} as unknown as CurrentUser;
 
 function makeApplication(overrides: Partial<Application> = {}): Application {
   return {
@@ -49,7 +54,9 @@ describe('FeeEstimatePanel — manual line-item rows', () => {
 
     // No estimate yet, so rows starts empty (Row[] derived from
     // estimate?.lineItems ?? []) — nothing to query until a row is added.
-    expect(screen.queryAllByPlaceholderText('amountPlaceholder')).toHaveLength(0);
+    expect(screen.queryAllByPlaceholderText('amountPlaceholder')).toHaveLength(
+      0,
+    );
     fireEvent.click(screen.getByText('+ addRow'));
     expect(screen.getAllByPlaceholderText('amountPlaceholder')).toHaveLength(1);
     fireEvent.click(screen.getByText('+ addRow'));
@@ -82,7 +89,14 @@ describe('FeeEstimatePanel — SPE type selection', () => {
       {
         id: 'op-1',
         name: 'SURF Research Cloud',
-        types: [{ id: 'type-1', name: 'Standard SPE', setupFee: 500, monthlyFee: 150 }],
+        types: [
+          {
+            id: 'type-1',
+            name: 'Standard SPE',
+            setupFee: 500,
+            monthlyFee: 150,
+          },
+        ],
       },
     ];
 
@@ -95,7 +109,9 @@ describe('FeeEstimatePanel — SPE type selection', () => {
       />,
     );
 
-    fireEvent.change(screen.getByDisplayValue('noneSelected'), { target: { value: 'op-1' } });
+    fireEvent.change(screen.getByDisplayValue('noneSelected'), {
+      target: { value: 'op-1' },
+    });
 
     // Selecting the operator swaps its own displayed value away from
     // "noneSelected", leaving the newly-rendered SPE type select as the only

@@ -13,7 +13,8 @@ import { getToken } from 'next-auth/jwt';
  */
 export async function GET(req: NextRequest) {
   const token = await getToken({ req, secret: process.env.AUTH_SECRET });
-  const idToken = typeof token?.idToken === 'string' ? token.idToken : undefined;
+  const idToken =
+    typeof token?.idToken === 'string' ? token.idToken : undefined;
   const issuer = process.env.AUTH_KEYCLOAK_ISSUER;
 
   if (!idToken || !issuer) {
@@ -23,7 +24,10 @@ export async function GET(req: NextRequest) {
   const endSessionUrl = new URL(`${issuer}/protocol/openid-connect/logout`);
   endSessionUrl.searchParams.set('id_token_hint', idToken);
   if (process.env.AUTH_URL) {
-    endSessionUrl.searchParams.set('post_logout_redirect_uri', process.env.AUTH_URL);
+    endSessionUrl.searchParams.set(
+      'post_logout_redirect_uri',
+      process.env.AUTH_URL,
+    );
   }
 
   return NextResponse.json({ url: endSessionUrl.toString() });

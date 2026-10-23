@@ -25,7 +25,9 @@ export function ApplicationCard({ application: app, locale = 'nl' }: Props) {
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs text-gray-400 font-mono">{app.referenceNumber}</span>
+              <span className="text-xs text-gray-400 font-mono">
+                {app.referenceNumber}
+              </span>
               {app.source === 'HDEU' && (
                 <span className="rounded text-xs bg-purple-100 text-purple-700 px-2 py-0.5 font-medium border border-purple-200">
                   HD@EU • {app.hdeuSendingCountry}
@@ -42,7 +44,11 @@ export function ApplicationCard({ application: app, locale = 'nl' }: Props) {
         <dl className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
           <div className="flex gap-1">
             <dt className="sr-only">{ta('typeLabel')}</dt>
-            <dd>{app.type === 'DATA_ACCESS_APPLICATION' ? ta('typeDataAccess') : ta('typeDataRequest')}</dd>
+            <dd>
+              {app.type === 'DATA_ACCESS_APPLICATION'
+                ? ta('typeDataAccess')
+                : ta('typeDataRequest')}
+            </dd>
           </div>
           <div className="flex gap-1">
             <dt className="sr-only">{t('organisation')}</dt>
@@ -57,13 +63,23 @@ export function ApplicationCard({ application: app, locale = 'nl' }: Props) {
         </dl>
 
         {app.decisionDeadline && (
-          <p className={`mt-3 text-xs font-medium ${
-            overdue ? 'text-[#d52b1e]' : warning ? 'text-[#f0a500]' : 'text-gray-400'
-          }`}>
+          <p
+            className={`mt-3 text-xs font-medium ${
+              overdue
+                ? 'text-[#d52b1e]'
+                : warning
+                  ? 'text-[#f0a500]'
+                  : 'text-gray-400'
+            }`}
+          >
             {t('decisionDeadline')} {formatDate(app.decisionDeadline)}
             {days !== null && (
               <span className="ml-1">
-                ({days < 0 ? t('daysOverdue', { count: Math.abs(days) }) : t('daysRemaining', { count: days })})
+                (
+                {days < 0
+                  ? t('daysOverdue', { count: Math.abs(days) })
+                  : t('daysRemaining', { count: days })}
+                )
               </span>
             )}
           </p>

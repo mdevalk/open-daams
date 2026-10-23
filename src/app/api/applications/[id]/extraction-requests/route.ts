@@ -9,16 +9,25 @@ import { actingUserId } from '@/auth';
  * an issued permit (EHDS Art. 60, 68(7), TEHDAS2 D6.3 §7.1).
  * body: { dataHolderId, datasetDescription }
  */
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await params;
     const body = await req.json();
 
-    const auth = await requireRole(await actingUserId(), ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN']);
-    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+    const auth = await requireRole(await actingUserId(), [
+      'CASE_HANDLER',
+      'DECISION_MAKER',
+      'ADMIN',
+    ]);
+    if (!auth.ok)
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const application = await prisma.application.findUnique({ where: { id } });
-    if (!application) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    if (!application)
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     if (!body.dataHolderId || !body.datasetDescription) {
       return NextResponse.json(
@@ -27,8 +36,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       );
     }
 
-    const dataHolder = await prisma.dataHolder.findUnique({ where: { id: body.dataHolderId } });
-    if (!dataHolder) return NextResponse.json({ error: 'Data holder not found' }, { status: 404 });
+    const dataHolder = await prisma.dataHolder.findUnique({
+      where: { id: body.dataHolderId },
+    });
+    if (!dataHolder)
+      return NextResponse.json(
+        { error: 'Data holder not found' },
+        { status: 404 },
+      );
 
     const request = await prisma.dataExtractionRequest.create({
       data: {
@@ -42,7 +57,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json(request, { status: 201 });
   } catch (e) {
     console.error('Failed to register extraction request', e);
-    const message = e instanceof Error ? e.message : 'Failed to register extraction request';
+    const message =
+      e instanceof Error ? e.message : 'Failed to register extraction request';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

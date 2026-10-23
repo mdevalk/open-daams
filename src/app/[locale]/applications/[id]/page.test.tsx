@@ -13,7 +13,10 @@ vi.mock('next-intl/server', () => ({ getTranslations: vi.fn() }));
 // CompletenessCheckPanel/AssessmentCheckPanel (rendered by the sections below)
 // are client components that call useRouter/useTranslations directly.
 vi.mock('next-intl', () => ({ useTranslations: () => (key: string) => key }));
-vi.mock('next/navigation', () => ({ notFound: vi.fn(), useRouter: () => ({ refresh: vi.fn() }) }));
+vi.mock('next/navigation', () => ({
+  notFound: vi.fn(),
+  useRouter: () => ({ refresh: vi.fn() }),
+}));
 
 import {
   CompletenessSection,
@@ -35,7 +38,9 @@ describe('CompletenessSection', () => {
   it('renders nothing outside pre-screening with no existing check', () => {
     const { container } = render(
       <CompletenessSection
-        application={{ id: 'a-1', status: 'PROCESSING', completenessCheck: null } as never}
+        application={
+          { id: 'a-1', status: 'PROCESSING', completenessCheck: null } as never
+        }
         currentUser={currentUser}
       />,
     );
@@ -45,7 +50,13 @@ describe('CompletenessSection', () => {
   it('renders once status is PRE_SCREENING', () => {
     const { container } = render(
       <CompletenessSection
-        application={{ id: 'a-1', status: 'PRE_SCREENING', completenessCheck: null } as never}
+        application={
+          {
+            id: 'a-1',
+            status: 'PRE_SCREENING',
+            completenessCheck: null,
+          } as never
+        }
         currentUser={currentUser}
       />,
     );
@@ -55,11 +66,13 @@ describe('CompletenessSection', () => {
   it('renders once a completenessCheck already exists, regardless of status', () => {
     const { container } = render(
       <CompletenessSection
-        application={{
-          id: 'a-1',
-          status: 'PROCESSING',
-          completenessCheck: { items: [], result: 'COMPLETE', remarks: null },
-        } as never}
+        application={
+          {
+            id: 'a-1',
+            status: 'PROCESSING',
+            completenessCheck: { items: [], result: 'COMPLETE', remarks: null },
+          } as never
+        }
         currentUser={currentUser}
       />,
     );
@@ -71,7 +84,9 @@ describe('AssessmentSection', () => {
   it('renders nothing outside processing with no existing check', () => {
     const { container } = render(
       <AssessmentSection
-        application={{ id: 'a-1', status: 'PRE_SCREENING', assessmentCheck: null } as never}
+        application={
+          { id: 'a-1', status: 'PRE_SCREENING', assessmentCheck: null } as never
+        }
         currentUser={currentUser}
       />,
     );
@@ -81,7 +96,9 @@ describe('AssessmentSection', () => {
   it('renders once status is PROCESSING', () => {
     const { container } = render(
       <AssessmentSection
-        application={{ id: 'a-1', status: 'PROCESSING', assessmentCheck: null } as never}
+        application={
+          { id: 'a-1', status: 'PROCESSING', assessmentCheck: null } as never
+        }
         currentUser={currentUser}
       />,
     );
@@ -91,22 +108,26 @@ describe('AssessmentSection', () => {
 
 describe('BillingSection', () => {
   it('renders nothing when billingDetails is null', () => {
-    const { container } = render(<BillingSection billingDetails={null} t={t} />);
+    const { container } = render(
+      <BillingSection billingDetails={null} t={t} />,
+    );
     expect(container).toBeEmptyDOMElement();
   });
 
   it('renders the organisation name when billingDetails is present', () => {
     render(
       <BillingSection
-        billingDetails={{
-          fullName: null,
-          email: null,
-          organisationName: 'Acme Research BV',
-          invoiceType: null,
-          vatNumber: null,
-          isProjectFinanciallyCovered: null,
-          financingAmountRange: null,
-        } as never}
+        billingDetails={
+          {
+            fullName: null,
+            email: null,
+            organisationName: 'Acme Research BV',
+            invoiceType: null,
+            vatNumber: null,
+            isProjectFinanciallyCovered: null,
+            financingAmountRange: null,
+          } as never
+        }
         t={t}
       />,
     );
@@ -129,7 +150,10 @@ describe('DataRequestDetailsSection', () => {
   it('renders nothing for a DATA_ACCESS_APPLICATION even with content', () => {
     const { container } = render(
       <DataRequestDetailsSection
-        application={baseDataRequestApplication({ type: 'DATA_ACCESS_APPLICATION', tabulationPlan: 'plan text' })}
+        application={baseDataRequestApplication({
+          type: 'DATA_ACCESS_APPLICATION',
+          tabulationPlan: 'plan text',
+        })}
         t={t}
       />,
     );
@@ -137,14 +161,21 @@ describe('DataRequestDetailsSection', () => {
   });
 
   it('renders nothing for a DATA_REQUEST with no detail fields set', () => {
-    const { container } = render(<DataRequestDetailsSection application={baseDataRequestApplication()} t={t} />);
+    const { container } = render(
+      <DataRequestDetailsSection
+        application={baseDataRequestApplication()}
+        t={t}
+      />,
+    );
     expect(container).toBeEmptyDOMElement();
   });
 
   it('renders once a DATA_REQUEST has a tabulation plan', () => {
     render(
       <DataRequestDetailsSection
-        application={baseDataRequestApplication({ tabulationPlan: 'Cross-tabulate by age band' })}
+        application={baseDataRequestApplication({
+          tabulationPlan: 'Cross-tabulate by age band',
+        })}
         t={t}
       />,
     );
@@ -172,7 +203,9 @@ function baseOtherDataApplication(overrides: Record<string, unknown> = {}) {
 
 describe('OtherDataSection', () => {
   it('renders nothing when nothing is flagged', () => {
-    const { container } = render(<OtherDataSection application={baseOtherDataApplication()} t={t} />);
+    const { container } = render(
+      <OtherDataSection application={baseOtherDataApplication()} t={t} />,
+    );
     expect(container).toBeEmptyDOMElement();
   });
 
@@ -180,7 +213,15 @@ describe('OtherDataSection', () => {
     const { container } = render(
       <OtherDataSection
         application={baseOtherDataApplication({
-          relatedDataPermits: [{ id: 'p-1', permitIssuer: 'CBS', permitIdentificationInformation: 'DP-1', permitStartDateOfIssue: null, permitEndDateOfIssue: null }],
+          relatedDataPermits: [
+            {
+              id: 'p-1',
+              permitIssuer: 'CBS',
+              permitIdentificationInformation: 'DP-1',
+              permitStartDateOfIssue: null,
+              permitEndDateOfIssue: null,
+            },
+          ],
         })}
         t={t}
       />,
@@ -192,7 +233,10 @@ describe('OtherDataSection', () => {
 describe('AdditionalInfoSection', () => {
   it('renders nothing with no additional info and no matching attachments', () => {
     const { container } = render(
-      <AdditionalInfoSection application={{ additionalInformation: null, attachments: [] } as never} t={t} />,
+      <AdditionalInfoSection
+        application={{ additionalInformation: null, attachments: [] } as never}
+        t={t}
+      />,
     );
     expect(container).toBeEmptyDOMElement();
   });
@@ -200,7 +244,12 @@ describe('AdditionalInfoSection', () => {
   it('renders the additional information text when set', () => {
     render(
       <AdditionalInfoSection
-        application={{ additionalInformation: 'Nothing further to add.', attachments: [] } as never}
+        application={
+          {
+            additionalInformation: 'Nothing further to add.',
+            attachments: [],
+          } as never
+        }
         t={t}
       />,
     );
@@ -221,13 +270,20 @@ function baseConsentApplication(overrides: Record<string, unknown> = {}) {
 
 describe('ConsentSection', () => {
   it('renders nothing when every consent field is null', () => {
-    const { container } = render(<ConsentSection application={baseConsentApplication()} t={t} />);
+    const { container } = render(
+      <ConsentSection application={baseConsentApplication()} t={t} />,
+    );
     expect(container).toBeEmptyDOMElement();
   });
 
   it('renders once at least one consent field is set', () => {
     const { container } = render(
-      <ConsentSection application={baseConsentApplication({ consentAcceptHealthDataBody: true })} t={t} />,
+      <ConsentSection
+        application={baseConsentApplication({
+          consentAcceptHealthDataBody: true,
+        })}
+        t={t}
+      />,
     );
     expect(container).not.toBeEmptyDOMElement();
   });
@@ -247,7 +303,16 @@ describe('DatasetVariablesSection', () => {
             sourceDatasetId: 'ds-1',
             name: 'Hospital admissions',
             url: undefined,
-            variables: [{ id: 'v-1', name: 'age_band', datatype: 'string', title: null, description: null, propertyUrl: null } as never],
+            variables: [
+              {
+                id: 'v-1',
+                name: 'age_band',
+                datatype: 'string',
+                title: null,
+                description: null,
+                propertyUrl: null,
+              } as never,
+            ],
           },
         ]}
         t={t}

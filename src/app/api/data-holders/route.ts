@@ -11,7 +11,10 @@ import { actingUserId } from '@/auth';
  * work for any role, matching the /api/users precedent.
  */
 export async function GET() {
-  const dataHolders = await prisma.dataHolder.findMany({ orderBy: { name: 'asc' }, include: { contacts: true } });
+  const dataHolders = await prisma.dataHolder.findMany({
+    orderBy: { name: 'asc' },
+    include: { contacts: true },
+  });
   return NextResponse.json(dataHolders);
 }
 
@@ -26,7 +29,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
 
     const auth = await requireRole(await actingUserId(), ['ADMIN']);
-    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+    if (!auth.ok)
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     if (!body.name || !String(body.name).trim()) {
       return NextResponse.json({ error: 'name is required' }, { status: 422 });
@@ -45,7 +49,15 @@ export async function POST(req: NextRequest) {
         operatorId: body.operatorId || null,
         peppolCode: body.peppolCode || null,
         ...(body.contactEmail || body.contactPhone
-          ? { contacts: { create: { email: body.contactEmail || null, phone: body.contactPhone || null, role: 'PRIMARY' } } }
+          ? {
+              contacts: {
+                create: {
+                  email: body.contactEmail || null,
+                  phone: body.contactPhone || null,
+                  role: 'PRIMARY',
+                },
+              },
+            }
           : {}),
       },
       include: { contacts: true },
@@ -62,11 +74,18 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(dataHolder, { status: 201 });
   } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
-      return NextResponse.json({ error: 'A data holder with this name already exists' }, { status: 409 });
+    if (
+      e instanceof Prisma.PrismaClientKnownRequestError &&
+      e.code === 'P2002'
+    ) {
+      return NextResponse.json(
+        { error: 'A data holder with this name already exists' },
+        { status: 409 },
+      );
     }
     console.error('Failed to create data holder', e);
-    const message = e instanceof Error ? e.message : 'Failed to create data holder';
+    const message =
+      e instanceof Error ? e.message : 'Failed to create data holder';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

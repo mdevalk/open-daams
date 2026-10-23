@@ -1,6 +1,9 @@
 import { DataPermit, Application } from '@prisma/client';
 import { useTranslations } from 'next-intl';
-import { PERMIT_STATUS_COLORS, formatPermitId } from '@/lib/capabilities/permit-lifecycle/permit';
+import {
+  PERMIT_STATUS_COLORS,
+  formatPermitId,
+} from '@/lib/capabilities/permit-lifecycle/permit';
 import { formatDate } from '@/lib/utils';
 
 type Props = {
@@ -34,17 +37,25 @@ export function PermitCard({ permit, compact, locale }: Props) {
   const tps = useTranslations('permitStatus');
   const statusColor = PERMIT_STATUS_COLORS[permit.status];
   const borderColor = STATUS_BORDER[permit.status] ?? 'border-gray-200';
-  const headerBg   = STATUS_HEADER[permit.status] ?? 'bg-gray-50 border-gray-200';
+  const headerBg = STATUS_HEADER[permit.status] ?? 'bg-gray-50 border-gray-200';
 
   return (
-    <div className={`rounded-lg border-2 ${borderColor} bg-white overflow-hidden`}>
+    <div
+      className={`rounded-lg border-2 ${borderColor} bg-white overflow-hidden`}
+    >
       {/* Header */}
-      <div className={`flex items-center justify-between px-4 py-3 border-b ${headerBg}`}>
+      <div
+        className={`flex items-center justify-between px-4 py-3 border-b ${headerBg}`}
+      >
         <div className="flex items-center gap-3">
-          <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold ${statusColor}`}>
+          <span
+            className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold ${statusColor}`}
+          >
             {tps(permit.status)}
           </span>
-          <span className="font-mono text-sm font-bold text-gray-800">{formatPermitId(permit.permitNumber, permit.version)}</span>
+          <span className="font-mono text-sm font-bold text-gray-800">
+            {formatPermitId(permit.permitNumber, permit.version)}
+          </span>
         </div>
         <div className="text-xs text-gray-500">
           {t('issuedAt')} {formatDate(permit.issuedAt)}
@@ -52,7 +63,9 @@ export function PermitCard({ permit, compact, locale }: Props) {
       </div>
 
       {/* Body */}
-      <div className={`px-4 py-3 grid ${compact ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-3'} gap-x-6 gap-y-2 text-sm`}>
+      <div
+        className={`px-4 py-3 grid ${compact ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-3'} gap-x-6 gap-y-2 text-sm`}
+      >
         <div>
           <p className="text-xs text-gray-500">{t('validFrom')}</p>
           <p className="font-medium">{formatDate(permit.validFrom)}</p>
@@ -64,7 +77,9 @@ export function PermitCard({ permit, compact, locale }: Props) {
         {permit.application && !compact && (
           <div>
             <p className="text-xs text-gray-500">{t('applicationNumber')}</p>
-            <p className="font-medium font-mono">{permit.application.referenceNumber}</p>
+            <p className="font-medium font-mono">
+              {permit.application.referenceNumber}
+            </p>
           </div>
         )}
         {!compact && (
@@ -78,11 +93,20 @@ export function PermitCard({ permit, compact, locale }: Props) {
             <p className="text-xs text-gray-500">{t('successorOf')}</p>
             <p className="font-medium font-mono text-xs">
               {locale ? (
-                <a href={`/${locale}/permits/${permit.previousPermit.id}`} className="text-[#01689b] hover:underline">
-                  {formatPermitId(permit.previousPermit.permitNumber, permit.previousPermit.version)}
+                <a
+                  href={`/${locale}/permits/${permit.previousPermit.id}`}
+                  className="text-[#01689b] hover:underline"
+                >
+                  {formatPermitId(
+                    permit.previousPermit.permitNumber,
+                    permit.previousPermit.version,
+                  )}
                 </a>
               ) : (
-                formatPermitId(permit.previousPermit.permitNumber, permit.previousPermit.version)
+                formatPermitId(
+                  permit.previousPermit.permitNumber,
+                  permit.previousPermit.version,
+                )
               )}
             </p>
           </div>

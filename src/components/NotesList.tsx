@@ -87,11 +87,17 @@ export function NotesList({
                   : 'border-gray-100 bg-gray-50'
               }`}
             >
-              <p className="text-gray-800 whitespace-pre-wrap">{note.content}</p>
+              <p className="text-gray-800 whitespace-pre-wrap">
+                {note.content}
+              </p>
               <p className="text-xs text-gray-400 mt-1.5">
                 {note.author.name}
-                {note.isInternal && <span className="ml-1 text-amber-600 font-medium">{t('internalTag')}</span>}
-                {' '}&middot; {formatDateTime(note.createdAt)}
+                {note.isInternal && (
+                  <span className="ml-1 text-amber-600 font-medium">
+                    {t('internalTag')}
+                  </span>
+                )}{' '}
+                &middot; {formatDateTime(note.createdAt)}
               </p>
             </div>
           ))}

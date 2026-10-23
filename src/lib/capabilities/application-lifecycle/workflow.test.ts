@@ -12,32 +12,81 @@ import nlMessages from '../../../../messages/nl.json';
 
 describe('getAvailableTransitions', () => {
   it('only returns transitions the given role is allowed to take', () => {
-    const forApplicant = getAvailableTransitions('SUBMITTED', 'DATA_ACCESS_APPLICATION', 'APPLICANT', true);
+    const forApplicant = getAvailableTransitions(
+      'SUBMITTED',
+      'DATA_ACCESS_APPLICATION',
+      'APPLICANT',
+      true,
+    );
     expect(forApplicant.map((t) => t.to)).toEqual(['WITHDRAWN']);
 
-    const forCaseHandler = getAvailableTransitions('SUBMITTED', 'DATA_ACCESS_APPLICATION', 'CASE_HANDLER', true);
-    expect(forCaseHandler.map((t) => t.to).sort()).toEqual(['PRE_SCREENING', 'WITHDRAWN']);
+    const forCaseHandler = getAvailableTransitions(
+      'SUBMITTED',
+      'DATA_ACCESS_APPLICATION',
+      'CASE_HANDLER',
+      true,
+    );
+    expect(forCaseHandler.map((t) => t.to).sort()).toEqual([
+      'PRE_SCREENING',
+      'WITHDRAWN',
+    ]);
   });
 
   it('returns nothing for a terminal status', () => {
-    expect(getAvailableTransitions('WITHDRAWN', 'DATA_ACCESS_APPLICATION', 'ADMIN', true)).toEqual([]);
+    expect(
+      getAvailableTransitions(
+        'WITHDRAWN',
+        'DATA_ACCESS_APPLICATION',
+        'ADMIN',
+        true,
+      ),
+    ).toEqual([]);
   });
 
   it('hides the positive-decision transition until the fee estimate is accepted', () => {
-    const withoutAcceptedEstimate = getAvailableTransitions('PROCESSING', 'DATA_ACCESS_APPLICATION', 'DECISION_MAKER', false);
-    expect(withoutAcceptedEstimate.some((t) => t.requiresDecisionOutcome === 'POSITIVE')).toBe(false);
+    const withoutAcceptedEstimate = getAvailableTransitions(
+      'PROCESSING',
+      'DATA_ACCESS_APPLICATION',
+      'DECISION_MAKER',
+      false,
+    );
+    expect(
+      withoutAcceptedEstimate.some(
+        (t) => t.requiresDecisionOutcome === 'POSITIVE',
+      ),
+    ).toBe(false);
     // A negative decision carries no cost commitment, so it stays available.
-    expect(withoutAcceptedEstimate.some((t) => t.requiresDecisionOutcome === 'NEGATIVE')).toBe(true);
+    expect(
+      withoutAcceptedEstimate.some(
+        (t) => t.requiresDecisionOutcome === 'NEGATIVE',
+      ),
+    ).toBe(true);
 
-    const withAcceptedEstimate = getAvailableTransitions('PROCESSING', 'DATA_ACCESS_APPLICATION', 'DECISION_MAKER', true);
-    expect(withAcceptedEstimate.some((t) => t.requiresDecisionOutcome === 'POSITIVE')).toBe(true);
+    const withAcceptedEstimate = getAvailableTransitions(
+      'PROCESSING',
+      'DATA_ACCESS_APPLICATION',
+      'DECISION_MAKER',
+      true,
+    );
+    expect(
+      withAcceptedEstimate.some(
+        (t) => t.requiresDecisionOutcome === 'POSITIVE',
+      ),
+    ).toBe(true);
   });
 
   // D6.4 Figure 1(a): PROCESSING ⇆ AWAITING_ADDITIONAL_INFORMATION is its own
   // pair of arrows, distinct from the PRE_SCREENING one.
   it('allows requesting additional information from PROCESSING too, not just PRE_SCREENING', () => {
-    const transitions = getAvailableTransitions('PROCESSING', 'DATA_ACCESS_APPLICATION', 'CASE_HANDLER', true);
-    expect(transitions.some((t) => t.to === 'AWAITING_ADDITIONAL_INFORMATION')).toBe(true);
+    const transitions = getAvailableTransitions(
+      'PROCESSING',
+      'DATA_ACCESS_APPLICATION',
+      'CASE_HANDLER',
+      true,
+    );
+    expect(
+      transitions.some((t) => t.to === 'AWAITING_ADDITIONAL_INFORMATION'),
+    ).toBe(true);
   });
 
   // D6.4 R7.5.2/R6.3.7: resuming must return to whichever phase the request
@@ -50,7 +99,10 @@ describe('getAvailableTransitions', () => {
       true,
       'PRE_SCREENING',
     );
-    expect(fromPreScreening.map((t) => t.to).sort()).toEqual(['PRE_SCREENING', 'WITHDRAWN']);
+    expect(fromPreScreening.map((t) => t.to).sort()).toEqual([
+      'PRE_SCREENING',
+      'WITHDRAWN',
+    ]);
 
     const fromProcessing = getAvailableTransitions(
       'AWAITING_ADDITIONAL_INFORMATION',
@@ -59,7 +111,10 @@ describe('getAvailableTransitions', () => {
       true,
       'PROCESSING',
     );
-    expect(fromProcessing.map((t) => t.to).sort()).toEqual(['PROCESSING', 'WITHDRAWN']);
+    expect(fromProcessing.map((t) => t.to).sort()).toEqual([
+      'PROCESSING',
+      'WITHDRAWN',
+    ]);
   });
 
   // D6.4 Figure 1(a): a non-response in due time goes to WITHDRAWN, not a
@@ -96,14 +151,22 @@ describe('isTerminal', () => {
 describe('calculateDecisionDeadline (EHDS Art. 68)', () => {
   it('gives STANDARD applicants 3 months, extendable to 6', () => {
     const from = new Date(2026, 0, 15);
-    expect(calculateDecisionDeadline(from, 'STANDARD', false)).toEqual(new Date(2026, 3, 15));
-    expect(calculateDecisionDeadline(from, 'STANDARD', true)).toEqual(new Date(2026, 6, 15));
+    expect(calculateDecisionDeadline(from, 'STANDARD', false)).toEqual(
+      new Date(2026, 3, 15),
+    );
+    expect(calculateDecisionDeadline(from, 'STANDARD', true)).toEqual(
+      new Date(2026, 6, 15),
+    );
   });
 
   it('gives EXPEDITED applicants 2 months, extendable to 3', () => {
     const from = new Date(2026, 0, 15);
-    expect(calculateDecisionDeadline(from, 'EXPEDITED', false)).toEqual(new Date(2026, 2, 15));
-    expect(calculateDecisionDeadline(from, 'EXPEDITED', true)).toEqual(new Date(2026, 3, 15));
+    expect(calculateDecisionDeadline(from, 'EXPEDITED', false)).toEqual(
+      new Date(2026, 2, 15),
+    );
+    expect(calculateDecisionDeadline(from, 'EXPEDITED', true)).toEqual(
+      new Date(2026, 3, 15),
+    );
   });
 
   it('defaults to the STANDARD, non-extended deadline', () => {
@@ -114,13 +177,17 @@ describe('calculateDecisionDeadline (EHDS Art. 68)', () => {
 
 describe('calculateAdditionalInfoDeadline', () => {
   it('adds 28 days (D6.4 R6.3.3)', () => {
-    expect(calculateAdditionalInfoDeadline(new Date(2026, 0, 1))).toEqual(new Date(2026, 0, 29));
+    expect(calculateAdditionalInfoDeadline(new Date(2026, 0, 1))).toEqual(
+      new Date(2026, 0, 29),
+    );
   });
 });
 
 describe('calculatePermitAcceptanceDeadline', () => {
   it('adds 28 days (D6.4 R9.2.6)', () => {
-    expect(calculatePermitAcceptanceDeadline(new Date(2026, 0, 1))).toEqual(new Date(2026, 0, 29));
+    expect(calculatePermitAcceptanceDeadline(new Date(2026, 0, 1))).toEqual(
+      new Date(2026, 0, 29),
+    );
   });
 });
 
@@ -154,7 +221,9 @@ describe('deadlineStatus', () => {
 
 describe('transitionLogLabel', () => {
   it('returns the message-file label for a known transition key', () => {
-    expect(transitionLogLabel('submit')).toBe(nlMessages.workflowTransitions.submit.label);
+    expect(transitionLogLabel('submit')).toBe(
+      nlMessages.workflowTransitions.submit.label,
+    );
   });
 
   it('falls back to the key itself when it has no entry', () => {

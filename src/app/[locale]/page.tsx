@@ -14,7 +14,13 @@ type Item = { id: string; href: string; title: string; subtitle: string };
 // muted empty state rather than disappearing, so all three tiers are a
 // stable, glanceable set rather than a shifting layout.
 function AttentionTier({
-  emoji, title, items, borderColor, bgColor, textColor, emptyLabel,
+  emoji,
+  title,
+  items,
+  borderColor,
+  bgColor,
+  textColor,
+  emptyLabel,
 }: {
   emoji: string;
   title: string;
@@ -26,10 +32,19 @@ function AttentionTier({
 }) {
   const isEmpty = items.length === 0;
   return (
-    <div className={cn('rounded border-l-4 p-4', isEmpty ? 'border-gray-200 bg-gray-50' : cn(borderColor, bgColor))}>
+    <div
+      className={cn(
+        'rounded border-l-4 p-4',
+        isEmpty ? 'border-gray-200 bg-gray-50' : cn(borderColor, bgColor),
+      )}
+    >
       <div className="flex items-center gap-2 mb-3">
         <span aria-hidden="true">{emoji}</span>
-        <h3 className={cn('font-semibold', isEmpty ? 'text-gray-500' : textColor)}>{title} ({items.length})</h3>
+        <h3
+          className={cn('font-semibold', isEmpty ? 'text-gray-500' : textColor)}
+        >
+          {title} ({items.length})
+        </h3>
       </div>
       {isEmpty ? (
         <p className="text-sm text-gray-400">{emptyLabel}</p>
@@ -41,7 +56,9 @@ function AttentionTier({
               href={item.href}
               className="block rounded border border-gray-200 bg-white px-3 py-2 hover:border-gray-300 transition-colors"
             >
-              <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
+              <p className="text-sm font-medium text-gray-900 truncate">
+                {item.title}
+              </p>
               <p className="text-xs text-gray-500 truncate">{item.subtitle}</p>
             </a>
           ))}
@@ -66,7 +83,9 @@ export default async function DashboardPage({
   function dayLabel(date: Date | null): string {
     const days = daysUntil(date);
     if (days === null) return '';
-    return days < 0 ? t('daysOverdue', { count: Math.abs(days) }) : t('daysRemaining', { count: days });
+    return days < 0
+      ? t('daysOverdue', { count: Math.abs(days) })
+      : t('daysRemaining', { count: days });
   }
 
   const [
@@ -86,7 +105,9 @@ export default async function DashboardPage({
   ] = await Promise.all([
     prisma.application.findMany({
       include: {
-        applicant: { select: { name: true, dataUser: { select: { name: true } } } },
+        applicant: {
+          select: { name: true, dataUser: { select: { name: true } } },
+        },
         caseHandler: { select: { name: true } },
       },
       orderBy: { updatedAt: 'desc' },
@@ -94,43 +115,97 @@ export default async function DashboardPage({
     }),
     prisma.application.groupBy({ by: ['status'], _count: { id: true } }),
     prisma.application.findMany({
-      where: { decisionDeadline: { lt: now }, status: { notIn: ['DECISION_ISSUED', 'WITHDRAWN'] } },
-      select: { id: true, referenceNumber: true, title: true, decisionDeadline: true },
+      where: {
+        decisionDeadline: { lt: now },
+        status: { notIn: ['DECISION_ISSUED', 'WITHDRAWN'] },
+      },
+      select: {
+        id: true,
+        referenceNumber: true,
+        title: true,
+        decisionDeadline: true,
+      },
     }),
     prisma.application.findMany({
-      where: { status: 'AWAITING_ADDITIONAL_INFORMATION', additionalInfoDeadline: { lt: now } },
-      select: { id: true, referenceNumber: true, title: true, additionalInfoDeadline: true },
+      where: {
+        status: 'AWAITING_ADDITIONAL_INFORMATION',
+        additionalInfoDeadline: { lt: now },
+      },
+      select: {
+        id: true,
+        referenceNumber: true,
+        title: true,
+        additionalInfoDeadline: true,
+      },
     }),
     prisma.application.findMany({
-      where: { decisionDeadline: { gte: now, lt: in14Days }, status: { notIn: ['DECISION_ISSUED', 'WITHDRAWN'] } },
-      select: { id: true, referenceNumber: true, title: true, decisionDeadline: true },
+      where: {
+        decisionDeadline: { gte: now, lt: in14Days },
+        status: { notIn: ['DECISION_ISSUED', 'WITHDRAWN'] },
+      },
+      select: {
+        id: true,
+        referenceNumber: true,
+        title: true,
+        decisionDeadline: true,
+      },
     }),
     prisma.application.findMany({
       where: { status: 'SUBMITTED' },
-      select: { id: true, referenceNumber: true, title: true, submittedAt: true },
+      select: {
+        id: true,
+        referenceNumber: true,
+        title: true,
+        submittedAt: true,
+      },
     }),
     prisma.application.findMany({
-      where: { permitAcceptanceStatus: 'PENDING', permitAcceptanceDeadline: { lt: now } },
-      select: { id: true, referenceNumber: true, title: true, permitAcceptanceDeadline: true },
+      where: {
+        permitAcceptanceStatus: 'PENDING',
+        permitAcceptanceDeadline: { lt: now },
+      },
+      select: {
+        id: true,
+        referenceNumber: true,
+        title: true,
+        permitAcceptanceDeadline: true,
+      },
     }),
     prisma.dataPermit.findMany({
-      where: { isCurrent: true, validUntil: { lt: now }, status: { notIn: ['EXPIRED', 'REVOKED'] } },
+      where: {
+        isCurrent: true,
+        validUntil: { lt: now },
+        status: { notIn: ['EXPIRED', 'REVOKED'] },
+      },
       select: {
-        id: true, permitNumber: true, version: true, validUntil: true,
+        id: true,
+        permitNumber: true,
+        version: true,
+        validUntil: true,
         application: { select: { referenceNumber: true } },
       },
     }),
     prisma.dataPermit.findMany({
-      where: { isCurrent: true, validUntil: { gte: now, lt: in14Days }, status: { notIn: ['EXPIRED', 'REVOKED'] } },
+      where: {
+        isCurrent: true,
+        validUntil: { gte: now, lt: in14Days },
+        status: { notIn: ['EXPIRED', 'REVOKED'] },
+      },
       select: {
-        id: true, permitNumber: true, version: true, validUntil: true,
+        id: true,
+        permitNumber: true,
+        version: true,
+        validUntil: true,
         application: { select: { referenceNumber: true } },
       },
     }),
     prisma.dataPermit.findMany({
       where: { effectiveAt: { lte: now }, activatedAt: null },
       select: {
-        id: true, permitNumber: true, version: true, effectiveAt: true,
+        id: true,
+        permitNumber: true,
+        version: true,
+        effectiveAt: true,
         previousPermit: { select: { id: true } },
         application: { select: { referenceNumber: true } },
       },
@@ -138,7 +213,9 @@ export default async function DashboardPage({
     prisma.permitChangeRequest.findMany({
       where: { status: 'REQUESTED' },
       select: {
-        id: true, type: true, requestedAt: true,
+        id: true,
+        type: true,
+        requestedAt: true,
         permit: { select: { id: true, permitNumber: true, version: true } },
       },
     }),
@@ -153,7 +230,10 @@ export default async function DashboardPage({
   ]);
 
   const activeStatuses: ApplicationStatus[] = [
-    'SUBMITTED', 'PRE_SCREENING', 'AWAITING_ADDITIONAL_INFORMATION', 'PROCESSING',
+    'SUBMITTED',
+    'PRE_SCREENING',
+    'AWAITING_ADDITIONAL_INFORMATION',
+    'PROCESSING',
   ];
   const activeCount = byStatus
     .filter((r) => activeStatuses.includes(r.status))
@@ -247,22 +327,35 @@ export default async function DashboardPage({
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: t('kpiTotal'),       value: total },
-          { label: t('kpiActive'),      value: activeCount },
-          { label: t('kpiOverdue'),     value: appsOverdueDecision.length, alert: appsOverdueDecision.length > 0 },
-          { label: t('kpiCompleted'),    value: completedCount },
+          { label: t('kpiTotal'), value: total },
+          { label: t('kpiActive'), value: activeCount },
+          {
+            label: t('kpiOverdue'),
+            value: appsOverdueDecision.length,
+            alert: appsOverdueDecision.length > 0,
+          },
+          { label: t('kpiCompleted'), value: completedCount },
         ].map((kpi) => (
           <div
             key={kpi.label}
             className={cn(
               'rounded border p-5',
-              kpi.alert ? 'border-[#d52b1e] bg-[#fce8e6]' : 'border-gray-200 bg-white',
+              kpi.alert
+                ? 'border-[#d52b1e] bg-[#fce8e6]'
+                : 'border-gray-200 bg-white',
             )}
           >
-            <p className={cn('text-3xl font-bold', kpi.alert ? 'text-[#7a1711]' : 'text-[#154273]')}>
+            <p
+              className={cn(
+                'text-3xl font-bold',
+                kpi.alert ? 'text-[#7a1711]' : 'text-[#154273]',
+              )}
+            >
               {kpi.value}
             </p>
-            <p className={`text-xs mt-1 ${kpi.alert ? 'text-[#d52b1e] font-medium' : 'text-gray-500'}`}>
+            <p
+              className={`text-xs mt-1 ${kpi.alert ? 'text-[#d52b1e] font-medium' : 'text-gray-500'}`}
+            >
               {kpi.label}
             </p>
           </div>
@@ -303,7 +396,10 @@ export default async function DashboardPage({
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold text-gray-900">{t('recentActivity')}</h2>
-          <a href={`/${locale}/applications`} className="text-sm text-[#01689b] hover:underline">
+          <a
+            href={`/${locale}/applications`}
+            className="text-sm text-[#01689b] hover:underline"
+          >
             {t('allApplications')}
           </a>
         </div>

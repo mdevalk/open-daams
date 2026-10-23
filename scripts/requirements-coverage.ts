@@ -10,7 +10,10 @@ import { capabilities } from '../use-cases/capabilities';
 import type { UseCaseEntry } from '../use-cases/types';
 
 const SRC_CAPABILITIES_DIR = path.resolve(__dirname, '../src/lib/capabilities');
-const TRACEABILITY_DOC = path.resolve(__dirname, '../docs/d6.4-requirements-traceability.md');
+const TRACEABILITY_DOC = path.resolve(
+  __dirname,
+  '../docs/d6.4-requirements-traceability.md',
+);
 const OUTPUT_DOC = path.resolve(__dirname, '../docs/use-case-coverage.md');
 
 const capabilityNames = new Map(capabilities.map((c) => [c.id, c.name]));
@@ -20,20 +23,28 @@ type Status = 'not started' | 'implemented, untested' | 'verified';
 async function statusFor(entry: UseCaseEntry): Promise<Status> {
   if (!entry.module) return 'not started';
 
-  const modulePath = path.join(SRC_CAPABILITIES_DIR, entry.capability, entry.module);
+  const modulePath = path.join(
+    SRC_CAPABILITIES_DIR,
+    entry.capability,
+    entry.module,
+  );
   try {
     await import(`${modulePath}.ts`);
   } catch {
     return 'not started';
   }
 
-  return fs.existsSync(`${modulePath}.test.ts`) ? 'verified' : 'implemented, untested';
+  return fs.existsSync(`${modulePath}.test.ts`)
+    ? 'verified'
+    : 'implemented, untested';
 }
 
 function loadRequirementIds(): Set<string> {
   const text = fs.readFileSync(TRACEABILITY_DOC, 'utf8');
   const ids = new Set<string>();
-  for (const match of text.matchAll(/^\|\s*(R\d+(?:\.\d+){1,3}(?:\s*\([ab]\))?)\s*\|/gm)) {
+  for (const match of text.matchAll(
+    /^\|\s*(R\d+(?:\.\d+){1,3}(?:\s*\([ab]\))?)\s*\|/gm,
+  )) {
     ids.add(match[1].replace(/\s*\([ab]\)/, ''));
   }
   return ids;
@@ -41,27 +52,47 @@ function loadRequirementIds(): Set<string> {
 
 async function main() {
   const knownRequirementIds = loadRequirementIds();
-  const statuses = await Promise.all(useCaseRegistry.map(async (entry) => ({ entry, status: await statusFor(entry) })));
+  const statuses = await Promise.all(
+    useCaseRegistry.map(async (entry) => ({
+      entry,
+      status: await statusFor(entry),
+    })),
+  );
   statuses.sort(
     (a, b) =>
-      (capabilityNames.get(a.entry.capability) ?? a.entry.capability).localeCompare(capabilityNames.get(b.entry.capability) ?? b.entry.capability) ||
-      a.entry.id.localeCompare(b.entry.id),
+      (
+        capabilityNames.get(a.entry.capability) ?? a.entry.capability
+      ).localeCompare(
+        capabilityNames.get(b.entry.capability) ?? b.entry.capability,
+      ) || a.entry.id.localeCompare(b.entry.id),
   );
 
   for (const { entry } of statuses) {
     if (!capabilityNames.has(entry.capability)) {
-      console.warn(`WARNING: ${entry.id} references unknown capability id: ${entry.capability}`);
+      console.warn(
+        `WARNING: ${entry.id} references unknown capability id: ${entry.capability}`,
+      );
     }
-    const unknownIds = entry.satisfies.filter((id) => !knownRequirementIds.has(id));
+    const unknownIds = entry.satisfies.filter(
+      (id) => !knownRequirementIds.has(id),
+    );
     if (unknownIds.length) {
-      console.warn(`WARNING: ${entry.id} references unknown requirement id(s): ${unknownIds.join(', ')}`);
+      console.warn(
+        `WARNING: ${entry.id} references unknown requirement id(s): ${unknownIds.join(', ')}`,
+      );
     }
   }
 
-  const byRequirement = new Map<string, { useCaseIds: string[]; verified: boolean }>();
+  const byRequirement = new Map<
+    string,
+    { useCaseIds: string[]; verified: boolean }
+  >();
   for (const { entry, status } of statuses) {
     for (const reqId of entry.satisfies) {
-      const row = byRequirement.get(reqId) ?? { useCaseIds: [], verified: false };
+      const row = byRequirement.get(reqId) ?? {
+        useCaseIds: [],
+        verified: false,
+      };
       row.useCaseIds.push(entry.id);
       row.verified = row.verified || status === 'verified';
       byRequirement.set(reqId, row);
@@ -69,19 +100,25 @@ async function main() {
   }
 
   const notStarted = statuses.filter((s) => s.status === 'not started').length;
-  const untested = statuses.filter((s) => s.status === 'implemented, untested').length;
+  const untested = statuses.filter(
+    (s) => s.status === 'implemented, untested',
+  ).length;
   const verified = statuses.filter((s) => s.status === 'verified').length;
 
   const useCaseRows = statuses
     .map(({ entry, status }) => {
-      const capabilityName = capabilityNames.get(entry.capability) ?? entry.capability;
+      const capabilityName =
+        capabilityNames.get(entry.capability) ?? entry.capability;
       return `| ${capabilityName} | ${entry.id} | ${entry.satisfies.join(', ') || '—'} | ${status} |`;
     })
     .join('\n');
 
   const requirementRows = [...byRequirement.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([reqId, row]) => `| ${reqId} | ${row.useCaseIds.join(', ')} | ${row.verified ? 'yes' : 'no'} |`)
+    .map(
+      ([reqId, row]) =>
+        `| ${reqId} | ${row.useCaseIds.join(', ')} | ${row.verified ? 'yes' : 'no'} |`,
+    )
     .join('\n');
 
   const markdown = `# Use-case & requirements coverage
@@ -114,7 +151,9 @@ ${requirementRows}
 
   fs.writeFileSync(OUTPUT_DOC, markdown);
   console.log(markdown);
-  console.log(`Written to ${path.relative(path.resolve(__dirname, '..'), OUTPUT_DOC)}`);
+  console.log(
+    `Written to ${path.relative(path.resolve(__dirname, '..'), OUTPUT_DOC)}`,
+  );
 }
 
 main();

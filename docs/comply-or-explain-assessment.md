@@ -17,16 +17,16 @@ transport-security standards are already fully assessed there and aren't repeate
 
 ## Summary
 
-| Standard / category | Status | Key finding |
-|---|---|---|
-| PDF/A (document format) | ⚠️ Open | Permits are generated as plain PDF, not the archival PDF/A format |
-| API standards (OpenAPI) | ⚠️ Open | No machine-readable spec exists for open-daams's own REST API |
-| Accessibility (EN 301 549 / WCAG) | ➖ Cross-reference | Fully assessed in `docs/wcag-2.1-assessment.md` |
-| TLS / transport security | ➖ Cross-reference | Covered by `docs/owasp-top10-assessment.md` A05 (CSP/HSTS) |
-| Federated identity (SAML/OIDC) | ✅ Done | The root authentication gap (OWASP A07) is fixed via Keycloak + Auth.js OIDC — the standards-compliant choice this list calls for |
-| Email security (DKIM/DMARC/SPF) | ℹ️ N/A | No email-sending exists in the codebase |
-| ODF (OpenDocument Format) | ℹ️ N/A | DAAMS generates no office documents of its own |
-| Network layer (IPv6, DNSSEC) | ➖ Out of scope | Datacenter/hosting concern |
+| Standard / category               | Status             | Key finding                                                                                                                       |
+| --------------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| PDF/A (document format)           | ⚠️ Open            | Permits are generated as plain PDF, not the archival PDF/A format                                                                 |
+| API standards (OpenAPI)           | ⚠️ Open            | No machine-readable spec exists for open-daams's own REST API                                                                     |
+| Accessibility (EN 301 549 / WCAG) | ➖ Cross-reference | Fully assessed in `docs/wcag-2.1-assessment.md`                                                                                   |
+| TLS / transport security          | ➖ Cross-reference | Covered by `docs/owasp-top10-assessment.md` A05 (CSP/HSTS)                                                                        |
+| Federated identity (SAML/OIDC)    | ✅ Done            | The root authentication gap (OWASP A07) is fixed via Keycloak + Auth.js OIDC — the standards-compliant choice this list calls for |
+| Email security (DKIM/DMARC/SPF)   | ℹ️ N/A             | No email-sending exists in the codebase                                                                                           |
+| ODF (OpenDocument Format)         | ℹ️ N/A             | DAAMS generates no office documents of its own                                                                                    |
+| Network layer (IPv6, DNSSEC)      | ➖ Out of scope    | Datacenter/hosting concern                                                                                                        |
 
 ## Findings
 
@@ -48,7 +48,7 @@ No OpenAPI/Swagger specification exists anywhere in this repository, despite doz
 under `src/app/api/**` (applications, permits, reference data, the public register, the SPE
 provisioning flow, and more). The list's API-standards category (the Nederlandse API-strategie /
 API Design Rules) expects a government REST API to be machine-readably documented. Worth noting
-directly: this codebase already treats OpenAPI as the expected standard for its *inbound*
+directly: this codebase already treats OpenAPI as the expected standard for its _inbound_
 integration — `src/lib/ncp-client.ts`'s own top comment names the National Dispatcher API it calls
 as "the National Dispatcher **OpenAPI**" — it just hasn't been applied to open-daams's own outbound
 surface yet.
@@ -105,7 +105,7 @@ application-only review doesn't reach.
 2. **Small, scoped**: configure `pdf-lib`'s output for PDF/A conformance (embedded fonts are
    already in place; the remaining work is XMP metadata and confirming no external references
    leak into the generated file) — or, if PDF/A turns out impractical for a chosen reason, write
-   that reason down explicitly, which is itself a valid comply-or-*explain* outcome.
+   that reason down explicitly, which is itself a valid comply-or-_explain_ outcome.
 3. ~~**Already tracked elsewhere**: when real authentication is eventually built (OWASP A07/NIS2
    (i)-(j)/BIO2 5.15–5.18), use OIDC — satisfies that root gap and this list's identity-federation
    entry in the same piece of work.~~ **Done** — see "Federated identity" above.

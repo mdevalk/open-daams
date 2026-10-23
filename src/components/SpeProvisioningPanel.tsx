@@ -4,7 +4,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { SpeProvisioningStatus } from '@prisma/client';
-import { SPE_STATUS_COLORS, SPE_TRANSITIONS } from '@/lib/capabilities/permit-lifecycle/spe';
+import {
+  SPE_STATUS_COLORS,
+  SPE_TRANSITIONS,
+} from '@/lib/capabilities/permit-lifecycle/spe';
 import { readErrorMessage, formatDateTime } from '@/lib/utils';
 
 type Order = {
@@ -49,7 +52,9 @@ export function SpeProvisioningPanel({
   const [envRef, setEnvRef] = useState('');
   const [comment, setComment] = useState('');
   const [operatorId, setOperatorId] = useState(order?.speOperatorId ?? '');
-  const [pendingTo, setPendingTo] = useState<SpeProvisioningStatus | null>(null);
+  const [pendingTo, setPendingTo] = useState<SpeProvisioningStatus | null>(
+    null,
+  );
 
   async function requestProvisioning() {
     setLoading(true);
@@ -60,7 +65,8 @@ export function SpeProvisioningPanel({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ actingUserId: currentUserId }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
+      if (!res.ok)
+        throw new Error(await readErrorMessage(res, terr('requestFailed')));
       router.refresh();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : terr('unexpected'));
@@ -84,7 +90,8 @@ export function SpeProvisioningPanel({
           comment: comment.trim() || undefined,
         }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
+      if (!res.ok)
+        throw new Error(await readErrorMessage(res, terr('requestFailed')));
       setEnvRef('');
       setComment('');
       setPendingTo(null);
@@ -101,7 +108,9 @@ export function SpeProvisioningPanel({
       <div className="flex items-center justify-between">
         <h2 className="font-semibold text-gray-900 text-sm">{t('title')}</h2>
         {order && (
-          <span className={`text-xs font-medium px-2 py-0.5 rounded ${SPE_STATUS_COLORS[order.status]}`}>
+          <span
+            className={`text-xs font-medium px-2 py-0.5 rounded ${SPE_STATUS_COLORS[order.status]}`}
+          >
             {ts(order.status)}
           </span>
         )}
@@ -109,28 +118,50 @@ export function SpeProvisioningPanel({
 
       {error && <p className="text-xs text-red-600">{error}</p>}
 
-      {!order && (
-        canManage ? (
-          <button type="button" disabled={loading} onClick={requestProvisioning} className="text-xs text-[#01689b] hover:underline">
+      {!order &&
+        (canManage ? (
+          <button
+            type="button"
+            disabled={loading}
+            onClick={requestProvisioning}
+            className="text-xs text-[#01689b] hover:underline"
+          >
             {t('request')}
           </button>
         ) : (
           <p className="text-xs text-gray-500">{t('noOrder')}</p>
-        )
-      )}
+        ))}
 
       {order && (
         <div className="space-y-2 text-sm">
           {order.environmentReference && (
-            <div className="flex justify-between"><span className="text-gray-500">{t('environment')}</span><span className="font-mono text-xs">{order.environmentReference}</span></div>
+            <div className="flex justify-between">
+              <span className="text-gray-500">{t('environment')}</span>
+              <span className="font-mono text-xs">
+                {order.environmentReference}
+              </span>
+            </div>
           )}
           {order.speOperator && (
-            <div className="flex justify-between"><span className="text-gray-500">{t('operatorLabel')}</span><span className="text-xs">{order.speOperator.name}</span></div>
+            <div className="flex justify-between">
+              <span className="text-gray-500">{t('operatorLabel')}</span>
+              <span className="text-xs">{order.speOperator.name}</span>
+            </div>
           )}
           <p className="text-xs text-gray-400">
             {t('requested')} {formatDateTime(order.requestedAt)}
-            {order.provisionedAt && <> · {t('active')} {formatDateTime(order.provisionedAt)}</>}
-            {order.decommissionedAt && <> · {t('decommissioned')} {formatDateTime(order.decommissionedAt)}</>}
+            {order.provisionedAt && (
+              <>
+                {' '}
+                · {t('active')} {formatDateTime(order.provisionedAt)}
+              </>
+            )}
+            {order.decommissionedAt && (
+              <>
+                {' '}
+                · {t('decommissioned')} {formatDateTime(order.decommissionedAt)}
+              </>
+            )}
           </p>
 
           {canManage && SPE_TRANSITIONS[order.status].length > 0 && (
@@ -141,9 +172,13 @@ export function SpeProvisioningPanel({
                     type="button"
                     key={tr.to}
                     disabled={loading}
-                    onClick={() => setPendingTo(pendingTo === tr.to ? null : tr.to)}
+                    onClick={() =>
+                      setPendingTo(pendingTo === tr.to ? null : tr.to)
+                    }
                     className={`text-xs rounded px-2 py-1 border ${
-                      pendingTo === tr.to ? 'border-[#154273] bg-[#e8f4fb]' : 'border-gray-300 hover:bg-gray-50'
+                      pendingTo === tr.to
+                        ? 'border-[#154273] bg-[#e8f4fb]'
+                        : 'border-gray-300 hover:bg-gray-50'
                     }`}
                     title={tx(tr.description)}
                   >
@@ -154,7 +189,9 @@ export function SpeProvisioningPanel({
 
               {pendingTo && (
                 <div className="space-y-2">
-                  {SPE_TRANSITIONS[order.status].find((tr) => tr.to === pendingTo)?.requiresEnvironmentReference && (
+                  {SPE_TRANSITIONS[order.status].find(
+                    (tr) => tr.to === pendingTo,
+                  )?.requiresEnvironmentReference && (
                     <input
                       type="text"
                       value={envRef}
@@ -170,7 +207,9 @@ export function SpeProvisioningPanel({
                   >
                     <option value="">{t('operatorLabel')}...</option>
                     {speOperators.map((op) => (
-                      <option key={op.id} value={op.id}>{op.name}</option>
+                      <option key={op.id} value={op.id}>
+                        {op.name}
+                      </option>
                     ))}
                   </select>
                   <textarea
@@ -195,13 +234,19 @@ export function SpeProvisioningPanel({
 
           {order.logs.length > 0 && (
             <details className="text-xs">
-              <summary className="cursor-pointer text-gray-500 hover:text-gray-800">{t('history')}</summary>
+              <summary className="cursor-pointer text-gray-500 hover:text-gray-800">
+                {t('history')}
+              </summary>
               <ul className="mt-2 space-y-1.5">
                 {order.logs.map((log) => (
                   <li key={log.id} className="text-gray-600">
                     <span className="font-medium">{ts(log.toStatus)}</span>
-                    {' — '}{log.user.name} ({log.user.role}) · {formatDateTime(log.createdAt)}
-                    {log.comment && <div className="italic text-gray-500">{log.comment}</div>}
+                    {' — '}
+                    {log.user.name} ({log.user.role}) ·{' '}
+                    {formatDateTime(log.createdAt)}
+                    {log.comment && (
+                      <div className="italic text-gray-500">{log.comment}</div>
+                    )}
                   </li>
                 ))}
               </ul>

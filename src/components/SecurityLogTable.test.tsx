@@ -26,7 +26,10 @@ function makeEntry(overrides: Partial<Entries[number]> = {}): Entries[number] {
 
 describe('SecurityLogTable — empty state', () => {
   it('shows the empty message and no table when there are no entries', async () => {
-    const element = await SecurityLogTable({ entries: [] as Entries, locale: 'nl' });
+    const element = await SecurityLogTable({
+      entries: [] as Entries,
+      locale: 'nl',
+    });
     render(element);
     expect(screen.getByText('empty')).toBeInTheDocument();
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
@@ -38,7 +41,12 @@ describe('SecurityLogTable — rows', () => {
     const element = await SecurityLogTable({
       entries: [
         makeEntry(),
-        makeEntry({ id: 'log-2', reason: 'missing_user_id', attemptedUserId: null, detail: 'No userId provided' }),
+        makeEntry({
+          id: 'log-2',
+          reason: 'missing_user_id',
+          attemptedUserId: null,
+          detail: 'No userId provided',
+        }),
       ],
       locale: 'nl',
     });
@@ -49,11 +57,16 @@ describe('SecurityLogTable — rows', () => {
     expect(screen.getByText('reasonMissingUserId')).toBeInTheDocument();
     expect(screen.getByText('u-9')).toBeInTheDocument();
     expect(screen.getByText('—')).toBeInTheDocument(); // attemptedUserId null fallback
-    expect(screen.getByText('Attempted to PATCH /api/permits/p-1')).toBeInTheDocument();
+    expect(
+      screen.getByText('Attempted to PATCH /api/permits/p-1'),
+    ).toBeInTheDocument();
   });
 
   it('falls back to reasonUnknown for a reason not in the mapping', async () => {
-    const element = await SecurityLogTable({ entries: [makeEntry({ reason: 'something_else' })], locale: 'nl' });
+    const element = await SecurityLogTable({
+      entries: [makeEntry({ reason: 'something_else' })],
+      locale: 'nl',
+    });
     render(element);
     expect(screen.getByText('reasonUnknown')).toBeInTheDocument();
   });

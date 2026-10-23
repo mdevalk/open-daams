@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
+import {
+  render,
+  screen,
+  fireEvent,
+  cleanup,
+  waitFor,
+} from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import type { ComponentProps } from 'react';
 import { ExtractionRequestsPanel } from './ExtractionRequestsPanel';
@@ -21,7 +27,10 @@ const DATA_HOLDERS = [{ id: 'dh-1', name: 'GP Information Network (LINH)' }];
 
 beforeEach(() => {
   refresh.mockReset();
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }));
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }),
+  );
 });
 
 function makeRequest(overrides: Record<string, unknown> = {}) {
@@ -40,7 +49,13 @@ function makeRequest(overrides: Record<string, unknown> = {}) {
 describe('ExtractionRequestsPanel — registering a request', () => {
   it('shows the empty state, and a way to open the registration form for a manager', () => {
     render(
-      <ExtractionRequestsPanel applicationId="app-1" currentUserId="u-1" requests={[]} dataHolders={DATA_HOLDERS} canManage={true} />,
+      <ExtractionRequestsPanel
+        applicationId="app-1"
+        currentUserId="u-1"
+        requests={[]}
+        dataHolders={DATA_HOLDERS}
+        canManage={true}
+      />,
     );
     expect(screen.getByText('noneRegistered')).toBeInTheDocument();
     expect(screen.getByText('+ registerRequest')).toBeInTheDocument();
@@ -48,14 +63,26 @@ describe('ExtractionRequestsPanel — registering a request', () => {
 
   it('hides the registration control for a non-manager', () => {
     render(
-      <ExtractionRequestsPanel applicationId="app-1" currentUserId="u-1" requests={[]} dataHolders={DATA_HOLDERS} canManage={false} />,
+      <ExtractionRequestsPanel
+        applicationId="app-1"
+        currentUserId="u-1"
+        requests={[]}
+        dataHolders={DATA_HOLDERS}
+        canManage={false}
+      />,
     );
     expect(screen.queryByText('+ registerRequest')).not.toBeInTheDocument();
   });
 
   it('keeps submit disabled until a data holder and description are filled, then posts the payload and resets the form', async () => {
     render(
-      <ExtractionRequestsPanel applicationId="app-1" currentUserId="u-1" requests={[]} dataHolders={DATA_HOLDERS} canManage={true} />,
+      <ExtractionRequestsPanel
+        applicationId="app-1"
+        currentUserId="u-1"
+        requests={[]}
+        dataHolders={DATA_HOLDERS}
+        canManage={true}
+      />,
     );
 
     fireEvent.click(screen.getByText('+ registerRequest'));
@@ -65,8 +92,12 @@ describe('ExtractionRequestsPanel — registering a request', () => {
     const submitButton = screen.getByText('registerRequest');
     expect(submitButton).toBeDisabled();
 
-    fireEvent.change(document.querySelector('select')!, { target: { value: 'dh-1' } });
-    fireEvent.change(document.querySelector('textarea')!, { target: { value: 'GP records dataset' } });
+    fireEvent.change(document.querySelector('select')!, {
+      target: { value: 'dh-1' },
+    });
+    fireEvent.change(document.querySelector('textarea')!, {
+      target: { value: 'GP records dataset' },
+    });
     expect(submitButton).not.toBeDisabled();
 
     fireEvent.click(submitButton);
@@ -102,7 +133,9 @@ describe('ExtractionRequestsPanel — existing requests and status transitions',
       />,
     );
 
-    expect(screen.getByText('GP Information Network (LINH)')).toBeInTheDocument();
+    expect(
+      screen.getByText('GP Information Network (LINH)'),
+    ).toBeInTheDocument();
     expect(screen.getByText('GP records')).toBeInTheDocument();
     expect(screen.getByText('REQUESTED')).toBeInTheDocument();
   });
@@ -127,7 +160,10 @@ describe('ExtractionRequestsPanel — existing requests and status transitions',
     const fetchMock = vi.mocked(fetch);
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/extraction-requests/req-1',
-      expect.objectContaining({ method: 'PATCH', body: JSON.stringify({ status: 'CONFIRMED' }) }),
+      expect.objectContaining({
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'CONFIRMED' }),
+      }),
     );
   });
 
@@ -136,7 +172,13 @@ describe('ExtractionRequestsPanel — existing requests and status transitions',
       <ExtractionRequestsPanel
         applicationId="app-1"
         currentUserId="u-1"
-        requests={[makeRequest({ status: 'DELIVERED', deliveredAt: new Date('2026-01-15'), deliveryNotes: 'Delivered via SFTP' })]}
+        requests={[
+          makeRequest({
+            status: 'DELIVERED',
+            deliveredAt: new Date('2026-01-15'),
+            deliveryNotes: 'Delivered via SFTP',
+          }),
+        ]}
         dataHolders={DATA_HOLDERS}
         canManage={true}
       />,

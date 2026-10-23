@@ -20,11 +20,20 @@ afterEach(cleanup);
 type Applicants = ComponentProps<typeof NewApplicationTabs>['applicants'];
 type CurrentUser = ComponentProps<typeof NewApplicationTabs>['currentUser'];
 
-const APPLICANT_USER = { id: 'u-2', role: 'APPLICANT', name: 'A. de Vries' } as unknown as CurrentUser;
+const APPLICANT_USER = {
+  id: 'u-2',
+  role: 'APPLICANT',
+  name: 'A. de Vries',
+} as unknown as CurrentUser;
 
 beforeEach(() => {
   // NcpFetchForm fetches its queue on mount once its tab is selected.
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ entries: [] }) }));
+  vi.stubGlobal(
+    'fetch',
+    vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => ({ entries: [] }) }),
+  );
 });
 
 describe('NewApplicationTabs — switching tabs', () => {

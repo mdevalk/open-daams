@@ -19,7 +19,9 @@ function main() {
 
   if (existsSync(KEY_PATH) && !force) {
     console.error(`A signing key already exists at ${KEY_PATH}.`);
-    console.error('Re-running would orphan every signature issued with the current key.');
+    console.error(
+      'Re-running would orphan every signature issued with the current key.',
+    );
     console.error('Pass --force to overwrite anyway.');
     process.exit(1);
   }
@@ -44,7 +46,9 @@ function main() {
   mkdirSync(KEY_DIR, { recursive: true });
   writeFileSync(KEY_PATH, JSON.stringify(jwk, null, 2) + '\n');
 
-  console.log(`Generated a new permit-signing keypair at ${KEY_PATH} (kid: ${kid}).`);
+  console.log(
+    `Generated a new permit-signing keypair at ${KEY_PATH} (kid: ${kid}).`,
+  );
   console.log('This file is gitignored — keep it out of version control.');
 }
 

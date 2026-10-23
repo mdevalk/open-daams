@@ -4,9 +4,17 @@ import { requireRole, requireRoleOrOwner } from '@/lib/authz';
 import { actingUserId } from '@/auth';
 
 const MANAGE_ROLES = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'] as const;
-const STAFF_ROLES = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN', 'DATA_HOLDER'] as const;
+const STAFF_ROLES = [
+  'CASE_HANDLER',
+  'DECISION_MAKER',
+  'ADMIN',
+  'DATA_HOLDER',
+] as const;
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const { id } = await params;
   try {
     const application = await prisma.application.findUnique({
@@ -27,43 +35,68 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       },
     });
 
-    if (!application) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    if (!application)
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-    const auth = await requireRoleOrOwner(await actingUserId(), [...STAFF_ROLES], application.applicantId);
-    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+    const auth = await requireRoleOrOwner(
+      await actingUserId(),
+      [...STAFF_ROLES],
+      application.applicantId,
+    );
+    if (!auth.ok)
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const isStaff = (STAFF_ROLES as readonly string[]).includes(auth.user.role);
 
     return NextResponse.json({
       ...application,
-      notes: isStaff ? application.notes : application.notes.filter((n) => !n.isInternal),
+      notes: isStaff
+        ? application.notes
+        : application.notes.filter((n) => !n.isInternal),
     });
   } catch (e) {
     console.error(`Failed to fetch application ${id}`, e);
-    const message = e instanceof Error ? e.message : 'Failed to fetch application';
+    const message =
+      e instanceof Error ? e.message : 'Failed to fetch application';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
 // The only caller today (EthicalReviewPanel.tsx) only ever sends
 // ethicalReview* fields — this route stays scoped to exactly that.
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const { id } = await params;
   try {
     const body = await req.json();
 
     const auth = await requireRole(await actingUserId(), [...MANAGE_ROLES]);
-    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+    if (!auth.ok)
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const application = await prisma.application.update({
       where: { id },
       data: {
-        ...(body.ethicalReviewRequired !== undefined ? { ethicalReviewRequired: body.ethicalReviewRequired } : {}),
-        ...(body.ethicalReviewStatus !== undefined ? { ethicalReviewStatus: body.ethicalReviewStatus } : {}),
-        ...(body.ethicalReviewBody !== undefined ? { ethicalReviewBody: body.ethicalReviewBody } : {}),
-        ...(body.ethicalReviewReference !== undefined ? { ethicalReviewReference: body.ethicalReviewReference } : {}),
+        ...(body.ethicalReviewRequired !== undefined
+          ? { ethicalReviewRequired: body.ethicalReviewRequired }
+          : {}),
+        ...(body.ethicalReviewStatus !== undefined
+          ? { ethicalReviewStatus: body.ethicalReviewStatus }
+          : {}),
+        ...(body.ethicalReviewBody !== undefined
+          ? { ethicalReviewBody: body.ethicalReviewBody }
+          : {}),
+        ...(body.ethicalReviewReference !== undefined
+          ? { ethicalReviewReference: body.ethicalReviewReference }
+          : {}),
         ...(body.ethicalReviewDate !== undefined
-          ? { ethicalReviewDate: body.ethicalReviewDate ? new Date(body.ethicalReviewDate) : null }
+          ? {
+              ethicalReviewDate: body.ethicalReviewDate
+                ? new Date(body.ethicalReviewDate)
+                : null,
+            }
           : {}),
       },
     });
@@ -71,7 +104,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json(application);
   } catch (e) {
     console.error(`Failed to update application ${id}`, e);
-    const message = e instanceof Error ? e.message : 'Failed to update application';
+    const message =
+      e instanceof Error ? e.message : 'Failed to update application';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

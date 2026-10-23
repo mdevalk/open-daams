@@ -8,17 +8,31 @@ import { actingUserId } from '@/auth';
 export function buildSpeOperatorUpdateData(body: Record<string, unknown>) {
   return {
     ...(body.name !== undefined ? { name: String(body.name).trim() } : {}),
-    ...(body.speProviderId !== undefined ? { speProviderId: body.speProviderId || null } : {}),
+    ...(body.speProviderId !== undefined
+      ? { speProviderId: body.speProviderId || null }
+      : {}),
     ...(body.address !== undefined ? { address: body.address || null } : {}),
-    ...(body.businessId !== undefined ? { businessId: body.businessId || null } : {}),
-    ...(body.vatNumber !== undefined ? { vatNumber: body.vatNumber || null } : {}),
-    ...(body.invoiceType !== undefined ? { invoiceType: body.invoiceType || null } : {}),
+    ...(body.businessId !== undefined
+      ? { businessId: body.businessId || null }
+      : {}),
+    ...(body.vatNumber !== undefined
+      ? { vatNumber: body.vatNumber || null }
+      : {}),
+    ...(body.invoiceType !== undefined
+      ? { invoiceType: body.invoiceType || null }
+      : {}),
     ...(body.invoiceReferenceNumber !== undefined
       ? { invoiceReferenceNumber: body.invoiceReferenceNumber || null }
       : {}),
-    ...(body.eInvoiceAddress !== undefined ? { eInvoiceAddress: body.eInvoiceAddress || null } : {}),
-    ...(body.operatorId !== undefined ? { operatorId: body.operatorId || null } : {}),
-    ...(body.peppolCode !== undefined ? { peppolCode: body.peppolCode || null } : {}),
+    ...(body.eInvoiceAddress !== undefined
+      ? { eInvoiceAddress: body.eInvoiceAddress || null }
+      : {}),
+    ...(body.operatorId !== undefined
+      ? { operatorId: body.operatorId || null }
+      : {}),
+    ...(body.peppolCode !== undefined
+      ? { peppolCode: body.peppolCode || null }
+      : {}),
   };
 }
 
@@ -32,13 +46,18 @@ export function describeSpeOperatorChanges(
   if (body.contactEmail !== undefined) changes.push('contact email');
   if (body.contactPhone !== undefined) changes.push('contact phone');
   if (body.speProviderId !== undefined) {
-    changes.push(speOperator.speProvider ? `SPE provider set to ${speOperator.speProvider.name}` : 'SPE provider cleared');
+    changes.push(
+      speOperator.speProvider
+        ? `SPE provider set to ${speOperator.speProvider.name}`
+        : 'SPE provider cleared',
+    );
   }
   if (body.address !== undefined) changes.push('address');
   if (body.businessId !== undefined) changes.push('business ID');
   if (body.vatNumber !== undefined) changes.push('VAT number');
   if (body.invoiceType !== undefined) changes.push('invoice type');
-  if (body.invoiceReferenceNumber !== undefined) changes.push('invoice reference number');
+  if (body.invoiceReferenceNumber !== undefined)
+    changes.push('invoice reference number');
   if (body.eInvoiceAddress !== undefined) changes.push('e-invoice address');
   if (body.operatorId !== undefined) changes.push('operator ID');
   if (body.peppolCode !== undefined) changes.push('Peppol code');
@@ -47,17 +66,29 @@ export function describeSpeOperatorChanges(
 
 /** Upserts the SPE operator's PRIMARY contact when contactEmail/contactPhone are present in the body. */
 async function upsertPrimaryContact(id: string, body: Record<string, unknown>) {
-  if (body.contactEmail === undefined && body.contactPhone === undefined) return;
+  if (body.contactEmail === undefined && body.contactPhone === undefined)
+    return;
 
-  const existingContact = await prisma.contact.findFirst({ where: { speOperatorId: id, role: 'PRIMARY' } });
+  const existingContact = await prisma.contact.findFirst({
+    where: { speOperatorId: id, role: 'PRIMARY' },
+  });
   const contactData = {
-    ...(body.contactEmail !== undefined ? { email: (body.contactEmail as string | null | undefined) || null } : {}),
-    ...(body.contactPhone !== undefined ? { phone: (body.contactPhone as string | null | undefined) || null } : {}),
+    ...(body.contactEmail !== undefined
+      ? { email: (body.contactEmail as string | null | undefined) || null }
+      : {}),
+    ...(body.contactPhone !== undefined
+      ? { phone: (body.contactPhone as string | null | undefined) || null }
+      : {}),
   };
   if (existingContact) {
-    await prisma.contact.update({ where: { id: existingContact.id }, data: contactData });
+    await prisma.contact.update({
+      where: { id: existingContact.id },
+      data: contactData,
+    });
   } else {
-    await prisma.contact.create({ data: { speOperatorId: id, role: 'PRIMARY', ...contactData } });
+    await prisma.contact.create({
+      data: { speOperatorId: id, role: 'PRIMARY', ...contactData },
+    });
   }
 }
 
@@ -69,13 +100,17 @@ async function upsertPrimaryContact(id: string, body: Record<string, unknown>) {
  *         vatNumber?, invoiceType?, invoiceReferenceNumber?, eInvoiceAddress?, operatorId?,
  *         peppolCode? }
  */
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await params;
     const body = await req.json();
 
     const auth = await requireRole(await actingUserId(), ['ADMIN']);
-    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+    if (!auth.ok)
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     await upsertPrimaryContact(id, body);
 
@@ -99,11 +134,18 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     return NextResponse.json(speOperator);
   } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
-      return NextResponse.json({ error: 'An SPE operator with this name already exists' }, { status: 409 });
+    if (
+      e instanceof Prisma.PrismaClientKnownRequestError &&
+      e.code === 'P2002'
+    ) {
+      return NextResponse.json(
+        { error: 'An SPE operator with this name already exists' },
+        { status: 409 },
+      );
     }
     console.error('Failed to update SPE operator', e);
-    const message = e instanceof Error ? e.message : 'Failed to update SPE operator';
+    const message =
+      e instanceof Error ? e.message : 'Failed to update SPE operator';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
@@ -116,24 +158,42 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
  * would silently wipe its whole type/price catalogue.
  * (no request body needed)
  */
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await params;
 
     const auth = await requireRole(await actingUserId(), ['ADMIN']);
-    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+    if (!auth.ok)
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const speOperator = await prisma.speOperator.findUnique({
       where: { id },
-      include: { _count: { select: { provisioningOrders: true, types: true } } },
+      include: {
+        _count: { select: { provisioningOrders: true, types: true } },
+      },
     });
-    if (!speOperator) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    if (!speOperator)
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     if (speOperator._count.provisioningOrders > 0) {
-      return NextResponse.json({ error: 'This SPE operator is still referenced and cannot be deleted' }, { status: 409 });
+      return NextResponse.json(
+        {
+          error: 'This SPE operator is still referenced and cannot be deleted',
+        },
+        { status: 409 },
+      );
     }
     if (speOperator._count.types > 0) {
-      return NextResponse.json({ error: 'This SPE operator still has SPE types and cannot be deleted — delete its types first' }, { status: 409 });
+      return NextResponse.json(
+        {
+          error:
+            'This SPE operator still has SPE types and cannot be deleted — delete its types first',
+        },
+        { status: 409 },
+      );
     }
 
     await prisma.speOperator.delete({ where: { id } });
@@ -150,7 +210,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error('Failed to delete SPE operator', e);
-    const message = e instanceof Error ? e.message : 'Failed to delete SPE operator';
+    const message =
+      e instanceof Error ? e.message : 'Failed to delete SPE operator';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

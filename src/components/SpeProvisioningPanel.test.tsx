@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
+import {
+  render,
+  screen,
+  fireEvent,
+  cleanup,
+  waitFor,
+} from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import type { ComponentProps } from 'react';
 import { SpeProvisioningPanel } from './SpeProvisioningPanel';
@@ -17,7 +23,9 @@ afterEach(cleanup);
 
 type Order = ComponentProps<typeof SpeProvisioningPanel>['order'];
 
-function makeOrder(overrides: Partial<NonNullable<Order>> = {}): NonNullable<Order> {
+function makeOrder(
+  overrides: Partial<NonNullable<Order>> = {},
+): NonNullable<Order> {
   return {
     id: 'order-1',
     status: 'REQUESTED',
@@ -39,22 +47,52 @@ beforeEach(() => {
 
 describe('SpeProvisioningPanel — no order yet', () => {
   it('shows a request button for managers', () => {
-    render(<SpeProvisioningPanel permitId="p-1" order={null} speOperators={[]} canManage={true} currentUserId="u-1" />);
+    render(
+      <SpeProvisioningPanel
+        permitId="p-1"
+        order={null}
+        speOperators={[]}
+        canManage={true}
+        currentUserId="u-1"
+      />,
+    );
     expect(screen.getByText('request')).toBeInTheDocument();
   });
 
   it('shows a plain message for non-managers, with no request button', () => {
-    render(<SpeProvisioningPanel permitId="p-1" order={null} speOperators={[]} canManage={false} currentUserId="u-1" />);
+    render(
+      <SpeProvisioningPanel
+        permitId="p-1"
+        order={null}
+        speOperators={[]}
+        canManage={false}
+        currentUserId="u-1"
+      />,
+    );
     expect(screen.getByText('noOrder')).toBeInTheDocument();
     expect(screen.queryByText('request')).not.toBeInTheDocument();
   });
 
   it('POSTs a provisioning request and refreshes on success', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }));
-    render(<SpeProvisioningPanel permitId="p-1" order={null} speOperators={[]} canManage={true} currentUserId="u-1" />);
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }),
+    );
+    render(
+      <SpeProvisioningPanel
+        permitId="p-1"
+        order={null}
+        speOperators={[]}
+        canManage={true}
+        currentUserId="u-1"
+      />,
+    );
     fireEvent.click(screen.getByText('request'));
     await waitFor(() => expect(refresh).toHaveBeenCalled());
-    expect(fetch).toHaveBeenCalledWith('/api/permits/p-1/spe-provisioning', expect.objectContaining({ method: 'POST' }));
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/permits/p-1/spe-provisioning',
+      expect.objectContaining({ method: 'POST' }),
+    );
   });
 });
 
@@ -65,7 +103,15 @@ describe('SpeProvisioningPanel — existing order', () => {
       speOperator: { name: 'SURF Research Cloud' },
       status: 'ACTIVE',
     });
-    render(<SpeProvisioningPanel permitId="p-1" order={order} speOperators={[]} canManage={true} currentUserId="u-1" />);
+    render(
+      <SpeProvisioningPanel
+        permitId="p-1"
+        order={order}
+        speOperators={[]}
+        canManage={true}
+        currentUserId="u-1"
+      />,
+    );
     expect(screen.getByText('env-abc')).toBeInTheDocument();
     expect(screen.getByText('SURF Research Cloud')).toBeInTheDocument();
     expect(screen.getByText('ACTIVE')).toBeInTheDocument();
@@ -73,13 +119,29 @@ describe('SpeProvisioningPanel — existing order', () => {
 
   it('shows no transition buttons for non-managers', () => {
     const order = makeOrder({ status: 'REQUESTED' });
-    render(<SpeProvisioningPanel permitId="p-1" order={order} speOperators={[]} canManage={false} currentUserId="u-1" />);
+    render(
+      <SpeProvisioningPanel
+        permitId="p-1"
+        order={order}
+        speOperators={[]}
+        canManage={false}
+        currentUserId="u-1"
+      />,
+    );
     expect(screen.queryByText('startProvisioning')).not.toBeInTheDocument();
   });
 
   it('shows available transition buttons for managers, and expands the confirm form on selection', () => {
     const order = makeOrder({ status: 'REQUESTED' });
-    render(<SpeProvisioningPanel permitId="p-1" order={order} speOperators={[]} canManage={true} currentUserId="u-1" />);
+    render(
+      <SpeProvisioningPanel
+        permitId="p-1"
+        order={order}
+        speOperators={[]}
+        canManage={true}
+        currentUserId="u-1"
+      />,
+    );
     expect(screen.getByText('startProvisioning')).toBeInTheDocument();
     expect(screen.getByText('cancelRequest')).toBeInTheDocument();
 
@@ -91,22 +153,47 @@ describe('SpeProvisioningPanel — existing order', () => {
 
   it('requires an environment reference field only for transitions that need it (PROVISIONING -> ACTIVE)', () => {
     const order = makeOrder({ status: 'PROVISIONING' });
-    render(<SpeProvisioningPanel permitId="p-1" order={order} speOperators={[]} canManage={true} currentUserId="u-1" />);
+    render(
+      <SpeProvisioningPanel
+        permitId="p-1"
+        order={order}
+        speOperators={[]}
+        canManage={true}
+        currentUserId="u-1"
+      />,
+    );
     fireEvent.click(screen.getByText('markActive'));
-    expect(screen.getByPlaceholderText('envRefPlaceholder')).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText('envRefPlaceholder'),
+    ).toBeInTheDocument();
 
     // cancelProvisioning does not require an environment reference field.
     fireEvent.click(screen.getByText('markActive')); // toggle back off
     fireEvent.click(screen.getByText('cancelProvisioning'));
-    expect(screen.queryByPlaceholderText('envRefPlaceholder')).not.toBeInTheDocument();
+    expect(
+      screen.queryByPlaceholderText('envRefPlaceholder'),
+    ).not.toBeInTheDocument();
   });
 
   it('PATCHes the chosen transition with entered details and refreshes on success', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }),
+    );
     const order = makeOrder({ status: 'PROVISIONING' });
-    render(<SpeProvisioningPanel permitId="p-1" order={order} speOperators={[]} canManage={true} currentUserId="u-1" />);
+    render(
+      <SpeProvisioningPanel
+        permitId="p-1"
+        order={order}
+        speOperators={[]}
+        canManage={true}
+        currentUserId="u-1"
+      />,
+    );
     fireEvent.click(screen.getByText('markActive'));
-    fireEvent.change(screen.getByPlaceholderText('envRefPlaceholder'), { target: { value: 'new-env-ref' } });
+    fireEvent.change(screen.getByPlaceholderText('envRefPlaceholder'), {
+      target: { value: 'new-env-ref' },
+    });
     fireEvent.click(screen.getByText('confirm'));
 
     await waitFor(() => expect(refresh).toHaveBeenCalled());
@@ -114,13 +201,25 @@ describe('SpeProvisioningPanel — existing order', () => {
     const [, init] = fetchMock.mock.calls[0];
     const body = JSON.parse(init!.body as string);
     expect(body).toEqual(
-      expect.objectContaining({ actingUserId: 'u-1', toStatus: 'ACTIVE', environmentReference: 'new-env-ref' }),
+      expect.objectContaining({
+        actingUserId: 'u-1',
+        toStatus: 'ACTIVE',
+        environmentReference: 'new-env-ref',
+      }),
     );
   });
 
   it('shows no transition section for a terminal DECOMMISSIONED order', () => {
     const order = makeOrder({ status: 'DECOMMISSIONED' });
-    render(<SpeProvisioningPanel permitId="p-1" order={order} speOperators={[]} canManage={true} currentUserId="u-1" />);
+    render(
+      <SpeProvisioningPanel
+        permitId="p-1"
+        order={order}
+        speOperators={[]}
+        canManage={true}
+        currentUserId="u-1"
+      />,
+    );
     expect(screen.queryByText('confirmDecommissioned')).not.toBeInTheDocument();
   });
 
@@ -138,15 +237,37 @@ describe('SpeProvisioningPanel — existing order', () => {
         },
       ],
     });
-    render(<SpeProvisioningPanel permitId="p-1" order={order} speOperators={[]} canManage={true} currentUserId="u-1" />);
+    render(
+      <SpeProvisioningPanel
+        permitId="p-1"
+        order={order}
+        speOperators={[]}
+        canManage={true}
+        currentUserId="u-1"
+      />,
+    );
     expect(screen.getByText('history')).toBeInTheDocument();
     expect(screen.getByText('Went live')).toBeInTheDocument();
     expect(screen.getByText(/S\. Bakker/)).toBeInTheDocument();
   });
 
   it('shows an error message when the request fails', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, json: async () => ({ error: 'Nope' }) }));
-    render(<SpeProvisioningPanel permitId="p-1" order={null} speOperators={[]} canManage={true} currentUserId="u-1" />);
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        json: async () => ({ error: 'Nope' }),
+      }),
+    );
+    render(
+      <SpeProvisioningPanel
+        permitId="p-1"
+        order={null}
+        speOperators={[]}
+        canManage={true}
+        currentUserId="u-1"
+      />,
+    );
     fireEvent.click(screen.getByText('request'));
     expect(await screen.findByText('Nope')).toBeInTheDocument();
   });

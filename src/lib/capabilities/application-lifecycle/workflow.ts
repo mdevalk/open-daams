@@ -1,4 +1,9 @@
-import { ApplicationStatus, ApplicationType, UserRole, DecisionTrack } from '@prisma/client';
+import {
+  ApplicationStatus,
+  ApplicationType,
+  UserRole,
+  DecisionTrack,
+} from '@prisma/client';
 import nlMessages from '../../../../messages/nl.json';
 
 export type Transition = {
@@ -143,7 +148,7 @@ export const TRANSITIONS: Record<ApplicationStatus, Transition[]> = {
   // Terminal — no further application transitions.
   // A positive DECISION_ISSUED creates a DataPermit with its own lifecycle.
   DECISION_ISSUED: [],
-  WITHDRAWN:       [],
+  WITHDRAWN: [],
 };
 
 // ApplicationLog.action is a persisted, point-in-time audit record — like
@@ -152,7 +157,9 @@ export const TRANSITIONS: Record<ApplicationStatus, Transition[]> = {
 // than being retroactively re-rendered per-viewer. This is the one place a
 // transition's label is still needed as literal text server-side.
 export function transitionLogLabel(key: string): string {
-  const entry = (nlMessages.workflowTransitions as Record<string, { label: string }>)[key];
+  const entry = (
+    nlMessages.workflowTransitions as Record<string, { label: string }>
+  )[key];
   return entry?.label ?? key;
 }
 
@@ -169,7 +176,10 @@ export function getAvailableTransitions(
   return (TRANSITIONS[currentStatus] ?? []).filter((t) => {
     if (!t.requiredRole.includes(userRole)) return false;
     if (t.requiresFeeEstimateAccepted && !feeEstimateAccepted) return false;
-    if ((t.key === 'resumePreScreening' || t.key === 'resumeProcessing') && t.to !== additionalInfoRequestedFromStatus) {
+    if (
+      (t.key === 'resumePreScreening' || t.key === 'resumeProcessing') &&
+      t.to !== additionalInfoRequestedFromStatus
+    ) {
       return false;
     }
     return true;
@@ -177,13 +187,13 @@ export function getAvailableTransitions(
 }
 
 export const STATUS_COLORS: Record<ApplicationStatus, string> = {
-  DRAFT:                           'bg-gray-100 text-gray-700',
-  SUBMITTED:                       'bg-blue-100 text-blue-700',
-  PRE_SCREENING:                   'bg-yellow-100 text-yellow-800',
+  DRAFT: 'bg-gray-100 text-gray-700',
+  SUBMITTED: 'bg-blue-100 text-blue-700',
+  PRE_SCREENING: 'bg-yellow-100 text-yellow-800',
   AWAITING_ADDITIONAL_INFORMATION: 'bg-orange-100 text-orange-700',
-  PROCESSING:                      'bg-indigo-100 text-indigo-700',
-  DECISION_ISSUED:                 'bg-emerald-100 text-emerald-700',
-  WITHDRAWN:                       'bg-gray-100 text-gray-500',
+  PROCESSING: 'bg-indigo-100 text-indigo-700',
+  DECISION_ISSUED: 'bg-emerald-100 text-emerald-700',
+  WITHDRAWN: 'bg-gray-100 text-gray-500',
 };
 
 export function isTerminal(status: ApplicationStatus): boolean {
@@ -194,8 +204,11 @@ export function isTerminal(status: ApplicationStatus): boolean {
 // STANDARD applicants get 3 months, extendable by 3 (total 6); EXPEDITED
 // (public-sector bodies / Union institutions under a public-health or policy
 // mandate) get 2 months, extendable by 1 (total 3).
-const DECISION_DEADLINE_MONTHS: Record<DecisionTrack, { base: number; extended: number }> = {
-  STANDARD:  { base: 3, extended: 6 },
+const DECISION_DEADLINE_MONTHS: Record<
+  DecisionTrack,
+  { base: number; extended: number }
+> = {
+  STANDARD: { base: 3, extended: 6 },
   EXPEDITED: { base: 2, extended: 3 },
 };
 
@@ -205,7 +218,10 @@ export function calculateDecisionDeadline(
   extended = false,
 ): Date {
   const d = new Date(from);
-  d.setMonth(d.getMonth() + DECISION_DEADLINE_MONTHS[track][extended ? 'extended' : 'base']);
+  d.setMonth(
+    d.getMonth() +
+      DECISION_DEADLINE_MONTHS[track][extended ? 'extended' : 'base'],
+  );
   return d;
 }
 
@@ -221,7 +237,9 @@ export function calculatePermitAcceptanceDeadline(sentAt: Date): Date {
   return d;
 }
 
-export function deadlineStatus(deadline: Date | null | undefined): 'ok' | 'warning' | 'overdue' | null {
+export function deadlineStatus(
+  deadline: Date | null | undefined,
+): 'ok' | 'warning' | 'overdue' | null {
   if (!deadline) return null;
   const days = (new Date(deadline).getTime() - Date.now()) / 86_400_000;
   if (days < 0) return 'overdue';

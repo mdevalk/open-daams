@@ -53,7 +53,8 @@ export function InvoicePanel({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ actingUserId: currentUserId }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
+      if (!res.ok)
+        throw new Error(await readErrorMessage(res, terr('requestFailed')));
       router.refresh();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : terr('unexpected'));
@@ -65,7 +66,9 @@ export function InvoicePanel({
   return (
     <div className="rounded border border-gray-200 bg-white p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="font-semibold text-gray-900 text-sm">{t('panelTitle')}</h2>
+        <h2 className="font-semibold text-gray-900 text-sm">
+          {t('panelTitle')}
+        </h2>
         <div className="flex items-center gap-3">
           {invoices.length > 0 && (
             <a
@@ -98,7 +101,10 @@ export function InvoicePanel({
           {invoices.map((invoice) => {
             const overdue = isOverdue(invoice);
             return (
-              <li key={invoice.id} className="border border-gray-100 rounded p-3 text-sm flex items-center justify-between">
+              <li
+                key={invoice.id}
+                className="border border-gray-100 rounded p-3 text-sm flex items-center justify-between"
+              >
                 <a
                   href={`/${locale}/financials/${invoice.id}`}
                   className="font-mono font-medium text-[#01689b] hover:underline"
@@ -107,7 +113,9 @@ export function InvoicePanel({
                 </a>
                 <span
                   className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                    overdue ? 'bg-amber-100 text-amber-700' : STATUS_STYLES[invoice.status]
+                    overdue
+                      ? 'bg-amber-100 text-amber-700'
+                      : STATUS_STYLES[invoice.status]
                   }`}
                 >
                   {overdue ? t('overdue') : t(`status${invoice.status}`)}

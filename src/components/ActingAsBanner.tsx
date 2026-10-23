@@ -32,9 +32,17 @@ export function ActingAsBanner() {
     <div className="w-full bg-amber-400/90 text-amber-950 text-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1.5 flex items-center justify-between">
         <span className="font-semibold">
-          {t('actingAs', { name: impersonatedName, role: tr(impersonatedRole) })}
+          {t('actingAs', {
+            name: impersonatedName,
+            role: tr(impersonatedRole),
+          })}
         </span>
-        <button type="button" onClick={stop} disabled={busy} className="underline decoration-dotted text-xs font-medium">
+        <button
+          type="button"
+          onClick={stop}
+          disabled={busy}
+          className="underline decoration-dotted text-xs font-medium"
+        >
           {t('stop')}
         </button>
       </div>

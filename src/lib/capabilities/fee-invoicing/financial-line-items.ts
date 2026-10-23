@@ -4,7 +4,10 @@ import { FinancialLineCategory } from '@prisma/client';
 // FeeEstimatePanel, PermitPanel, InvoicePanel/InvoiceActions, and
 // generate-permit-pdf.ts. GL codes are placeholders — swap for real account
 // codes here when available, nowhere else needs to change.
-export const LINE_CATEGORY_META: Record<FinancialLineCategory, { label: string; glCode: string }> = {
+export const LINE_CATEGORY_META: Record<
+  FinancialLineCategory,
+  { label: string; glCode: string }
+> = {
   ADMINISTRATIVE: { label: 'Behandelkosten', glCode: '4010' },
   DATA_PREPARATION: { label: 'Gegevensvoorbereiding', glCode: '4020' },
   DATA_HOLDER: { label: 'Kosten gegevenshouder(s)', glCode: '4030' },

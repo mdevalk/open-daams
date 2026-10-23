@@ -13,7 +13,13 @@ const OUTCOME_STYLES: Record<Entry['outcome'], string> = {
   FAILURE: 'bg-red-100 text-red-700',
 };
 
-export async function IntegrationLogTable({ entries, locale }: { entries: Entry[]; locale: string }) {
+export async function IntegrationLogTable({
+  entries,
+  locale,
+}: {
+  entries: Entry[];
+  locale: string;
+}) {
   const t = await getTranslations({ locale, namespace: 'integrationLog' });
 
   return (
@@ -30,7 +36,12 @@ export async function IntegrationLogTable({ entries, locale }: { entries: Entry[
         {
           key: 'direction',
           header: t('colDirection'),
-          render: (e) => t(e.direction === 'INBOUND' ? 'directionInbound' : 'directionOutbound'),
+          render: (e) =>
+            t(
+              e.direction === 'INBOUND'
+                ? 'directionInbound'
+                : 'directionOutbound',
+            ),
           className: 'px-4 py-2 whitespace-nowrap text-gray-700',
         },
         {
@@ -43,7 +54,9 @@ export async function IntegrationLogTable({ entries, locale }: { entries: Entry[
           key: 'outcome',
           header: t('colOutcome'),
           render: (e) => (
-            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${OUTCOME_STYLES[e.outcome]}`}>
+            <span
+              className={`rounded-full px-2 py-0.5 text-xs font-medium ${OUTCOME_STYLES[e.outcome]}`}
+            >
               {t(e.outcome === 'SUCCESS' ? 'outcomeSuccess' : 'outcomeFailure')}
             </span>
           ),
@@ -54,7 +67,10 @@ export async function IntegrationLogTable({ entries, locale }: { entries: Entry[
           header: t('colApplication'),
           render: (e) =>
             e.application ? (
-              <a href={`/${locale}/applications/${e.application.id}`} className="text-[#01689b] hover:underline">
+              <a
+                href={`/${locale}/applications/${e.application.id}`}
+                className="text-[#01689b] hover:underline"
+              >
                 {e.application.referenceNumber}
               </a>
             ) : (
@@ -68,7 +84,11 @@ export async function IntegrationLogTable({ entries, locale }: { entries: Entry[
           render: (e) => e.initiatedBy?.name ?? '—',
           className: 'px-4 py-2 whitespace-nowrap text-gray-700',
         },
-        { key: 'error', header: t('colError'), render: (e) => e.errorMessage ?? '—' },
+        {
+          key: 'error',
+          header: t('colError'),
+          render: (e) => e.errorMessage ?? '—',
+        },
       ]}
     />
   );

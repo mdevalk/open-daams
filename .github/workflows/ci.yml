@@ -20,3 +20,5 @@ jobs:
       - run: npm audit --audit-level=moderate
 
       - run: npm run test
+
+      - run: npm run format:ci

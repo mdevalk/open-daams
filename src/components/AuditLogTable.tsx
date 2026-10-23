@@ -5,7 +5,13 @@ import { LogTable } from '@/components/LogTable';
 
 type Entry = AuditLog & { user: Pick<User, 'name'> };
 
-export async function AuditLogTable({ entries, locale }: { entries: Entry[]; locale: string }) {
+export async function AuditLogTable({
+  entries,
+  locale,
+}: {
+  entries: Entry[];
+  locale: string;
+}) {
   const t = await getTranslations({ locale, namespace: 'auditLog' });
 
   return (
@@ -36,7 +42,11 @@ export async function AuditLogTable({ entries, locale }: { entries: Entry[]; loc
           className: 'px-4 py-2 font-mono text-xs text-gray-700',
         },
         { key: 'action', header: t('colAction'), render: (e) => e.action },
-        { key: 'comment', header: t('colComment'), render: (e) => e.comment ?? '—' },
+        {
+          key: 'comment',
+          header: t('colComment'),
+          render: (e) => e.comment ?? '—',
+        },
       ]}
     />
   );

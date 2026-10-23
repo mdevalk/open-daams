@@ -21,7 +21,7 @@ export function DeadlineBanner({
   if (!s) return null;
 
   const cls = {
-    ok:      'deadline-ok',
+    ok: 'deadline-ok',
     warning: 'deadline-warning',
     overdue: 'deadline-overdue',
   }[s];
@@ -29,16 +29,23 @@ export function DeadlineBanner({
   const icon = { ok: '⏰', warning: '⚠️', overdue: '🔴' }[s];
 
   return (
-    <div className={`rounded px-4 py-3 text-sm flex items-start gap-3 ${cls}`} role="status">
-      <span aria-hidden="true" className="mt-0.5">{icon}</span>
+    <div
+      className={`rounded px-4 py-3 text-sm flex items-start gap-3 ${cls}`}
+      role="status"
+    >
+      <span aria-hidden="true" className="mt-0.5">
+        {icon}
+      </span>
       <div>
         <span className="font-semibold">{label}</span>
         <span className="ml-2">{formatDate(deadline)}</span>
         {days !== null && (
           <span className="ml-2 text-xs">
-            ({days < 0
+            (
+            {days < 0
               ? t('daysOverdue', { days: Math.abs(days) })
-              : t('daysRemaining', { days })})
+              : t('daysRemaining', { days })}
+            )
           </span>
         )}
       </div>

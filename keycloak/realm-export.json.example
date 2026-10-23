@@ -26,7 +26,10 @@
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
-      "redirectUris": ["http://localhost:3000/api/auth/callback/keycloak", "http://localhost:3000"],
+      "redirectUris": [
+        "http://localhost:3000/api/auth/callback/keycloak",
+        "http://localhost:3000"
+      ],
       "webOrigins": ["http://localhost:3000"],
       "baseUrl": "http://localhost:3000",
       "attributes": {
@@ -42,7 +45,9 @@
       "enabled": true,
       "firstName": "A.",
       "lastName": "de Vries",
-      "credentials": [{ "type": "password", "value": "Demo1234!", "temporary": false }],
+      "credentials": [
+        { "type": "password", "value": "Demo1234!", "temporary": false }
+      ],
       "realmRoles": ["APPLICANT"]
     },
     {
@@ -52,7 +57,9 @@
       "enabled": true,
       "firstName": "M.",
       "lastName": "Jansen",
-      "credentials": [{ "type": "password", "value": "Demo1234!", "temporary": false }],
+      "credentials": [
+        { "type": "password", "value": "Demo1234!", "temporary": false }
+      ],
       "realmRoles": ["APPLICANT"]
     },
     {
@@ -62,7 +69,9 @@
       "enabled": true,
       "firstName": "S.",
       "lastName": "Bakker",
-      "credentials": [{ "type": "password", "value": "Demo1234!", "temporary": false }],
+      "credentials": [
+        { "type": "password", "value": "Demo1234!", "temporary": false }
+      ],
       "realmRoles": ["CASE_HANDLER"]
     },
     {
@@ -72,7 +81,9 @@
       "enabled": true,
       "firstName": "P.",
       "lastName": "van den Berg",
-      "credentials": [{ "type": "password", "value": "Demo1234!", "temporary": false }],
+      "credentials": [
+        { "type": "password", "value": "Demo1234!", "temporary": false }
+      ],
       "realmRoles": ["DECISION_MAKER"]
     },
     {
@@ -82,7 +93,9 @@
       "enabled": true,
       "firstName": "R.",
       "lastName": "de Groot",
-      "credentials": [{ "type": "password", "value": "Demo1234!", "temporary": false }],
+      "credentials": [
+        { "type": "password", "value": "Demo1234!", "temporary": false }
+      ],
       "realmRoles": ["ADMIN"]
     }
   ]

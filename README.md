@@ -29,28 +29,28 @@ What's implemented, and the specific EHDS Regulation (EU) 2025/327 article (or T
 reference) it's based on. See [`docs/architecture.md`](./docs/architecture.md) for how these pieces
 fit together in code.
 
-| Functionality | EHDS / TEHDAS2 reference |
-|---|---|
-| Application submission & lifecycle | Art. 67 (data access application), Art. 69 (data request) |
-| Statutory decision deadlines (standard 3 months +3; accelerated 2 months +1; 4-week info window) | Art. 68, Art. 69 |
-| Structured completeness check (checklist, distinct from assessment) | D6.3 Ch. 5, Annex 7/8 |
-| Type-specific application fields (cohort formation, controls/relatives, tabulation plan, transfers outside EU/EEA, lawfulness of processing) | D6.3 Annex 5 (data access application) / Annex 6 (data request) |
-| Ethical review tracking (status, committee, reference) | D6.3 §6.1 |
-| Cost estimate & invoicing sent to the applicant | Art. 62(5) |
-| Opt-out exception mechanism | Art. 71(4) |
-| Decision issuance & data permit creation | Art. 68(1)–(3) |
-| Data permit document (10-section template) | D6.3 Annex 9; mandatory content per Art. 68(10) |
-| Permit validity, amendment, renewal (once) | Art. 68(12) |
-| Permit revocation for non-compliance | Art. 63(1) |
-| List of persons authorised to process data in the SPE — role-differentiated (researcher, auto-derived from the application; output controller, HDAB-selected per D6.3's four-eyes principle), each with a sample DID identity; each granted dataset also carries a signed storage-location write instruction for the data holder | D6.3 Annex 9 §6.8, Art. 73 |
-| SPE operator selection at permit issuance/amendment (provider derived from operator) | Art. 73 |
-| Extraction requests to health data holders | Art. 60, Art. 68(7) |
-| Appeal (bezwaar/beroep) tracking against a decision | Art. 63 / national administrative law |
-| Public transparency register (applications & decisions) | Art. 57(1)(j)(ii), Art. 58, Art. 61(4) |
-| Cross-border application import via HealthData@EU | Art. 75 |
-| Role-based access control, enforced server-side on reads and writes, backed by real OIDC login (Keycloak) — see [assessments](#assessments) | Art. 57 (HDAB responsibilities), implemented as internal RBAC |
-| Audit trail of application/permit/SPE-provisioning transitions and reference-data changes | supports record-keeping under Art. 57(1) |
-| Trusted data holder flag (registry) + selector on an application | Art. 72 — partial, see below |
+| Functionality                                                                                                                                                                                                                                                                                                                    | EHDS / TEHDAS2 reference                                        |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Application submission & lifecycle                                                                                                                                                                                                                                                                                               | Art. 67 (data access application), Art. 69 (data request)       |
+| Statutory decision deadlines (standard 3 months +3; accelerated 2 months +1; 4-week info window)                                                                                                                                                                                                                                 | Art. 68, Art. 69                                                |
+| Structured completeness check (checklist, distinct from assessment)                                                                                                                                                                                                                                                              | D6.3 Ch. 5, Annex 7/8                                           |
+| Type-specific application fields (cohort formation, controls/relatives, tabulation plan, transfers outside EU/EEA, lawfulness of processing)                                                                                                                                                                                     | D6.3 Annex 5 (data access application) / Annex 6 (data request) |
+| Ethical review tracking (status, committee, reference)                                                                                                                                                                                                                                                                           | D6.3 §6.1                                                       |
+| Cost estimate & invoicing sent to the applicant                                                                                                                                                                                                                                                                                  | Art. 62(5)                                                      |
+| Opt-out exception mechanism                                                                                                                                                                                                                                                                                                      | Art. 71(4)                                                      |
+| Decision issuance & data permit creation                                                                                                                                                                                                                                                                                         | Art. 68(1)–(3)                                                  |
+| Data permit document (10-section template)                                                                                                                                                                                                                                                                                       | D6.3 Annex 9; mandatory content per Art. 68(10)                 |
+| Permit validity, amendment, renewal (once)                                                                                                                                                                                                                                                                                       | Art. 68(12)                                                     |
+| Permit revocation for non-compliance                                                                                                                                                                                                                                                                                             | Art. 63(1)                                                      |
+| List of persons authorised to process data in the SPE — role-differentiated (researcher, auto-derived from the application; output controller, HDAB-selected per D6.3's four-eyes principle), each with a sample DID identity; each granted dataset also carries a signed storage-location write instruction for the data holder | D6.3 Annex 9 §6.8, Art. 73                                      |
+| SPE operator selection at permit issuance/amendment (provider derived from operator)                                                                                                                                                                                                                                             | Art. 73                                                         |
+| Extraction requests to health data holders                                                                                                                                                                                                                                                                                       | Art. 60, Art. 68(7)                                             |
+| Appeal (bezwaar/beroep) tracking against a decision                                                                                                                                                                                                                                                                              | Art. 63 / national administrative law                           |
+| Public transparency register (applications & decisions)                                                                                                                                                                                                                                                                          | Art. 57(1)(j)(ii), Art. 58, Art. 61(4)                          |
+| Cross-border application import via HealthData@EU                                                                                                                                                                                                                                                                                | Art. 75                                                         |
+| Role-based access control, enforced server-side on reads and writes, backed by real OIDC login (Keycloak) — see [assessments](#assessments)                                                                                                                                                                                      | Art. 57 (HDAB responsibilities), implemented as internal RBAC   |
+| Audit trail of application/permit/SPE-provisioning transitions and reference-data changes                                                                                                                                                                                                                                        | supports record-keeping under Art. 57(1)                        |
+| Trusted data holder flag (registry) + selector on an application                                                                                                                                                                                                                                                                 | Art. 72 — partial, see below                                    |
 
 Not yet implemented: the **full** trusted-health-data-holder referral/assessment procedure (Art.
 72 — only the trusted flag and selector exist today, not the referral/proposed-decision
@@ -145,19 +145,19 @@ Open [http://localhost:3000](http://localhost:3000) and sign in — every page r
 except the public register. All 5 seeded demo users (see `prisma/seed.ts`) share the password
 `Demo1234!` (defined in `keycloak/realm-export.json.example`, local-dev-only credentials):
 
-| Email | Role |
-|---|---|
-| `researcher@umcu.nl` | APPLICANT |
-| `analyst@rivm.nl` | APPLICANT |
-| `casehandler@hdab.nl` | CASE_HANDLER |
-| `director@hdab.nl` | DECISION_MAKER |
-| `admin@hdab.nl` | ADMIN |
+| Email                 | Role           |
+| --------------------- | -------------- |
+| `researcher@umcu.nl`  | APPLICANT      |
+| `analyst@rivm.nl`     | APPLICANT      |
+| `casehandler@hdab.nl` | CASE_HANDLER   |
+| `director@hdab.nl`    | DECISION_MAKER |
+| `admin@hdab.nl`       | ADMIN          |
 
 Signed in as `admin@hdab.nl`, the header's account menu (⚙️) offers an **"Act as"** picker to
 switch between the other seeded users without a second login — useful for exercising
 role-specific views. Keycloak's own admin console is at
 [http://localhost:8080](http://localhost:8080) (`admin` / `changeme`, from `.env`'s
-`KEYCLOAK_ADMIN_USER`/`KEYCLOAK_ADMIN_PASSWORD`). Note: the realm only auto-imports on a *fresh*
+`KEYCLOAK_ADMIN_USER`/`KEYCLOAK_ADMIN_PASSWORD`). Note: the realm only auto-imports on a _fresh_
 `keycloak_data` volume — `docker compose down -v` if you need to reset it.
 
 Run the unit test suite with `npm run test` (or `npm run test:watch` while developing).

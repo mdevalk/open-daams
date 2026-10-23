@@ -11,7 +11,11 @@ type Props = {
   applicationId: string;
   currentUserId: string;
   canManage: boolean;
-  existing: { items: AssessmentItem[]; result: string; remarks?: string | null } | null;
+  existing: {
+    items: AssessmentItem[];
+    result: string;
+    remarks?: string | null;
+  } | null;
 };
 
 // TEHDAS2 D6.4 §7.3/7.4 — substantive assessment criteria (Art. 68(1)-(2)).
@@ -33,7 +37,12 @@ const RESULT_STYLES: Record<string, string> = {
   INCOMPLETE: 'bg-red-100 text-red-700',
 };
 
-export function AssessmentCheckPanel({ applicationId, currentUserId, canManage, existing }: Props) {
+export function AssessmentCheckPanel({
+  applicationId,
+  currentUserId,
+  canManage,
+  existing,
+}: Props) {
   const router = useRouter();
   const t = useTranslations('assessmentCheckPanel');
   const terr = useTranslations('errors');
@@ -41,7 +50,12 @@ export function AssessmentCheckPanel({ applicationId, currentUserId, canManage, 
   // log entry, it stays as recorded rather than being retranslated per
   // viewer. A fresh (not yet saved) checklist uses live-translated labels.
   const [items, setItems] = useState<AssessmentItem[]>(
-    existing?.items ?? DEFAULT_ITEM_KEYS.map((key) => ({ key, label: t(`items.${key}`), passed: false })),
+    existing?.items ??
+      DEFAULT_ITEM_KEYS.map((key) => ({
+        key,
+        label: t(`items.${key}`),
+        passed: false,
+      })),
   );
   const [result, setResult] = useState(existing?.result ?? 'PENDING');
   const [remarks, setRemarks] = useState(existing?.remarks ?? '');
@@ -58,19 +72,30 @@ export function AssessmentCheckPanel({ applicationId, currentUserId, canManage, 
   const allPassed = items.every((i) => i.passed);
 
   function toggle(key: string) {
-    setItems((prev) => prev.map((i) => (i.key === key ? { ...i, passed: !i.passed } : i)));
+    setItems((prev) =>
+      prev.map((i) => (i.key === key ? { ...i, passed: !i.passed } : i)),
+    );
   }
 
   async function markComplete() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/applications/${applicationId}/assessment-check`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items, result: 'COMPLETE', remarks, checkedById: currentUserId }),
-      });
-      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
+      const res = await fetch(
+        `/api/applications/${applicationId}/assessment-check`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            items,
+            result: 'COMPLETE',
+            remarks,
+            checkedById: currentUserId,
+          }),
+        },
+      );
+      if (!res.ok)
+        throw new Error(await readErrorMessage(res, terr('requestFailed')));
       setResult('COMPLETE');
       router.refresh();
     } catch (e: unknown) {
@@ -91,10 +116,15 @@ export function AssessmentCheckPanel({ applicationId, currentUserId, canManage, 
       >
         <h2 className="font-semibold text-gray-900 text-sm">{t('title')}</h2>
         <div className="flex items-center gap-2">
-          <span className={`text-xs font-medium px-2 py-0.5 rounded ${RESULT_STYLES[result]}`}>
+          <span
+            className={`text-xs font-medium px-2 py-0.5 rounded ${RESULT_STYLES[result]}`}
+          >
             {t(`result${result}`)}
           </span>
-          <span aria-hidden="true" className={`text-gray-400 transition-transform ${expanded ? 'rotate-90' : ''}`}>
+          <span
+            aria-hidden="true"
+            className={`text-gray-400 transition-transform ${expanded ? 'rotate-90' : ''}`}
+          >
             ▸
           </span>
         </div>
@@ -112,13 +142,20 @@ export function AssessmentCheckPanel({ applicationId, currentUserId, canManage, 
                   onChange={() => toggle(item.key)}
                   className="mt-0.5"
                 />
-                <span className={item.passed ? 'text-gray-700' : 'text-gray-500'}>{item.label}</span>
+                <span
+                  className={item.passed ? 'text-gray-700' : 'text-gray-500'}
+                >
+                  {item.label}
+                </span>
               </li>
             ))}
           </ul>
 
           <div>
-            <label className="text-xs text-gray-500" htmlFor="assessment-remarks">
+            <label
+              className="text-xs text-gray-500"
+              htmlFor="assessment-remarks"
+            >
               {t('remarks')}
             </label>
             <textarea

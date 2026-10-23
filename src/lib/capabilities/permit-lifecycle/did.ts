@@ -2,7 +2,8 @@ import { randomBytes } from 'node:crypto';
 
 // Bitcoin/base58btc alphabet — excludes 0/O/I/l to avoid visual ambiguity,
 // same alphabet a real did:key multibase encoding would use.
-const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+const BASE58_ALPHABET =
+  '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 
 // Sample/placeholder identity for the data-holder writer, researcher, and
 // output-controller roles (StorageLocation.writerDid, AuthorizedPerson.did)
@@ -12,6 +13,7 @@ const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvw
 export function generateSampleDid(): string {
   const bytes = randomBytes(32);
   let id = '';
-  for (const byte of bytes) id += BASE58_ALPHABET[byte % BASE58_ALPHABET.length];
+  for (const byte of bytes)
+    id += BASE58_ALPHABET[byte % BASE58_ALPHABET.length];
   return `did:key:z${id}`;
 }

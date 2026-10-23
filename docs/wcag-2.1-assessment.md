@@ -21,20 +21,20 @@ including a body like HDAB-NL. It complements `docs/owasp-top10-assessment.md` �
 
 ## Summary
 
-| WCAG 2.1 SC | Level | Status | Key finding |
-|---|---|---|---|
-| 1.1.1 Non-text Content | A | ℹ️ N/A | No `<img>` elements exist anywhere in the codebase — all iconography is inline SVG (`lucide-react`) |
-| 1.3.1 Info and Relationships | A | ⚠️ Open | Form controls are visually labelled but not programmatically associated (systemic); public-register data tables have no header `scope` |
-| 1.4.1 Use of Color | A | ✅ Clean | Every status indicator checked (badges, dashboard alert dots, deadline text) pairs colour with a text label — nothing is colour-only |
-| 1.4.3 Contrast (Minimum) | AA | ⚠️ Open | `text-gray-400` (2.54:1) used for real content in 27 places; a warning-deadline text colour (2.08:1) fails badly |
-| 1.4.11 Non-text Contrast | AA | ⚠️ Minor | Default Tailwind `gray-300` form-control borders sit at 1.47:1 against white |
-| 2.1.1 Keyboard | A | ✅ Clean | No non-semantic click handler (`<div>`/`<span onClick>`) found anywhere in `src/` |
-| 2.4.1 Bypass Blocks | A | ✅ Clean | Working skip link (`#main-content`), correctly hidden until focused |
-| 2.4.7 Focus Visible | AA | ✅ Clean | Every `outline-none` override in the codebase is paired with a visible `focus:ring` replacement |
-| 3.1.1 Language of Page | A | ✅ Clean | `<html lang={locale}>` correctly reflects the active locale (nl/en/fr) |
-| 3.1.2 Language of Parts | AA | ⚠️ Minor | Two `<nav aria-label>`s are hardcoded Dutch text regardless of the active locale |
-| 3.3.2 Labels or Instructions | A | ⚠️ Open | Same root cause as 1.3.1's form-control finding |
-| 4.1.2 Name, Role, Value | A | ⚠️ Open | Same root cause as 1.3.1's form-control finding |
+| WCAG 2.1 SC                  | Level | Status   | Key finding                                                                                                                            |
+| ---------------------------- | ----- | -------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.1.1 Non-text Content       | A     | ℹ️ N/A   | No `<img>` elements exist anywhere in the codebase — all iconography is inline SVG (`lucide-react`)                                    |
+| 1.3.1 Info and Relationships | A     | ⚠️ Open  | Form controls are visually labelled but not programmatically associated (systemic); public-register data tables have no header `scope` |
+| 1.4.1 Use of Color           | A     | ✅ Clean | Every status indicator checked (badges, dashboard alert dots, deadline text) pairs colour with a text label — nothing is colour-only   |
+| 1.4.3 Contrast (Minimum)     | AA    | ⚠️ Open  | `text-gray-400` (2.54:1) used for real content in 27 places; a warning-deadline text colour (2.08:1) fails badly                       |
+| 1.4.11 Non-text Contrast     | AA    | ⚠️ Minor | Default Tailwind `gray-300` form-control borders sit at 1.47:1 against white                                                           |
+| 2.1.1 Keyboard               | A     | ✅ Clean | No non-semantic click handler (`<div>`/`<span onClick>`) found anywhere in `src/`                                                      |
+| 2.4.1 Bypass Blocks          | A     | ✅ Clean | Working skip link (`#main-content`), correctly hidden until focused                                                                    |
+| 2.4.7 Focus Visible          | AA    | ✅ Clean | Every `outline-none` override in the codebase is paired with a visible `focus:ring` replacement                                        |
+| 3.1.1 Language of Page       | A     | ✅ Clean | `<html lang={locale}>` correctly reflects the active locale (nl/en/fr)                                                                 |
+| 3.1.2 Language of Parts      | AA    | ⚠️ Minor | Two `<nav aria-label>`s are hardcoded Dutch text regardless of the active locale                                                       |
+| 3.3.2 Labels or Instructions | A     | ⚠️ Open  | Same root cause as 1.3.1's form-control finding                                                                                        |
+| 4.1.2 Name, Role, Value      | A     | ⚠️ Open  | Same root cause as 1.3.1's form-control finding                                                                                        |
 
 ## Findings
 
@@ -49,6 +49,7 @@ disappears the moment a value is entered, and isn't a substitute for a label und
 case).
 
 Confirmed live and in source, three representative cases:
+
 - `src/app/[locale]/applications/page.tsx:59-86` — the Search/Status/Type/Source filter row.
   Visually labelled (`<label className="...">{t('searchLabel')}</label>` etc.), but no `htmlFor`.
 - `src/components/FeeEstimatePanel.tsx:313-369` — SPE operator/type selects and the setup/usage
@@ -81,7 +82,7 @@ the hex values in source (not estimated):
 - **`text-gray-400` (`#9ca3af` on white) — 2.54:1.** Used in **27 places** across the codebase for
   real, meaningful content, not decoration: log/history timestamps
   (`src/app/[locale]/permits/[id]/page.tsx:494` — `{log.user.name} · {log.user.role} ·
-  {formatDateTime(log.createdAt)}`), applicant/data-user names on cards and lists
+{formatDateTime(log.createdAt)}`), applicant/data-user names on cards and lists
   (`ApplicationCard.tsx:28`, `permits/page.tsx:180`, `financials/page.tsx:101,246`), and several
   empty-state messages (`NotesList.tsx:77`, `SpeTypeList.tsx:114`). This is the most-repeated
   contrast failure in the app by occurrence count.
@@ -97,7 +98,7 @@ values.
 
 **Fix**: darken `text-gray-400` to at least Tailwind's `gray-500` (`#6b7280`, 4.83:1 — already
 used elsewhere in the app and passes) for anywhere it carries real content; replace `#f0a500` as a
-*text* colour with something closer to the `#6b4c00` already used successfully as the
+_text_ colour with something closer to the `#6b4c00` already used successfully as the
 `PRE_SCREENING`/`AWAITING_ADDITIONAL_INFORMATION` badge text colour (7.13:1) — amber can stay as a
 background/border accent, just not as small foreground text.
 
@@ -122,6 +123,7 @@ labels themselves are correctly translated, only the two landmark names aren't.
 
 Worth stating plainly, not just the gaps: the things checked here were **clean**, not merely
 untested.
+
 - **Colour is never the only signal.** Every status indicator inspected — `StatusBadge`, the
   dashboard's overdue/due-soon/awaiting-decision dots, the public register's Positive/Negative
   pills, `ApplicationCard`'s deadline text — pairs its colour with an explicit text label.

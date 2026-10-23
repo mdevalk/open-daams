@@ -31,22 +31,23 @@ const EXPIRE: PermitTransition = {
   description: 'expireDesc',
 };
 
-export const PERMIT_TRANSITIONS: Record<DataPermitStatus, PermitTransition[]> = {
-  GRANTED: [REVOKE, EXPIRE],
-  AMENDED: [REVOKE, EXPIRE],
-  // D6.4 §9.3: a permit that has been extended MUST NOT be extended a second time
-  RENEWED: [REVOKE, EXPIRE],
-  // Terminal states
-  REVOKED: [],
-  EXPIRED: [],
-};
+export const PERMIT_TRANSITIONS: Record<DataPermitStatus, PermitTransition[]> =
+  {
+    GRANTED: [REVOKE, EXPIRE],
+    AMENDED: [REVOKE, EXPIRE],
+    // D6.4 §9.3: a permit that has been extended MUST NOT be extended a second time
+    RENEWED: [REVOKE, EXPIRE],
+    // Terminal states
+    REVOKED: [],
+    EXPIRED: [],
+  };
 
 export const PERMIT_STATUS_COLORS: Record<DataPermitStatus, string> = {
-  GRANTED:  'bg-emerald-100 text-emerald-700',
-  AMENDED:  'bg-blue-100 text-blue-700',
-  RENEWED:  'bg-teal-100 text-teal-700',
-  REVOKED:  'bg-red-100 text-red-700',
-  EXPIRED:  'bg-gray-100 text-gray-500',
+  GRANTED: 'bg-emerald-100 text-emerald-700',
+  AMENDED: 'bg-blue-100 text-blue-700',
+  RENEWED: 'bg-teal-100 text-teal-700',
+  REVOKED: 'bg-red-100 text-red-700',
+  EXPIRED: 'bg-gray-100 text-gray-500',
 };
 
 // The full, human-readable permit id combines the stable base number with the
@@ -75,11 +76,21 @@ export function resolveCurrentAndPendingVersion(
   currentPermitVersion: number,
 ): {
   currentVersion: PermitVersionSummary | null;
-  pendingVersion: { id: string; permitNumber: string; version: number; effectiveAt: Date } | null;
+  pendingVersion: {
+    id: string;
+    permitNumber: string;
+    version: number;
+    effectiveAt: Date;
+  } | null;
 } {
   const currentVersion = versions.find((v) => v.isCurrent) ?? null;
   const pendingVersionRaw =
-    versions.find((v) => v.version === currentPermitVersion + 1 && v.effectiveAt && !v.activatedAt) ?? null;
+    versions.find(
+      (v) =>
+        v.version === currentPermitVersion + 1 &&
+        v.effectiveAt &&
+        !v.activatedAt,
+    ) ?? null;
   const pendingVersion = pendingVersionRaw?.effectiveAt
     ? {
         id: pendingVersionRaw.id,
@@ -107,15 +118,28 @@ function addMonths(date: Date, months: number): Date {
 export function derivePermitDisplayFlags(
   permit: { validUntil: Date | string | null },
   app: PermitDisplayApplication,
-): { isDataRequest: boolean; retentionDeadline: Date | null; showEthical: boolean } {
+): {
+  isDataRequest: boolean;
+  retentionDeadline: Date | null;
+  showEthical: boolean;
+} {
   return {
     isDataRequest: app?.type === 'DATA_REQUEST',
-    retentionDeadline: permit.validUntil ? addMonths(new Date(permit.validUntil), 6) : null,
-    showEthical: Boolean(app?.ethicalReviewRequired && app.ethicalReviewStatus && app.ethicalReviewStatus !== 'NOT_REQUIRED'),
+    retentionDeadline: permit.validUntil
+      ? addMonths(new Date(permit.validUntil), 6)
+      : null,
+    showEthical: Boolean(
+      app?.ethicalReviewRequired &&
+      app.ethicalReviewStatus &&
+      app.ethicalReviewStatus !== 'NOT_REQUIRED',
+    ),
   };
 }
 
-type SpeOperatorForLabel = { name: string; speProvider: { name: string } | null } | null;
+type SpeOperatorForLabel = {
+  name: string;
+  speProvider: { name: string } | null;
+} | null;
 
 export function formatSpeOperatorLabel(
   speOperator: SpeOperatorForLabel,
@@ -123,5 +147,8 @@ export function formatSpeOperatorLabel(
 ): string | null {
   if (!speOperator) return null;
   if (!speOperator.speProvider) return speOperator.name;
-  return t('speOperatorViaProvider', { operator: speOperator.name, provider: speOperator.speProvider.name });
+  return t('speOperatorViaProvider', {
+    operator: speOperator.name,
+    provider: speOperator.speProvider.name,
+  });
 }

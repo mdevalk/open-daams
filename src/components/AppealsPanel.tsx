@@ -7,7 +7,11 @@ import { AppealStatus } from '@prisma/client';
 import { useRouter } from 'next/navigation';
 import { formatDate, readErrorMessage } from '@/lib/utils';
 
-type AppealAttachment = { id: string; filename: string; mimeType: string | null };
+type AppealAttachment = {
+  id: string;
+  filename: string;
+  mimeType: string | null;
+};
 
 type AppealSummary = {
   id: string;
@@ -44,7 +48,12 @@ const NEXT_STATUSES: Record<string, string[]> = {
   WITHDRAWN: [],
 };
 
-export function AppealsPanel({ applicationId, appeals, canManage, currentUserId }: Props) {
+export function AppealsPanel({
+  applicationId,
+  appeals,
+  canManage,
+  currentUserId,
+}: Props) {
   const router = useRouter();
   const t = useTranslations('appealsPanel');
   const ts = useTranslations('appealStatus');
@@ -64,9 +73,15 @@ export function AppealsPanel({ applicationId, appeals, canManage, currentUserId 
       const res = await fetch(`/api/applications/${applicationId}/appeals`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ submittedBy, grounds, authority, actingUserId: currentUserId }),
+        body: JSON.stringify({
+          submittedBy,
+          grounds,
+          authority,
+          actingUserId: currentUserId,
+        }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
+      if (!res.ok)
+        throw new Error(await readErrorMessage(res, terr('requestFailed')));
       setSubmittedBy('');
       setGrounds('');
       setAuthority('');
@@ -88,7 +103,8 @@ export function AppealsPanel({ applicationId, appeals, canManage, currentUserId 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status, actingUserId: currentUserId }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
+      if (!res.ok)
+        throw new Error(await readErrorMessage(res, terr('requestFailed')));
       router.refresh();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : terr('unexpected'));
@@ -103,14 +119,22 @@ export function AppealsPanel({ applicationId, appeals, canManage, currentUserId 
     try {
       const buf = await file.arrayBuffer();
       let binary = '';
-      new Uint8Array(buf).forEach((b) => { binary += String.fromCodePoint(b); });
+      new Uint8Array(buf).forEach((b) => {
+        binary += String.fromCodePoint(b);
+      });
       const content = btoa(binary);
       const res = await fetch(`/api/appeals/${appealId}/attachments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filename: file.name, mimeType: file.type || undefined, content, actingUserId: currentUserId }),
+        body: JSON.stringify({
+          filename: file.name,
+          mimeType: file.type || undefined,
+          content,
+          actingUserId: currentUserId,
+        }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
+      if (!res.ok)
+        throw new Error(await readErrorMessage(res, terr('requestFailed')));
       router.refresh();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : terr('unexpected'));
@@ -124,7 +148,11 @@ export function AppealsPanel({ applicationId, appeals, canManage, currentUserId 
       <div className="flex items-center justify-between">
         <h2 className="font-semibold text-gray-900 text-sm">{t('title')}</h2>
         {canManage && !showForm && (
-          <button type="button" onClick={() => setShowForm(true)} className="text-xs text-[#01689b] hover:underline">
+          <button
+            type="button"
+            onClick={() => setShowForm(true)}
+            className="text-xs text-[#01689b] hover:underline"
+          >
             + {t('register')}
           </button>
         )}
@@ -138,18 +166,33 @@ export function AppealsPanel({ applicationId, appeals, canManage, currentUserId 
 
       <div className="space-y-3">
         {appeals.map((appeal) => (
-          <div key={appeal.id} className="border border-gray-100 rounded p-3 text-sm space-y-1">
+          <div
+            key={appeal.id}
+            className="border border-gray-100 rounded p-3 text-sm space-y-1"
+          >
             <div className="flex items-center justify-between">
               <span className="font-medium">{appeal.submittedBy}</span>
-              <span className={`text-xs font-medium px-2 py-0.5 rounded ${STATUS_STYLES[appeal.status]}`}>
+              <span
+                className={`text-xs font-medium px-2 py-0.5 rounded ${STATUS_STYLES[appeal.status]}`}
+              >
                 {ts(appeal.status)}
               </span>
             </div>
-            <p className="text-gray-700 text-xs whitespace-pre-wrap">{appeal.grounds}</p>
-            {appeal.authority && <p className="text-xs text-gray-500">{t('handledBy')} {appeal.authority}</p>}
-            <p className="text-xs text-gray-400">{t('submittedOn')} {formatDate(appeal.submittedAt)}</p>
+            <p className="text-gray-700 text-xs whitespace-pre-wrap">
+              {appeal.grounds}
+            </p>
+            {appeal.authority && (
+              <p className="text-xs text-gray-500">
+                {t('handledBy')} {appeal.authority}
+              </p>
+            )}
+            <p className="text-xs text-gray-400">
+              {t('submittedOn')} {formatDate(appeal.submittedAt)}
+            </p>
             {appeal.decisionSummary && (
-              <p className="text-xs text-gray-700 border-t border-gray-100 pt-1 mt-1">{appeal.decisionSummary}</p>
+              <p className="text-xs text-gray-700 border-t border-gray-100 pt-1 mt-1">
+                {appeal.decisionSummary}
+              </p>
             )}
             {appeal.signedAt && (
               <a
@@ -216,27 +259,54 @@ export function AppealsPanel({ applicationId, appeals, canManage, currentUserId 
       {canManage && showForm && (
         <div className="space-y-2 border-t border-gray-100 pt-3">
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">{t('submittedByLabel')}</label>
-            <input type="text" value={submittedBy} onChange={e => setSubmittedBy(e.target.value)}
-              className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              {t('submittedByLabel')}
+            </label>
+            <input
+              type="text"
+              value={submittedBy}
+              onChange={(e) => setSubmittedBy(e.target.value)}
+              className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
+            />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">{t('groundsLabel')}</label>
-            <textarea rows={3} value={grounds} onChange={e => setGrounds(e.target.value)}
-              className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              {t('groundsLabel')}
+            </label>
+            <textarea
+              rows={3}
+              value={grounds}
+              onChange={(e) => setGrounds(e.target.value)}
+              className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
+            />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">{t('authorityLabel')}</label>
-            <input type="text" value={authority} onChange={e => setAuthority(e.target.value)}
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              {t('authorityLabel')}
+            </label>
+            <input
+              type="text"
+              value={authority}
+              onChange={(e) => setAuthority(e.target.value)}
               placeholder={t('authorityPlaceholder')}
-              className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
+              className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
+            />
           </div>
           <div className="flex gap-2">
-            <button type="button" disabled={loading || !submittedBy.trim() || !grounds.trim()} onClick={submitAppeal}
-              className="flex-1 rounded px-3 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors">
+            <button
+              type="button"
+              disabled={loading || !submittedBy.trim() || !grounds.trim()}
+              onClick={submitAppeal}
+              className="flex-1 rounded px-3 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors"
+            >
               {loading ? t('loading') : t('register')}
             </button>
-            <button type="button" disabled={loading} onClick={() => setShowForm(false)} className="rounded px-3 py-2 text-sm border border-gray-300 hover:bg-gray-50">
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => setShowForm(false)}
+              className="rounded px-3 py-2 text-sm border border-gray-300 hover:bg-gray-50"
+            >
               {t('cancel')}
             </button>
           </div>

@@ -118,11 +118,19 @@ function billingFieldsToPayload(billing: BillingFields) {
 // Full field list for the read-only, by-reference display on a Data User
 // row (see ApplicantBillingDetails above) — every field that model has,
 // not just the 8-field subset Data Holder/SPE Operator edit manually.
-const APPLICANT_BILLING_DISPLAY_FIELDS: { key: keyof ApplicantBillingDetails; labelKey: string; type?: 'boolean' | 'date' }[] = [
+const APPLICANT_BILLING_DISPLAY_FIELDS: {
+  key: keyof ApplicantBillingDetails;
+  labelKey: string;
+  type?: 'boolean' | 'date';
+}[] = [
   { key: 'fullName', labelKey: 'billingContactName' },
   { key: 'email', labelKey: 'billingContactEmail' },
   { key: 'phone', labelKey: 'billingContactPhone' },
-  { key: 'sameAsContactPerson', labelKey: 'sameAsContactPerson', type: 'boolean' },
+  {
+    key: 'sameAsContactPerson',
+    labelKey: 'sameAsContactPerson',
+    type: 'boolean',
+  },
   { key: 'organisationName', labelKey: 'organisationName' },
   { key: 'address', labelKey: 'address' },
   { key: 'businessId', labelKey: 'businessId' },
@@ -132,13 +140,23 @@ const APPLICANT_BILLING_DISPLAY_FIELDS: { key: keyof ApplicantBillingDetails; la
   { key: 'eInvoiceAddress', labelKey: 'eInvoiceAddress' },
   { key: 'operatorId', labelKey: 'operatorId' },
   { key: 'peppolCode', labelKey: 'peppolCode' },
-  { key: 'isProjectFinanciallyCovered', labelKey: 'financiallyCovered', type: 'boolean' },
+  {
+    key: 'isProjectFinanciallyCovered',
+    labelKey: 'financiallyCovered',
+    type: 'boolean',
+  },
   { key: 'financingAmountRange', labelKey: 'financingAmountRange' },
-  { key: 'section4ProfileDataDate', labelKey: 'section4ProfileDataDate', type: 'date' },
+  {
+    key: 'section4ProfileDataDate',
+    labelKey: 'section4ProfileDataDate',
+    type: 'date',
+  },
 ];
 
 function hasFieldValue(value: unknown, type?: 'boolean' | 'date'): boolean {
-  return type === 'boolean' ? value !== null && value !== undefined : Boolean(value);
+  return type === 'boolean'
+    ? value !== null && value !== undefined
+    : Boolean(value);
 }
 
 function isValidDutchPhone(value: string): boolean {
@@ -149,7 +167,18 @@ function isValidDutchPhone(value: string): boolean {
 const inputCls =
   'w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]';
 
-export function MasterdataManager({ apiBasePath, namespace, entities, relationOptions, hasTrustedFlag, hasSpeTypes, hasBillingDetails, hasBillingDetailsDisplay, isAdmin, currentUserId }: Props) {
+export function MasterdataManager({
+  apiBasePath,
+  namespace,
+  entities,
+  relationOptions,
+  hasTrustedFlag,
+  hasSpeTypes,
+  hasBillingDetails,
+  hasBillingDetailsDisplay,
+  isAdmin,
+  currentUserId,
+}: Props) {
   const router = useRouter();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const t = useTranslations(namespace as any);
@@ -188,10 +217,15 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
     setError(null);
   }
 
-  function renderBillingFields(billing: BillingFields, setBilling: (b: BillingFields) => void) {
+  function renderBillingFields(
+    billing: BillingFields,
+    setBilling: (b: BillingFields) => void,
+  ) {
     return (
       <div className="space-y-2 border-t border-gray-100 pt-2">
-        <p className="text-xs font-semibold text-gray-700">{t('billingDetailsTitle')}</p>
+        <p className="text-xs font-semibold text-gray-700">
+          {t('billingDetailsTitle')}
+        </p>
         <textarea
           value={billing.address}
           onChange={(e) => setBilling({ ...billing, address: e.target.value })}
@@ -200,22 +234,47 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
           className={inputCls}
         />
         <div className="grid grid-cols-2 gap-2">
-          <input value={billing.businessId} onChange={(e) => setBilling({ ...billing, businessId: e.target.value })} placeholder={t('businessId')} className={inputCls} />
-          <input value={billing.vatNumber} onChange={(e) => setBilling({ ...billing, vatNumber: e.target.value })} placeholder={t('vatNumber')} className={inputCls} />
+          <input
+            value={billing.businessId}
+            onChange={(e) =>
+              setBilling({ ...billing, businessId: e.target.value })
+            }
+            placeholder={t('businessId')}
+            className={inputCls}
+          />
+          <input
+            value={billing.vatNumber}
+            onChange={(e) =>
+              setBilling({ ...billing, vatNumber: e.target.value })
+            }
+            placeholder={t('vatNumber')}
+            className={inputCls}
+          />
         </div>
         <div>
           <p className="text-xs text-gray-500 mb-1">{t('invoiceType')}</p>
           <div className="inline-flex rounded border border-gray-300 overflow-hidden text-xs">
             <button
               type="button"
-              onClick={() => setBilling({ ...billing, invoiceType: billing.invoiceType === 'PAPER' ? '' : 'PAPER' })}
+              onClick={() =>
+                setBilling({
+                  ...billing,
+                  invoiceType: billing.invoiceType === 'PAPER' ? '' : 'PAPER',
+                })
+              }
               className={`px-3 py-1 ${billing.invoiceType === 'PAPER' ? 'bg-[#154273] text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
             >
               {t('invoiceTypePaper')}
             </button>
             <button
               type="button"
-              onClick={() => setBilling({ ...billing, invoiceType: billing.invoiceType === 'ELECTRONIC' ? '' : 'ELECTRONIC' })}
+              onClick={() =>
+                setBilling({
+                  ...billing,
+                  invoiceType:
+                    billing.invoiceType === 'ELECTRONIC' ? '' : 'ELECTRONIC',
+                })
+              }
               className={`px-3 py-1 border-l border-gray-300 ${billing.invoiceType === 'ELECTRONIC' ? 'bg-[#154273] text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
             >
               {t('invoiceTypeElectronic')}
@@ -223,12 +282,40 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
           </div>
         </div>
         <div className="grid grid-cols-2 gap-2">
-          <input value={billing.invoiceReferenceNumber} onChange={(e) => setBilling({ ...billing, invoiceReferenceNumber: e.target.value })} placeholder={t('invoiceReferenceNumber')} className={inputCls} />
-          <input value={billing.eInvoiceAddress} onChange={(e) => setBilling({ ...billing, eInvoiceAddress: e.target.value })} placeholder={t('eInvoiceAddress')} className={inputCls} />
+          <input
+            value={billing.invoiceReferenceNumber}
+            onChange={(e) =>
+              setBilling({ ...billing, invoiceReferenceNumber: e.target.value })
+            }
+            placeholder={t('invoiceReferenceNumber')}
+            className={inputCls}
+          />
+          <input
+            value={billing.eInvoiceAddress}
+            onChange={(e) =>
+              setBilling({ ...billing, eInvoiceAddress: e.target.value })
+            }
+            placeholder={t('eInvoiceAddress')}
+            className={inputCls}
+          />
         </div>
         <div className="grid grid-cols-2 gap-2">
-          <input value={billing.operatorId} onChange={(e) => setBilling({ ...billing, operatorId: e.target.value })} placeholder={t('operatorId')} className={inputCls} />
-          <input value={billing.peppolCode} onChange={(e) => setBilling({ ...billing, peppolCode: e.target.value })} placeholder={t('peppolCode')} className={inputCls} />
+          <input
+            value={billing.operatorId}
+            onChange={(e) =>
+              setBilling({ ...billing, operatorId: e.target.value })
+            }
+            placeholder={t('operatorId')}
+            className={inputCls}
+          />
+          <input
+            value={billing.peppolCode}
+            onChange={(e) =>
+              setBilling({ ...billing, peppolCode: e.target.value })
+            }
+            placeholder={t('peppolCode')}
+            className={inputCls}
+          />
         </div>
       </div>
     );
@@ -251,7 +338,8 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
           actingUserId: currentUserId,
         }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
+      if (!res.ok)
+        throw new Error(await readErrorMessage(res, terr('requestFailed')));
       setEditingId(null);
       router.refresh();
     } catch (e: unknown) {
@@ -270,7 +358,8 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ actingUserId: currentUserId }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
+      if (!res.ok)
+        throw new Error(await readErrorMessage(res, terr('requestFailed')));
       router.refresh();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : terr('unexpected'));
@@ -296,7 +385,8 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
           actingUserId: currentUserId,
         }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
+      if (!res.ok)
+        throw new Error(await readErrorMessage(res, terr('requestFailed')));
       setNewName('');
       setNewEmail('');
       setNewPhone('');
@@ -322,12 +412,25 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
 
       <div className="space-y-2">
         {entities.map((entity) => (
-          <div key={entity.id} className="rounded border border-gray-200 bg-white p-3">
+          <div
+            key={entity.id}
+            className="rounded border border-gray-200 bg-white p-3"
+          >
             {editingId === entity.id ? (
               <div className="space-y-2">
-                <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder={t('name')} className={inputCls} />
+                <input
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder={t('name')}
+                  className={inputCls}
+                />
                 <div className="grid grid-cols-2 gap-2">
-                  <input value={editEmail} onChange={(e) => setEditEmail(e.target.value)} placeholder={t('contactEmail')} className={inputCls} />
+                  <input
+                    value={editEmail}
+                    onChange={(e) => setEditEmail(e.target.value)}
+                    placeholder={t('contactEmail')}
+                    className={inputCls}
+                  />
                   <div>
                     <input
                       value={editPhone}
@@ -335,33 +438,56 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
                       placeholder={t('contactPhone')}
                       className={`${inputCls}${editPhoneInvalid ? ' border-red-400 focus:ring-red-400' : ''}`}
                     />
-                    <p className={`text-xs mt-1 ${editPhoneInvalid ? 'text-red-600' : 'text-gray-400'}`}>
-                      {editPhoneInvalid ? tmd('contactPhoneInvalid') : tmd('contactPhoneHint')}
+                    <p
+                      className={`text-xs mt-1 ${editPhoneInvalid ? 'text-red-600' : 'text-gray-400'}`}
+                    >
+                      {editPhoneInvalid
+                        ? tmd('contactPhoneInvalid')
+                        : tmd('contactPhoneHint')}
                     </p>
                   </div>
                 </div>
                 {relationOptions && (
-                  <select value={editProviderId} onChange={(e) => setEditProviderId(e.target.value)} className={inputCls}>
+                  <select
+                    value={editProviderId}
+                    onChange={(e) => setEditProviderId(e.target.value)}
+                    className={inputCls}
+                  >
                     <option value="">{t('providerLabel')}...</option>
                     {relationOptions.map((opt) => (
-                      <option key={opt.id} value={opt.id}>{opt.name}</option>
+                      <option key={opt.id} value={opt.id}>
+                        {opt.name}
+                      </option>
                     ))}
                   </select>
                 )}
                 {hasTrustedFlag && (
                   <label className="flex items-center gap-2 text-xs text-gray-700">
-                    <input type="checkbox" checked={editTrusted} onChange={(e) => setEditTrusted(e.target.checked)} />
+                    <input
+                      type="checkbox"
+                      checked={editTrusted}
+                      onChange={(e) => setEditTrusted(e.target.checked)}
+                    />
                     {t('trustedCheckbox')}
                   </label>
                 )}
-                {hasBillingDetails && renderBillingFields(editBilling, setEditBilling)}
+                {hasBillingDetails &&
+                  renderBillingFields(editBilling, setEditBilling)}
                 <div className="flex gap-2">
-                  <button type="button" disabled={loading || !editName.trim() || editPhoneInvalid} onClick={() => saveEdit(entity.id)}
-                    className="rounded px-3 py-1.5 text-xs font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50">
+                  <button
+                    type="button"
+                    disabled={loading || !editName.trim() || editPhoneInvalid}
+                    onClick={() => saveEdit(entity.id)}
+                    className="rounded px-3 py-1.5 text-xs font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50"
+                  >
                     {t('save')}
                   </button>
-                  <button type="button" disabled={loading} onClick={() => setEditingId(null)}
-                    className="rounded px-3 py-1.5 text-xs border border-gray-300 hover:bg-gray-50">
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={() => setEditingId(null)}
+                    className="rounded px-3 py-1.5 text-xs border border-gray-300 hover:bg-gray-50"
+                  >
                     {t('cancel')}
                   </button>
                 </div>
@@ -377,47 +503,90 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
                       </span>
                     )}
                   </p>
-                  {entity.contacts.map((contact, i) => (
-                    (contact.name || contact.email || contact.phone) && (
-                      <p key={i} className="text-xs text-gray-500 mt-0.5">
-                        {contact.name && <span className="text-gray-700 font-medium">{contact.name}</span>}
-                        {contact.name && (contact.email || contact.phone) && <span className="mx-1.5 text-gray-300">·</span>}
-                        {contact.email && (
-                          <a href={`mailto:${contact.email}`} className="hover:text-[#01689b] hover:underline">{contact.email}</a>
-                        )}
-                        {contact.email && contact.phone && <span className="mx-1.5 text-gray-300">·</span>}
-                        {contact.phone && (
-                          <a href={`tel:${contact.phone}`} className="hover:text-[#01689b] hover:underline">{contact.phone}</a>
-                        )}
-                      </p>
-                    )
-                  ))}
+                  {entity.contacts.map(
+                    (contact, i) =>
+                      (contact.name || contact.email || contact.phone) && (
+                        <p key={i} className="text-xs text-gray-500 mt-0.5">
+                          {contact.name && (
+                            <span className="text-gray-700 font-medium">
+                              {contact.name}
+                            </span>
+                          )}
+                          {contact.name && (contact.email || contact.phone) && (
+                            <span className="mx-1.5 text-gray-300">·</span>
+                          )}
+                          {contact.email && (
+                            <a
+                              href={`mailto:${contact.email}`}
+                              className="hover:text-[#01689b] hover:underline"
+                            >
+                              {contact.email}
+                            </a>
+                          )}
+                          {contact.email && contact.phone && (
+                            <span className="mx-1.5 text-gray-300">·</span>
+                          )}
+                          {contact.phone && (
+                            <a
+                              href={`tel:${contact.phone}`}
+                              className="hover:text-[#01689b] hover:underline"
+                            >
+                              {contact.phone}
+                            </a>
+                          )}
+                        </p>
+                      ),
+                  )}
                   {relationOptions && (
-                    <p className="text-xs text-gray-400">{t('providerLabel')}: {entity.speProvider?.name ?? '—'}</p>
+                    <p className="text-xs text-gray-400">
+                      {t('providerLabel')}: {entity.speProvider?.name ?? '—'}
+                    </p>
                   )}
                   {hasBillingDetailsDisplay && entity.billingDetails && (
                     <div className="mt-2 pt-2 border-t border-gray-100">
-                      <p className="text-xs font-semibold text-gray-700 mb-1">{t('billingDetailsTitle')}</p>
+                      <p className="text-xs font-semibold text-gray-700 mb-1">
+                        {t('billingDetailsTitle')}
+                      </p>
                       <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                        {APPLICANT_BILLING_DISPLAY_FIELDS.map(({ key, labelKey, type }) => {
-                          const value = entity.billingDetails![key];
-                          if (!hasFieldValue(value, type)) return null;
-                          const display = type === 'boolean' ? t(value ? 'yes' : 'no') : type === 'date' ? formatDate(value as string) : (value as string);
-                          return (
-                            <div key={key}>
-                              <dt className="text-gray-400">{t(labelKey)}</dt>
-                              <dd className="text-gray-700">{display}</dd>
-                            </div>
-                          );
-                        })}
+                        {APPLICANT_BILLING_DISPLAY_FIELDS.map(
+                          ({ key, labelKey, type }) => {
+                            const value = entity.billingDetails![key];
+                            if (!hasFieldValue(value, type)) return null;
+                            const display =
+                              type === 'boolean'
+                                ? t(value ? 'yes' : 'no')
+                                : type === 'date'
+                                  ? formatDate(value as string)
+                                  : (value as string);
+                            return (
+                              <div key={key}>
+                                <dt className="text-gray-400">{t(labelKey)}</dt>
+                                <dd className="text-gray-700">{display}</dd>
+                              </div>
+                            );
+                          },
+                        )}
                       </dl>
                     </div>
                   )}
                 </div>
                 {isAdmin && (
                   <div className="flex gap-2 flex-shrink-0">
-                    <button type="button" onClick={() => startEdit(entity)} className="text-xs text-[#01689b] hover:underline">{t('edit')}</button>
-                    <button type="button" disabled={loading} onClick={() => deleteEntity(entity.id)} className="text-xs text-red-600 hover:underline">{t('delete')}</button>
+                    <button
+                      type="button"
+                      onClick={() => startEdit(entity)}
+                      className="text-xs text-[#01689b] hover:underline"
+                    >
+                      {t('edit')}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={() => deleteEntity(entity.id)}
+                      className="text-xs text-red-600 hover:underline"
+                    >
+                      {t('delete')}
+                    </button>
                   </div>
                 )}
               </div>
@@ -435,12 +604,22 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
         ))}
       </div>
 
-      {isAdmin && (
-        showAddForm ? (
+      {isAdmin &&
+        (showAddForm ? (
           <div className="rounded border border-gray-200 bg-white p-3 space-y-2">
-            <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder={t('name')} className={inputCls} />
+            <input
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder={t('name')}
+              className={inputCls}
+            />
             <div className="grid grid-cols-2 gap-2">
-              <input value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder={t('contactEmail')} className={inputCls} />
+              <input
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                placeholder={t('contactEmail')}
+                className={inputCls}
+              />
               <div>
                 <input
                   value={newPhone}
@@ -448,43 +627,69 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
                   placeholder={t('contactPhone')}
                   className={`${inputCls}${newPhoneInvalid ? ' border-red-400 focus:ring-red-400' : ''}`}
                 />
-                <p className={`text-xs mt-1 ${newPhoneInvalid ? 'text-red-600' : 'text-gray-400'}`}>
-                  {newPhoneInvalid ? tmd('contactPhoneInvalid') : tmd('contactPhoneHint')}
+                <p
+                  className={`text-xs mt-1 ${newPhoneInvalid ? 'text-red-600' : 'text-gray-400'}`}
+                >
+                  {newPhoneInvalid
+                    ? tmd('contactPhoneInvalid')
+                    : tmd('contactPhoneHint')}
                 </p>
               </div>
             </div>
             {relationOptions && (
-              <select value={newProviderId} onChange={(e) => setNewProviderId(e.target.value)} className={inputCls}>
+              <select
+                value={newProviderId}
+                onChange={(e) => setNewProviderId(e.target.value)}
+                className={inputCls}
+              >
                 <option value="">{t('providerLabel')}...</option>
                 {relationOptions.map((opt) => (
-                  <option key={opt.id} value={opt.id}>{opt.name}</option>
+                  <option key={opt.id} value={opt.id}>
+                    {opt.name}
+                  </option>
                 ))}
               </select>
             )}
             {hasTrustedFlag && (
               <label className="flex items-center gap-2 text-xs text-gray-700">
-                <input type="checkbox" checked={newTrusted} onChange={(e) => setNewTrusted(e.target.checked)} />
+                <input
+                  type="checkbox"
+                  checked={newTrusted}
+                  onChange={(e) => setNewTrusted(e.target.checked)}
+                />
                 {t('trustedCheckbox')}
               </label>
             )}
-            {hasBillingDetails && renderBillingFields(newBilling, setNewBilling)}
+            {hasBillingDetails &&
+              renderBillingFields(newBilling, setNewBilling)}
             <div className="flex gap-2">
-              <button type="button" disabled={loading || !newName.trim() || newPhoneInvalid} onClick={submitNew}
-                className="rounded px-3 py-1.5 text-xs font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50">
+              <button
+                type="button"
+                disabled={loading || !newName.trim() || newPhoneInvalid}
+                onClick={submitNew}
+                className="rounded px-3 py-1.5 text-xs font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50"
+              >
                 {loading ? t('save') : t('addNew')}
               </button>
-              <button type="button" disabled={loading} onClick={() => setShowAddForm(false)}
-                className="rounded px-3 py-1.5 text-xs border border-gray-300 hover:bg-gray-50">
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => setShowAddForm(false)}
+                className="rounded px-3 py-1.5 text-xs border border-gray-300 hover:bg-gray-50"
+              >
                 {t('cancel')}
               </button>
             </div>
           </div>
         ) : (
-          <button type="button" onClick={() => setShowAddForm(true)} className="text-sm text-[#01689b] hover:underline font-medium">
+          <button
+            type="button"
+            onClick={() => setShowAddForm(true)}
+            className="text-sm text-[#01689b] hover:underline font-medium"
+          >
             + {t('addNew')}
           </button>
-        )
-      )}
+        ))}
     </div>
   );
 }

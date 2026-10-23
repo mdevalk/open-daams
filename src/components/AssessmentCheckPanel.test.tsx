@@ -16,12 +16,22 @@ afterEach(cleanup);
 
 beforeEach(() => {
   refresh.mockReset();
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }));
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }),
+  );
 });
 
 describe('AssessmentCheckPanel — fresh checklist (no existing check)', () => {
   it('renders the default items unchecked, with the PENDING badge', () => {
-    render(<AssessmentCheckPanel applicationId="app-1" currentUserId="u-1" canManage={true} existing={null} />);
+    render(
+      <AssessmentCheckPanel
+        applicationId="app-1"
+        currentUserId="u-1"
+        canManage={true}
+        existing={null}
+      />,
+    );
 
     expect(screen.getByText('resultPENDING')).toBeInTheDocument();
     expect(screen.getByText('items.eligibleApplicant')).toBeInTheDocument();
@@ -33,21 +43,39 @@ describe('AssessmentCheckPanel — fresh checklist (no existing check)', () => {
   });
 
   it('toggles an item when its checkbox is clicked', () => {
-    render(<AssessmentCheckPanel applicationId="app-1" currentUserId="u-1" canManage={true} existing={null} />);
+    render(
+      <AssessmentCheckPanel
+        applicationId="app-1"
+        currentUserId="u-1"
+        canManage={true}
+        existing={null}
+      />,
+    );
 
-    const firstCheckbox = document.querySelectorAll('input[type="checkbox"]')[0] as HTMLInputElement;
+    const firstCheckbox = document.querySelectorAll(
+      'input[type="checkbox"]',
+    )[0] as HTMLInputElement;
     expect(firstCheckbox).not.toBeChecked();
     fireEvent.click(firstCheckbox);
     expect(firstCheckbox).toBeChecked();
   });
 
   it('starts collapsed when canManage is false, and expanding shows disabled checkboxes, read-only remarks, and no mark-complete action', () => {
-    render(<AssessmentCheckPanel applicationId="app-1" currentUserId="u-1" canManage={false} existing={null} />);
+    render(
+      <AssessmentCheckPanel
+        applicationId="app-1"
+        currentUserId="u-1"
+        canManage={false}
+        existing={null}
+      />,
+    );
 
     expect(document.querySelectorAll('input[type="checkbox"]')).toHaveLength(0);
     fireEvent.click(screen.getByText('title'));
 
-    document.querySelectorAll('input[type="checkbox"]').forEach((cb) => expect(cb).toBeDisabled());
+    document
+      .querySelectorAll('input[type="checkbox"]')
+      .forEach((cb) => expect(cb).toBeDisabled());
     expect(screen.getByLabelText('remarks')).toHaveAttribute('readonly');
     expect(screen.queryByText('markComplete')).not.toBeInTheDocument();
   });
@@ -56,16 +84,34 @@ describe('AssessmentCheckPanel — fresh checklist (no existing check)', () => {
 describe('AssessmentCheckPanel — collapsing', () => {
   it('auto-collapses when canManage flips to false (e.g. after a decision is issued)', () => {
     const existing = {
-      items: [{ key: 'eligibleApplicant', label: 'Applicant is eligible', passed: true }],
+      items: [
+        {
+          key: 'eligibleApplicant',
+          label: 'Applicant is eligible',
+          passed: true,
+        },
+      ],
       result: 'COMPLETE',
       remarks: 'All good',
     };
     const { rerender } = render(
-      <AssessmentCheckPanel applicationId="app-1" currentUserId="u-1" canManage={true} existing={existing} />,
+      <AssessmentCheckPanel
+        applicationId="app-1"
+        currentUserId="u-1"
+        canManage={true}
+        existing={existing}
+      />,
     );
     expect(screen.getByText('Applicant is eligible')).toBeInTheDocument();
 
-    rerender(<AssessmentCheckPanel applicationId="app-1" currentUserId="u-1" canManage={false} existing={existing} />);
+    rerender(
+      <AssessmentCheckPanel
+        applicationId="app-1"
+        currentUserId="u-1"
+        canManage={false}
+        existing={existing}
+      />,
+    );
     expect(screen.queryByText('Applicant is eligible')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByText('title'));
@@ -75,9 +121,18 @@ describe('AssessmentCheckPanel — collapsing', () => {
 
 describe('AssessmentCheckPanel — marking complete', () => {
   it('submits all items as a POST request and updates the badge to COMPLETE', async () => {
-    render(<AssessmentCheckPanel applicationId="app-1" currentUserId="u-1" canManage={true} existing={null} />);
+    render(
+      <AssessmentCheckPanel
+        applicationId="app-1"
+        currentUserId="u-1"
+        canManage={true}
+        existing={null}
+      />,
+    );
 
-    document.querySelectorAll('input[type="checkbox"]').forEach((cb) => fireEvent.click(cb));
+    document
+      .querySelectorAll('input[type="checkbox"]')
+      .forEach((cb) => fireEvent.click(cb));
 
     fireEvent.click(screen.getByText('markComplete'));
 
@@ -98,9 +153,18 @@ describe('AssessmentCheckPanel — marking complete', () => {
   });
 
   it('disables the mark-complete button once the result is COMPLETE, preventing duplicate submits', async () => {
-    render(<AssessmentCheckPanel applicationId="app-1" currentUserId="u-1" canManage={true} existing={null} />);
+    render(
+      <AssessmentCheckPanel
+        applicationId="app-1"
+        currentUserId="u-1"
+        canManage={true}
+        existing={null}
+      />,
+    );
 
-    document.querySelectorAll('input[type="checkbox"]').forEach((cb) => fireEvent.click(cb));
+    document
+      .querySelectorAll('input[type="checkbox"]')
+      .forEach((cb) => fireEvent.click(cb));
     fireEvent.click(screen.getByText('markComplete'));
     expect(await screen.findByText('resultCOMPLETE')).toBeInTheDocument();
 
@@ -114,11 +178,24 @@ describe('AssessmentCheckPanel — marking complete', () => {
 describe('AssessmentCheckPanel — existing check', () => {
   it('renders items and remarks from the existing check, and hides notAllChecked once it is no longer PENDING', () => {
     const existing = {
-      items: [{ key: 'eligibleApplicant', label: 'Applicant is eligible', passed: true }],
+      items: [
+        {
+          key: 'eligibleApplicant',
+          label: 'Applicant is eligible',
+          passed: true,
+        },
+      ],
       result: 'COMPLETE',
       remarks: 'All good',
     };
-    render(<AssessmentCheckPanel applicationId="app-1" currentUserId="u-1" canManage={true} existing={existing} />);
+    render(
+      <AssessmentCheckPanel
+        applicationId="app-1"
+        currentUserId="u-1"
+        canManage={true}
+        existing={existing}
+      />,
+    );
 
     expect(screen.getByText('Applicant is eligible')).toBeInTheDocument();
     expect(screen.getByDisplayValue('All good')).toBeInTheDocument();

@@ -24,7 +24,9 @@ const findFirst = vi.mocked(prisma.application.findFirst);
 const studyCohortCreate = vi.mocked(prisma.studyCohort.create);
 const dataHolderFindMany = vi.mocked(prisma.dataHolder.findMany);
 const dataHolderCreateMany = vi.mocked(prisma.dataHolder.createMany);
-const requestedDatasetCreateMany = vi.mocked(prisma.requestedDataset.createMany);
+const requestedDatasetCreateMany = vi.mocked(
+  prisma.requestedDataset.createMany,
+);
 
 beforeEach(() => {
   findFirst.mockReset();
@@ -41,8 +43,14 @@ describe('parseHdeuPayload', () => {
   });
 
   it('rejects a non-object payload', () => {
-    expect(parseHdeuPayload(null)).toEqual({ ok: false, errors: ['Payload must be a JSON object'] });
-    expect(parseHdeuPayload('nope')).toEqual({ ok: false, errors: ['Payload must be a JSON object'] });
+    expect(parseHdeuPayload(null)).toEqual({
+      ok: false,
+      errors: ['Payload must be a JSON object'],
+    });
+    expect(parseHdeuPayload('nope')).toEqual({
+      ok: false,
+      errors: ['Payload must be a JSON object'],
+    });
     expect(parseHdeuPayload([1, 2]).ok).toBe(false);
   });
 
@@ -53,27 +61,40 @@ describe('parseHdeuPayload', () => {
     const result = parseHdeuPayload(rest);
     expect(result.ok).toBe(false);
     if (!result.ok) {
-      expect(result.errors).toContain('Missing required field: hdeuApplicationId');
+      expect(result.errors).toContain(
+        'Missing required field: hdeuApplicationId',
+      );
       expect(result.errors).toContain('Missing required field: sendingCountry');
     }
   });
 
   it('rejects an applicationType outside the allowed enum', () => {
-    const result = parseHdeuPayload({ ...samplePayload, applicationType: 'SOMETHING_ELSE' });
+    const result = parseHdeuPayload({
+      ...samplePayload,
+      applicationType: 'SOMETHING_ELSE',
+    });
     expect(result.ok).toBe(false);
     if (!result.ok) {
-      expect(result.errors).toContain('applicationType must be DATA_ACCESS_APPLICATION or DATA_REQUEST');
+      expect(result.errors).toContain(
+        'applicationType must be DATA_ACCESS_APPLICATION or DATA_REQUEST',
+      );
     }
   });
 
   it('rejects requestedDatasets that are not the expected shape', () => {
-    const notAnArray = parseHdeuPayload({ ...samplePayload, requestedDatasets: 'nope' });
+    const notAnArray = parseHdeuPayload({
+      ...samplePayload,
+      requestedDatasets: 'nope',
+    });
     expect(notAnArray.ok).toBe(false);
-    if (!notAnArray.ok) expect(notAnArray.errors).toContain('requestedDatasets must be an array');
+    if (!notAnArray.ok)
+      expect(notAnArray.errors).toContain('requestedDatasets must be an array');
 
     const badShape = parseHdeuPayload({
       ...samplePayload,
-      requestedDatasets: [{ dataHolderName: 'X', datasets: [{ noNameField: true }] }],
+      requestedDatasets: [
+        { dataHolderName: 'X', datasets: [{ noNameField: true }] },
+      ],
     });
     expect(badShape.ok).toBe(false);
     if (!badShape.ok) {
@@ -86,9 +107,15 @@ describe('parseHdeuPayload', () => {
 
 describe('createApplicationFromHdeuPayload', () => {
   it('rejects re-importing an already-imported hdeuApplicationId', async () => {
-    findFirst.mockResolvedValue({ id: 'app-1', referenceNumber: 'HDAB-2026-0004' } as never);
+    findFirst.mockResolvedValue({
+      id: 'app-1',
+      referenceNumber: 'HDAB-2026-0004',
+    } as never);
 
-    const result = await createApplicationFromHdeuPayload(samplePayload as never, samplePayload);
+    const result = await createApplicationFromHdeuPayload(
+      samplePayload as never,
+      samplePayload,
+    );
 
     expect(result).toEqual({
       ok: false,
@@ -114,7 +141,12 @@ describe('createStudyCohorts', () => {
 
     const cohorts: HdeuStudyCohort[] = [
       { countryId: 'NL', role: 'COHORT', size: 100 },
-      { countryId: 'NL', role: 'CONTROL', relatesToIndex: 0, matchingCriteria: 'age-matched' },
+      {
+        countryId: 'NL',
+        role: 'CONTROL',
+        relatesToIndex: 0,
+        matchingCriteria: 'age-matched',
+      },
     ];
 
     await createStudyCohorts('app-1', cohorts);
@@ -126,7 +158,11 @@ describe('createStudyCohorts', () => {
     });
     // Second call: the CONTROL row, relatesToId resolved from the COHORT's real db id (not the array index).
     expect(studyCohortCreate.mock.calls[1][0]).toMatchObject({
-      data: expect.objectContaining({ applicationId: 'app-1', role: 'CONTROL', relatesToId: 'cohort-db-id' }),
+      data: expect.objectContaining({
+        applicationId: 'app-1',
+        role: 'CONTROL',
+        relatesToId: 'cohort-db-id',
+      }),
     });
   });
 
@@ -155,7 +191,9 @@ describe('createRequestedDatasets', () => {
   });
 
   it('reuses an existing data holder by name without creating a new one', async () => {
-    dataHolderFindMany.mockResolvedValueOnce([{ id: 'dh-1', name: 'GP Network' }] as never);
+    dataHolderFindMany.mockResolvedValueOnce([
+      { id: 'dh-1', name: 'GP Network' },
+    ] as never);
 
     await createRequestedDatasets('app-1', [
       { dataHolderName: 'GP Network', datasets: [{ name: 'Registry A' }] },
@@ -164,7 +202,11 @@ describe('createRequestedDatasets', () => {
     expect(dataHolderCreateMany).not.toHaveBeenCalled();
     expect(requestedDatasetCreateMany).toHaveBeenCalledWith({
       data: [
-        expect.objectContaining({ applicationId: 'app-1', dataHolderId: 'dh-1', name: 'Registry A' }),
+        expect.objectContaining({
+          applicationId: 'app-1',
+          dataHolderId: 'dh-1',
+          name: 'Registry A',
+        }),
       ],
     });
   });
@@ -185,7 +227,11 @@ describe('createRequestedDatasets', () => {
     expect(dataHolderFindMany).toHaveBeenCalledTimes(2);
     expect(requestedDatasetCreateMany).toHaveBeenCalledWith({
       data: [
-        expect.objectContaining({ applicationId: 'app-1', dataHolderId: 'dh-new', name: 'Registry B' }),
+        expect.objectContaining({
+          applicationId: 'app-1',
+          dataHolderId: 'dh-new',
+          name: 'Registry B',
+        }),
       ],
     });
   });
@@ -210,13 +256,20 @@ describe('describeOtherCountryHdabContacts', () => {
       { countryId: 'DE', role: 'COHORT', hdabContacts: 'de-hdab@example.org' },
       { countryId: 'FI', role: 'COHORT' },
     ];
-    expect(describeOtherCountryHdabContacts(cohorts, 'NL')).toBe('DE (de-hdab@example.org), FI');
+    expect(describeOtherCountryHdabContacts(cohorts, 'NL')).toBe(
+      'DE (de-hdab@example.org), FI',
+    );
   });
 
   it('ignores CONTROL/RELATIVE entries — only COHORT rows represent a country', () => {
     const cohorts: HdeuStudyCohort[] = [
       { countryId: 'NL', role: 'COHORT' },
-      { countryId: 'DE', role: 'CONTROL', relatesToIndex: 0, hdabContacts: 'should not appear' },
+      {
+        countryId: 'DE',
+        role: 'CONTROL',
+        relatesToIndex: 0,
+        hdabContacts: 'should not appear',
+      },
     ];
     expect(describeOtherCountryHdabContacts(cohorts, 'NL')).toBeNull();
   });

@@ -14,39 +14,65 @@ const MANAGE_ROLES = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'] as const;
  * submission," not "+N months from today."
  * body: { reason }
  */
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await params;
     const body = await req.json();
 
     const auth = await requireRole(await actingUserId(), [...MANAGE_ROLES]);
-    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+    if (!auth.ok)
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const reason = typeof body.reason === 'string' ? body.reason.trim() : '';
-    if (!reason) return NextResponse.json({ error: 'A written justification is required' }, { status: 422 });
+    if (!reason)
+      return NextResponse.json(
+        { error: 'A written justification is required' },
+        { status: 422 },
+      );
 
     const application = await prisma.application.findUnique({
       where: { id },
       include: { applicant: { select: { email: true } } },
     });
-    if (!application) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    if (!application)
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     if (['DECISION_ISSUED', 'WITHDRAWN'].includes(application.status)) {
-      return NextResponse.json({ error: 'Cannot extend the deadline of a closed application' }, { status: 422 });
+      return NextResponse.json(
+        { error: 'Cannot extend the deadline of a closed application' },
+        { status: 422 },
+      );
     }
     if (application.deadlineExtended) {
-      return NextResponse.json({ error: 'The deadline has already been extended once' }, { status: 409 });
+      return NextResponse.json(
+        { error: 'The deadline has already been extended once' },
+        { status: 409 },
+      );
     }
     if (!application.submittedAt) {
-      return NextResponse.json({ error: 'Application has no submission date to extend from' }, { status: 422 });
+      return NextResponse.json(
+        { error: 'Application has no submission date to extend from' },
+        { status: 422 },
+      );
     }
 
-    const decisionDeadline = calculateDecisionDeadline(application.submittedAt, application.decisionTrack, true);
+    const decisionDeadline = calculateDecisionDeadline(
+      application.submittedAt,
+      application.decisionTrack,
+      true,
+    );
 
     const updated = await prisma.$transaction(async (tx) => {
       const app = await tx.application.update({
         where: { id },
-        data: { deadlineExtended: true, deadlineExtensionReason: reason, decisionDeadline },
+        data: {
+          deadlineExtended: true,
+          deadlineExtensionReason: reason,
+          decisionDeadline,
+        },
       });
       await tx.applicationLog.create({
         data: {
@@ -80,7 +106,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json(updated);
   } catch (e) {
     console.error('Failed to extend deadline', e);
-    const message = e instanceof Error ? e.message : 'Failed to extend deadline';
+    const message =
+      e instanceof Error ? e.message : 'Failed to extend deadline';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

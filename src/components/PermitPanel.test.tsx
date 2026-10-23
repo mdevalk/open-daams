@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
+import {
+  render,
+  screen,
+  fireEvent,
+  cleanup,
+  waitFor,
+} from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import type { ComponentProps } from 'react';
 import { PermitPanel } from './PermitPanel';
@@ -18,8 +24,14 @@ afterEach(cleanup);
 type Application = ComponentProps<typeof PermitPanel>['application'];
 type CurrentUser = ComponentProps<typeof PermitPanel>['currentUser'];
 
-const DECISION_MAKER = { id: 'u-1', role: 'DECISION_MAKER' } as unknown as CurrentUser;
-const CASE_HANDLER = { id: 'u-2', role: 'CASE_HANDLER' } as unknown as CurrentUser;
+const DECISION_MAKER = {
+  id: 'u-1',
+  role: 'DECISION_MAKER',
+} as unknown as CurrentUser;
+const CASE_HANDLER = {
+  id: 'u-2',
+  role: 'CASE_HANDLER',
+} as unknown as CurrentUser;
 
 const CONTACTS = [
   { id: 'contact-1', name: 'J. Jansen', ownerName: 'GP Information Network' },
@@ -46,7 +58,10 @@ describe('PermitPanel — visibility gating', () => {
   it('renders nothing when the application has no positive decision yet', () => {
     const { container } = render(
       <PermitPanel
-        application={makeApplication({ status: 'PROCESSING', decisionOutcome: null })}
+        application={makeApplication({
+          status: 'PROCESSING',
+          decisionOutcome: null,
+        })}
         currentUser={DECISION_MAKER}
         contacts={CONTACTS}
       />,
@@ -86,12 +101,21 @@ describe('PermitPanel — issue form', () => {
         speType: { name: 'Standard SPE' },
         lineItems: [
           { id: 'li-1', category: 'SPE_SETUP', amount: 500, description: null },
-          { id: 'li-2', category: 'ADMINISTRATIVE', amount: 100, description: 'One-off handling fee' },
+          {
+            id: 'li-2',
+            category: 'ADMINISTRATIVE',
+            amount: 100,
+            description: 'One-off handling fee',
+          },
         ],
       },
     });
     render(
-      <PermitPanel application={application} currentUser={DECISION_MAKER} contacts={CONTACTS} />,
+      <PermitPanel
+        application={application}
+        currentUser={DECISION_MAKER}
+        contacts={CONTACTS}
+      />,
     );
     expect(screen.getByText('€500')).toBeInTheDocument();
     expect(screen.getByText('€100')).toBeInTheDocument();
@@ -101,21 +125,34 @@ describe('PermitPanel — issue form', () => {
 
   it('disables the issue button until an output controller contact is selected', () => {
     render(
-      <PermitPanel application={makeApplication()} currentUser={DECISION_MAKER} contacts={CONTACTS} />,
+      <PermitPanel
+        application={makeApplication()}
+        currentUser={DECISION_MAKER}
+        contacts={CONTACTS}
+      />,
     );
     const issueButton = screen.getByText('issueButton');
     expect(issueButton).toBeDisabled();
 
-    const contactSelect = screen.getByDisplayValue('outputControllerContact...');
+    const contactSelect = screen.getByDisplayValue(
+      'outputControllerContact...',
+    );
     fireEvent.change(contactSelect, { target: { value: 'contact-1' } });
     expect(issueButton).not.toBeDisabled();
   });
 
   it('issues the permit with the selected contact and refreshes on success', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }),
+    );
 
     render(
-      <PermitPanel application={makeApplication()} currentUser={DECISION_MAKER} contacts={CONTACTS} />,
+      <PermitPanel
+        application={makeApplication()}
+        currentUser={DECISION_MAKER}
+        contacts={CONTACTS}
+      />,
     );
 
     fireEvent.change(screen.getByDisplayValue('outputControllerContact...'), {
@@ -154,7 +191,11 @@ describe('PermitPanel — existing permit', () => {
       },
     });
     render(
-      <PermitPanel application={application} currentUser={DECISION_MAKER} contacts={CONTACTS} />,
+      <PermitPanel
+        application={application}
+        currentUser={DECISION_MAKER}
+        contacts={CONTACTS}
+      />,
     );
     expect(screen.queryByText('issueButton')).not.toBeInTheDocument();
     // version 1 renders as the bare permit number (formatPermitId only appends

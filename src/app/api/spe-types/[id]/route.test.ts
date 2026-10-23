@@ -15,12 +15,22 @@ vi.mock('@/auth', () => ({
 }));
 
 import { prisma } from '@/lib/db';
-import { PATCH, validateSpeTypeFees, buildSpeTypeUpdateData, describeSpeTypeChanges } from './route';
+import {
+  PATCH,
+  validateSpeTypeFees,
+  buildSpeTypeUpdateData,
+  describeSpeTypeChanges,
+} from './route';
 
 const findUnique = vi.mocked(prisma.user.findUnique);
 const logCreate = vi.mocked(prisma.authzFailureLog.create);
 
-const APPLICANT = { id: 'u-2', role: 'APPLICANT' as const, name: 'A. de Vries', email: 'researcher@umcu.nl' };
+const APPLICANT = {
+  id: 'u-2',
+  role: 'APPLICANT' as const,
+  name: 'A. de Vries',
+  email: 'researcher@umcu.nl',
+};
 
 beforeEach(() => {
   findUnique.mockReset();
@@ -33,11 +43,15 @@ describe('validateSpeTypeFees', () => {
   });
 
   it('returns an error when setupFee is not a number', () => {
-    expect(validateSpeTypeFees({ setupFee: 'abc' })).toBe('setupFee must be a number');
+    expect(validateSpeTypeFees({ setupFee: 'abc' })).toBe(
+      'setupFee must be a number',
+    );
   });
 
   it('returns an error when monthlyFee is not a number', () => {
-    expect(validateSpeTypeFees({ monthlyFee: 'abc' })).toBe('monthlyFee must be a number');
+    expect(validateSpeTypeFees({ monthlyFee: 'abc' })).toBe(
+      'monthlyFee must be a number',
+    );
   });
 
   it('returns null when both fees are absent', () => {
@@ -62,11 +76,13 @@ describe('buildSpeTypeUpdateData', () => {
 
 describe('describeSpeTypeChanges', () => {
   it('lists all messages when every field changed', () => {
-    expect(describeSpeTypeChanges({ name: 'Standard', setupFee: 100, monthlyFee: 25 })).toEqual([
-      'name',
-      'setup fee',
-      'monthly fee',
-    ]);
+    expect(
+      describeSpeTypeChanges({
+        name: 'Standard',
+        setupFee: 100,
+        monthlyFee: 25,
+      }),
+    ).toEqual(['name', 'setup fee', 'monthly fee']);
   });
 
   it('returns an empty array when no fields changed', () => {
@@ -85,22 +101,35 @@ describe('PATCH /api/spe-types/[id]', () => {
   it('rejects a non-ADMIN acting user with the authz failure status and error', async () => {
     findUnique.mockResolvedValue(APPLICANT as never);
 
-    const res = await PATCH(makeRequest({ actingUserId: 'u-2', name: 'New Name' }), {
-      params: Promise.resolve({ id: 'st-1' }),
-    });
+    const res = await PATCH(
+      makeRequest({ actingUserId: 'u-2', name: 'New Name' }),
+      {
+        params: Promise.resolve({ id: 'st-1' }),
+      },
+    );
 
     expect(res.status).toBe(403);
     const json = await res.json();
-    expect(json).toEqual({ error: 'Role APPLICANT is not permitted to perform this action' });
+    expect(json).toEqual({
+      error: 'Role APPLICANT is not permitted to perform this action',
+    });
     expect(prisma.speType.update).not.toHaveBeenCalled();
   });
 
   it('rejects a non-numeric setupFee with a 422', async () => {
-    findUnique.mockResolvedValue({ id: 'u-1', role: 'ADMIN', name: 'Admin', email: 'admin@hdab.nl' } as never);
+    findUnique.mockResolvedValue({
+      id: 'u-1',
+      role: 'ADMIN',
+      name: 'Admin',
+      email: 'admin@hdab.nl',
+    } as never);
 
-    const res = await PATCH(makeRequest({ actingUserId: 'u-1', setupFee: 'abc' }), {
-      params: Promise.resolve({ id: 'st-1' }),
-    });
+    const res = await PATCH(
+      makeRequest({ actingUserId: 'u-1', setupFee: 'abc' }),
+      {
+        params: Promise.resolve({ id: 'st-1' }),
+      },
+    );
 
     expect(res.status).toBe(422);
     const json = await res.json();

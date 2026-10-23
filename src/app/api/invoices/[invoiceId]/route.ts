@@ -10,13 +10,19 @@ import { updateInvoiceStatus } from '@/lib/capabilities/fee-invoicing/invoice';
  * (issued from an accepted fee estimate, no permit yet) and final invoices
  * (issued from a granted permit's fee breakdown).
  */
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ invoiceId: string }> }) {
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ invoiceId: string }> },
+) {
   try {
     const { invoiceId } = await params;
     const body = await req.json();
 
-    const invoice = await prisma.invoice.findUnique({ where: { id: invoiceId } });
-    if (!invoice) return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
+    const invoice = await prisma.invoice.findUnique({
+      where: { id: invoiceId },
+    });
+    if (!invoice)
+      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
 
     return await updateInvoiceStatus(invoice, body.action);
   } catch (e) {

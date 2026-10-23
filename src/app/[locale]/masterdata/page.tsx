@@ -7,8 +7,19 @@ import { ContactsManager } from '@/components/ContactsManager';
 
 export const dynamic = 'force-dynamic';
 
-type Tab = 'data-holders' | 'spe-operators' | 'spe-providers' | 'data-users' | 'contacts';
-const TABS: Tab[] = ['data-users', 'data-holders', 'spe-operators', 'spe-providers', 'contacts'];
+type Tab =
+  | 'data-holders'
+  | 'spe-operators'
+  | 'spe-providers'
+  | 'data-users'
+  | 'contacts';
+const TABS: Tab[] = [
+  'data-users',
+  'data-holders',
+  'spe-operators',
+  'spe-providers',
+  'contacts',
+];
 
 export default async function MasterdataPage({
   params,
@@ -19,58 +30,96 @@ export default async function MasterdataPage({
 }) {
   const { locale } = await params;
   const { tab: queryTab } = await searchParams;
-  const tab: Tab = TABS.includes(queryTab as Tab) ? (queryTab as Tab) : 'data-holders';
+  const tab: Tab = TABS.includes(queryTab as Tab)
+    ? (queryTab as Tab)
+    : 'data-holders';
   const currentUser = await requireCurrentUser(locale);
 
   const t = await getTranslations({ locale, namespace: 'masterdata' });
 
-  const [dataHolders, speOperators, speProviders, dataUsers, applicantBillingDetailsList, auditLogEntries, contacts] =
-    await Promise.all([
-      prisma.dataHolder.findMany({ orderBy: { name: 'asc' }, include: { contacts: true } }),
-      prisma.speOperator.findMany({
-        include: { speProvider: { select: { name: true } }, types: { orderBy: { name: 'asc' } }, contacts: true },
-        orderBy: { name: 'asc' },
-      }),
-      prisma.speProvider.findMany({ orderBy: { name: 'asc' }, include: { contacts: true } }),
-      prisma.dataUser.findMany({ orderBy: { name: 'asc' }, include: { contacts: true } }),
-      // Not stored on DataUser — shown by reference: the most recent
-      // ApplicantBillingDetails among all applications from any user
-      // belonging to that organisation (first per dataUserId wins, since
-      // ordered newest-first below).
-      prisma.applicantBillingDetails.findMany({
-        include: { application: { select: { applicant: { select: { dataUserId: true } } } } },
-        orderBy: { createdAt: 'desc' },
-      }),
-      // AuditLog is shared with non-masterdata case-workflow events (Invoice,
-      // Appeal, AuthorizedPerson, Application-level actions) — restrict this
-      // page's "recent changes" panel to reference-data entity types only.
-      // 'SpeOperatorType' is a legacy label predating the SpeType rename,
-      // still present on older rows.
-      prisma.auditLog.findMany({
-        where: {
-          entityType: {
-            in: ['DataHolder', 'SpeOperator', 'SpeProvider', 'DataUser', 'SpeType', 'SpeOperatorType', 'Contact'],
-          },
+  const [
+    dataHolders,
+    speOperators,
+    speProviders,
+    dataUsers,
+    applicantBillingDetailsList,
+    auditLogEntries,
+    contacts,
+  ] = await Promise.all([
+    prisma.dataHolder.findMany({
+      orderBy: { name: 'asc' },
+      include: { contacts: true },
+    }),
+    prisma.speOperator.findMany({
+      include: {
+        speProvider: { select: { name: true } },
+        types: { orderBy: { name: 'asc' } },
+        contacts: true,
+      },
+      orderBy: { name: 'asc' },
+    }),
+    prisma.speProvider.findMany({
+      orderBy: { name: 'asc' },
+      include: { contacts: true },
+    }),
+    prisma.dataUser.findMany({
+      orderBy: { name: 'asc' },
+      include: { contacts: true },
+    }),
+    // Not stored on DataUser — shown by reference: the most recent
+    // ApplicantBillingDetails among all applications from any user
+    // belonging to that organisation (first per dataUserId wins, since
+    // ordered newest-first below).
+    prisma.applicantBillingDetails.findMany({
+      include: {
+        application: {
+          select: { applicant: { select: { dataUserId: true } } },
         },
-        include: { user: { select: { name: true } } },
-        orderBy: { createdAt: 'desc' },
-        take: 20,
-      }),
-      prisma.contact.findMany({
-        include: {
-          dataUser: { select: { name: true } },
-          dataHolder: { select: { name: true } },
-          speOperator: { select: { name: true } },
-          speProvider: { select: { name: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    }),
+    // AuditLog is shared with non-masterdata case-workflow events (Invoice,
+    // Appeal, AuthorizedPerson, Application-level actions) — restrict this
+    // page's "recent changes" panel to reference-data entity types only.
+    // 'SpeOperatorType' is a legacy label predating the SpeType rename,
+    // still present on older rows.
+    prisma.auditLog.findMany({
+      where: {
+        entityType: {
+          in: [
+            'DataHolder',
+            'SpeOperator',
+            'SpeProvider',
+            'DataUser',
+            'SpeType',
+            'SpeOperatorType',
+            'Contact',
+          ],
         },
-        orderBy: { name: 'asc' },
-      }),
-    ]);
+      },
+      include: { user: { select: { name: true } } },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+    }),
+    prisma.contact.findMany({
+      include: {
+        dataUser: { select: { name: true } },
+        dataHolder: { select: { name: true } },
+        speOperator: { select: { name: true } },
+        speProvider: { select: { name: true } },
+      },
+      orderBy: { name: 'asc' },
+    }),
+  ]);
 
-  const billingDetailsByDataUserId = new Map<string, (typeof applicantBillingDetailsList)[number]>();
+  const billingDetailsByDataUserId = new Map<
+    string,
+    (typeof applicantBillingDetailsList)[number]
+  >();
   for (const bd of applicantBillingDetailsList) {
     const dataUserId = bd.application.applicant.dataUserId;
-    if (!billingDetailsByDataUserId.has(dataUserId)) billingDetailsByDataUserId.set(dataUserId, bd);
+    if (!billingDetailsByDataUserId.has(dataUserId))
+      billingDetailsByDataUserId.set(dataUserId, bd);
   }
   const dataUsersForClient = dataUsers.map((du) => ({
     ...du,
@@ -84,7 +133,11 @@ export default async function MasterdataPage({
   // that boundary (MasterdataManager is a client component).
   const speOperatorsForClient = speOperators.map((op) => ({
     ...op,
-    types: op.types.map((t) => ({ ...t, setupFee: t.setupFee.toString(), monthlyFee: t.monthlyFee.toString() })),
+    types: op.types.map((t) => ({
+      ...t,
+      setupFee: t.setupFee.toString(),
+      monthlyFee: t.monthlyFee.toString(),
+    })),
   }));
 
   const contactsForClient = contacts.map((c) => {
@@ -95,7 +148,15 @@ export default async function MasterdataPage({
         : c.speOperator
           ? (['SpeOperator', c.speOperator.name] as const)
           : (['SpeProvider', c.speProvider?.name ?? '—'] as const);
-    return { id: c.id, name: c.name, email: c.email, phone: c.phone, role: c.role, ownerType, ownerName };
+    return {
+      id: c.id,
+      name: c.name,
+      email: c.email,
+      phone: c.phone,
+      role: c.role,
+      ownerType,
+      ownerName,
+    };
   });
   // {id, name} only — speOperators carries Decimal fields on nested `types`
   // (see speOperatorsForClient above) that the client-side owner picker
@@ -117,9 +178,24 @@ export default async function MasterdataPage({
 
   const tabConfig: Record<
     Exclude<Tab, 'contacts'>,
-    { apiBasePath: string; namespace: string; entities: unknown[]; relationOptions?: { id: string; name: string }[]; hasTrustedFlag?: boolean; hasSpeTypes?: boolean; hasBillingDetails?: boolean; hasBillingDetailsDisplay?: boolean }
+    {
+      apiBasePath: string;
+      namespace: string;
+      entities: unknown[];
+      relationOptions?: { id: string; name: string }[];
+      hasTrustedFlag?: boolean;
+      hasSpeTypes?: boolean;
+      hasBillingDetails?: boolean;
+      hasBillingDetailsDisplay?: boolean;
+    }
   > = {
-    'data-holders': { apiBasePath: '/api/data-holders', namespace: 'dataHolders', entities: dataHolders, hasTrustedFlag: true, hasBillingDetails: true },
+    'data-holders': {
+      apiBasePath: '/api/data-holders',
+      namespace: 'dataHolders',
+      entities: dataHolders,
+      hasTrustedFlag: true,
+      hasBillingDetails: true,
+    },
     'spe-operators': {
       apiBasePath: '/api/spe-operators',
       namespace: 'speOperators',
@@ -128,8 +204,17 @@ export default async function MasterdataPage({
       hasSpeTypes: true,
       hasBillingDetails: true,
     },
-    'spe-providers': { apiBasePath: '/api/spe-providers', namespace: 'speProviders', entities: speProviders },
-    'data-users': { apiBasePath: '/api/data-users', namespace: 'dataUsers', entities: dataUsersForClient, hasBillingDetailsDisplay: true },
+    'spe-providers': {
+      apiBasePath: '/api/spe-providers',
+      namespace: 'speProviders',
+      entities: speProviders,
+    },
+    'data-users': {
+      apiBasePath: '/api/data-users',
+      namespace: 'dataUsers',
+      entities: dataUsersForClient,
+      hasBillingDetailsDisplay: true,
+    },
   };
 
   return (
@@ -183,7 +268,9 @@ export default async function MasterdataPage({
         </div>
 
         <div className="space-y-4">
-          {isAdmin && <MasterdataAuditLog entries={auditLogEntries} locale={locale} />}
+          {isAdmin && (
+            <MasterdataAuditLog entries={auditLogEntries} locale={locale} />
+          )}
         </div>
       </div>
     </div>

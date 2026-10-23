@@ -3,7 +3,10 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
 import { actingUserId } from '@/auth';
-import { DECIDE_ROLES, APPROVAL_EFFECT } from '@/lib/capabilities/permit-lifecycle/permit-change';
+import {
+  DECIDE_ROLES,
+  APPROVAL_EFFECT,
+} from '@/lib/capabilities/permit-lifecycle/permit-change';
 import { signPermit, groupDatasetsByHolder } from '@/lib/permit-signing';
 import { regenerateStoredPermitPdf } from '@/lib/capabilities/permit-lifecycle/permit-pdf-store';
 import { generateSampleDid } from '@/lib/capabilities/permit-lifecycle/did';
@@ -19,7 +22,9 @@ const CHANGE_REQUEST_INCLUDE = {
   },
 } satisfies Prisma.PermitChangeRequestInclude;
 
-type ChangeRequestWithPermit = Prisma.PermitChangeRequestGetPayload<{ include: typeof CHANGE_REQUEST_INCLUDE }>;
+type ChangeRequestWithPermit = Prisma.PermitChangeRequestGetPayload<{
+  include: typeof CHANGE_REQUEST_INCLUDE;
+}>;
 type PermitWithRelations = ChangeRequestWithPermit['permit'];
 type ApprovalEffect = (typeof APPROVAL_EFFECT)[keyof typeof APPROVAL_EFFECT];
 
@@ -32,7 +37,12 @@ async function rejectChangeRequest(
 ) {
   return prisma.permitChangeRequest.update({
     where: { id: requestId },
-    data: { status: 'REJECTED', decidedById: actingUserId, decidedAt: now, decisionComment: comment ?? null },
+    data: {
+      status: 'REJECTED',
+      decidedById: actingUserId,
+      decidedAt: now,
+      decisionComment: comment ?? null,
+    },
   });
 }
 
@@ -42,11 +52,19 @@ async function rejectChangeRequest(
  * and, when the id changed, the frozen name snapshot that goes with it.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function resolveSpeFields(request: ChangeRequestWithPermit, permit: PermitWithRelations, body: any) {
+async function resolveSpeFields(
+  request: ChangeRequestWithPermit,
+  permit: PermitWithRelations,
+  body: any,
+) {
   const speOperatorId =
-    request.type === 'AMENDMENT' && 'speOperatorId' in body ? body.speOperatorId || null : permit.speOperatorId;
+    request.type === 'AMENDMENT' && 'speOperatorId' in body
+      ? body.speOperatorId || null
+      : permit.speOperatorId;
   const speTypeId =
-    request.type === 'AMENDMENT' && 'speTypeId' in body ? body.speTypeId || null : permit.speTypeId;
+    request.type === 'AMENDMENT' && 'speTypeId' in body
+      ? body.speTypeId || null
+      : permit.speTypeId;
 
   // Only re-resolve (and re-freeze) the name snapshot when the id actually
   // changes — carrying the id forward unchanged means the previous
@@ -55,23 +73,41 @@ async function resolveSpeFields(request: ChangeRequestWithPermit, permit: Permit
   // join at verify time.
   const speOperatorChanged = speOperatorId !== permit.speOperatorId;
   const speTypeChanged = speTypeId !== permit.speTypeId;
-  const speOperatorRow = speOperatorChanged && speOperatorId
-    ? await prisma.speOperator.findUnique({ where: { id: speOperatorId }, include: { speProvider: { select: { name: true } } } })
-    : null;
-  const speTypeRow = speTypeChanged && speTypeId
-    ? await prisma.speType.findUnique({ where: { id: speTypeId } })
-    : null;
-  const speOperatorName = speOperatorChanged ? (speOperatorRow?.name ?? null) : permit.speOperatorName;
+  const speOperatorRow =
+    speOperatorChanged && speOperatorId
+      ? await prisma.speOperator.findUnique({
+          where: { id: speOperatorId },
+          include: { speProvider: { select: { name: true } } },
+        })
+      : null;
+  const speTypeRow =
+    speTypeChanged && speTypeId
+      ? await prisma.speType.findUnique({ where: { id: speTypeId } })
+      : null;
+  const speOperatorName = speOperatorChanged
+    ? (speOperatorRow?.name ?? null)
+    : permit.speOperatorName;
   const speOperatorProviderName = speOperatorChanged
     ? (speOperatorRow?.speProvider?.name ?? null)
     : permit.speOperatorProviderName;
-  const speTypeName = speTypeChanged ? (speTypeRow?.name ?? null) : permit.speTypeName;
+  const speTypeName = speTypeChanged
+    ? (speTypeRow?.name ?? null)
+    : permit.speTypeName;
 
-  return { speOperatorId, speTypeId, speOperatorName, speOperatorProviderName, speTypeName };
+  return {
+    speOperatorId,
+    speTypeId,
+    speOperatorName,
+    speOperatorProviderName,
+    speTypeName,
+  };
 }
 
 type OutputControllerResolution =
-  | { ok: true; outputController: { name: string; affiliation: string; did: string } }
+  | {
+      ok: true;
+      outputController: { name: string; affiliation: string; did: string };
+    }
   | { ok: false; status: number; error: string };
 
 /**
@@ -87,28 +123,48 @@ export function resolveOutputController(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   body: any,
 ): OutputControllerResolution {
-  const outputControllerRow = permit.authorizedPersons.find((p) => p.role === 'OUTPUT_CONTROLLER');
+  const outputControllerRow = permit.authorizedPersons.find(
+    (p) => p.role === 'OUTPUT_CONTROLLER',
+  );
   if (!outputControllerRow?.did) {
-    return { ok: false, status: 500, error: 'Permit has no output controller to carry forward' };
+    return {
+      ok: false,
+      status: 500,
+      error: 'Permit has no output controller to carry forward',
+    };
   }
 
   const outputControllerNameInput =
-    request.type === 'AMENDMENT' && body.outputControllerName ? String(body.outputControllerName).trim() : '';
+    request.type === 'AMENDMENT' && body.outputControllerName
+      ? String(body.outputControllerName).trim()
+      : '';
   const outputControllerAffiliationInput =
     request.type === 'AMENDMENT' && body.outputControllerAffiliation
       ? String(body.outputControllerAffiliation).trim()
       : '';
-  if (Boolean(outputControllerNameInput) !== Boolean(outputControllerAffiliationInput)) {
+  if (
+    Boolean(outputControllerNameInput) !==
+    Boolean(outputControllerAffiliationInput)
+  ) {
     return {
       ok: false,
       status: 422,
-      error: 'Both outputControllerName and outputControllerAffiliation are required to change the output controller',
+      error:
+        'Both outputControllerName and outputControllerAffiliation are required to change the output controller',
     };
   }
   const outputControllerChanged = Boolean(outputControllerNameInput);
   const outputController = outputControllerChanged
-    ? { name: outputControllerNameInput, affiliation: outputControllerAffiliationInput, did: generateSampleDid() }
-    : { name: outputControllerRow.name, affiliation: outputControllerRow.affiliation, did: outputControllerRow.did };
+    ? {
+        name: outputControllerNameInput,
+        affiliation: outputControllerAffiliationInput,
+        did: generateSampleDid(),
+      }
+    : {
+        name: outputControllerRow.name,
+        affiliation: outputControllerRow.affiliation,
+        did: outputControllerRow.did,
+      };
 
   return { ok: true, outputController };
 }
@@ -124,16 +180,27 @@ export function resolveEffectiveDate(
   now: Date,
 ): { requestedEffectiveDate: Date | null; deferred: boolean } {
   const requestedEffectiveDate =
-    request.type === 'AMENDMENT' && body.effectiveDate ? new Date(body.effectiveDate) : null;
-  const deferred = requestedEffectiveDate !== null && requestedEffectiveDate.getTime() > now.getTime();
+    request.type === 'AMENDMENT' && body.effectiveDate
+      ? new Date(body.effectiveDate)
+      : null;
+  const deferred =
+    requestedEffectiveDate !== null &&
+    requestedEffectiveDate.getTime() > now.getTime();
   return { requestedEffectiveDate, deferred };
 }
 
 // 1. Retire the current version — skipped when deferred: the old
 //    version keeps operating until activation.
-async function retireCurrentVersion(tx: Prisma.TransactionClient, permit: PermitWithRelations, deferred: boolean) {
+async function retireCurrentVersion(
+  tx: Prisma.TransactionClient,
+  permit: PermitWithRelations,
+  deferred: boolean,
+) {
   if (!deferred) {
-    await tx.dataPermit.update({ where: { id: permit.id }, data: { isCurrent: false } });
+    await tx.dataPermit.update({
+      where: { id: permit.id },
+      data: { isCurrent: false },
+    });
   }
 }
 
@@ -157,7 +224,10 @@ type NewPermitVersionOptions = {
 
 // 2. Create the new version, copying permit content forward. Revocation
 //    markers are intentionally not carried over (a reinstated permit is clean).
-async function createNewPermitVersion(tx: Prisma.TransactionClient, opts: NewPermitVersionOptions) {
+async function createNewPermitVersion(
+  tx: Prisma.TransactionClient,
+  opts: NewPermitVersionOptions,
+) {
   const {
     permit,
     newVersion,
@@ -343,7 +413,9 @@ async function logVersionTransition(
       userId: actingUserId,
       fromStatus: permit.status,
       toStatus: effect.to,
-      action: deferred ? `${request.type} approved — pending activation` : `${request.type} approved`,
+      action: deferred
+        ? `${request.type} approved — pending activation`
+        : `${request.type} approved`,
       comment: comment ?? null,
     },
   });
@@ -363,7 +435,8 @@ type ApprovalPreparation =
       speOperatorName: string | null;
       speOperatorProviderName: string | null;
       speTypeName: string | null;
-      researcherRow: PermitWithRelations['authorizedPersons'][number] | undefined;
+      researcherRow:
+        PermitWithRelations['authorizedPersons'][number] | undefined;
       newOutputController: { name: string; affiliation: string; did: string };
     }
   | { ok: false; status: number; error: string };
@@ -384,32 +457,59 @@ async function prepareApproval(
 ): Promise<ApprovalPreparation> {
   const effect = APPROVAL_EFFECT[request.type];
   const newValidUntil =
-    request.type === 'RENEWAL' && body.newValidUntil ? new Date(body.newValidUntil) : undefined;
+    request.type === 'RENEWAL' && body.newValidUntil
+      ? new Date(body.newValidUntil)
+      : undefined;
   if (request.type === 'RENEWAL' && !newValidUntil) {
-    return { ok: false, status: 422, error: 'A new validUntil date is required to approve a renewal' };
+    return {
+      ok: false,
+      status: 422,
+      error: 'A new validUntil date is required to approve a renewal',
+    };
   }
 
-  const { requestedEffectiveDate, deferred } = resolveEffectiveDate(request, body, now);
+  const { requestedEffectiveDate, deferred } = resolveEffectiveDate(
+    request,
+    body,
+    now,
+  );
 
   const newVersion = permit.version + 1;
   const newValidUntilResolved = newValidUntil ?? permit.validUntil;
 
-  const { speOperatorId, speTypeId, speOperatorName, speOperatorProviderName, speTypeName } =
-    await resolveSpeFields(request, permit, body);
+  const {
+    speOperatorId,
+    speTypeId,
+    speOperatorName,
+    speOperatorProviderName,
+    speTypeName,
+  } = await resolveSpeFields(request, permit, body);
 
   // Researcher is never re-selected via amendment — it's derived from the
   // application, which doesn't change after decision — so it's always
   // carried forward unchanged.
-  const researcherRow = permit.authorizedPersons.find((p) => p.role === 'RESEARCHER');
+  const researcherRow = permit.authorizedPersons.find(
+    (p) => p.role === 'RESEARCHER',
+  );
 
   const oc = resolveOutputController(request, permit, body);
   if (!oc.ok) return { ok: false, status: oc.status, error: oc.error };
 
   return {
     ok: true,
-    effect, newValidUntil, newValidUntilResolved, requestedEffectiveDate, deferred, newVersion,
-    speOperatorId, speTypeId, speOperatorName, speOperatorProviderName, speTypeName,
-    researcherRow, newOutputController: oc.outputController,
+    effect,
+    newValidUntil,
+    newValidUntilResolved,
+    requestedEffectiveDate,
+    deferred,
+    newVersion,
+    speOperatorId,
+    speTypeId,
+    speOperatorName,
+    speOperatorProviderName,
+    speTypeName,
+    researcherRow,
+    newOutputController: oc.outputController,
   };
 }
 
@@ -447,42 +547,71 @@ export async function PATCH(
 
     const decision = body.decision as 'APPROVED' | 'REJECTED';
     if (decision !== 'APPROVED' && decision !== 'REJECTED') {
-      return NextResponse.json({ error: 'decision must be APPROVED or REJECTED' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'decision must be APPROVED or REJECTED' },
+        { status: 400 },
+      );
     }
 
     const auth = await requireRole(await actingUserId(), [...DECIDE_ROLES]);
-    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+    if (!auth.ok)
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const request = await prisma.permitChangeRequest.findUnique({
       where: { id: requestId },
       include: CHANGE_REQUEST_INCLUDE,
     });
     if (request?.permitId !== id) {
-      return NextResponse.json({ error: 'Change request not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Change request not found' },
+        { status: 404 },
+      );
     }
     if (request.status !== 'REQUESTED') {
-      return NextResponse.json({ error: 'This request has already been decided' }, { status: 422 });
+      return NextResponse.json(
+        { error: 'This request has already been decided' },
+        { status: 422 },
+      );
     }
 
     const permit = request.permit;
     if (!permit.isCurrent) {
-      return NextResponse.json({ error: 'This permit version has been superseded' }, { status: 422 });
+      return NextResponse.json(
+        { error: 'This permit version has been superseded' },
+        { status: 422 },
+      );
     }
 
     const now = new Date();
 
     if (decision === 'REJECTED') {
-      const updated = await rejectChangeRequest(requestId, auth.user.id, body.comment, now);
+      const updated = await rejectChangeRequest(
+        requestId,
+        auth.user.id,
+        body.comment,
+        now,
+      );
       return NextResponse.json(updated);
     }
 
     // APPROVED — supersede the current version with a new one (D6.4 §9.3).
     const prep = await prepareApproval(request, permit, body, now);
-    if (!prep.ok) return NextResponse.json({ error: prep.error }, { status: prep.status });
+    if (!prep.ok)
+      return NextResponse.json({ error: prep.error }, { status: prep.status });
     const {
-      effect, newValidUntil, newValidUntilResolved, requestedEffectiveDate, deferred, newVersion,
-      speOperatorId, speTypeId, speOperatorName, speOperatorProviderName, speTypeName,
-      researcherRow, newOutputController,
+      effect,
+      newValidUntil,
+      newValidUntilResolved,
+      requestedEffectiveDate,
+      deferred,
+      newVersion,
+      speOperatorId,
+      speTypeId,
+      speOperatorName,
+      speOperatorProviderName,
+      speTypeName,
+      researcherRow,
+      newOutputController,
     } = prep;
 
     const { signature, signedAt, signingKeyId } = await signPermit({
@@ -504,7 +633,10 @@ export async function PATCH(
       researcher: researcherRow?.did
         ? { affiliation: researcherRow.affiliation, did: researcherRow.did }
         : null,
-      outputController: { affiliation: newOutputController.affiliation, did: newOutputController.did },
+      outputController: {
+        affiliation: newOutputController.affiliation,
+        did: newOutputController.did,
+      },
     });
 
     const newPermitId = await prisma.$transaction(async (tx) => {
@@ -528,11 +660,32 @@ export async function PATCH(
         speTypeName,
       });
 
-      await carryForwardAuthorizedPersons(tx, newPermit, researcherRow, newOutputController);
+      await carryForwardAuthorizedPersons(
+        tx,
+        newPermit,
+        researcherRow,
+        newOutputController,
+      );
       await carryForwardGrantedDatasets(tx, newPermit, permit, auth.user.id);
       await repointSpeProvisioning(tx, permit, newPermit, deferred);
-      await approveChangeRequest(tx, requestId, auth.user.id, now, body.comment, newValidUntil);
-      await logVersionTransition(tx, newPermit, permit, request, effect, deferred, body.comment, auth.user.id);
+      await approveChangeRequest(
+        tx,
+        requestId,
+        auth.user.id,
+        now,
+        body.comment,
+        newValidUntil,
+      );
+      await logVersionTransition(
+        tx,
+        newPermit,
+        permit,
+        request,
+        effect,
+        deferred,
+        body.comment,
+        auth.user.id,
+      );
 
       // 7. Render and store the new version's PDF — the official legal
       // document — now that its authorised persons (step 3) are in place.
@@ -543,7 +696,8 @@ export async function PATCH(
 
     return NextResponse.json({ ok: true, newPermitId, pending: deferred });
   } catch (e) {
-    const message = e instanceof Error ? e.message : 'Failed to decide change request';
+    const message =
+      e instanceof Error ? e.message : 'Failed to decide change request';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

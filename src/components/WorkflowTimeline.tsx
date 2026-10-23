@@ -8,7 +8,8 @@ export function WorkflowTimeline({ logs }: { logs: LogEntry[] }) {
   const t = useTranslations('workflowTimeline');
   const ts = useTranslations('applicationStatus');
 
-  if (logs.length === 0) return <p className="text-sm text-gray-500">{t('noHistory')}</p>;
+  if (logs.length === 0)
+    return <p className="text-sm text-gray-500">{t('noHistory')}</p>;
 
   return (
     <ol className="relative border-l border-gray-200 ml-3">

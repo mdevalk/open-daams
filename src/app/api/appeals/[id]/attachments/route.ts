@@ -12,26 +12,41 @@ import { actingUserId } from '@/auth';
  * linked to the application record.
  * body: { filename, mimeType, content (base64) }
  */
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await params;
     const body = await req.json();
 
-    const auth = await requireRole(await actingUserId(), ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN']);
-    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+    const auth = await requireRole(await actingUserId(), [
+      'CASE_HANDLER',
+      'DECISION_MAKER',
+      'ADMIN',
+    ]);
+    if (!auth.ok)
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const appeal = await prisma.appeal.findUnique({ where: { id } });
-    if (!appeal) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    if (!appeal)
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     if (!body.filename || !body.content) {
-      return NextResponse.json({ error: 'filename and content are required' }, { status: 422 });
+      return NextResponse.json(
+        { error: 'filename and content are required' },
+        { status: 422 },
+      );
     }
 
     let content: Buffer;
     try {
       content = Buffer.from(body.content, 'base64');
     } catch {
-      return NextResponse.json({ error: 'content must be base64-encoded' }, { status: 422 });
+      return NextResponse.json(
+        { error: 'content must be base64-encoded' },
+        { status: 422 },
+      );
     }
 
     const attachment = await prisma.attachment.create({
@@ -56,10 +71,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       },
     });
 
-    return NextResponse.json({ id: attachment.id, filename: attachment.filename, mimeType: attachment.mimeType }, { status: 201 });
+    return NextResponse.json(
+      {
+        id: attachment.id,
+        filename: attachment.filename,
+        mimeType: attachment.mimeType,
+      },
+      { status: 201 },
+    );
   } catch (e) {
     console.error('Failed to attach file to appeal', e);
-    const message = e instanceof Error ? e.message : 'Failed to attach file to appeal';
+    const message =
+      e instanceof Error ? e.message : 'Failed to attach file to appeal';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

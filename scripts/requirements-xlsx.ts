@@ -6,10 +6,23 @@ import fs from 'node:fs';
 import path from 'node:path';
 import ExcelJS from 'exceljs';
 
-const SOURCE_DOC = path.resolve(__dirname, '../docs/d6.4-requirements-traceability.md');
-const OUTPUT_FILE = path.resolve(__dirname, '../docs/d6.4-requirements-traceability.xlsx');
+const SOURCE_DOC = path.resolve(
+  __dirname,
+  '../docs/d6.4-requirements-traceability.md',
+);
+const OUTPUT_FILE = path.resolve(
+  __dirname,
+  '../docs/d6.4-requirements-traceability.xlsx',
+);
 
-type Row = { section: string; id: string; level: string; requirement: string; status: string; note: string };
+type Row = {
+  section: string;
+  id: string;
+  level: string;
+  requirement: string;
+  status: string;
+  note: string;
+};
 
 function parseRows(): Row[] {
   const lines = fs.readFileSync(SOURCE_DOC, 'utf8').split('\n');
@@ -24,7 +37,12 @@ function parseRows(): Row[] {
       continue;
     }
 
-    if (!/^\|\s*ID\s*\|\s*Level\s*\|\s*Requirement\s*\|\s*Status\s*\|\s*Note\s*\|/.test(line)) continue;
+    if (
+      !/^\|\s*ID\s*\|\s*Level\s*\|\s*Requirement\s*\|\s*Status\s*\|\s*Note\s*\|/.test(
+        line,
+      )
+    )
+      continue;
     // Table header found; skip it and the separator row, then read data rows until the table ends.
     i += 2;
     for (; i < lines.length; i++) {
@@ -33,7 +51,10 @@ function parseRows(): Row[] {
         i--;
         break;
       }
-      const cells = row.split('|').slice(1, -1).map((c) => c.trim());
+      const cells = row
+        .split('|')
+        .slice(1, -1)
+        .map((c) => c.trim());
       if (cells.length < 5) continue;
       const [id, level, requirement, status, note] = cells;
       rows.push({ section, id, level, requirement, status, note });
@@ -48,7 +69,9 @@ async function main() {
 
   const workbook = new ExcelJS.Workbook();
 
-  const sheet = workbook.addWorksheet('Requirements', { views: [{ state: 'frozen', ySplit: 1 }] });
+  const sheet = workbook.addWorksheet('Requirements', {
+    views: [{ state: 'frozen', ySplit: 1 }],
+  });
   sheet.columns = [
     { header: 'Section', key: 'section', width: 42 },
     { header: 'ID', key: 'id', width: 12 },
@@ -91,7 +114,9 @@ async function main() {
   });
 
   await workbook.xlsx.writeFile(OUTPUT_FILE);
-  console.log(`Written ${rows.length} requirements to ${path.relative(path.resolve(__dirname, '..'), OUTPUT_FILE)}`);
+  console.log(
+    `Written ${rows.length} requirements to ${path.relative(path.resolve(__dirname, '..'), OUTPUT_FILE)}`,
+  );
 }
 
 main();

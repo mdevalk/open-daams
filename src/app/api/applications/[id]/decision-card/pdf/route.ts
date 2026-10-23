@@ -7,7 +7,12 @@ import { actingUserId } from '@/auth';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-const STAFF_ROLES = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN', 'DATA_HOLDER'] as const;
+const STAFF_ROLES = [
+  'CASE_HANDLER',
+  'DECISION_MAKER',
+  'ADMIN',
+  'DATA_HOLDER',
+] as const;
 
 /**
  * GET /api/applications/[id]/decision-card/pdf
@@ -34,8 +39,13 @@ export async function GET(
       return new NextResponse('Not found', { status: 404 });
     }
 
-    const auth = await requireRoleOrOwner(await actingUserId(), [...STAFF_ROLES], application.applicantId);
-    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+    const auth = await requireRoleOrOwner(
+      await actingUserId(),
+      [...STAFF_ROLES],
+      application.applicantId,
+    );
+    if (!auth.ok)
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const filename = `besluit-${application.decisionId.replaceAll('/', '-')}.pdf`;
 
@@ -45,7 +55,8 @@ export async function GET(
     });
   } catch (e) {
     console.error(`Failed to serve decision-card PDF for ${id}`, e);
-    const message = e instanceof Error ? e.message : 'Failed to serve decision-card PDF';
+    const message =
+      e instanceof Error ? e.message : 'Failed to serve decision-card PDF';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

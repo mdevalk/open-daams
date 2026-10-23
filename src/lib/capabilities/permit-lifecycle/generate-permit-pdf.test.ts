@@ -12,7 +12,12 @@ import { generatePermitPdf, type PermitPdfData } from './generate-permit-pdf';
 type CallRecord = { op: string; args: unknown[] };
 
 function normalizeArg(arg: unknown): unknown {
-  if (arg && typeof arg === 'object' && 'name' in arg && 'widthOfTextAtSize' in arg) {
+  if (
+    arg &&
+    typeof arg === 'object' &&
+    'name' in arg &&
+    'widthOfTextAtSize' in arg
+  ) {
     return `<font:${(arg as PDFFont).name}>`;
   }
   if (arg instanceof Uint8Array) {
@@ -47,7 +52,11 @@ async function captureDrawCalls(permit: PermitPdfData): Promise<CallRecord[]> {
     setCreationDate: PDFDocument.prototype.setCreationDate,
   };
 
-  function spy(target: object, key: string, original: (...args: unknown[]) => unknown) {
+  function spy(
+    target: object,
+    key: string,
+    original: (...args: unknown[]) => unknown,
+  ) {
     const mock = vi.fn(function (this: unknown, ...args: unknown[]) {
       log.push({ op: key, args: args.map(normalizeArg) });
       return original.apply(this, args);
@@ -63,14 +72,24 @@ async function captureDrawCalls(permit: PermitPdfData): Promise<CallRecord[]> {
   spy(PDFDocument.prototype, 'setTitle', asGeneric(originals.setTitle));
   spy(PDFDocument.prototype, 'setAuthor', asGeneric(originals.setAuthor));
   spy(PDFDocument.prototype, 'setSubject', asGeneric(originals.setSubject));
-  spy(PDFDocument.prototype, 'setCreationDate', asGeneric(originals.setCreationDate));
+  spy(
+    PDFDocument.prototype,
+    'setCreationDate',
+    asGeneric(originals.setCreationDate),
+  );
 
   try {
     await generatePermitPdf(permit);
   } finally {
     for (const [key, original] of Object.entries(originals)) {
-      const target = key === 'drawText' || key === 'drawRectangle' || key === 'drawLine' ? PDFPage.prototype : PDFDocument.prototype;
-      Object.defineProperty(target, key, { value: original, configurable: true });
+      const target =
+        key === 'drawText' || key === 'drawRectangle' || key === 'drawLine'
+          ? PDFPage.prototype
+          : PDFDocument.prototype;
+      Object.defineProperty(target, key, {
+        value: original,
+        configurable: true,
+      });
     }
   }
 
@@ -78,8 +97,18 @@ async function captureDrawCalls(permit: PermitPdfData): Promise<CallRecord[]> {
 }
 
 const AUTHORIZED_PERSONS = [
-  { name: '', affiliation: 'UMC Utrecht', role: 'RESEARCHER', did: 'did:key:zResearcher' },
-  { name: '', affiliation: 'UMC Utrecht', role: 'OUTPUT_CONTROLLER', did: 'did:key:zOutputController' },
+  {
+    name: '',
+    affiliation: 'UMC Utrecht',
+    role: 'RESEARCHER',
+    did: 'did:key:zResearcher',
+  },
+  {
+    name: '',
+    affiliation: 'UMC Utrecht',
+    role: 'OUTPUT_CONTROLLER',
+    did: 'did:key:zOutputController',
+  },
 ];
 
 const GRANTED_DATASETS = [
@@ -90,14 +119,21 @@ const GRANTED_DATASETS = [
     datasetId: 'ds-1',
     catalogId: 'cat-1',
     distributions: [],
-    storageLocation: { reference: 'spe://bucket/ds-1', writerDid: 'did:key:zWriter' },
+    storageLocation: {
+      reference: 'spe://bucket/ds-1',
+      writerDid: 'did:key:zWriter',
+    },
   },
 ];
 
 const LINE_ITEMS = [
   { category: 'ADMINISTRATIVE' as const, description: null, amount: 250 },
   { category: 'SPE_SETUP' as const, description: null, amount: 500 },
-  { category: 'SPE_USAGE' as const, description: 'Eerste 3 maanden', amount: 150 },
+  {
+    category: 'SPE_USAGE' as const,
+    description: 'Eerste 3 maanden',
+    amount: 150,
+  },
 ];
 
 function baseFixture(): PermitPdfData {
@@ -150,7 +186,11 @@ function baseFixture(): PermitPdfData {
       legalBasis: 'EHDS Art. 53(1) - scientific research',
       dataProcessingCountry: 'NL',
       isCrossBorder: false,
-      applicant: { name: 'Dr. A. de Vries', organisation: 'UMC Utrecht', email: 'researcher@umcu.nl' },
+      applicant: {
+        name: 'Dr. A. de Vries',
+        organisation: 'UMC Utrecht',
+        email: 'researcher@umcu.nl',
+      },
     },
   };
 }
@@ -174,7 +214,8 @@ describe('generatePermitPdf — draw-call sequence (behavior-equivalence snapsho
   it('a revoked permit', async () => {
     const permit = baseFixture();
     permit.status = 'REVOKED';
-    permit.revocationReason = 'Data holder withdrew consent to the underlying dataset.';
+    permit.revocationReason =
+      'Data holder withdrew consent to the underlying dataset.';
     permit.revocationAt = new Date('2026-06-01T00:00:00Z');
     const log = await captureDrawCalls(permit);
     expect(log).toMatchSnapshot();
@@ -196,7 +237,11 @@ describe('generatePermitPdf — draw-call sequence (behavior-equivalence snapsho
     permit.status = 'AMENDED';
     permit.previousPermitId = 'prev-permit-1';
     permit.previousPermit = { permitNumber: 'DP-NL-2025-0001', version: 1 };
-    permit.application = { ...permit.application!, isCrossBorder: true, dataProcessingCountry: 'BE' };
+    permit.application = {
+      ...permit.application!,
+      isCrossBorder: true,
+      dataProcessingCountry: 'BE',
+    };
     permit.signature = null;
     permit.signedAt = null;
     permit.signingKeyId = null;

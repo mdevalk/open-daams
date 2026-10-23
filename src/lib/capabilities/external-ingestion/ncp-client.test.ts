@@ -21,8 +21,12 @@ describe('guessAttachmentMimeType', () => {
   });
 
   it('falls back to octet-stream for an unknown or missing extension', () => {
-    expect(guessAttachmentMimeType('archive.rar')).toBe('application/octet-stream');
-    expect(guessAttachmentMimeType('no-extension')).toBe('application/octet-stream');
+    expect(guessAttachmentMimeType('archive.rar')).toBe(
+      'application/octet-stream',
+    );
+    expect(guessAttachmentMimeType('no-extension')).toBe(
+      'application/octet-stream',
+    );
   });
 });
 
@@ -53,7 +57,9 @@ describe('resolveAttachmentBytes', () => {
   it('returns undefined when no entry matches', () => {
     const zip = new AdmZip();
     zip.addFile('unrelated.pdf', Buffer.from('x'));
-    expect(resolveAttachmentBytes(zip, undefined, 'protocol.pdf')).toBeUndefined();
+    expect(
+      resolveAttachmentBytes(zip, undefined, 'protocol.pdf'),
+    ).toBeUndefined();
   });
 });
 
@@ -63,7 +69,9 @@ describe('mapNcpDetailZipToHdeuPayload', () => {
     zip.addFile('protocol.pdf', Buffer.from('x'));
     zip.addFile('cover-letter.docx', Buffer.from('y'));
 
-    expect(() => mapNcpDetailZipToHdeuPayload(zip.toBuffer())).toThrow(NcpDetailMappingError);
+    expect(() => mapNcpDetailZipToHdeuPayload(zip.toBuffer())).toThrow(
+      NcpDetailMappingError,
+    );
 
     try {
       mapNcpDetailZipToHdeuPayload(zip.toBuffer());
@@ -72,7 +80,10 @@ describe('mapNcpDetailZipToHdeuPayload', () => {
       expect(e).toBeInstanceOf(NcpDetailMappingError);
       const err = e as InstanceType<typeof NcpDetailMappingError>;
       expect(err.message).toContain('application_metadata.json');
-      expect(err.attachments.sort()).toEqual(['cover-letter.docx', 'protocol.pdf']);
+      expect(err.attachments.sort()).toEqual([
+        'cover-letter.docx',
+        'protocol.pdf',
+      ]);
     }
   });
 
@@ -80,13 +91,17 @@ describe('mapNcpDetailZipToHdeuPayload', () => {
     const zip = new AdmZip();
     zip.addFile('application_metadata.json', Buffer.from('{not json'));
 
-    expect(() => mapNcpDetailZipToHdeuPayload(zip.toBuffer())).toThrow(NcpDetailMappingError);
+    expect(() => mapNcpDetailZipToHdeuPayload(zip.toBuffer())).toThrow(
+      NcpDetailMappingError,
+    );
   });
 });
 
 describe('buildControlEntry', () => {
   it('returns undefined when no controls will be extracted', () => {
-    const entry = { willControlsBeExtracted: { key: 'no', value: 'No' } } as never;
+    const entry = {
+      willControlsBeExtracted: { key: 'no', value: 'No' },
+    } as never;
     expect(buildControlEntry(entry, 'NL')).toBeUndefined();
   });
 
@@ -97,13 +112,20 @@ describe('buildControlEntry', () => {
       extractionCriteriaForControls: 'age-matched',
     } as never;
     const control = buildControlEntry(entry, 'NL');
-    expect(control).toMatchObject({ countryId: 'NL', role: 'CONTROL', size: 50, matchingCriteria: 'age-matched' });
+    expect(control).toMatchObject({
+      countryId: 'NL',
+      role: 'CONTROL',
+      size: 50,
+      matchingCriteria: 'age-matched',
+    });
   });
 });
 
 describe('buildRelativeEntry', () => {
   it('returns undefined when no relatives will be extracted', () => {
-    const entry = { willRelativesBeExtracted: { key: 'no', value: 'No' } } as never;
+    const entry = {
+      willRelativesBeExtracted: { key: 'no', value: 'No' },
+    } as never;
     expect(buildRelativeEntry(entry, 'NL')).toBeUndefined();
   });
 
@@ -113,7 +135,11 @@ describe('buildRelativeEntry', () => {
       relationshipToStudyCohort: 'sibling',
     } as never;
     const relative = buildRelativeEntry(entry, 'NL');
-    expect(relative).toMatchObject({ countryId: 'NL', role: 'RELATIVE', relationshipToSubject: 'sibling' });
+    expect(relative).toMatchObject({
+      countryId: 'NL',
+      role: 'RELATIVE',
+      relationshipToSubject: 'sibling',
+    });
   });
 });
 
@@ -123,8 +149,14 @@ describe('buildInvoicingDetails', () => {
   });
 
   it('maps section4 fields when present', () => {
-    const result = buildInvoicingDetails({ fullName: 'A. de Vries', email: 'a@example.org' } as never);
-    expect(result).toMatchObject({ fullName: 'A. de Vries', email: 'a@example.org' });
+    const result = buildInvoicingDetails({
+      fullName: 'A. de Vries',
+      email: 'a@example.org',
+    } as never);
+    expect(result).toMatchObject({
+      fullName: 'A. de Vries',
+      email: 'a@example.org',
+    });
   });
 });
 
@@ -162,7 +194,9 @@ describe('buildSection3Fields', () => {
   });
 
   it('falls back to defaults when neither branch has a value', () => {
-    const section3 = { legalOrNaturalPerson: { key: 'legal', value: 'Legal person' } } as never;
+    const section3 = {
+      legalOrNaturalPerson: { key: 'legal', value: 'Legal person' },
+    } as never;
     const fields = buildSection3Fields(section3);
     expect(fields.applicantName).toBe('Not specified');
     expect(fields.applicantEmail).toBe('unknown@unknown.invalid');

@@ -14,13 +14,22 @@ vi.mock('@/auth', () => ({
 
 import { prisma } from '@/lib/db';
 import { actingUserId } from '@/auth';
-import { POST, dataAccessApplicationFields, dataAccessApplicationDefaults } from './route';
+import {
+  POST,
+  dataAccessApplicationFields,
+  dataAccessApplicationDefaults,
+} from './route';
 
 const findUnique = vi.mocked(prisma.user.findUnique);
 const logCreate = vi.mocked(prisma.authzFailureLog.create);
 const actingUserIdMock = vi.mocked(actingUserId);
 
-const APPLICANT = { id: 'u-2', role: 'APPLICANT' as const, name: 'A. de Vries', email: 'researcher@umcu.nl' };
+const APPLICANT = {
+  id: 'u-2',
+  role: 'APPLICANT' as const,
+  name: 'A. de Vries',
+  email: 'researcher@umcu.nl',
+};
 
 function postRequest(body: unknown) {
   return new NextRequest('http://localhost/api/applications', {
@@ -98,11 +107,17 @@ describe('dataAccessApplicationFields', () => {
   });
 
   it('does not convert dataAccessLaterDate when absent', () => {
-    expect(dataAccessApplicationFields({ dataAccessLaterDate: null }).dataAccessLaterDate).toBeNull();
+    expect(
+      dataAccessApplicationFields({ dataAccessLaterDate: null })
+        .dataAccessLaterDate,
+    ).toBeNull();
   });
 
   it('preserves explicit false/0 via ?? instead of falling back to the default (dataSubjectsInformed)', () => {
-    expect(dataAccessApplicationFields({ dataSubjectsInformed: false }).dataSubjectsInformed).toBe(false);
+    expect(
+      dataAccessApplicationFields({ dataSubjectsInformed: false })
+        .dataSubjectsInformed,
+    ).toBe(false);
   });
 });
 
@@ -162,7 +177,9 @@ describe('POST /api/applications guard clauses', () => {
 
   it('rejects a missing session with 401', async () => {
     actingUserIdMock.mockResolvedValueOnce(undefined);
-    const res = await POST(postRequest({ applicantId: 'u-2', type: 'DATA_ACCESS_APPLICATION' }));
+    const res = await POST(
+      postRequest({ applicantId: 'u-2', type: 'DATA_ACCESS_APPLICATION' }),
+    );
     expect(res.status).toBe(401);
     const json = await res.json();
     expect(json.error).toBe('A valid acting user id is required');
@@ -171,7 +188,13 @@ describe('POST /api/applications guard clauses', () => {
 
   it('rejects an unknown actingUserId with 401', async () => {
     findUnique.mockResolvedValue(null);
-    const res = await POST(postRequest({ actingUserId: 'ghost', applicantId: 'u-2', type: 'DATA_ACCESS_APPLICATION' }));
+    const res = await POST(
+      postRequest({
+        actingUserId: 'ghost',
+        applicantId: 'u-2',
+        type: 'DATA_ACCESS_APPLICATION',
+      }),
+    );
     expect(res.status).toBe(401);
     const json = await res.json();
     expect(json.error).toBe('Acting user not found');
@@ -180,10 +203,16 @@ describe('POST /api/applications guard clauses', () => {
   it('rejects an APPLICANT creating an application for a different applicantId with 403', async () => {
     findUnique.mockResolvedValue(APPLICANT as never);
     const res = await POST(
-      postRequest({ actingUserId: 'u-2', applicantId: 'someone-else', type: 'DATA_ACCESS_APPLICATION' }),
+      postRequest({
+        actingUserId: 'u-2',
+        applicantId: 'someone-else',
+        type: 'DATA_ACCESS_APPLICATION',
+      }),
     );
     expect(res.status).toBe(403);
     const json = await res.json();
-    expect(json.error).toBe('An applicant may only create their own application');
+    expect(json.error).toBe(
+      'An applicant may only create their own application',
+    );
   });
 });

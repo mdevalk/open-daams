@@ -4,7 +4,11 @@ import { SecurityLogTable } from '@/components/SecurityLogTable';
 
 export const dynamic = 'force-dynamic';
 
-export default async function SecurityLogPage({ params }: { params: Promise<{ locale: string }> }) {
+export default async function SecurityLogPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'securityLog' });
 

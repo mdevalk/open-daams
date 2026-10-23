@@ -10,20 +10,29 @@ const MANAGE_ROLES = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'] as const;
  * Select (or clear) the trusted data holder for an application (D6.4 §12 / Art. 72).
  * body: { trustedDataHolderId: string | null }
  */
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const { id } = await params;
   try {
     const body = await req.json();
 
     const auth = await requireRole(await actingUserId(), [...MANAGE_ROLES]);
-    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+    if (!auth.ok)
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const trustedDataHolderId: string | null = body.trustedDataHolderId || null;
     let dataHolder = null;
     if (trustedDataHolderId) {
-      dataHolder = await prisma.dataHolder.findUnique({ where: { id: trustedDataHolderId } });
+      dataHolder = await prisma.dataHolder.findUnique({
+        where: { id: trustedDataHolderId },
+      });
       if (!dataHolder?.isTrusted) {
-        return NextResponse.json({ error: 'That data holder is not marked as trusted' }, { status: 422 });
+        return NextResponse.json(
+          { error: 'That data holder is not marked as trusted' },
+          { status: 422 },
+        );
       }
     }
 
@@ -37,15 +46,21 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         userId: auth.user.id,
         entityType: 'Application',
         entityId: id,
-        action: dataHolder ? `Trusted data holder set: ${dataHolder.name}` : 'Trusted data holder cleared',
+        action: dataHolder
+          ? `Trusted data holder set: ${dataHolder.name}`
+          : 'Trusted data holder cleared',
         comment: null,
       },
     });
 
     return NextResponse.json(application);
   } catch (e) {
-    console.error(`Failed to update trusted data holder for application ${id}`, e);
-    const message = e instanceof Error ? e.message : 'Failed to update trusted data holder';
+    console.error(
+      `Failed to update trusted data holder for application ${id}`,
+      e,
+    );
+    const message =
+      e instanceof Error ? e.message : 'Failed to update trusted data holder';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

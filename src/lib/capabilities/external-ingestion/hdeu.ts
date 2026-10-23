@@ -21,7 +21,8 @@ export type HdeuStudyCohort = {
   howWillDataBeLinked?: string;
   personProfileDataDate?: string;
   relationshipToSubject?: string;
-  cohortFormationMethod?: 'CRITERIA' | 'PREVIOUS_COHORT' | 'COMBINED' | 'WHOLE_POPULATION';
+  cohortFormationMethod?:
+    'CRITERIA' | 'PREVIOUS_COHORT' | 'COMBINED' | 'WHOLE_POPULATION';
   // Release 7 §6 — consent/permit basis (COHORT only)
   hasTheStudyCohortBeenFormedBasedOnInformationOfStudyParticipants?: boolean;
   doesTheInformedConsentCoverTheRequestedRegistryExtractions?: boolean;
@@ -137,11 +138,11 @@ export type HdeuDatasetVariable = {
 
 export type HdeuPayload = {
   // Envelope (NCP routing layer)
-  hdeuApplicationId: string;       // Sending DAAMS reference, e.g. "FI-HDAB-2025-0042"
-  sendingCountry: string;          // ISO 3166-1 alpha-2, e.g. "FI"
-  sendingHdab: string;             // Name of the sending HDAB
-  transmissionTimestamp: string;   // ISO 8601
-  ncpTransactionId?: string;       // HealthData@EU NCP transaction ID (optional)
+  hdeuApplicationId: string; // Sending DAAMS reference, e.g. "FI-HDAB-2025-0042"
+  sendingCountry: string; // ISO 3166-1 alpha-2, e.g. "FI"
+  sendingHdab: string; // Name of the sending HDAB
+  transmissionTimestamp: string; // ISO 8601
+  ncpTransactionId?: string; // HealthData@EU NCP transaction ID (optional)
 
   // Application type
   applicationType: 'DATA_ACCESS_APPLICATION' | 'DATA_REQUEST';
@@ -176,7 +177,7 @@ export type HdeuPayload = {
   studyPopulation: string;
   inclusionCriteria: string;
   exclusionCriteria: string;
-  dataStartDate?: string;       // ISO 8601 date
+  dataStartDate?: string; // ISO 8601 date
   dataEndDate?: string;
   projectStartDate?: string;
   projectEndDate?: string;
@@ -260,7 +261,8 @@ export type HdeuPayload = {
   cohortSizeIsEstimate?: boolean;
   cohortSize?: number;
   cohortSizeJustification?: string;
-  cohortFormationMethod?: 'CRITERIA' | 'PREVIOUS_COHORT' | 'COMBINED' | 'WHOLE_POPULATION';
+  cohortFormationMethod?:
+    'CRITERIA' | 'PREVIOUS_COHORT' | 'COMBINED' | 'WHOLE_POPULATION';
   extractionMethod?: 'RANDOM_SAMPLE' | 'ALL_QUALIFYING' | 'OTHER_SAMPLE';
   sampleSize?: string;
   samplingMethodDescription?: string;
@@ -364,8 +366,7 @@ export type HdeuPayload = {
 };
 
 export type ParseResult =
-  | { ok: true; payload: HdeuPayload }
-  | { ok: false; errors: string[] };
+  { ok: true; payload: HdeuPayload } | { ok: false; errors: string[] };
 
 const REQUIRED: (keyof HdeuPayload)[] = [
   'hdeuApplicationId',
@@ -406,7 +407,9 @@ export function parseHdeuPayload(raw: unknown): ParseResult {
     obj.applicationType !== 'DATA_ACCESS_APPLICATION' &&
     obj.applicationType !== 'DATA_REQUEST'
   ) {
-    errors.push('applicationType must be DATA_ACCESS_APPLICATION or DATA_REQUEST');
+    errors.push(
+      'applicationType must be DATA_ACCESS_APPLICATION or DATA_REQUEST',
+    );
   }
 
   if (!Array.isArray(obj.requestedDatasets)) {
@@ -415,13 +418,22 @@ export function parseHdeuPayload(raw: unknown): ParseResult {
     obj.requestedDatasets.some((g) => {
       if (typeof g !== 'object' || g === null) return true;
       const group = g as Record<string, unknown>;
-      if (typeof group.dataHolderName !== 'string' || !Array.isArray(group.datasets)) return true;
+      if (
+        typeof group.dataHolderName !== 'string' ||
+        !Array.isArray(group.datasets)
+      )
+        return true;
       return group.datasets.some(
-        (d) => typeof d !== 'object' || d === null || typeof (d as Record<string, unknown>).name !== 'string',
+        (d) =>
+          typeof d !== 'object' ||
+          d === null ||
+          typeof (d as Record<string, unknown>).name !== 'string',
       );
     })
   ) {
-    errors.push('requestedDatasets must be an array of { dataHolderName, datasets: [{ name, url? }] }');
+    errors.push(
+      'requestedDatasets must be an array of { dataHolderName, datasets: [{ name, url? }] }',
+    );
   }
 
   if (errors.length > 0) return { ok: false, errors };
@@ -429,7 +441,14 @@ export function parseHdeuPayload(raw: unknown): ParseResult {
 }
 
 export type CreateApplicationResult =
-  | { ok: true; application: { id: string; referenceNumber: string; decisionDeadline: Date | null } }
+  | {
+      ok: true;
+      application: {
+        id: string;
+        referenceNumber: string;
+        decisionDeadline: Date | null;
+      };
+    }
   | { ok: false; status: 409 | 500; error: string };
 
 /**
@@ -439,7 +458,9 @@ export type CreateApplicationResult =
  * it to a masterdata reference.
  */
 async function resolveOrCreateApplicant(p: HdeuPayload) {
-  const existing = await prisma.user.findUnique({ where: { email: p.applicantEmail } });
+  const existing = await prisma.user.findUnique({
+    where: { email: p.applicantEmail },
+  });
   if (existing) return existing;
 
   const dataUser = await prisma.dataUser.upsert({
@@ -481,8 +502,10 @@ function buildApplicationCreateData(
   // studyCohorts is present, else fall back to the top-level payload fields
   // (manual entry / direct JSON import, which don't produce studyCohorts)
   const firstCohort = p.studyCohorts?.find((c) => c.role === 'COHORT');
-  const mirrorCohort = <K extends keyof HdeuStudyCohort>(key: K, fallback: HdeuPayload[K & keyof HdeuPayload]) =>
-    firstCohort ? firstCohort[key] : fallback;
+  const mirrorCohort = <K extends keyof HdeuStudyCohort>(
+    key: K,
+    fallback: HdeuPayload[K & keyof HdeuPayload],
+  ) => (firstCohort ? firstCohort[key] : fallback);
 
   return {
     referenceNumber,
@@ -505,16 +528,21 @@ function buildApplicationCreateData(
     purposeCategories: p.purposeCategories ?? [],
     projectLeaderName: p.projectLeaderName,
     projectLeaderCountry: p.projectLeaderCountry,
-    theResearchFocusesOnTheFollowingObjectives: p.theResearchFocusesOnTheFollowingObjectives ?? [],
-    theResearchFocusesOnTheFollowingObjectivesOther: p.theResearchFocusesOnTheFollowingObjectivesOther,
+    theResearchFocusesOnTheFollowingObjectives:
+      p.theResearchFocusesOnTheFollowingObjectives ?? [],
+    theResearchFocusesOnTheFollowingObjectivesOther:
+      p.theResearchFocusesOnTheFollowingObjectivesOther,
     areaOfResearch: p.areaOfResearch,
     areaOfResearchOther: p.areaOfResearchOther,
     descriptionOfTheDataYouWillUse: p.descriptionOfTheDataYouWillUse,
-    theNatureOfTheDataDoesNotLetYouProvideADescription: p.theNatureOfTheDataDoesNotLetYouProvideADescription,
+    theNatureOfTheDataDoesNotLetYouProvideADescription:
+      p.theNatureOfTheDataDoesNotLetYouProvideADescription,
     descriptionOfTheProject: p.descriptionOfTheProject,
     summaryOfTheProject: p.summaryOfTheProject,
-    theNatureOfTheProjectDoesNotLetYouProvideASummary: p.theNatureOfTheProjectDoesNotLetYouProvideASummary,
-    theNatureOfTheProjectDoesNotLetYouProvideASummaryReason: p.theNatureOfTheProjectDoesNotLetYouProvideASummaryReason,
+    theNatureOfTheProjectDoesNotLetYouProvideASummary:
+      p.theNatureOfTheProjectDoesNotLetYouProvideASummary,
+    theNatureOfTheProjectDoesNotLetYouProvideASummaryReason:
+      p.theNatureOfTheProjectDoesNotLetYouProvideASummaryReason,
     legalBasis: p.legalBasis,
     requestedVariables: p.requestedVariables,
     studyPopulation: p.studyPopulation,
@@ -530,7 +558,9 @@ function buildApplicationCreateData(
     applyingOnBehalfOfPublicSector: p.applyingOnBehalfOfPublicSector,
     applyingForMandatedTasks: p.applyingForMandatedTasks,
     legalOrNaturalPerson: p.legalOrNaturalPerson,
-    legalOrNaturalPersonProfileDataDate: toDate(p.legalOrNaturalPersonProfileDataDate),
+    legalOrNaturalPersonProfileDataDate: toDate(
+      p.legalOrNaturalPersonProfileDataDate,
+    ),
     legalPersonAddress: p.legalPersonAddress,
     legalPersonZipCode: p.legalPersonZipCode,
     legalPersonCity: p.legalPersonCity,
@@ -550,13 +580,17 @@ function buildApplicationCreateData(
     expectedBenefits: p.expectedBenefits,
     applicantQualifications: p.applicantQualifications,
     linkToTheSupportingLegalBasis: p.linkToTheSupportingLegalBasis,
-    summaryOfPlanForUsingTheDataLanguage: p.summaryOfPlanForUsingTheDataLanguage,
+    summaryOfPlanForUsingTheDataLanguage:
+      p.summaryOfPlanForUsingTheDataLanguage,
     summaryOfResearchPlanLanguage: p.summaryOfResearchPlanLanguage,
-    personResponsibleSameAsContactPerson: p.personResponsibleSameAsContactPerson,
+    personResponsibleSameAsContactPerson:
+      p.personResponsibleSameAsContactPerson,
     personResponsibleName: p.personResponsibleName,
     personResponsibleJobTitle: p.personResponsibleJobTitle,
     personResponsibleAffiliation: p.personResponsibleAffiliation,
-    personResponsibleProfileDataDate: toDate(p.personResponsibleProfileDataDate),
+    personResponsibleProfileDataDate: toDate(
+      p.personResponsibleProfileDataDate,
+    ),
     personResearchSameAsContactPerson: p.personResearchSameAsContactPerson,
     personResearchName: p.personResearchName,
     personResearchJobTitle: p.personResearchJobTitle,
@@ -579,12 +613,26 @@ function buildApplicationCreateData(
     extractionInterval: p.extractionInterval,
     extractionIntervalOther: p.extractionIntervalOther,
     extractionTimingNotes: p.extractionTimingNotes,
-    dataSubjectsInformed: mirrorCohort('dataSubjectsInformed', p.dataSubjectsInformed),
-    dataSubjectsInformedDetail: mirrorCohort('dataSubjectsInformedDetail', p.dataSubjectsInformedDetail),
-    includesControls: mirrorCohort('includesControls', p.includesControls) ?? false,
-    controlsDescription: mirrorCohort('controlsDescription', p.controlsDescription),
-    includesRelatives: mirrorCohort('includesRelatives', p.includesRelatives) ?? false,
-    relativesDescription: mirrorCohort('relativesDescription', p.relativesDescription),
+    dataSubjectsInformed: mirrorCohort(
+      'dataSubjectsInformed',
+      p.dataSubjectsInformed,
+    ),
+    dataSubjectsInformedDetail: mirrorCohort(
+      'dataSubjectsInformedDetail',
+      p.dataSubjectsInformedDetail,
+    ),
+    includesControls:
+      mirrorCohort('includesControls', p.includesControls) ?? false,
+    controlsDescription: mirrorCohort(
+      'controlsDescription',
+      p.controlsDescription,
+    ),
+    includesRelatives:
+      mirrorCohort('includesRelatives', p.includesRelatives) ?? false,
+    relativesDescription: mirrorCohort(
+      'relativesDescription',
+      p.relativesDescription,
+    ),
     usesOptOutException: p.usesOptOutException ?? false,
     optOutExceptionJustification: p.optOutExceptionJustification,
     tabulationPlan: p.tabulationPlan,
@@ -619,27 +667,46 @@ function buildApplicationCreateData(
     transferLegalBasis: p.transferLegalBasis,
     transferLegalArticle: p.transferLegalArticle,
     transferSafeguards: p.transferSafeguards ?? [],
-    whyWillDataBeTransferredOutsideEUArticle47: p.whyWillDataBeTransferredOutsideEUArticle47,
-    whyWillDataBeTransferredOutsideEUArticle47Options: p.whyWillDataBeTransferredOutsideEUArticle47Options ?? [],
-    whyWillDataBeTransferredOutsideEUArticle47a: p.whyWillDataBeTransferredOutsideEUArticle47a,
-    whyWillDataBeTransferredOutsideEUArticle47b: p.whyWillDataBeTransferredOutsideEUArticle47b,
-    whyWillDataBeTransferredOutsideEUArticle47c: p.whyWillDataBeTransferredOutsideEUArticle47c,
-    whyWillDataBeTransferredOutsideEUArticle48: p.whyWillDataBeTransferredOutsideEUArticle48,
-    whyWillDataBeTransferredOutsideEUArticle48a: p.whyWillDataBeTransferredOutsideEUArticle48a,
-    whyWillDataBeTransferredOutsideEUArticle48b: p.whyWillDataBeTransferredOutsideEUArticle48b,
-    whyWillDataBeTransferredOutsideEUArticle48bOptions: p.whyWillDataBeTransferredOutsideEUArticle48bOptions ?? [],
-    whyWillDataBeTransferredOutsideEUArticle48c: p.whyWillDataBeTransferredOutsideEUArticle48c,
-    whyWillDataBeTransferredOutsideEUArticle48cOpt: p.whyWillDataBeTransferredOutsideEUArticle48cOpt,
-    whyWillDataBeTransferredOutsideEUArticle48d: p.whyWillDataBeTransferredOutsideEUArticle48d,
-    whyWillDataBeTransferredOutsideEUArticle48e: p.whyWillDataBeTransferredOutsideEUArticle48e,
-    whyWillDataBeTransferredOutsideEUArticle49: p.whyWillDataBeTransferredOutsideEUArticle49,
-    legalBasisForTransferringTheDataOutsideEU: p.legalBasisForTransferringTheDataOutsideEU,
-    legalBasisForTransferringTheDataOutsideEUOtherOptions: p.legalBasisForTransferringTheDataOutsideEUOtherOptions ?? [],
-    safeguardsAreProvidedByReferringGDCP: p.safeguardsAreProvidedByReferringGDCP ?? [],
-    safeguardsAreProvidedByOtherExceptionalLegalBases: p.safeguardsAreProvidedByOtherExceptionalLegalBases,
+    whyWillDataBeTransferredOutsideEUArticle47:
+      p.whyWillDataBeTransferredOutsideEUArticle47,
+    whyWillDataBeTransferredOutsideEUArticle47Options:
+      p.whyWillDataBeTransferredOutsideEUArticle47Options ?? [],
+    whyWillDataBeTransferredOutsideEUArticle47a:
+      p.whyWillDataBeTransferredOutsideEUArticle47a,
+    whyWillDataBeTransferredOutsideEUArticle47b:
+      p.whyWillDataBeTransferredOutsideEUArticle47b,
+    whyWillDataBeTransferredOutsideEUArticle47c:
+      p.whyWillDataBeTransferredOutsideEUArticle47c,
+    whyWillDataBeTransferredOutsideEUArticle48:
+      p.whyWillDataBeTransferredOutsideEUArticle48,
+    whyWillDataBeTransferredOutsideEUArticle48a:
+      p.whyWillDataBeTransferredOutsideEUArticle48a,
+    whyWillDataBeTransferredOutsideEUArticle48b:
+      p.whyWillDataBeTransferredOutsideEUArticle48b,
+    whyWillDataBeTransferredOutsideEUArticle48bOptions:
+      p.whyWillDataBeTransferredOutsideEUArticle48bOptions ?? [],
+    whyWillDataBeTransferredOutsideEUArticle48c:
+      p.whyWillDataBeTransferredOutsideEUArticle48c,
+    whyWillDataBeTransferredOutsideEUArticle48cOpt:
+      p.whyWillDataBeTransferredOutsideEUArticle48cOpt,
+    whyWillDataBeTransferredOutsideEUArticle48d:
+      p.whyWillDataBeTransferredOutsideEUArticle48d,
+    whyWillDataBeTransferredOutsideEUArticle48e:
+      p.whyWillDataBeTransferredOutsideEUArticle48e,
+    whyWillDataBeTransferredOutsideEUArticle49:
+      p.whyWillDataBeTransferredOutsideEUArticle49,
+    legalBasisForTransferringTheDataOutsideEU:
+      p.legalBasisForTransferringTheDataOutsideEU,
+    legalBasisForTransferringTheDataOutsideEUOtherOptions:
+      p.legalBasisForTransferringTheDataOutsideEUOtherOptions ?? [],
+    safeguardsAreProvidedByReferringGDCP:
+      p.safeguardsAreProvidedByReferringGDCP ?? [],
+    safeguardsAreProvidedByOtherExceptionalLegalBases:
+      p.safeguardsAreProvidedByOtherExceptionalLegalBases,
     dataController: p.dataController,
     dataMinimisationCompliance: p.dataMinimisationCompliance,
-    complyWithDataMinimisationPrincipleNotEUMember: p.complyWithDataMinimisationPrincipleNotEUMember,
+    complyWithDataMinimisationPrincipleNotEUMember:
+      p.complyWithDataMinimisationPrincipleNotEUMember,
     protectionStatement1: p.protectionStatement1,
     protectionStatement2: p.protectionStatement2,
     protectionStatement3: p.protectionStatement3,
@@ -650,12 +717,18 @@ function buildApplicationCreateData(
     lawfulnessLegalBasisOther: p.lawfulnessLegalBasisOther,
     lawfulForProcessingPersonalData: p.lawfulForProcessingPersonalData ?? [],
     europeanUnionInstitution: p.europeanUnionInstitution ?? [],
-    legalBasisForProcessingCombinedData: p.legalBasisForProcessingCombinedData ?? [],
-    otherLegalBasisForProcessingCombinedData: p.otherLegalBasisForProcessingCombinedData,
-    legalBasisForProcessingApplicationData: p.legalBasisForProcessingApplicationData ?? [],
-    otherLegalBasisForProcessingApplicationData: p.otherLegalBasisForProcessingApplicationData,
-    legalBasisForProcessingCombinedApplicationData: p.legalBasisForProcessingCombinedApplicationData ?? [],
-    otherLegalBasisForProcessingCombinedApplicationData: p.otherLegalBasisForProcessingCombinedApplicationData,
+    legalBasisForProcessingCombinedData:
+      p.legalBasisForProcessingCombinedData ?? [],
+    otherLegalBasisForProcessingCombinedData:
+      p.otherLegalBasisForProcessingCombinedData,
+    legalBasisForProcessingApplicationData:
+      p.legalBasisForProcessingApplicationData ?? [],
+    otherLegalBasisForProcessingApplicationData:
+      p.otherLegalBasisForProcessingApplicationData,
+    legalBasisForProcessingCombinedApplicationData:
+      p.legalBasisForProcessingCombinedApplicationData ?? [],
+    otherLegalBasisForProcessingCombinedApplicationData:
+      p.otherLegalBasisForProcessingCombinedApplicationData,
 
     // §9
     additionalInformation: p.additionalInformation,
@@ -687,15 +760,25 @@ function buildApplicationCreateData(
  * the find-or-create/creation logic so the two don't drift apart.
  */
 
-async function createInvoicingDetails(applicationId: string, invoicingDetails: HdeuInvoicingDetails | undefined) {
+async function createInvoicingDetails(
+  applicationId: string,
+  invoicingDetails: HdeuInvoicingDetails | undefined,
+) {
   if (!invoicingDetails) return;
   const { section4ProfileDataDate, ...invoicingData } = invoicingDetails;
   await prisma.applicantBillingDetails.create({
-    data: { applicationId, ...invoicingData, section4ProfileDataDate: toDate(section4ProfileDataDate) },
+    data: {
+      applicationId,
+      ...invoicingData,
+      section4ProfileDataDate: toDate(section4ProfileDataDate),
+    },
   });
 }
 
-async function createAttachments(applicationId: string, attachments: HdeuAttachment[] | undefined) {
+async function createAttachments(
+  applicationId: string,
+  attachments: HdeuAttachment[] | undefined,
+) {
   const attachmentsWithContent = (attachments ?? []).filter(
     (a): a is HdeuAttachment & { content: Buffer } => a.content !== undefined,
   );
@@ -705,21 +788,30 @@ async function createAttachments(applicationId: string, attachments: HdeuAttachm
   });
 }
 
-async function createDatasetVariables(applicationId: string, datasetVariables: HdeuDatasetVariable[] | undefined) {
+async function createDatasetVariables(
+  applicationId: string,
+  datasetVariables: HdeuDatasetVariable[] | undefined,
+) {
   if (!datasetVariables || datasetVariables.length === 0) return;
   await prisma.datasetVariable.createMany({
     data: datasetVariables.map((v) => ({ applicationId, ...v })),
   });
 }
 
-async function createRelatedDataPermits(applicationId: string, relatedDataPermits: HdeuRelatedDataPermit[] | undefined) {
+async function createRelatedDataPermits(
+  applicationId: string,
+  relatedDataPermits: HdeuRelatedDataPermit[] | undefined,
+) {
   if (!relatedDataPermits || relatedDataPermits.length === 0) return;
   await prisma.relatedDataPermit.createMany({
     data: relatedDataPermits.map((r) => ({ applicationId, ...r })),
   });
 }
 
-async function createTabulationPlans(applicationId: string, tabulationPlans: HdeuTabulationPlan[] | undefined) {
+async function createTabulationPlans(
+  applicationId: string,
+  tabulationPlans: HdeuTabulationPlan[] | undefined,
+) {
   if (!tabulationPlans || tabulationPlans.length === 0) return;
   await prisma.tabulationPlan.createMany({
     data: tabulationPlans.map((t) => ({ applicationId, ...t })),
@@ -730,7 +822,10 @@ async function createTabulationPlans(applicationId: string, tabulationPlans: Hde
  * COHORT rows first, so CONTROL/RELATIVE rows can resolve relatesToIndex to
  * a real database id via their self-relation.
  */
-export async function createStudyCohorts(applicationId: string, studyCohorts: HdeuStudyCohort[] | undefined) {
+export async function createStudyCohorts(
+  applicationId: string,
+  studyCohorts: HdeuStudyCohort[] | undefined,
+) {
   if (!studyCohorts || studyCohorts.length === 0) return;
 
   const idByIndex = new Map<number, string>();
@@ -767,7 +862,10 @@ export async function createStudyCohorts(applicationId: string, studyCohorts: Hd
       data: {
         applicationId,
         ...data,
-        relatesToId: relatesToIndex !== undefined ? idByIndex.get(relatesToIndex) : undefined,
+        relatesToId:
+          relatesToIndex !== undefined
+            ? idByIndex.get(relatesToIndex)
+            : undefined,
         cohortFormationMethod: data.cohortFormationMethod,
         extractionMethod: data.extractionMethod,
         extractionFrequency: data.extractionFrequency,
@@ -790,20 +888,36 @@ export async function createStudyCohorts(applicationId: string, studyCohorts: Hd
  * rather than one upsert per distinct name, mirroring the same pattern in
  * applications/route.ts's POST handler.
  */
-export async function createRequestedDatasets(applicationId: string, requestedDatasets: HdeuPayload['requestedDatasets']) {
+export async function createRequestedDatasets(
+  applicationId: string,
+  requestedDatasets: HdeuPayload['requestedDatasets'],
+) {
   if (requestedDatasets.length === 0) return;
 
-  const distinctNames = [...new Set(requestedDatasets.map((g) => g.dataHolderName))];
-  const existingDataHolders = await prisma.dataHolder.findMany({ where: { name: { in: distinctNames } } });
-  const missingNames = distinctNames.filter((n) => !existingDataHolders.some((dh) => dh.name === n));
+  const distinctNames = [
+    ...new Set(requestedDatasets.map((g) => g.dataHolderName)),
+  ];
+  const existingDataHolders = await prisma.dataHolder.findMany({
+    where: { name: { in: distinctNames } },
+  });
+  const missingNames = distinctNames.filter(
+    (n) => !existingDataHolders.some((dh) => dh.name === n),
+  );
   if (missingNames.length > 0) {
-    await prisma.dataHolder.createMany({ data: missingNames.map((name) => ({ name })), skipDuplicates: true });
+    await prisma.dataHolder.createMany({
+      data: missingNames.map((name) => ({ name })),
+      skipDuplicates: true,
+    });
   }
   const allDataHolders =
     missingNames.length > 0
-      ? await prisma.dataHolder.findMany({ where: { name: { in: distinctNames } } })
+      ? await prisma.dataHolder.findMany({
+          where: { name: { in: distinctNames } },
+        })
       : existingDataHolders;
-  const dataHolderIdsByName = new Map(allDataHolders.map((dh) => [dh.name, dh.id]));
+  const dataHolderIdsByName = new Map(
+    allDataHolders.map((dh) => [dh.name, dh.id]),
+  );
 
   await prisma.requestedDataset.createMany({
     data: requestedDatasets.flatMap((g) =>
@@ -814,7 +928,10 @@ export async function createRequestedDatasets(applicationId: string, requestedDa
         url: d.url || null,
         datasetId: d.datasetId || null,
         catalogId: d.catalogId || null,
-        distributions: d.distributions && d.distributions.length > 0 ? d.distributions : undefined,
+        distributions:
+          d.distributions && d.distributions.length > 0
+            ? d.distributions
+            : undefined,
       })),
     ),
   });
@@ -839,7 +956,9 @@ export function describeOtherCountryHdabContacts(
   );
   if (otherCountryCohorts.length === 0) return null;
   return otherCountryCohorts
-    .map((c) => (c.hdabContacts ? `${c.countryId} (${c.hdabContacts})` : c.countryId))
+    .map((c) =>
+      c.hdabContacts ? `${c.countryId} (${c.hdabContacts})` : c.countryId,
+    )
     .join(', ');
 }
 
@@ -852,7 +971,11 @@ export async function createApplicationFromHdeuPayload(
     where: { hdeuApplicationId: p.hdeuApplicationId },
   });
   if (existing) {
-    return { ok: false, status: 409, error: `Already imported as ${existing.referenceNumber}` };
+    return {
+      ok: false,
+      status: 409,
+      error: `Already imported as ${existing.referenceNumber}`,
+    };
   }
 
   const applicant = await resolveOrCreateApplicant(p);
@@ -861,7 +984,8 @@ export async function createApplicationFromHdeuPayload(
     return {
       ok: false,
       status: 500,
-      error: 'No HDAB staff user found to attribute the import. Seed the database first.',
+      error:
+        'No HDAB staff user found to attribute the import. Seed the database first.',
     };
   }
 
@@ -871,7 +995,14 @@ export async function createApplicationFromHdeuPayload(
   const referenceNumber = `HDAB-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`;
 
   const application = await prisma.application.create({
-    data: buildApplicationCreateData(p, rawPayload, applicant.id, referenceNumber, transmittedAt, receivedAt),
+    data: buildApplicationCreateData(
+      p,
+      rawPayload,
+      applicant.id,
+      referenceNumber,
+      transmittedAt,
+      receivedAt,
+    ),
   });
 
   await createInvoicingDetails(application.id, p.invoicingDetails);
@@ -882,7 +1013,10 @@ export async function createApplicationFromHdeuPayload(
   await createStudyCohorts(application.id, p.studyCohorts);
   await createRequestedDatasets(application.id, p.requestedDatasets);
 
-  const otherCountryHdabs = describeOtherCountryHdabContacts(p.studyCohorts, p.sendingCountry);
+  const otherCountryHdabs = describeOtherCountryHdabContacts(
+    p.studyCohorts,
+    p.sendingCountry,
+  );
 
   await prisma.applicationLog.create({
     data: {

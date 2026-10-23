@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
+import {
+  render,
+  screen,
+  fireEvent,
+  cleanup,
+  waitFor,
+} from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import type { ComponentProps } from 'react';
 import { MasterdataManager } from './MasterdataManager';
@@ -53,15 +59,34 @@ describe('MasterdataManager — empty / listing', () => {
 
   it('renders the entity name and contact name/email/phone as mailto/tel links', () => {
     const entity = makeEntity({
-      contacts: [{ role: 'PRIMARY', name: 'J. de Boer', email: 'j.deboer@example.nl', phone: '0612345678' }],
+      contacts: [
+        {
+          role: 'PRIMARY',
+          name: 'J. de Boer',
+          email: 'j.deboer@example.nl',
+          phone: '0612345678',
+        },
+      ],
     });
     render(
-      <MasterdataManager apiBasePath="/api/data-holders" namespace="dataHolders" entities={[entity]} isAdmin={false} currentUserId="u-1" />,
+      <MasterdataManager
+        apiBasePath="/api/data-holders"
+        namespace="dataHolders"
+        entities={[entity]}
+        isAdmin={false}
+        currentUserId="u-1"
+      />,
     );
     expect(screen.getByText('GP Information Network')).toBeInTheDocument();
     expect(screen.getByText('J. de Boer')).toBeInTheDocument();
-    expect(screen.getByText('j.deboer@example.nl')).toHaveAttribute('href', 'mailto:j.deboer@example.nl');
-    expect(screen.getByText('0612345678')).toHaveAttribute('href', 'tel:0612345678');
+    expect(screen.getByText('j.deboer@example.nl')).toHaveAttribute(
+      'href',
+      'mailto:j.deboer@example.nl',
+    );
+    expect(screen.getByText('0612345678')).toHaveAttribute(
+      'href',
+      'tel:0612345678',
+    );
   });
 
   it('shows the trusted badge only when hasTrustedFlag and the entity is trusted', () => {
@@ -96,13 +121,17 @@ describe('MasterdataManager — empty / listing', () => {
       <MasterdataManager
         apiBasePath="/api/spe-types"
         namespace="speTypes"
-        entities={[makeEntity({ speProvider: { name: 'SURF Research Cloud' } })]}
+        entities={[
+          makeEntity({ speProvider: { name: 'SURF Research Cloud' } }),
+        ]}
         relationOptions={relationOptions}
         isAdmin={false}
         currentUserId="u-1"
       />,
     );
-    expect(screen.getByText('providerLabel: SURF Research Cloud')).toBeInTheDocument();
+    expect(
+      screen.getByText('providerLabel: SURF Research Cloud'),
+    ).toBeInTheDocument();
 
     rerender(
       <MasterdataManager
@@ -164,7 +193,13 @@ describe('MasterdataManager — empty / listing', () => {
 describe('MasterdataManager — admin-only controls', () => {
   it('hides edit/delete and "+ addNew" for a non-admin', () => {
     render(
-      <MasterdataManager apiBasePath="/api/data-holders" namespace="dataHolders" entities={[makeEntity()]} isAdmin={false} currentUserId="u-1" />,
+      <MasterdataManager
+        apiBasePath="/api/data-holders"
+        namespace="dataHolders"
+        entities={[makeEntity()]}
+        isAdmin={false}
+        currentUserId="u-1"
+      />,
     );
     expect(screen.queryByText('edit')).not.toBeInTheDocument();
     expect(screen.queryByText('delete')).not.toBeInTheDocument();
@@ -173,7 +208,13 @@ describe('MasterdataManager — admin-only controls', () => {
 
   it('shows edit/delete and "+ addNew" for an admin', () => {
     render(
-      <MasterdataManager apiBasePath="/api/data-holders" namespace="dataHolders" entities={[makeEntity()]} isAdmin={true} currentUserId="u-1" />,
+      <MasterdataManager
+        apiBasePath="/api/data-holders"
+        namespace="dataHolders"
+        entities={[makeEntity()]}
+        isAdmin={true}
+        currentUserId="u-1"
+      />,
     );
     expect(screen.getByText('edit')).toBeInTheDocument();
     expect(screen.getByText('delete')).toBeInTheDocument();
@@ -184,15 +225,25 @@ describe('MasterdataManager — admin-only controls', () => {
 describe('MasterdataManager — Dutch phone validation', () => {
   it('shows the invalid hint and disables save for a malformed phone, and clears it for a valid one', () => {
     render(
-      <MasterdataManager apiBasePath="/api/data-holders" namespace="dataHolders" entities={[makeEntity()]} isAdmin={true} currentUserId="u-1" />,
+      <MasterdataManager
+        apiBasePath="/api/data-holders"
+        namespace="dataHolders"
+        entities={[makeEntity()]}
+        isAdmin={true}
+        currentUserId="u-1"
+      />,
     );
     fireEvent.click(screen.getByText('edit'));
 
-    fireEvent.change(screen.getByPlaceholderText('contactPhone'), { target: { value: '12345' } });
+    fireEvent.change(screen.getByPlaceholderText('contactPhone'), {
+      target: { value: '12345' },
+    });
     expect(screen.getByText('contactPhoneInvalid')).toBeInTheDocument();
     expect(screen.getByText('save')).toBeDisabled();
 
-    fireEvent.change(screen.getByPlaceholderText('contactPhone'), { target: { value: '0612345678' } });
+    fireEvent.change(screen.getByPlaceholderText('contactPhone'), {
+      target: { value: '0612345678' },
+    });
     expect(screen.getByText('contactPhoneHint')).toBeInTheDocument();
     expect(screen.getByText('save')).not.toBeDisabled();
   });
@@ -201,23 +252,43 @@ describe('MasterdataManager — Dutch phone validation', () => {
 describe('MasterdataManager — edit flow', () => {
   it('prefills the edit form and cancels without submitting', () => {
     const entity = makeEntity({
-      contacts: [{ role: 'PRIMARY', name: 'J. de Boer', email: 'j@example.nl', phone: '0612345678' }],
+      contacts: [
+        {
+          role: 'PRIMARY',
+          name: 'J. de Boer',
+          email: 'j@example.nl',
+          phone: '0612345678',
+        },
+      ],
     });
     render(
-      <MasterdataManager apiBasePath="/api/data-holders" namespace="dataHolders" entities={[entity]} isAdmin={true} currentUserId="u-1" />,
+      <MasterdataManager
+        apiBasePath="/api/data-holders"
+        namespace="dataHolders"
+        entities={[entity]}
+        isAdmin={true}
+        currentUserId="u-1"
+      />,
     );
     fireEvent.click(screen.getByText('edit'));
-    expect(screen.getByDisplayValue('GP Information Network')).toBeInTheDocument();
+    expect(
+      screen.getByDisplayValue('GP Information Network'),
+    ).toBeInTheDocument();
     expect(screen.getByDisplayValue('j@example.nl')).toBeInTheDocument();
     expect(screen.getByDisplayValue('0612345678')).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('cancel'));
-    expect(screen.queryByDisplayValue('GP Information Network')).not.toBeInTheDocument();
+    expect(
+      screen.queryByDisplayValue('GP Information Network'),
+    ).not.toBeInTheDocument();
     expect(screen.getByText('GP Information Network')).toBeInTheDocument();
   });
 
   it('saves with the full payload (provider, trusted flag, billing fields) and refreshes on success', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }),
+    );
     const relationOptions = [{ id: 'op-1', name: 'SURF Research Cloud' }];
     const entity = makeEntity({ speProviderId: '', isTrusted: false });
 
@@ -235,12 +306,18 @@ describe('MasterdataManager — edit flow', () => {
     );
     fireEvent.click(screen.getByText('edit'));
 
-    fireEvent.change(screen.getByPlaceholderText('contactEmail'), { target: { value: 'contact@surf.nl' } });
-    fireEvent.change(screen.getByDisplayValue('providerLabel...'), { target: { value: 'op-1' } });
+    fireEvent.change(screen.getByPlaceholderText('contactEmail'), {
+      target: { value: 'contact@surf.nl' },
+    });
+    fireEvent.change(screen.getByDisplayValue('providerLabel...'), {
+      target: { value: 'op-1' },
+    });
     // Click the checkbox input directly rather than its wrapping <label> text —
     // avoids depending on jsdom's label-click delegation behaving like a browser.
     fireEvent.click(container.querySelector('input[type="checkbox"]')!);
-    fireEvent.change(screen.getByPlaceholderText('businessId'), { target: { value: 'BIZ-123' } });
+    fireEvent.change(screen.getByPlaceholderText('businessId'), {
+      target: { value: 'BIZ-123' },
+    });
     fireEvent.click(screen.getByText('invoiceTypeElectronic'));
 
     fireEvent.click(screen.getByText('save'));
@@ -275,9 +352,21 @@ describe('MasterdataManager — edit flow', () => {
   });
 
   it('shows the server error message and does not refresh when the save fails', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, json: async () => ({ error: 'Name already in use' }) }));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        json: async () => ({ error: 'Name already in use' }),
+      }),
+    );
     render(
-      <MasterdataManager apiBasePath="/api/data-holders" namespace="dataHolders" entities={[makeEntity()]} isAdmin={true} currentUserId="u-1" />,
+      <MasterdataManager
+        apiBasePath="/api/data-holders"
+        namespace="dataHolders"
+        entities={[makeEntity()]}
+        isAdmin={true}
+        currentUserId="u-1"
+      />,
     );
     fireEvent.click(screen.getByText('edit'));
     fireEvent.click(screen.getByText('save'));
@@ -289,9 +378,18 @@ describe('MasterdataManager — edit flow', () => {
 
 describe('MasterdataManager — delete flow', () => {
   it('deletes an entity and refreshes on success', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }),
+    );
     render(
-      <MasterdataManager apiBasePath="/api/data-holders" namespace="dataHolders" entities={[makeEntity()]} isAdmin={true} currentUserId="u-1" />,
+      <MasterdataManager
+        apiBasePath="/api/data-holders"
+        namespace="dataHolders"
+        entities={[makeEntity()]}
+        isAdmin={true}
+        currentUserId="u-1"
+      />,
     );
     fireEvent.click(screen.getByText('delete'));
 
@@ -307,15 +405,28 @@ describe('MasterdataManager — delete flow', () => {
 
 describe('MasterdataManager — add flow', () => {
   it('disables submit until a name is entered, then creates the entity and resets/closes the form', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }),
+    );
     render(
-      <MasterdataManager apiBasePath="/api/data-holders" namespace="dataHolders" entities={[]} isAdmin={true} currentUserId="u-1" />,
+      <MasterdataManager
+        apiBasePath="/api/data-holders"
+        namespace="dataHolders"
+        entities={[]}
+        isAdmin={true}
+        currentUserId="u-1"
+      />,
     );
     fireEvent.click(screen.getByText('+ addNew'));
     expect(screen.getByText('addNew')).toBeDisabled();
 
-    fireEvent.change(screen.getByPlaceholderText('name'), { target: { value: 'New Data Holder' } });
-    fireEvent.change(screen.getByPlaceholderText('contactEmail'), { target: { value: 'info@newdh.nl' } });
+    fireEvent.change(screen.getByPlaceholderText('name'), {
+      target: { value: 'New Data Holder' },
+    });
+    fireEvent.change(screen.getByPlaceholderText('contactEmail'), {
+      target: { value: 'info@newdh.nl' },
+    });
     expect(screen.getByText('addNew')).not.toBeDisabled();
 
     fireEvent.click(screen.getByText('addNew'));
@@ -341,10 +452,18 @@ describe('MasterdataManager — add flow', () => {
 
   it('cancels the add form without submitting', () => {
     render(
-      <MasterdataManager apiBasePath="/api/data-holders" namespace="dataHolders" entities={[]} isAdmin={true} currentUserId="u-1" />,
+      <MasterdataManager
+        apiBasePath="/api/data-holders"
+        namespace="dataHolders"
+        entities={[]}
+        isAdmin={true}
+        currentUserId="u-1"
+      />,
     );
     fireEvent.click(screen.getByText('+ addNew'));
-    fireEvent.change(screen.getByPlaceholderText('name'), { target: { value: 'Should be discarded' } });
+    fireEvent.change(screen.getByPlaceholderText('name'), {
+      target: { value: 'Should be discarded' },
+    });
     fireEvent.click(screen.getByText('cancel'));
     expect(screen.queryByPlaceholderText('name')).not.toBeInTheDocument();
     expect(screen.getByText('+ addNew')).toBeInTheDocument();

@@ -15,7 +15,9 @@ afterEach(cleanup);
 type StudyCohorts = ComponentProps<typeof StudyCohortExplorer>['studyCohorts'];
 type Attachments = ComponentProps<typeof StudyCohortExplorer>['attachments'];
 
-function makeCohort(overrides: Partial<StudyCohorts[number]> = {}): StudyCohorts[number] {
+function makeCohort(
+  overrides: Partial<StudyCohorts[number]> = {},
+): StudyCohorts[number] {
   return {
     id: 'sc-1',
     countryId: 'NL',
@@ -73,20 +75,35 @@ describe('StudyCohortExplorer — country switcher', () => {
   it('shows no country buttons for a single country, and switches base heading for multiple', () => {
     const single = [makeCohort({ countryId: 'NL' })];
     const { rerender } = render(
-      <StudyCohortExplorer studyCohorts={single} includesControls={false} includesRelatives={false} attachments={[] as Attachments} />,
+      <StudyCohortExplorer
+        studyCohorts={single}
+        includesControls={false}
+        includesRelatives={false}
+        attachments={[] as Attachments}
+      />,
     );
     // Only one country -> no pill buttons, but base tab (default) still shows.
     expect(screen.queryByText('NL')).not.toBeInTheDocument();
 
-    const multi = [makeCohort({ countryId: 'NL' }), makeCohort({ id: 'sc-2', countryId: 'DE' })];
+    const multi = [
+      makeCohort({ countryId: 'NL' }),
+      makeCohort({ id: 'sc-2', countryId: 'DE' }),
+    ];
     rerender(
-      <StudyCohortExplorer studyCohorts={multi} includesControls={false} includesRelatives={false} attachments={[] as Attachments} />,
+      <StudyCohortExplorer
+        studyCohorts={multi}
+        includesControls={false}
+        includesRelatives={false}
+        attachments={[] as Attachments}
+      />,
     );
     expect(screen.getByText('NL')).toBeInTheDocument();
     expect(screen.getByText('DE')).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('DE'));
-    expect(screen.getByText('section6BaseHeading:{"country":"DE"}')).toBeInTheDocument();
+    expect(
+      screen.getByText('section6BaseHeading:{"country":"DE"}'),
+    ).toBeInTheDocument();
   });
 });
 
@@ -106,7 +123,12 @@ describe('StudyCohortExplorer — base tab', () => {
   it('renders base fields when present', () => {
     render(
       <StudyCohortExplorer
-        studyCohorts={[makeCohort({ hdabContacts: 'Dr. Jansen', dataSubjectsInformed: true })]}
+        studyCohorts={[
+          makeCohort({
+            hdabContacts: 'Dr. Jansen',
+            dataSubjectsInformed: true,
+          }),
+        ]}
         includesControls={false}
         includesRelatives={false}
         attachments={[] as Attachments}
@@ -161,10 +183,20 @@ describe('StudyCohortExplorer — tab navigation', () => {
   it('6.2 tab renders control-specific extra fields (matchingCriteria) when includesControls is true and a CONTROL row exists', () => {
     const cohorts = [
       makeCohort({ role: 'COHORT' }),
-      makeCohort({ id: 'sc-control', role: 'CONTROL', matchingCriteria: 'Age and sex matched', controlsPerCohortPerson: '2' }),
+      makeCohort({
+        id: 'sc-control',
+        role: 'CONTROL',
+        matchingCriteria: 'Age and sex matched',
+        controlsPerCohortPerson: '2',
+      }),
     ];
     render(
-      <StudyCohortExplorer studyCohorts={cohorts} includesControls={true} includesRelatives={false} attachments={[] as Attachments} />,
+      <StudyCohortExplorer
+        studyCohorts={cohorts}
+        includesControls={true}
+        includesRelatives={false}
+        attachments={[] as Attachments}
+      />,
     );
     fireEvent.click(screen.getByText('section62Tab'));
     expect(screen.getByText('yes')).toBeInTheDocument();
@@ -174,10 +206,19 @@ describe('StudyCohortExplorer — tab navigation', () => {
   it('6.3 tab renders relative-specific extra field (relationshipToSubject) when includesRelatives is true and a RELATIVE row exists', () => {
     const cohorts = [
       makeCohort({ role: 'COHORT' }),
-      makeCohort({ id: 'sc-relative', role: 'RELATIVE', relationshipToSubject: 'Sibling' }),
+      makeCohort({
+        id: 'sc-relative',
+        role: 'RELATIVE',
+        relationshipToSubject: 'Sibling',
+      }),
     ];
     render(
-      <StudyCohortExplorer studyCohorts={cohorts} includesControls={false} includesRelatives={true} attachments={[] as Attachments} />,
+      <StudyCohortExplorer
+        studyCohorts={cohorts}
+        includesControls={false}
+        includesRelatives={true}
+        attachments={[] as Attachments}
+      />,
     );
     fireEvent.click(screen.getByText('section63Tab'));
     expect(screen.getByText('Sibling')).toBeInTheDocument();
@@ -190,10 +231,18 @@ describe('StudyCohortExplorer — attachment link', () => {
       { id: 'att-1', description: 'ncp-var-ref-1', filename: 'variables.pdf' },
     ] as unknown as Attachments;
     const cohorts = [
-      makeCohort({ variablesAttachmentId: 'ncp-var-ref-1', variablesAttachmentRef: 'variables.pdf' }),
+      makeCohort({
+        variablesAttachmentId: 'ncp-var-ref-1',
+        variablesAttachmentRef: 'variables.pdf',
+      }),
     ];
     render(
-      <StudyCohortExplorer studyCohorts={cohorts} includesControls={false} includesRelatives={false} attachments={attachments} />,
+      <StudyCohortExplorer
+        studyCohorts={cohorts}
+        includesControls={false}
+        includesRelatives={false}
+        attachments={attachments}
+      />,
     );
     fireEvent.click(screen.getByText('section61Tab'));
     const link = screen.getByText('variables.pdf');

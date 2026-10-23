@@ -14,20 +14,32 @@ import { actingUserId } from '@/auth';
  * surfaced as overdue, completed via the normal action).
  * body: { status: 'ACCEPTED' | 'DECLINED', comment? }
  */
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await params;
     const body = await req.json();
 
-    const auth = await requireRole(await actingUserId(), ['APPLICANT', 'CASE_HANDLER', 'ADMIN']);
-    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+    const auth = await requireRole(await actingUserId(), [
+      'APPLICANT',
+      'CASE_HANDLER',
+      'ADMIN',
+    ]);
+    if (!auth.ok)
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     if (body.status !== 'ACCEPTED' && body.status !== 'DECLINED') {
-      return NextResponse.json({ error: 'status must be ACCEPTED or DECLINED' }, { status: 422 });
+      return NextResponse.json(
+        { error: 'status must be ACCEPTED or DECLINED' },
+        { status: 422 },
+      );
     }
 
     const application = await prisma.application.findUnique({ where: { id } });
-    if (!application) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    if (!application)
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
     if (
       application.status !== 'DECISION_ISSUED' ||
       application.decisionOutcome !== 'POSITIVE' ||
@@ -43,7 +55,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const applicationUpdate =
       body.status === 'ACCEPTED'
         ? { permitAcceptanceStatus: 'ACCEPTED' as const, permitAcceptedAt: now }
-        : { permitAcceptanceStatus: 'DECLINED' as const, status: 'WITHDRAWN' as const };
+        : {
+            permitAcceptanceStatus: 'DECLINED' as const,
+            status: 'WITHDRAWN' as const,
+          };
 
     const [updated] = await prisma.$transaction([
       prisma.application.update({ where: { id }, data: applicationUpdate }),
@@ -52,8 +67,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           applicationId: id,
           userId: auth.user.id,
           fromStatus: application.status,
-          toStatus: body.status === 'DECLINED' ? 'WITHDRAWN' : application.status,
-          action: body.status === 'ACCEPTED' ? 'Pre-permit accepted' : 'Pre-permit declined — application withdrawn',
+          toStatus:
+            body.status === 'DECLINED' ? 'WITHDRAWN' : application.status,
+          action:
+            body.status === 'ACCEPTED'
+              ? 'Pre-permit accepted'
+              : 'Pre-permit declined — application withdrawn',
           comment: body.comment ?? null,
         },
       }),
@@ -62,7 +81,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json(updated);
   } catch (e) {
     console.error('Failed to record pre-permit response', e);
-    const message = e instanceof Error ? e.message : 'Failed to record pre-permit response';
+    const message =
+      e instanceof Error ? e.message : 'Failed to record pre-permit response';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

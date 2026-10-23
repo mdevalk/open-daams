@@ -43,13 +43,45 @@ beforeEach(() => {
 describe('snapshotLineItems', () => {
   it('copies category/glCode/description/amount/currency/applicationId/dataHolderId, dropping identity fields', () => {
     const source = [
-      { category: 'ADMINISTRATIVE', glCode: '4010', description: null, amount: 100, currency: 'EUR', applicationId: 'app1', dataHolderId: null },
-      { category: 'DATA_HOLDER', glCode: '4030', description: null, amount: 250.5, currency: 'EUR', applicationId: 'app1', dataHolderId: 'dh1' },
+      {
+        category: 'ADMINISTRATIVE',
+        glCode: '4010',
+        description: null,
+        amount: 100,
+        currency: 'EUR',
+        applicationId: 'app1',
+        dataHolderId: null,
+      },
+      {
+        category: 'DATA_HOLDER',
+        glCode: '4030',
+        description: null,
+        amount: 250.5,
+        currency: 'EUR',
+        applicationId: 'app1',
+        dataHolderId: 'dh1',
+      },
     ] as unknown as SourceLineItem[];
 
     expect(snapshotLineItems(source)).toEqual([
-      { category: 'ADMINISTRATIVE', glCode: '4010', description: null, amount: 100, currency: 'EUR', applicationId: 'app1', dataHolderId: null },
-      { category: 'DATA_HOLDER', glCode: '4030', description: null, amount: 250.5, currency: 'EUR', applicationId: 'app1', dataHolderId: 'dh1' },
+      {
+        category: 'ADMINISTRATIVE',
+        glCode: '4010',
+        description: null,
+        amount: 100,
+        currency: 'EUR',
+        applicationId: 'app1',
+        dataHolderId: null,
+      },
+      {
+        category: 'DATA_HOLDER',
+        glCode: '4030',
+        description: null,
+        amount: 250.5,
+        currency: 'EUR',
+        applicationId: 'app1',
+        dataHolderId: 'dh1',
+      },
     ]);
   });
 
@@ -83,10 +115,22 @@ describe('groupByDataHolder', () => {
 });
 
 describe('determineOutstandingInvoiceGroups', () => {
-  const applicantItem = { category: 'ADMINISTRATIVE', dataHolderId: null } as unknown as SourceLineItem;
-  const holder1Item = { category: 'DATA_HOLDER', dataHolderId: 'dh1' } as unknown as SourceLineItem;
-  const holder2Item = { category: 'DATA_HOLDER', dataHolderId: 'dh2' } as unknown as SourceLineItem;
-  const speItem = { category: 'SPE_SETUP', dataHolderId: null } as unknown as SourceLineItem;
+  const applicantItem = {
+    category: 'ADMINISTRATIVE',
+    dataHolderId: null,
+  } as unknown as SourceLineItem;
+  const holder1Item = {
+    category: 'DATA_HOLDER',
+    dataHolderId: 'dh1',
+  } as unknown as SourceLineItem;
+  const holder2Item = {
+    category: 'DATA_HOLDER',
+    dataHolderId: 'dh2',
+  } as unknown as SourceLineItem;
+  const speItem = {
+    category: 'SPE_SETUP',
+    dataHolderId: null,
+  } as unknown as SourceLineItem;
 
   it('returns an applicant, one group per data holder, and an SPE group when nothing is billed yet', () => {
     const groups = determineOutstandingInvoiceGroups({
@@ -96,9 +140,20 @@ describe('determineOutstandingInvoiceGroups', () => {
     });
 
     expect(groups).toEqual([
-      { recipientType: 'APPLICANT', items: [applicantItem, holder1Item, holder2Item, speItem] },
-      { recipientType: 'DATA_HOLDER', dataHolderId: 'dh1', items: [holder1Item] },
-      { recipientType: 'DATA_HOLDER', dataHolderId: 'dh2', items: [holder2Item] },
+      {
+        recipientType: 'APPLICANT',
+        items: [applicantItem, holder1Item, holder2Item, speItem],
+      },
+      {
+        recipientType: 'DATA_HOLDER',
+        dataHolderId: 'dh1',
+        items: [holder1Item],
+      },
+      {
+        recipientType: 'DATA_HOLDER',
+        dataHolderId: 'dh2',
+        items: [holder2Item],
+      },
       { recipientType: 'SPE_OPERATOR', speOperatorId: 'op1', items: [speItem] },
     ]);
   });
@@ -122,7 +177,11 @@ describe('determineOutstandingInvoiceGroups', () => {
 
     expect(groups).toEqual([
       { recipientType: 'APPLICANT', items: [holder1Item, holder2Item] },
-      { recipientType: 'DATA_HOLDER', dataHolderId: 'dh2', items: [holder2Item] },
+      {
+        recipientType: 'DATA_HOLDER',
+        dataHolderId: 'dh2',
+        items: [holder2Item],
+      },
     ]);
   });
 
@@ -148,7 +207,11 @@ describe('determineOutstandingInvoiceGroups', () => {
 
   it('returns nothing for an empty line-item list', () => {
     expect(
-      determineOutstandingInvoiceGroups({ lineItems: [], existingInvoices: [], speOperatorId: 'op1' }),
+      determineOutstandingInvoiceGroups({
+        lineItems: [],
+        existingInvoices: [],
+        speOperatorId: 'op1',
+      }),
     ).toEqual([]);
   });
 });
@@ -156,7 +219,10 @@ describe('determineOutstandingInvoiceGroups', () => {
 describe('sumLineItems', () => {
   it('sums the amounts across line items', () => {
     expect(
-      sumLineItems([{ amount: 100 }, { amount: 250.5 }] as unknown as SourceLineItem[]),
+      sumLineItems([
+        { amount: 100 },
+        { amount: 250.5 },
+      ] as unknown as SourceLineItem[]),
     ).toBe(350.5);
   });
 
@@ -170,11 +236,15 @@ describe('calculateDueDate', () => {
   // Date constructor (not a UTC-midnight ISO string) to stay correct
   // regardless of the test runner's timezone.
   it('defaults to a 30-day payment term', () => {
-    expect(calculateDueDate(new Date(2026, 0, 1))).toEqual(new Date(2026, 0, 31));
+    expect(calculateDueDate(new Date(2026, 0, 1))).toEqual(
+      new Date(2026, 0, 31),
+    );
   });
 
   it('accepts a custom term', () => {
-    expect(calculateDueDate(new Date(2026, 0, 1), 10)).toEqual(new Date(2026, 0, 11));
+    expect(calculateDueDate(new Date(2026, 0, 1), 10)).toEqual(
+      new Date(2026, 0, 11),
+    );
   });
 });
 
@@ -197,7 +267,14 @@ describe('groupInvoicesByPermitOrApplication', () => {
   }
 
   it('groups by permitId when set', () => {
-    const permit = { id: 'permit-1', application: { referenceNumber: 'HDAB-1', title: 'Study A', applicant: { name: 'A. de Vries' } } };
+    const permit = {
+      id: 'permit-1',
+      application: {
+        referenceNumber: 'HDAB-1',
+        title: 'Study A',
+        applicant: { name: 'A. de Vries' },
+      },
+    };
     const groups = groupInvoicesByPermitOrApplication([
       invoice({ id: 'inv-1', permit }),
       invoice({ id: 'inv-2', permit }),
@@ -209,22 +286,38 @@ describe('groupInvoicesByPermitOrApplication', () => {
   });
 
   it('falls back to applicationId for provisional (pre-permit) invoices', () => {
-    const application = { id: 'app-1', referenceNumber: 'HDAB-2', title: 'Study B', applicant: { name: 'M. Jansen' } };
-    const groups = groupInvoicesByPermitOrApplication([invoice({ id: 'inv-3', application })]);
+    const application = {
+      id: 'app-1',
+      referenceNumber: 'HDAB-2',
+      title: 'Study B',
+      applicant: { name: 'M. Jansen' },
+    };
+    const groups = groupInvoicesByPermitOrApplication([
+      invoice({ id: 'inv-3', application }),
+    ]);
     expect(groups).toHaveLength(1);
     expect(groups[0].key).toBe('application-app-1');
     expect(groups[0].reference).toBe('M. Jansen — HDAB-2 — Study B');
   });
 
   it('preserves iteration order across distinct groups', () => {
-    const permitA = { id: 'permit-A', application: { referenceNumber: 'A', title: 'A', applicant: null } };
-    const permitB = { id: 'permit-B', application: { referenceNumber: 'B', title: 'B', applicant: null } };
+    const permitA = {
+      id: 'permit-A',
+      application: { referenceNumber: 'A', title: 'A', applicant: null },
+    };
+    const permitB = {
+      id: 'permit-B',
+      application: { referenceNumber: 'B', title: 'B', applicant: null },
+    };
     const groups = groupInvoicesByPermitOrApplication([
       invoice({ id: 'inv-1', permit: permitA }),
       invoice({ id: 'inv-2', permit: permitB }),
       invoice({ id: 'inv-3', permit: permitA }),
     ]);
-    expect(groups.map((g) => g.key)).toEqual(['permit-permit-A', 'permit-permit-B']);
+    expect(groups.map((g) => g.key)).toEqual([
+      'permit-permit-A',
+      'permit-permit-B',
+    ]);
     expect(groups[0].invoices).toHaveLength(2);
   });
 });
@@ -235,22 +328,34 @@ describe('buildInvoiceWhereClause', () => {
   });
 
   it('filters by status', () => {
-    expect(buildInvoiceWhereClause({ status: 'PAID' })).toEqual({ status: 'PAID' });
+    expect(buildInvoiceWhereClause({ status: 'PAID' })).toEqual({
+      status: 'PAID',
+    });
   });
 
   it('filters overdue invoices regardless of the status param', () => {
     const where = buildInvoiceWhereClause({ overdue: '1' });
-    expect(where).toMatchObject({ status: 'ISSUED', dueAt: { lt: expect.any(Date) } });
+    expect(where).toMatchObject({
+      status: 'ISSUED',
+      dueAt: { lt: expect.any(Date) },
+    });
   });
 
   it('filters by permitId', () => {
-    expect(buildInvoiceWhereClause({ permitId: 'permit-1' })).toEqual({ permitId: 'permit-1' });
+    expect(buildInvoiceWhereClause({ permitId: 'permit-1' })).toEqual({
+      permitId: 'permit-1',
+    });
   });
 });
 
 describe('buildInvoiceStatusCounts', () => {
   it('maps groupBy count rows into a status -> count record', () => {
-    expect(buildInvoiceStatusCounts([{ status: 'ISSUED', _count: 3 }, { status: 'PAID', _count: 5 }])).toEqual({
+    expect(
+      buildInvoiceStatusCounts([
+        { status: 'ISSUED', _count: 3 },
+        { status: 'PAID', _count: 5 },
+      ]),
+    ).toEqual({
       ISSUED: 3,
       PAID: 5,
     });
@@ -272,7 +377,11 @@ describe('buildInvoiceStatusSums', () => {
   });
 
   it('treats a null sum as 0', () => {
-    expect(buildInvoiceStatusSums([{ status: 'DRAFT', _sum: { totalAmount: null } }])).toEqual({ DRAFT: 0 });
+    expect(
+      buildInvoiceStatusSums([
+        { status: 'DRAFT', _sum: { totalAmount: null } },
+      ]),
+    ).toEqual({ DRAFT: 0 });
   });
 });
 
@@ -288,13 +397,28 @@ describe('resolveActiveTab', () => {
   });
 });
 
-function makeInvoice(overrides: Partial<{ id: string; status: string; invoiceNumber: string }> = {}) {
-  return { id: 'inv-1', status: 'ISSUED', invoiceNumber: 'INV-NL-2026-0001', ...overrides } as never;
+function makeInvoice(
+  overrides: Partial<{
+    id: string;
+    status: string;
+    invoiceNumber: string;
+  }> = {},
+) {
+  return {
+    id: 'inv-1',
+    status: 'ISSUED',
+    invoiceNumber: 'INV-NL-2026-0001',
+    ...overrides,
+  } as never;
 }
 
 describe('updateInvoiceStatus', () => {
   it('returns the authz error, unmodified, when mark_paid is not permitted', async () => {
-    mockRequireRole.mockResolvedValue({ ok: false, status: 403, error: 'not allowed' });
+    mockRequireRole.mockResolvedValue({
+      ok: false,
+      status: 403,
+      error: 'not allowed',
+    });
     const res = await updateInvoiceStatus(makeInvoice(), 'mark_paid');
     expect(res.status).toBe(403);
     expect(await res.json()).toEqual({ error: 'not allowed' });
@@ -302,14 +426,23 @@ describe('updateInvoiceStatus', () => {
   });
 
   it('rejects mark_paid on an invoice that is not ISSUED', async () => {
-    mockRequireRole.mockResolvedValue({ ok: true, user: { id: 'u1', role: 'ADMIN', name: 'A', email: 'a@b.c' } });
-    const res = await updateInvoiceStatus(makeInvoice({ status: 'CANCELLED' }), 'mark_paid');
+    mockRequireRole.mockResolvedValue({
+      ok: true,
+      user: { id: 'u1', role: 'ADMIN', name: 'A', email: 'a@b.c' },
+    });
+    const res = await updateInvoiceStatus(
+      makeInvoice({ status: 'CANCELLED' }),
+      'mark_paid',
+    );
     expect(res.status).toBe(422);
     expect(update).not.toHaveBeenCalled();
   });
 
   it('marks an ISSUED invoice paid and writes an audit log entry', async () => {
-    mockRequireRole.mockResolvedValue({ ok: true, user: { id: 'u1', role: 'ADMIN', name: 'A', email: 'a@b.c' } });
+    mockRequireRole.mockResolvedValue({
+      ok: true,
+      user: { id: 'u1', role: 'ADMIN', name: 'A', email: 'a@b.c' },
+    });
     update.mockResolvedValue(makeInvoice({ status: 'PAID' }));
     const res = await updateInvoiceStatus(makeInvoice(), 'mark_paid');
     expect(res.status).toBe(200);
@@ -318,23 +451,39 @@ describe('updateInvoiceStatus', () => {
       data: { status: 'PAID', paidAt: expect.any(Date) },
     });
     expect(auditCreate).toHaveBeenCalledWith({
-      data: expect.objectContaining({ userId: 'u1', entityType: 'Invoice', entityId: 'inv-1' }),
+      data: expect.objectContaining({
+        userId: 'u1',
+        entityType: 'Invoice',
+        entityId: 'inv-1',
+      }),
     });
   });
 
   it('rejects cancelling a PAID invoice', async () => {
-    mockRequireRole.mockResolvedValue({ ok: true, user: { id: 'u1', role: 'ADMIN', name: 'A', email: 'a@b.c' } });
-    const res = await updateInvoiceStatus(makeInvoice({ status: 'PAID' }), 'cancel');
+    mockRequireRole.mockResolvedValue({
+      ok: true,
+      user: { id: 'u1', role: 'ADMIN', name: 'A', email: 'a@b.c' },
+    });
+    const res = await updateInvoiceStatus(
+      makeInvoice({ status: 'PAID' }),
+      'cancel',
+    );
     expect(res.status).toBe(422);
     expect(update).not.toHaveBeenCalled();
   });
 
   it('cancels a non-PAID invoice and writes an audit log entry', async () => {
-    mockRequireRole.mockResolvedValue({ ok: true, user: { id: 'u1', role: 'DECISION_MAKER', name: 'A', email: 'a@b.c' } });
+    mockRequireRole.mockResolvedValue({
+      ok: true,
+      user: { id: 'u1', role: 'DECISION_MAKER', name: 'A', email: 'a@b.c' },
+    });
     update.mockResolvedValue(makeInvoice({ status: 'CANCELLED' }));
     const res = await updateInvoiceStatus(makeInvoice(), 'cancel');
     expect(res.status).toBe(200);
-    expect(update).toHaveBeenCalledWith({ where: { id: 'inv-1' }, data: { status: 'CANCELLED' } });
+    expect(update).toHaveBeenCalledWith({
+      where: { id: 'inv-1' },
+      data: { status: 'CANCELLED' },
+    });
     expect(auditCreate).toHaveBeenCalled();
   });
 

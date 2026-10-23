@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: open-daams — Permit Verification API
-  version: "0.1.0"
+  version: '0.1.0'
   description: |
     The public, unauthenticated subset of open-daams's API: the four endpoints that let any
     external party — a data holder, an SPE operator, an auditor, or the sibling
@@ -295,7 +295,15 @@ components:
 
     PermitStatusResponse:
       type: object
-      required: [permitNumber, currentVersion, status, revoked, revocationReason, revocationAt]
+      required:
+        [
+          permitNumber,
+          currentVersion,
+          status,
+          revoked,
+          revocationReason,
+          revocationAt,
+        ]
       properties:
         permitNumber:
           type: string

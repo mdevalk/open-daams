@@ -115,13 +115,13 @@ Design/gap detail lives in `docs/`: `d6.4-gap-analysis.md` (TEHDAS2 D6.4 v0.5 vs
 are the central platform / WP6.
 
 **Permit model (recent work):** the permit is an **append-only version chain** — an approved
-amendment / renewal / revocation-appeal creates a *new* `DataPermit` row (`version` + 1,
+amendment / renewal / revocation-appeal creates a _new_ `DataPermit` row (`version` + 1,
 `isCurrent`, `previousPermit` self-relation) rather than mutating in place. Two-axis lifecycle:
 `DataPermitStatus` (the permit's own status) vs `PermitChangeRequest` (the workflow). Full
 permit id renders as `DP-NL-2025-0001-v2` via `formatPermitId`.
 
 **i18n:** the tool chrome is localised (nl/en/fr) via next-intl message namespaces; permit
-*content* and the issued PDF stay in the issuing HDAB's language by design.
+_content_ and the issued PDF stay in the issuing HDAB's language by design.
 
 **Known open items:** server-side API error strings are still hardcoded EN/NL (client fallbacks
 are i18n'd via the `errors` namespace); IPR / trade secrets (Art. 52) is noted but not yet a

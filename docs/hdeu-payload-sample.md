@@ -12,6 +12,7 @@ catalogue, not personal or identifying information.
 
 Two fields are **not** static — `buildSamplePayload()` overrides them fresh on every load, so
 they won't match the values below when you actually click the button:
+
 - `hdeuApplicationId` — a new `crypto.randomUUID()` each time, so repeated demo runs never collide
   on the applicant-id dedup check.
 - `transmissionTimestamp` — set to `new Date().toISOString()` at load time.

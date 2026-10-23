@@ -53,7 +53,9 @@ export default async function PublicRegisterPage({
       </div>
 
       <section className="rounded-xl border border-gray-200 bg-white p-5">
-        <h2 className="font-semibold text-gray-900 mb-4">{t('applicationsTitle')}</h2>
+        <h2 className="font-semibold text-gray-900 mb-4">
+          {t('applicationsTitle')}
+        </h2>
         {publishedApplications.length === 0 ? (
           <p className="text-sm text-gray-500">{t('noApplications')}</p>
         ) : (
@@ -63,7 +65,9 @@ export default async function PublicRegisterPage({
                 <tr className="text-left text-gray-500 border-b border-gray-200">
                   <th className="py-2 pr-4 font-medium">{t('colReference')}</th>
                   <th className="py-2 pr-4 font-medium">{t('colTitle')}</th>
-                  <th className="py-2 pr-4 font-medium">{t('colOrganisation')}</th>
+                  <th className="py-2 pr-4 font-medium">
+                    {t('colOrganisation')}
+                  </th>
                   <th className="py-2 pr-4 font-medium">{t('colPurpose')}</th>
                   <th className="py-2 pr-4 font-medium">{t('colPublished')}</th>
                 </tr>
@@ -71,10 +75,16 @@ export default async function PublicRegisterPage({
               <tbody>
                 {publishedApplications.map((a) => (
                   <tr key={a.id} className="border-b border-gray-100">
-                    <td className="py-2 pr-4 font-mono text-xs">{a.referenceNumber}</td>
+                    <td className="py-2 pr-4 font-mono text-xs">
+                      {a.referenceNumber}
+                    </td>
                     <td className="py-2 pr-4">{a.title}</td>
-                    <td className="py-2 pr-4">{a.applicant.dataUser?.name ?? '—'}</td>
-                    <td className="py-2 pr-4">{purposeLabel(a.purposeCategory)}</td>
+                    <td className="py-2 pr-4">
+                      {a.applicant.dataUser?.name ?? '—'}
+                    </td>
+                    <td className="py-2 pr-4">
+                      {purposeLabel(a.purposeCategory)}
+                    </td>
                     <td className="py-2 pr-4">{formatDate(a.publishedAt)}</td>
                   </tr>
                 ))}
@@ -85,7 +95,9 @@ export default async function PublicRegisterPage({
       </section>
 
       <section className="rounded-xl border border-gray-200 bg-white p-5">
-        <h2 className="font-semibold text-gray-900 mb-4">{t('decisionsTitle')}</h2>
+        <h2 className="font-semibold text-gray-900 mb-4">
+          {t('decisionsTitle')}
+        </h2>
         {publishedDecisions.length === 0 ? (
           <p className="text-sm text-gray-500">{t('noDecisions')}</p>
         ) : (
@@ -95,7 +107,9 @@ export default async function PublicRegisterPage({
                 <tr className="text-left text-gray-500 border-b border-gray-200">
                   <th className="py-2 pr-4 font-medium">{t('colReference')}</th>
                   <th className="py-2 pr-4 font-medium">{t('colTitle')}</th>
-                  <th className="py-2 pr-4 font-medium">{t('colOrganisation')}</th>
+                  <th className="py-2 pr-4 font-medium">
+                    {t('colOrganisation')}
+                  </th>
                   <th className="py-2 pr-4 font-medium">{t('colDecision')}</th>
                   <th className="py-2 pr-4 font-medium">{t('colSummary')}</th>
                   <th className="py-2 pr-4 font-medium">{t('colPublished')}</th>
@@ -104,18 +118,32 @@ export default async function PublicRegisterPage({
               <tbody>
                 {publishedDecisions.map((a) => (
                   <tr key={a.id} className="border-b border-gray-100">
-                    <td className="py-2 pr-4 font-mono text-xs">{a.referenceNumber}</td>
+                    <td className="py-2 pr-4 font-mono text-xs">
+                      {a.referenceNumber}
+                    </td>
                     <td className="py-2 pr-4">{a.title}</td>
-                    <td className="py-2 pr-4">{a.applicant.dataUser?.name ?? '—'}</td>
                     <td className="py-2 pr-4">
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded ${
-                        a.decisionOutcome === 'POSITIVE' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
-                      }`}>
-                        {a.decisionOutcome === 'POSITIVE' ? t('positive') : t('negative')}
+                      {a.applicant.dataUser?.name ?? '—'}
+                    </td>
+                    <td className="py-2 pr-4">
+                      <span
+                        className={`text-xs font-medium px-2 py-0.5 rounded ${
+                          a.decisionOutcome === 'POSITIVE'
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : 'bg-red-100 text-red-700'
+                        }`}
+                      >
+                        {a.decisionOutcome === 'POSITIVE'
+                          ? t('positive')
+                          : t('negative')}
                       </span>
                     </td>
-                    <td className="py-2 pr-4 text-gray-600 max-w-xs">{a.decisionSummary || '—'}</td>
-                    <td className="py-2 pr-4">{formatDate(a.decisionPublishedAt)}</td>
+                    <td className="py-2 pr-4 text-gray-600 max-w-xs">
+                      {a.decisionSummary || '—'}
+                    </td>
+                    <td className="py-2 pr-4">
+                      {formatDate(a.decisionPublishedAt)}
+                    </td>
                   </tr>
                 ))}
               </tbody>

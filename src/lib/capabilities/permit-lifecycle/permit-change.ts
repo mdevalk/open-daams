@@ -1,4 +1,9 @@
-import { PermitChangeType, PermitChangeStatus, DataPermitStatus, UserRole } from '@prisma/client';
+import {
+  PermitChangeType,
+  PermitChangeStatus,
+  DataPermitStatus,
+  UserRole,
+} from '@prisma/client';
 
 /**
  * TEHDAS2 D6.4 §9.3/§9.4 — workflow for a change requested against an already-issued
@@ -25,7 +30,11 @@ export const CHANGE_STATUS_COLORS: Record<PermitChangeStatus, string> = {
 };
 
 // Staff may document a request; only decision makers approve/reject it.
-export const REQUEST_ROLES: UserRole[] = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'];
+export const REQUEST_ROLES: UserRole[] = [
+  'CASE_HANDLER',
+  'DECISION_MAKER',
+  'ADMIN',
+];
 export const DECIDE_ROLES: UserRole[] = ['DECISION_MAKER', 'ADMIN'];
 
 /**
@@ -33,7 +42,9 @@ export const DECIDE_ROLES: UserRole[] = ['DECISION_MAKER', 'ADMIN'];
  * - AMENDMENT / RENEWAL only while the permit is active; no second renewal after RENEWED.
  * - REVOCATION_APPEAL only when the permit is REVOKED.
  */
-export function requestableTypes(permitStatus: DataPermitStatus): PermitChangeType[] {
+export function requestableTypes(
+  permitStatus: DataPermitStatus,
+): PermitChangeType[] {
   switch (permitStatus) {
     case 'GRANTED':
     case 'AMENDED':
@@ -52,7 +63,10 @@ export function requestableTypes(permitStatus: DataPermitStatus): PermitChangeTy
  * version. Per D6.4 R9.3.6, approving an amendment, renewal or revocation appeal
  * generates an up-to-date permit version (new ID).
  */
-export const APPROVAL_EFFECT: Record<PermitChangeType, { to: DataPermitStatus; newVersion: boolean }> = {
+export const APPROVAL_EFFECT: Record<
+  PermitChangeType,
+  { to: DataPermitStatus; newVersion: boolean }
+> = {
   AMENDMENT: { to: 'AMENDED', newVersion: true },
   RENEWAL: { to: 'RENEWED', newVersion: true },
   REVOCATION_APPEAL: { to: 'GRANTED', newVersion: true }, // revocation overturned → reinstated
@@ -73,17 +87,27 @@ export function buildChangeRequestDecisionBody(params: {
   outputControllerName: string;
   outputControllerAffiliation: string;
 }) {
-  const isApprovedRenewal = params.decision === 'APPROVED' && params.requestType === 'RENEWAL';
-  const isApprovedAmendment = params.decision === 'APPROVED' && params.requestType === 'AMENDMENT';
+  const isApprovedRenewal =
+    params.decision === 'APPROVED' && params.requestType === 'RENEWAL';
+  const isApprovedAmendment =
+    params.decision === 'APPROVED' && params.requestType === 'AMENDMENT';
   return {
     decision: params.decision,
     actingUserId: params.actingUserId,
     comment: params.comment || null,
     newValidUntil: isApprovedRenewal ? params.newValidUntil : undefined,
-    effectiveDate: isApprovedAmendment ? params.effectiveDate || undefined : undefined,
-    speOperatorId: isApprovedAmendment ? params.speOperatorId || undefined : undefined,
-    outputControllerName: isApprovedAmendment ? params.outputControllerName || undefined : undefined,
-    outputControllerAffiliation: isApprovedAmendment ? params.outputControllerAffiliation || undefined : undefined,
+    effectiveDate: isApprovedAmendment
+      ? params.effectiveDate || undefined
+      : undefined,
+    speOperatorId: isApprovedAmendment
+      ? params.speOperatorId || undefined
+      : undefined,
+    outputControllerName: isApprovedAmendment
+      ? params.outputControllerName || undefined
+      : undefined,
+    outputControllerAffiliation: isApprovedAmendment
+      ? params.outputControllerAffiliation || undefined
+      : undefined,
   };
 }
 
@@ -95,7 +119,11 @@ export function resolveChangeRequestNavigation(
   data: { newPermitId?: string; pending?: boolean } | null,
   currentPermitId: string,
 ): { type: 'push'; permitId: string } | { type: 'refresh' } {
-  if (data?.newPermitId && data.newPermitId !== currentPermitId && !data.pending) {
+  if (
+    data?.newPermitId &&
+    data.newPermitId !== currentPermitId &&
+    !data.pending
+  ) {
     return { type: 'push', permitId: data.newPermitId };
   }
   return { type: 'refresh' };

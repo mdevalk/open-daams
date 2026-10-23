@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
+import {
+  render,
+  screen,
+  fireEvent,
+  cleanup,
+  waitFor,
+} from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import { InvoicePanel } from './InvoicePanel';
 
@@ -42,8 +48,18 @@ describe('InvoicePanel — invoice list', () => {
         permitId="permit-1"
         locale="nl"
         invoices={[
-          { id: 'inv-1', invoiceNumber: 'INV-2026-0001', status: 'DRAFT', dueAt: '2026-12-01' },
-          { id: 'inv-2', invoiceNumber: 'INV-2026-0002', status: 'PAID', dueAt: '2026-12-01' },
+          {
+            id: 'inv-1',
+            invoiceNumber: 'INV-2026-0001',
+            status: 'DRAFT',
+            dueAt: '2026-12-01',
+          },
+          {
+            id: 'inv-2',
+            invoiceNumber: 'INV-2026-0002',
+            status: 'PAID',
+            dueAt: '2026-12-01',
+          },
         ]}
         canIssue={false}
         currentUserId="u-1"
@@ -66,7 +82,14 @@ describe('InvoicePanel — invoice list', () => {
       <InvoicePanel
         permitId="permit-1"
         locale="nl"
-        invoices={[{ id: 'inv-3', invoiceNumber: 'INV-2026-0003', status: 'ISSUED', dueAt: '2020-01-01' }]}
+        invoices={[
+          {
+            id: 'inv-3',
+            invoiceNumber: 'INV-2026-0003',
+            status: 'ISSUED',
+            dueAt: '2020-01-01',
+          },
+        ]}
         canIssue={false}
         currentUserId="u-1"
         hasInvoiceableAmounts={false}
@@ -81,7 +104,14 @@ describe('InvoicePanel — invoice list', () => {
       <InvoicePanel
         permitId="permit-1"
         locale="nl"
-        invoices={[{ id: 'inv-4', invoiceNumber: 'INV-2026-0004', status: 'ISSUED', dueAt: '2099-01-01' }]}
+        invoices={[
+          {
+            id: 'inv-4',
+            invoiceNumber: 'INV-2026-0004',
+            status: 'ISSUED',
+            dueAt: '2099-01-01',
+          },
+        ]}
         canIssue={false}
         currentUserId="u-1"
         hasInvoiceableAmounts={false}
@@ -122,7 +152,10 @@ describe('InvoicePanel — issuing', () => {
   });
 
   it('issues invoices and refreshes on success', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }),
+    );
 
     render(
       <InvoicePanel
@@ -149,7 +182,10 @@ describe('InvoicePanel — issuing', () => {
   it('shows an error message when issuing fails', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue({ ok: false, json: async () => ({ error: 'No invoiceable amounts' }) }),
+      vi.fn().mockResolvedValue({
+        ok: false,
+        json: async () => ({ error: 'No invoiceable amounts' }),
+      }),
     );
 
     render(
@@ -164,7 +200,9 @@ describe('InvoicePanel — issuing', () => {
     );
 
     fireEvent.click(screen.getByText('issue'));
-    expect(await screen.findByText('No invoiceable amounts')).toBeInTheDocument();
+    expect(
+      await screen.findByText('No invoiceable amounts'),
+    ).toBeInTheDocument();
     expect(refresh).not.toHaveBeenCalled();
   });
 });

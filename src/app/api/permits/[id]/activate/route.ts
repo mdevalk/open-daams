@@ -23,23 +23,34 @@ export async function POST(
     const { id } = await params;
 
     const auth = await requireRole(await actingUserId(), [...DECIDE_ROLES]);
-    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+    if (!auth.ok)
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const pending = await prisma.dataPermit.findUnique({
       where: { id },
       include: { previousPermit: true },
     });
-    if (!pending) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    if (!pending)
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     if (!pending.effectiveAt || pending.activatedAt) {
-      return NextResponse.json({ error: 'This version is not pending activation' }, { status: 422 });
+      return NextResponse.json(
+        { error: 'This version is not pending activation' },
+        { status: 422 },
+      );
     }
     if (pending.effectiveAt.getTime() > Date.now()) {
-      return NextResponse.json({ error: 'The effective date has not been reached yet' }, { status: 422 });
+      return NextResponse.json(
+        { error: 'The effective date has not been reached yet' },
+        { status: 422 },
+      );
     }
     if (!pending.previousPermit?.isCurrent) {
       return NextResponse.json(
-        { error: 'The predecessor permit is no longer current — cannot activate' },
+        {
+          error:
+            'The predecessor permit is no longer current — cannot activate',
+        },
         { status: 409 },
       );
     }
@@ -47,8 +58,14 @@ export async function POST(
     const now = new Date();
 
     await prisma.$transaction([
-      prisma.dataPermit.update({ where: { id: pending.previousPermit.id }, data: { isCurrent: false } }),
-      prisma.dataPermit.update({ where: { id: pending.id }, data: { isCurrent: true, activatedAt: now } }),
+      prisma.dataPermit.update({
+        where: { id: pending.previousPermit.id },
+        data: { isCurrent: false },
+      }),
+      prisma.dataPermit.update({
+        where: { id: pending.id },
+        data: { isCurrent: true, activatedAt: now },
+      }),
       prisma.speProvisioningOrder.updateMany({
         where: { permitId: pending.previousPermit.id },
         data: { permitId: pending.id },
@@ -64,11 +81,14 @@ export async function POST(
       }),
     ]);
 
-    const updated = await prisma.dataPermit.findUniqueOrThrow({ where: { id: pending.id } });
+    const updated = await prisma.dataPermit.findUniqueOrThrow({
+      where: { id: pending.id },
+    });
     return NextResponse.json(updated);
   } catch (e) {
     console.error('Failed to activate permit version', e);
-    const message = e instanceof Error ? e.message : 'Failed to activate permit version';
+    const message =
+      e instanceof Error ? e.message : 'Failed to activate permit version';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

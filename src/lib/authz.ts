@@ -2,11 +2,17 @@ import { prisma } from '@/lib/db';
 import { UserRole } from '@prisma/client';
 
 export type FindUserResult =
-  | { ok: true; user: { id: string; role: UserRole; name: string; email: string } }
+  | {
+      ok: true;
+      user: { id: string; role: UserRole; name: string; email: string };
+    }
   | { ok: false; status: 401; error: string };
 
 export type AuthzResult =
-  | { ok: true; user: { id: string; role: UserRole; name: string; email: string } }
+  | {
+      ok: true;
+      user: { id: string; role: UserRole; name: string; email: string };
+    }
   | { ok: false; status: 401 | 403; error: string };
 
 /**
@@ -15,7 +21,11 @@ export type AuthzResult =
  * these functions receive request context, only userId/roles, and adding it
  * would mean touching all ~40 call sites instead of this one shared path.
  */
-async function logAuthzFailure(reason: string, detail: string, attemptedUserId?: string) {
+async function logAuthzFailure(
+  reason: string,
+  detail: string,
+  attemptedUserId?: string,
+) {
   await prisma.authzFailureLog.create({
     data: { reason, detail, attemptedUserId: attemptedUserId ?? null },
   });
@@ -31,7 +41,11 @@ async function logAuthzFailure(reason: string, detail: string, attemptedUserId?:
 export async function findActingUser(userId: unknown): Promise<FindUserResult> {
   if (typeof userId !== 'string' || !userId) {
     const error = 'A valid acting user id is required';
-    await logAuthzFailure('missing_user_id', error, typeof userId === 'string' ? userId : undefined);
+    await logAuthzFailure(
+      'missing_user_id',
+      error,
+      typeof userId === 'string' ? userId : undefined,
+    );
     return { ok: false, status: 401, error };
   }
 
@@ -50,7 +64,10 @@ export async function findActingUser(userId: unknown): Promise<FindUserResult> {
  * client (there is no session/auth layer yet), but centralises the check so
  * swapping in real authentication only requires changing this function.
  */
-export async function requireRole(userId: unknown, allowedRoles: UserRole[]): Promise<AuthzResult> {
+export async function requireRole(
+  userId: unknown,
+  allowedRoles: UserRole[],
+): Promise<AuthzResult> {
   const found = await findActingUser(userId);
   if (!found.ok) return found;
 

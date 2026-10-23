@@ -4,7 +4,12 @@ import { ExtractionStatus } from '@prisma/client';
 import { requireRole } from '@/lib/authz';
 import { actingUserId } from '@/auth';
 
-const VALID_STATUSES: ExtractionStatus[] = ['REQUESTED', 'CONFIRMED', 'DELIVERED', 'DECLINED'];
+const VALID_STATUSES: ExtractionStatus[] = [
+  'REQUESTED',
+  'CONFIRMED',
+  'DELIVERED',
+  'DECLINED',
+];
 
 /**
  * PATCH /api/extraction-requests/[id]
@@ -12,16 +17,27 @@ const VALID_STATUSES: ExtractionStatus[] = ['REQUESTED', 'CONFIRMED', 'DELIVERED
  * delivered, or declined).
  * body: { status, deliveryNotes? }
  */
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await params;
     const body = await req.json();
 
-    const auth = await requireRole(await actingUserId(), ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN']);
-    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+    const auth = await requireRole(await actingUserId(), [
+      'CASE_HANDLER',
+      'DECISION_MAKER',
+      'ADMIN',
+    ]);
+    if (!auth.ok)
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-    const request = await prisma.dataExtractionRequest.findUnique({ where: { id } });
-    if (!request) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    const request = await prisma.dataExtractionRequest.findUnique({
+      where: { id },
+    });
+    if (!request)
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     const status = body.status as ExtractionStatus;
     if (!VALID_STATUSES.includes(status)) {
@@ -40,7 +56,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json(updated);
   } catch (e) {
     console.error('Failed to update extraction request', e);
-    const message = e instanceof Error ? e.message : 'Failed to update extraction request';
+    const message =
+      e instanceof Error ? e.message : 'Failed to update extraction request';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

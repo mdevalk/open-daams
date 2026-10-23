@@ -14,7 +14,13 @@
  */
 
 import AdmZip from 'adm-zip';
-import { HdeuAttachment, HdeuDatasetVariable, HdeuInvoicingDetails, HdeuPayload, HdeuStudyCohort } from './hdeu';
+import {
+  HdeuAttachment,
+  HdeuDatasetVariable,
+  HdeuInvoicingDetails,
+  HdeuPayload,
+  HdeuStudyCohort,
+} from './hdeu';
 
 /** Wire shape of one row from `GET applications` — kept separate from our
  * internal naming (see hdeu.ts's module comment for the same convention). */
@@ -43,7 +49,9 @@ function ncpHeaders(): Record<string, string> | null {
   return apiKey ? { 'X-API-key': apiKey } : null;
 }
 
-function toApplicationType(wire: 'application' | 'request'): NcpApplicationSummary['applicationType'] {
+function toApplicationType(
+  wire: 'application' | 'request',
+): NcpApplicationSummary['applicationType'] {
   return wire === 'request' ? 'DATA_REQUEST' : 'DATA_ACCESS_APPLICATION';
 }
 
@@ -68,7 +76,9 @@ function parseApplicationList(raw: unknown): NcpApplicationSummary[] {
       typeof entry.title !== 'string' ||
       typeof entry.version !== 'number'
     ) {
-      throw new Error('NCP applications response entry has an unexpected shape');
+      throw new Error(
+        'NCP applications response entry has an unexpected shape',
+      );
     }
     const summary: NcpApplicationSummary = {
       applicationId: entry.application_id,
@@ -85,7 +95,8 @@ function parseApplicationList(raw: unknown): NcpApplicationSummary[] {
   }
   // Most recently submitted first.
   return Array.from(latestById.values()).sort(
-    (a, b) => new Date(b.dateSubmitted).getTime() - new Date(a.dateSubmitted).getTime(),
+    (a, b) =>
+      new Date(b.dateSubmitted).getTime() - new Date(a.dateSubmitted).getTime(),
   );
 }
 
@@ -96,7 +107,10 @@ function parseApplicationList(raw: unknown): NcpApplicationSummary[] {
  * is responsible for recording the "sent" timestamp on the application
  * either way. Not part of this NCP-fetch fix — untouched.
  */
-export async function sendDecisionCardToNcp(application: { id: string; hdeuApplicationId: string | null }): Promise<void> {
+export async function sendDecisionCardToNcp(application: {
+  id: string;
+  hdeuApplicationId: string | null;
+}): Promise<void> {
   const headers = ncpHeaders();
   if (headers) {
     try {
@@ -109,8 +123,11 @@ export async function sendDecisionCardToNcp(application: { id: string; hdeuAppli
           transmittedAt: new Date().toISOString(),
         }),
       });
-      if (!res.ok) throw new Error(`NCP decision-cards POST returned ${res.status}`);
-      console.log(`[NCP] Decision card transmitted for application ${application.id} via ${NCP_BASE_URL}decision-cards`);
+      if (!res.ok)
+        throw new Error(`NCP decision-cards POST returned ${res.status}`);
+      console.log(
+        `[NCP] Decision card transmitted for application ${application.id} via ${NCP_BASE_URL}decision-cards`,
+      );
       return;
     } catch (err) {
       console.warn(
@@ -121,7 +138,7 @@ export async function sendDecisionCardToNcp(application: { id: string; hdeuAppli
   }
   console.log(
     `[NCP mock] Decision card transmitted for application ${application.id} ` +
-    `(HD@EU ref: ${application.hdeuApplicationId ?? 'unknown'})`,
+      `(HD@EU ref: ${application.hdeuApplicationId ?? 'unknown'})`,
   );
 }
 
@@ -140,21 +157,29 @@ function describeFetchError(err: unknown): string {
  * Inbound leg, step 1: the thin applications list. No fallback — every
  * failure throws with as much diagnostic detail as available.
  */
-export async function getNcpApplicationList(): Promise<NcpApplicationSummary[]> {
+export async function getNcpApplicationList(): Promise<
+  NcpApplicationSummary[]
+> {
   const headers = ncpHeaders();
   if (!headers) {
-    throw new Error('NCP_API_KEY is not configured — cannot fetch the applications list');
+    throw new Error(
+      'NCP_API_KEY is not configured — cannot fetch the applications list',
+    );
   }
 
   let res: Response;
   try {
     res = await fetch(`${NCP_BASE_URL}applications`, { headers });
   } catch (err) {
-    throw new Error(`Applications list fetch from ${NCP_BASE_URL}applications failed: ${describeFetchError(err)}`);
+    throw new Error(
+      `Applications list fetch from ${NCP_BASE_URL}applications failed: ${describeFetchError(err)}`,
+    );
   }
 
   if (!res.ok) {
-    throw new Error(`Applications list GET returned ${res.status} ${res.statusText}`);
+    throw new Error(
+      `Applications list GET returned ${res.status} ${res.statusText}`,
+    );
   }
 
   const body = await res.json();
@@ -168,12 +193,18 @@ export async function getNcpApplicationList(): Promise<NcpApplicationSummary[]> 
  * real environment or fails visibly; there's no equivalent synthetic ZIP to
  * substitute.
  */
-export async function getNcpApplicationDetail(applicationId: string): Promise<Buffer> {
+export async function getNcpApplicationDetail(
+  applicationId: string,
+): Promise<Buffer> {
   const headers = ncpHeaders();
   if (!headers) {
-    throw new Error('NCP_API_KEY is not configured — cannot fetch application detail');
+    throw new Error(
+      'NCP_API_KEY is not configured — cannot fetch application detail',
+    );
   }
-  const res = await fetch(`${NCP_BASE_URL}applications/${applicationId}`, { headers });
+  const res = await fetch(`${NCP_BASE_URL}applications/${applicationId}`, {
+    headers,
+  });
   if (!res.ok) {
     throw new Error(`NCP application detail GET returned ${res.status}`);
   }
@@ -188,7 +219,11 @@ export async function getNcpApplicationDetail(applicationId: string): Promise<Bu
 // holds the id). A bare-filename suffix match is the fallback for entries
 // without a known id.
 function matchesEntry(entryName: string, filename: string): boolean {
-  return entryName === filename || entryName.endsWith(`_${filename}`) || entryName.endsWith(`/${filename}`);
+  return (
+    entryName === filename ||
+    entryName.endsWith(`_${filename}`) ||
+    entryName.endsWith(`/${filename}`)
+  );
 }
 
 const ATTACHMENT_CONTENT_TYPES: Record<string, string> = {
@@ -213,12 +248,18 @@ export function guessAttachmentMimeType(filename: string): string {
  * after import re-fetches from the NCP, which is a message gateway, not a
  * store.
  */
-export function resolveAttachmentBytes(zip: AdmZip, ncpId: string | undefined, filename: string): Buffer | undefined {
+export function resolveAttachmentBytes(
+  zip: AdmZip,
+  ncpId: string | undefined,
+  filename: string,
+): Buffer | undefined {
   const target = ncpId ? `${ncpId}_${filename}` : filename;
   for (const entry of zip.getEntries()) {
     if (matchesEntry(entry.entryName, target)) return entry.getData();
     if (entry.entryName.endsWith('.zip')) {
-      const nested = new AdmZip(entry.getData()).getEntries().find((ne) => matchesEntry(ne.entryName, target));
+      const nested = new AdmZip(entry.getData())
+        .getEntries()
+        .find((ne) => matchesEntry(ne.entryName, target));
       if (nested) return nested.getData();
     }
   }
@@ -232,7 +273,10 @@ export function resolveAttachmentBytes(zip: AdmZip, ncpId: string | undefined, f
  * diagnostics — there's no application row yet to attach them to.
  */
 export class NcpDetailMappingError extends Error {
-  constructor(message: string, public readonly attachments: string[]) {
+  constructor(
+    message: string,
+    public readonly attachments: string[],
+  ) {
     super(message);
     this.name = 'NcpDetailMappingError';
   }
@@ -247,7 +291,9 @@ function collectAttachmentNames(zip: AdmZip): string[] {
   const names: string[] = [];
   for (const entry of zip.getEntries()) {
     if (entry.entryName.endsWith('.zip')) {
-      names.push(...new AdmZip(entry.getData()).getEntries().map((e) => e.entryName));
+      names.push(
+        ...new AdmZip(entry.getData()).getEntries().map((e) => e.entryName),
+      );
     } else {
       names.push(entry.entryName);
     }
@@ -567,7 +613,11 @@ type NcpMetadata = {
       complyWithDataMinimisationPrinciple?: string;
       complyWithDataMinimisationPrincipleNotEUMember?: string;
       attachResearchPermitIfRequired?: NcpAttachmentRef[];
-      peopleWhoWillBeProcessingTheData?: { fullName: string; emailAddress: string; affiliation?: string }[];
+      peopleWhoWillBeProcessingTheData?: {
+        fullName: string;
+        emailAddress: string;
+        affiliation?: string;
+      }[];
       protectionAndSecurityStatementsA?: boolean;
       protectionAndSecurityStatementsB?: boolean;
       protectionAndSecurityStatementsC?: boolean;
@@ -642,7 +692,10 @@ const PURPOSE_BY_KEY: Record<string, string> = {
   e: 'SCIENTIFIC_RESEARCH',
 };
 
-function localized(map: Record<string, string> | undefined, fallback: string): string {
+function localized(
+  map: Record<string, string> | undefined,
+  fallback: string,
+): string {
   if (!map) return fallback;
   return map.en ?? map.nl ?? Object.values(map)[0] ?? fallback;
 }
@@ -652,15 +705,22 @@ function localized(map: Record<string, string> | undefined, fallback: string): s
  * estimates/UI) — the real wire value does have it (confirmed against a
  * live DATA_REQUEST sample), so it's normalized here rather than passed
  * through, which would otherwise fail Prisma's enum validation on create. */
-function normalizeApplicationType(raw: NcpMetadata['application_type']): HdeuPayload['applicationType'] {
-  return raw === 'DATA_REQUEST_APPLICATION' ? 'DATA_REQUEST' : 'DATA_ACCESS_APPLICATION';
+function normalizeApplicationType(
+  raw: NcpMetadata['application_type'],
+): HdeuPayload['applicationType'] {
+  return raw === 'DATA_REQUEST_APPLICATION'
+    ? 'DATA_REQUEST'
+    : 'DATA_ACCESS_APPLICATION';
 }
 
 /** Best-effort parse of "dd-mm-yyyy t/m dd-mm-yyyy" (the only format seen so
  * far) into ISO dates — free text, not structured, so anything that doesn't
  * match this exact shape is left unset rather than risk importing a wrong
  * date silently. */
-function parseDutchDateRange(text: string | undefined): { start?: string; end?: string } {
+function parseDutchDateRange(text: string | undefined): {
+  start?: string;
+  end?: string;
+} {
   if (!text) return {};
   const match = text.match(/(\d{2})-(\d{2})-(\d{4}).*?(\d{2})-(\d{2})-(\d{4})/);
   if (!match) return {};
@@ -714,51 +774,80 @@ function formatPhone(p: NcpPhone | undefined): string | undefined {
 // applicant's own language, but the key/option-ordering is stable (matches
 // the D6.3 Annex 5 guideline's documented radio-button order, confirmed
 // against every real key/value pair seen across samples so far).
-const COHORT_FORMATION_BY_KEY: Record<string, HdeuStudyCohort['cohortFormationMethod']> = {
+const COHORT_FORMATION_BY_KEY: Record<
+  string,
+  HdeuStudyCohort['cohortFormationMethod']
+> = {
   a: 'CRITERIA',
   b: 'PREVIOUS_COHORT',
   c: 'COMBINED',
   d: 'WHOLE_POPULATION',
 };
 
-const EXTRACTION_METHOD_BY_KEY: Record<string, HdeuStudyCohort['extractionMethod']> = {
+const EXTRACTION_METHOD_BY_KEY: Record<
+  string,
+  HdeuStudyCohort['extractionMethod']
+> = {
   a: 'RANDOM_SAMPLE',
   b: 'ALL_QUALIFYING',
   c: 'OTHER_SAMPLE',
 };
 
-function mapExtractionMethod(v: NcpKeyValue | undefined): HdeuStudyCohort['extractionMethod'] {
+function mapExtractionMethod(
+  v: NcpKeyValue | undefined,
+): HdeuStudyCohort['extractionMethod'] {
   return v?.key ? EXTRACTION_METHOD_BY_KEY[v.key] : undefined;
 }
 
-const EXTRACTION_FREQUENCY_BY_KEY: Record<string, HdeuPayload['extractionFrequency']> = {
+const EXTRACTION_FREQUENCY_BY_KEY: Record<
+  string,
+  HdeuPayload['extractionFrequency']
+> = {
   a: 'ONCE',
   b: 'MULTIPLE_TIMES',
 };
 
-function mapExtractionFrequency(v: NcpKeyValue | undefined): HdeuPayload['extractionFrequency'] {
+function mapExtractionFrequency(
+  v: NcpKeyValue | undefined,
+): HdeuPayload['extractionFrequency'] {
   return v?.key ? EXTRACTION_FREQUENCY_BY_KEY[v.key] : undefined;
 }
 
 // D6.3 Annex 5 §6.1 order: a. Every year, b. Half a year, c. Quarter, d. Other
-const EXTRACTION_INTERVAL_BY_KEY: Record<string, HdeuStudyCohort['extractionInterval']> = {
+const EXTRACTION_INTERVAL_BY_KEY: Record<
+  string,
+  HdeuStudyCohort['extractionInterval']
+> = {
   a: 'YEARLY',
   b: 'HALF_YEARLY',
   c: 'QUARTERLY',
   d: 'OTHER',
 };
 
-const DATA_ACCESS_TIMING_BY_KEY: Record<string, HdeuPayload['dataAccessTiming']> = {
+const DATA_ACCESS_TIMING_BY_KEY: Record<
+  string,
+  HdeuPayload['dataAccessTiming']
+> = {
   a: 'AS_SOON_AS_POSSIBLE',
   b: 'LATER',
 };
 
-function mapDataAccessTiming(v: NcpKeyValue | undefined): HdeuPayload['dataAccessTiming'] {
+function mapDataAccessTiming(
+  v: NcpKeyValue | undefined,
+): HdeuPayload['dataAccessTiming'] {
   return v?.key ? DATA_ACCESS_TIMING_BY_KEY[v.key] : undefined;
 }
 
-function toAttachments(field: string, refs: NcpAttachmentRef[] | undefined): HdeuAttachment[] {
-  return (refs ?? []).map((r) => ({ field, filename: r.name, sizeBytes: r.size, description: r.id }));
+function toAttachments(
+  field: string,
+  refs: NcpAttachmentRef[] | undefined,
+): HdeuAttachment[] {
+  return (refs ?? []).map((r) => ({
+    field,
+    filename: r.name,
+    sizeBytes: r.size,
+    description: r.id,
+  }));
 }
 
 function estimateFlag(v: NcpKeyValue | undefined): boolean | undefined {
@@ -796,25 +885,34 @@ function buildCohortEntry(
     doesTheInformedConsentCoverTheRequestedRegistryExtractions: yesNo(
       entry.doesTheInformedConsentCoverTheRequestedRegistryExtractions,
     ),
-    confirmThatDataPermitHasBeenGrantedForTheResearchProject: entry.confirmThatDataPermitHasBeenGrantedForTheResearchProject,
+    confirmThatDataPermitHasBeenGrantedForTheResearchProject:
+      entry.confirmThatDataPermitHasBeenGrantedForTheResearchProject,
     priorPermitNumber: entry.idOfTheDataPermit,
     howTheStudyCohortWasObtained: entry.howTheStudyCohortWasObtained,
-    dataSubjectsInformed: yesNo(entry.providedInformationOfTheDataUseToCorrespondingSubjects),
+    dataSubjectsInformed: yesNo(
+      entry.providedInformationOfTheDataUseToCorrespondingSubjects,
+    ),
     dataSubjectsInformedDetail:
       entry.howProvidedInformationOfTheDataUseToCorrespondingSubjects ||
       entry.whyNotProvidedInformationOfTheDataUseToCorrespondingSubjects,
-    detailsOfHowTheStudyCohortHasBeenFormed: entry.detailsOfHowTheStudyCohortHasBeenFormed,
+    detailsOfHowTheStudyCohortHasBeenFormed:
+      entry.detailsOfHowTheStudyCohortHasBeenFormed,
     informationProviderName: entry.informationProviderName,
     informationProviderEmail: entry.informationProviderEmail,
     informationProviderPhone: formatPhone(entry.informationProviderPhone),
-    informationProviderSameAsContactPerson: entry.informationProviderSameAsContactPerson,
+    informationProviderSameAsContactPerson:
+      entry.informationProviderSameAsContactPerson,
     whyNeedDataOfaWholePopulation: entry.whyNeedDataOfaWholePopulation,
-    size: entry.sizeOfTheStudyCohort ? Number.parseInt(entry.sizeOfTheStudyCohort, 10) || undefined : undefined,
+    size: entry.sizeOfTheStudyCohort
+      ? Number.parseInt(entry.sizeOfTheStudyCohort, 10) || undefined
+      : undefined,
     sizeIsEstimate: estimateFlag(entry.sizeOfTheStudyCohortEstimationOrExact),
     sizeJustification: entry.whyNeedStudyCohortOfThisSize,
     regionsSeekForData: entry.regionsSeekForData,
-    variablesAttachmentRef: entry.variablesToBeUsedInDataExtractionAttachment?.[0]?.name,
-    variablesAttachmentId: entry.variablesToBeUsedInDataExtractionAttachment?.[0]?.id,
+    variablesAttachmentRef:
+      entry.variablesToBeUsedInDataExtractionAttachment?.[0]?.name,
+    variablesAttachmentId:
+      entry.variablesToBeUsedInDataExtractionAttachment?.[0]?.id,
     timePeriod: entry.timePeriodOfDataExtraction,
     dataStartDate,
     dataEndDate,
@@ -823,7 +921,9 @@ function buildCohortEntry(
     sampleSize: entry.sampleSize,
     inclusionCriteria: entry.inclusionCriteria,
     exclusionCriteria: entry.potentialExclusionCriteria,
-    extractionFrequency: mapExtractionFrequency(entry.howOftenDoesTheDataNeedToBeExtracted),
+    extractionFrequency: mapExtractionFrequency(
+      entry.howOftenDoesTheDataNeedToBeExtracted,
+    ),
     extractionInterval: entry.needForDataExtractionEvery?.key
       ? EXTRACTION_INTERVAL_BY_KEY[entry.needForDataExtractionEvery.key]
       : undefined,
@@ -835,7 +935,10 @@ function buildCohortEntry(
   };
 }
 
-export function buildControlEntry(entry: NcpSection6Entry, countryId: string): HdeuStudyCohort | undefined {
+export function buildControlEntry(
+  entry: NcpSection6Entry,
+  countryId: string,
+): HdeuStudyCohort | undefined {
   if (!yesNo(entry.willControlsBeExtracted)) return undefined;
   return {
     countryId,
@@ -853,7 +956,9 @@ export function buildControlEntry(entry: NcpSection6Entry, countryId: string): H
       ? entry.variablesForDataExtraction[0]?.id
       : undefined,
     matchingCriteria: entry.extractionCriteriaForControls,
-    size: entry.sizeOfControlGroup ? Number.parseInt(entry.sizeOfControlGroup, 10) || undefined : undefined,
+    size: entry.sizeOfControlGroup
+      ? Number.parseInt(entry.sizeOfControlGroup, 10) || undefined
+      : undefined,
     sizeIsEstimate: estimateFlag(entry.sizeOfControlGroupEstimationOrExact),
     controlsPerCohortPerson: entry.controlsPerPersonInStudyCohort,
     inclusionCriteria: entry.inclusionCriteriaForControls,
@@ -863,20 +968,30 @@ export function buildControlEntry(entry: NcpSection6Entry, countryId: string): H
     priorPermitValidFrom: entry.previouslyIssuedPermitValidityPeriodFrom,
     priorPermitValidTo: entry.previouslyIssuedPermitValidityPeriodTo,
     priorPermitNumber: entry.previouslyIssuedPermitNumber,
-    willDataBeExtractedSimultaneously: yesNo(entry.willDataForControlsBeExtractedSimultaneously),
+    willDataBeExtractedSimultaneously: yesNo(
+      entry.willDataForControlsBeExtractedSimultaneously,
+    ),
     extractionTimingNotes:
-      [entry.dataExtractionFrequencyMultipleTimesInformation, entry.moreInfoOnExtractionPeriods].filter(Boolean).join('\n') ||
-      undefined,
+      [
+        entry.dataExtractionFrequencyMultipleTimesInformation,
+        entry.moreInfoOnExtractionPeriods,
+      ]
+        .filter(Boolean)
+        .join('\n') || undefined,
     extractionFrequency: mapExtractionFrequency(entry.dataExtractionFrequency),
     extractionInterval: entry.dataNeedsToBeExtractedEvery?.key
       ? EXTRACTION_INTERVAL_BY_KEY[entry.dataNeedsToBeExtractedEvery.key]
       : undefined,
     extractionIntervalOther: entry.specifyOther,
-    orderForExtraction: entry.orderOfControlsDataExtraction || entry.extractionPhases,
+    orderForExtraction:
+      entry.orderOfControlsDataExtraction || entry.extractionPhases,
   };
 }
 
-export function buildRelativeEntry(entry: NcpSection6Entry, countryId: string): HdeuStudyCohort | undefined {
+export function buildRelativeEntry(
+  entry: NcpSection6Entry,
+  countryId: string,
+): HdeuStudyCohort | undefined {
   if (!yesNo(entry.willRelativesBeExtracted)) return undefined;
   return {
     countryId,
@@ -887,35 +1002,57 @@ export function buildRelativeEntry(entry: NcpSection6Entry, countryId: string): 
     databaseIds: entry.databasesForRelatives,
     datasetIds: entry.datasetsForRelatives,
     timePeriod: entry.timePeriodForDataExtractionRelatives,
-    variablesAttachmentRef: Array.isArray(entry.variablesForDataExtractionRelatives)
+    variablesAttachmentRef: Array.isArray(
+      entry.variablesForDataExtractionRelatives,
+    )
       ? entry.variablesForDataExtractionRelatives[0]?.name
       : undefined,
-    variablesAttachmentId: Array.isArray(entry.variablesForDataExtractionRelatives)
+    variablesAttachmentId: Array.isArray(
+      entry.variablesForDataExtractionRelatives,
+    )
       ? entry.variablesForDataExtractionRelatives[0]?.id
       : undefined,
-    size: entry.sizeOfRelativesGroup ? Number.parseInt(entry.sizeOfRelativesGroup, 10) || undefined : undefined,
+    size: entry.sizeOfRelativesGroup
+      ? Number.parseInt(entry.sizeOfRelativesGroup, 10) || undefined
+      : undefined,
     sizeIsEstimate: estimateFlag(entry.sizeOfRelativesGroupEstimateOrExact),
     priorPermitIssuer: entry.previouslyIssuedPermitIssuerRelatives,
-    willDataBeExtractedSimultaneously: yesNo(entry.willDataForRelativesBeExtractedSimultaneously),
+    willDataBeExtractedSimultaneously: yesNo(
+      entry.willDataForRelativesBeExtractedSimultaneously,
+    ),
     extractionTimingNotes:
-      [entry.dataExtractionFrequencyMultipleTimesInformationRelatives, entry.moreInfoOnExtractionPeriodsRelatives]
+      [
+        entry.dataExtractionFrequencyMultipleTimesInformationRelatives,
+        entry.moreInfoOnExtractionPeriodsRelatives,
+      ]
         .filter(Boolean)
         .join('\n') || undefined,
-    extractionFrequency: mapExtractionFrequency(entry.dataExtractionFrequencyRelatives),
+    extractionFrequency: mapExtractionFrequency(
+      entry.dataExtractionFrequencyRelatives,
+    ),
     extractionInterval: entry.dataNeedsToBeExtractedEveryRelatives?.key
-      ? EXTRACTION_INTERVAL_BY_KEY[entry.dataNeedsToBeExtractedEveryRelatives.key]
+      ? EXTRACTION_INTERVAL_BY_KEY[
+          entry.dataNeedsToBeExtractedEveryRelatives.key
+        ]
       : undefined,
     extractionIntervalOther: entry.specifyOtherRelatives,
-    orderForExtraction: entry.orderOfRelativesDataExtraction || entry.extractionPhasesRelatives,
+    orderForExtraction:
+      entry.orderOfRelativesDataExtraction || entry.extractionPhasesRelatives,
   };
 }
 
 function mapSection6Entry(
   entry: NcpSection6Entry,
   dataProcessingCountry: string,
-): { cohort: HdeuStudyCohort; control?: HdeuStudyCohort; relative?: HdeuStudyCohort } {
+): {
+  cohort: HdeuStudyCohort;
+  control?: HdeuStudyCohort;
+  relative?: HdeuStudyCohort;
+} {
   const countryId = (entry.country_id || dataProcessingCountry).toUpperCase();
-  const { start: dataStartDate, end: dataEndDate } = parseDutchDateRange(entry.timePeriodOfDataExtraction);
+  const { start: dataStartDate, end: dataEndDate } = parseDutchDateRange(
+    entry.timePeriodOfDataExtraction,
+  );
 
   return {
     cohort: buildCohortEntry(entry, countryId, dataStartDate, dataEndDate),
@@ -942,18 +1079,27 @@ function mapSection6Entry(
  * array, resolving relatesToIndex once each row's final array position is
  * known (cohort first, so control/relative can point back to it).
  */
-function buildStudyCohortsFromSection6(section6: NcpSection6Entry[], dataProcessingCountry: string): HdeuStudyCohort[] {
+function buildStudyCohortsFromSection6(
+  section6: NcpSection6Entry[],
+  dataProcessingCountry: string,
+): HdeuStudyCohort[] {
   const studyCohorts: HdeuStudyCohort[] = [];
   for (const entry of section6) {
-    const { cohort, control, relative } = mapSection6Entry(entry, dataProcessingCountry);
+    const { cohort, control, relative } = mapSection6Entry(
+      entry,
+      dataProcessingCountry,
+    );
     const cohortIndex = studyCohorts.push(cohort) - 1;
     if (control) studyCohorts.push({ ...control, relatesToIndex: cohortIndex });
-    if (relative) studyCohorts.push({ ...relative, relatesToIndex: cohortIndex });
+    if (relative)
+      studyCohorts.push({ ...relative, relatesToIndex: cohortIndex });
   }
   return studyCohorts;
 }
 
-export function buildInvoicingDetails(section4: NcpMetadata['form']['section4']): HdeuInvoicingDetails | undefined {
+export function buildInvoicingDetails(
+  section4: NcpMetadata['form']['section4'],
+): HdeuInvoicingDetails | undefined {
   if (!section4) return undefined;
   return {
     sameAsContactPerson: section4.sameAsContactPerson,
@@ -981,21 +1127,48 @@ export function buildInvoicingDetails(section4: NcpMetadata['form']['section4'])
  * applicant/legal-person field below shares that one gate, so it's resolved
  * once here rather than repeating the same ternary at each call site.
  */
-export function buildSection3Fields(section3: NonNullable<NcpMetadata['form']['section3']>) {
-  const isNaturalPerson = rawText(section3.legalOrNaturalPerson)?.toLowerCase().includes('natural');
+export function buildSection3Fields(
+  section3: NonNullable<NcpMetadata['form']['section3']>,
+) {
+  const isNaturalPerson = rawText(section3.legalOrNaturalPerson)
+    ?.toLowerCase()
+    .includes('natural');
   return {
     isNaturalPerson,
-    applicantName: (isNaturalPerson ? section3.naturalPersonName : section3.contactPersonName) || 'Not specified',
+    applicantName:
+      (isNaturalPerson
+        ? section3.naturalPersonName
+        : section3.contactPersonName) || 'Not specified',
     applicantEmail:
-      (isNaturalPerson ? section3.naturalPersonEmail : section3.contactPersonEmail) || 'unknown@unknown.invalid',
+      (isNaturalPerson
+        ? section3.naturalPersonEmail
+        : section3.contactPersonEmail) || 'unknown@unknown.invalid',
     applicantOrganisation:
-      (isNaturalPerson ? section3.naturalPersonAffiliation : section3.legalPersonName) || 'Unknown',
-    legalPersonAddress: isNaturalPerson ? section3.naturalPersonAddress : section3.legalPersonAddress,
-    legalPersonZipCode: isNaturalPerson ? section3.naturalPersonZipCode : section3.legalPersonZipCode,
-    legalPersonCity: isNaturalPerson ? section3.naturalPersonCity : section3.legalPersonCity,
-    legalPersonCountry: rawText(isNaturalPerson ? section3.naturalPersonCountry : section3.legalPersonCountry),
-    contactPersonAffiliation: isNaturalPerson ? section3.naturalPersonAffiliation : section3.contactPersonOrganisationName,
-    contactPersonPhone: formatPhone(isNaturalPerson ? section3.naturalPersonPhone : section3.contactPersonPhone),
+      (isNaturalPerson
+        ? section3.naturalPersonAffiliation
+        : section3.legalPersonName) || 'Unknown',
+    legalPersonAddress: isNaturalPerson
+      ? section3.naturalPersonAddress
+      : section3.legalPersonAddress,
+    legalPersonZipCode: isNaturalPerson
+      ? section3.naturalPersonZipCode
+      : section3.legalPersonZipCode,
+    legalPersonCity: isNaturalPerson
+      ? section3.naturalPersonCity
+      : section3.legalPersonCity,
+    legalPersonCountry: rawText(
+      isNaturalPerson
+        ? section3.naturalPersonCountry
+        : section3.legalPersonCountry,
+    ),
+    contactPersonAffiliation: isNaturalPerson
+      ? section3.naturalPersonAffiliation
+      : section3.contactPersonOrganisationName,
+    contactPersonPhone: formatPhone(
+      isNaturalPerson
+        ? section3.naturalPersonPhone
+        : section3.contactPersonPhone,
+    ),
   };
 }
 
@@ -1013,13 +1186,19 @@ function mapMetadataToHdeuPayload(meta: NcpMetadata): HdeuPayload {
   const section9 = form.section9 ?? {};
   const section10 = form.section10 ?? {};
   const cohort = section6[0];
-  const dataProcessingCountry = (dataset?.country?.country_id || 'nl').toUpperCase();
+  const dataProcessingCountry = (
+    dataset?.country?.country_id || 'nl'
+  ).toUpperCase();
 
-  const purposeKeys = section2.purposeForWhichDataWillBeUsed?.map((p) => p.key) ?? [];
-  const purposeCategories = purposeKeys.map((k) => PURPOSE_BY_KEY[k]).filter((c): c is string => Boolean(c));
+  const purposeKeys =
+    section2.purposeForWhichDataWillBeUsed?.map((p) => p.key) ?? [];
+  const purposeCategories = purposeKeys
+    .map((k) => PURPOSE_BY_KEY[k])
+    .filter((c): c is string => Boolean(c));
   const purposeCategory = purposeCategories[0] || 'SCIENTIFIC_RESEARCH';
 
-  const dataHolderName = dataset?.publisher?.name || dataset?.hdab?.name || 'Unknown';
+  const dataHolderName =
+    dataset?.publisher?.name || dataset?.hdab?.name || 'Unknown';
   const requestedDatasets = dataset
     ? [
         {
@@ -1041,44 +1220,90 @@ function mapMetadataToHdeuPayload(meta: NcpMetadata): HdeuPayload {
     : [];
 
   const requestedVariables =
-    dataset?.variables?.map((v) => localized(v.titles, v.titles?.[Object.keys(v.titles)[0]] ?? '')).join(', ') ||
-    'Not specified';
+    dataset?.variables
+      ?.map((v) =>
+        localized(v.titles, v.titles?.[Object.keys(v.titles)[0]] ?? ''),
+      )
+      .join(', ') || 'Not specified';
 
-  const studyCohorts = buildStudyCohortsFromSection6(section6, dataProcessingCountry);
+  const studyCohorts = buildStudyCohortsFromSection6(
+    section6,
+    dataProcessingCountry,
+  );
   const invoicingDetails = buildInvoicingDetails(section4);
   const section3Fields = buildSection3Fields(section3);
-  const { applicantName, applicantEmail, applicantOrganisation } = section3Fields;
+  const { applicantName, applicantEmail, applicantOrganisation } =
+    section3Fields;
 
   const attachments = [
-    ...toAttachments('section5.summaryOfPlanForUsingTheData', section5.summaryOfPlanForUsingTheData),
-    ...toAttachments('section5.summaryOfResearchPlan', section5.summaryOfResearchPlan),
+    ...toAttachments(
+      'section5.summaryOfPlanForUsingTheData',
+      section5.summaryOfPlanForUsingTheData,
+    ),
+    ...toAttachments(
+      'section5.summaryOfResearchPlan',
+      section5.summaryOfResearchPlan,
+    ),
     ...section6.flatMap((entry, i) => [
-      ...toAttachments(`section6[${i}].variablesToBeUsedInDataExtractionAttachment`, entry.variablesToBeUsedInDataExtractionAttachment),
-      ...toAttachments(`section6[${i}].consentAndInformationLetterAttachment`, entry.consentAndInformationLetterAttachment),
-      ...toAttachments(`section6[${i}].permitDecisionAttachment`, entry.permitDecisionAttachment),
-      ...toAttachments(`section6[${i}].ethicalReviewAttachment`, entry.ethicalReviewAttachment),
+      ...toAttachments(
+        `section6[${i}].variablesToBeUsedInDataExtractionAttachment`,
+        entry.variablesToBeUsedInDataExtractionAttachment,
+      ),
+      ...toAttachments(
+        `section6[${i}].consentAndInformationLetterAttachment`,
+        entry.consentAndInformationLetterAttachment,
+      ),
+      ...toAttachments(
+        `section6[${i}].permitDecisionAttachment`,
+        entry.permitDecisionAttachment,
+      ),
+      ...toAttachments(
+        `section6[${i}].ethicalReviewAttachment`,
+        entry.ethicalReviewAttachment,
+      ),
       ...toAttachments(
         `section6[${i}].variablesForDataExtraction`,
-        Array.isArray(entry.variablesForDataExtraction) ? entry.variablesForDataExtraction : undefined,
+        Array.isArray(entry.variablesForDataExtraction)
+          ? entry.variablesForDataExtraction
+          : undefined,
       ),
       ...toAttachments(
         `section6[${i}].variablesForDataExtractionRelatives`,
-        Array.isArray(entry.variablesForDataExtractionRelatives) ? entry.variablesForDataExtractionRelatives : undefined,
+        Array.isArray(entry.variablesForDataExtractionRelatives)
+          ? entry.variablesForDataExtractionRelatives
+          : undefined,
       ),
     ]),
-    ...toAttachments('section7.attachmentOfPermitDocuments', section7.attachmentOfPermitDocuments),
-    ...toAttachments('section8.attachResearchPermitIfRequired', section8.attachResearchPermitIfRequired),
-    ...toAttachments('section9.additionalAttachment', section9.additionalAttachment ?? section7.additionalAttachment),
-    ...(cohort?.tabulationPlanArray ?? form.tabulationPlanArray ?? []).flatMap((t, i) =>
-      toAttachments(`tabulationPlanArray[${i}].tabulationPlan`, t.tabulationPlan ? [t.tabulationPlan] : undefined),
+    ...toAttachments(
+      'section7.attachmentOfPermitDocuments',
+      section7.attachmentOfPermitDocuments,
+    ),
+    ...toAttachments(
+      'section8.attachResearchPermitIfRequired',
+      section8.attachResearchPermitIfRequired,
+    ),
+    ...toAttachments(
+      'section9.additionalAttachment',
+      section9.additionalAttachment ?? section7.additionalAttachment,
+    ),
+    ...(cohort?.tabulationPlanArray ?? form.tabulationPlanArray ?? []).flatMap(
+      (t, i) =>
+        toAttachments(
+          `tabulationPlanArray[${i}].tabulationPlan`,
+          t.tabulationPlan ? [t.tabulationPlan] : undefined,
+        ),
     ),
   ];
 
-  const datasetVariables: HdeuDatasetVariable[] = (section1.datasetVariables ?? []).map((v) => ({
+  const datasetVariables: HdeuDatasetVariable[] = (
+    section1.datasetVariables ?? []
+  ).map((v) => ({
     sourceDatasetId: v.datasetId,
     name: v.name,
     title: v.titles ? localized(v.titles, v.name) : undefined,
-    description: v.description ? localized(v.description, '') || undefined : undefined,
+    description: v.description
+      ? localized(v.description, '') || undefined
+      : undefined,
     datatype: v.datatype,
     propertyUrl: v.propertyUrl || undefined,
   }));
@@ -1099,9 +1324,10 @@ function mapMetadataToHdeuPayload(meta: NcpMetadata): HdeuPayload {
     applicantOrganisation,
 
     title: meta.title,
-    projectDescription: [section5.whatIsTheAimAndTopicOfTheProject, section2.summaryOfTheProject]
-      .filter(Boolean)
-      .join('\n\n') || 'Not specified',
+    projectDescription:
+      [section5.whatIsTheAimAndTopicOfTheProject, section2.summaryOfTheProject]
+        .filter(Boolean)
+        .join('\n\n') || 'Not specified',
     purposeCategory,
     purposeCategories,
     projectLeaderName: section2.projectLeader,
@@ -1121,7 +1347,9 @@ function mapMetadataToHdeuPayload(meta: NcpMetadata): HdeuPayload {
     dataProcessingCountry,
 
     // §3
-    applyingOnBehalfOfPublicSector: yesNo(section3.applyingForDataOnBehalfOfPublicSector),
+    applyingOnBehalfOfPublicSector: yesNo(
+      section3.applyingForDataOnBehalfOfPublicSector,
+    ),
     legalOrNaturalPerson: rawText(section3.legalOrNaturalPerson),
     legalPersonAddress: section3Fields.legalPersonAddress,
     legalPersonZipCode: section3Fields.legalPersonZipCode,
@@ -1134,8 +1362,11 @@ function mapMetadataToHdeuPayload(meta: NcpMetadata): HdeuPayload {
     contactPersonPhone: section3Fields.contactPersonPhone,
 
     // §3 (remaining)
-    applyingForMandatedTasks: yesNo(section3.applyingForDataForCarryingOutTasks),
-    legalOrNaturalPersonProfileDataDate: section3.legalOrNaturalPersonProfileDataDate,
+    applyingForMandatedTasks: yesNo(
+      section3.applyingForDataForCarryingOutTasks,
+    ),
+    legalOrNaturalPersonProfileDataDate:
+      section3.legalOrNaturalPersonProfileDataDate,
     contactPersonOrganisationName: section3.contactPersonOrganisationName,
     contactPersonOperatorID: section3.contactPersonOperatorID,
     contactPersonProfileDataDate: section3.contactPersonProfileDataDate,
@@ -1145,36 +1376,50 @@ function mapMetadataToHdeuPayload(meta: NcpMetadata): HdeuPayload {
 
     // §2 (remaining — placed after §4 in source order for no particular
     // reason beyond where the fields were discovered; harmless)
-    theResearchFocusesOnTheFollowingObjectives: section2.theResearchFocusesOnTheFollowingObjectives?.map((v) => v.value),
-    theResearchFocusesOnTheFollowingObjectivesOther: section2.theResearchFocusesOnTheFollowingObjectivesOther,
+    theResearchFocusesOnTheFollowingObjectives:
+      section2.theResearchFocusesOnTheFollowingObjectives?.map((v) => v.value),
+    theResearchFocusesOnTheFollowingObjectivesOther:
+      section2.theResearchFocusesOnTheFollowingObjectivesOther,
     areaOfResearch: rawText(section2.areaOfResearch),
     areaOfResearchOther: section2.areaOfResearchOther,
     descriptionOfTheDataYouWillUse: section2.descriptionOfTheDataYouWillUse,
-    theNatureOfTheDataDoesNotLetYouProvideADescription: section2.theNatureOfTheDataDoesNotLetYouProvideADescription,
+    theNatureOfTheDataDoesNotLetYouProvideADescription:
+      section2.theNatureOfTheDataDoesNotLetYouProvideADescription,
     descriptionOfTheProject: section2.descriptionOfTheProject,
     summaryOfTheProject: section2.summaryOfTheProject,
-    theNatureOfTheProjectDoesNotLetYouProvideASummary: section2.theNatureOfTheProjectDoesNotLetYouProvideASummary,
-    theNatureOfTheProjectDoesNotLetYouProvideASummaryReason: section2.theNatureOfTheProjectDoesNotLetYouProvideASummaryReason,
+    theNatureOfTheProjectDoesNotLetYouProvideASummary:
+      section2.theNatureOfTheProjectDoesNotLetYouProvideASummary,
+    theNatureOfTheProjectDoesNotLetYouProvideASummaryReason:
+      section2.theNatureOfTheProjectDoesNotLetYouProvideASummaryReason,
 
     // §5
-    whyDataIsNeeded: section5.whyTheDataIsNeeded || section5.whyAreTheDataRequested,
+    whyDataIsNeeded:
+      section5.whyTheDataIsNeeded || section5.whyAreTheDataRequested,
     whatIsTheAimAndTopicOfTheProject: section5.whatIsTheAimAndTopicOfTheProject,
     expectedBenefits: section5.whichAreTheExpectedBenefits,
     applicantQualifications: section5.describeApplicantsQualification,
     linkToTheSupportingLegalBasis: section5.linkToTheSupportingLegalBasis,
-    summaryOfPlanForUsingTheDataLanguage: rawText(section5.summaryOfPlanForUsingTheDataLanguage),
-    summaryOfResearchPlanLanguage: rawText(section5.summaryOfResearchPlanLanguage),
-    personResponsibleSameAsContactPerson: section5.personResponsibleSameAsContactPerson,
+    summaryOfPlanForUsingTheDataLanguage: rawText(
+      section5.summaryOfPlanForUsingTheDataLanguage,
+    ),
+    summaryOfResearchPlanLanguage: rawText(
+      section5.summaryOfResearchPlanLanguage,
+    ),
+    personResponsibleSameAsContactPerson:
+      section5.personResponsibleSameAsContactPerson,
     personResponsibleName: section5.personResponsibleName,
     personResponsibleJobTitle: section5.personResponsibleJobTitle,
     personResponsibleAffiliation: section5.personResponsibleAffiliation,
     personResponsibleProfileDataDate: section5.personResponsibleProfileDataDate,
-    personResearchSameAsContactPerson: section5.personResearchSameAsContactPerson,
+    personResearchSameAsContactPerson:
+      section5.personResearchSameAsContactPerson,
     personResearchName: section5.personResearchName,
     personResearchJobTitle: section5.personResearchJobTitle,
     personResearchAffiliation: section5.personResearchAffiliation,
     personResearchProfileDataDate: section5.personResearchProfileDataDate,
-    electronicHealthDataFormat: rawText(section5.formatOfTheElectronicHealthData),
+    electronicHealthDataFormat: rawText(
+      section5.formatOfTheElectronicHealthData,
+    ),
 
     // §6 full fidelity + flat mirror of the first (COHORT, first country) entry
     studyCohorts,
@@ -1189,11 +1434,15 @@ function mapMetadataToHdeuPayload(meta: NcpMetadata): HdeuPayload {
     includesControls: studyCohorts[0]?.includesControls,
     includesRelatives: studyCohorts[0]?.includesRelatives,
     ethicalReviewInput: cohort?.ethicalReviewInput ?? form.ethicalReviewInput,
-    whatIsTheFrequencyOfUpdates: cohort?.whatIsTheFrequencyOfUpdates ?? form.whatIsTheFrequencyOfUpdates,
-    tabulationPlans: (cohort?.tabulationPlanArray ?? form.tabulationPlanArray)?.map((t) => ({
+    whatIsTheFrequencyOfUpdates:
+      cohort?.whatIsTheFrequencyOfUpdates ?? form.whatIsTheFrequencyOfUpdates,
+    tabulationPlans: (
+      cohort?.tabulationPlanArray ?? form.tabulationPlanArray
+    )?.map((t) => ({
       tabulationRegisteredToBeUsed: t.tabulationRegisteredToBeUsed,
       tabulationPossibleStudyCohort: t.tabulationPossibleStudyCohort,
-      tabulationInformationOfRequiredVariables: t.tabulationInformationOfRequiredVariables,
+      tabulationInformationOfRequiredVariables:
+        t.tabulationInformationOfRequiredVariables,
       tabulationFormationVariables: t.tabulationFormationVariables,
       tabulationDesiredDirection: t.tabulationDesiredDirection,
       tabulationOrderInWhichTable: t.tabulationOrderInWhichTable,
@@ -1222,60 +1471,108 @@ function mapMetadataToHdeuPayload(meta: NcpMetadata): HdeuPayload {
     dataAccessUpdateFrequency: section8.frequencyOfAccessOrDataUpdates,
     inactiveStoragePeriodStart: section8.startPeriodOfInactiveDataStorage,
     inactiveStoragePeriodEnd: section8.endPeriodOfInactiveDataStorage,
-    usesOptOutException: yesNo(section8.optOutOfTheMechanismProvidedInTheNationalLaw),
+    usesOptOutException: yesNo(
+      section8.optOutOfTheMechanismProvidedInTheNationalLaw,
+    ),
     optOutExceptionJustification: section8.optOutJustification,
     transfersOutsideEuEea: yesNo(section8.willTheDataBeTransferred),
     transferCountries: section8.whichCountriesDataBeProcessed,
     transferLegalArticle: section8.transferLegalArticle,
     transferSafeguards: section8.transferSafeguards,
-    whyWillDataBeTransferredOutsideEUArticle47: section8.whyWillDataBeTransferredOutsideEUArticle47,
-    whyWillDataBeTransferredOutsideEUArticle47Options: section8.whyWillDataBeTransferredOutsideEUArticle47Options?.map((v) => v.value),
-    whyWillDataBeTransferredOutsideEUArticle47a: section8.whyWillDataBeTransferredOutsideEUArticle47a,
-    whyWillDataBeTransferredOutsideEUArticle47b: section8.whyWillDataBeTransferredOutsideEUArticle47b,
-    whyWillDataBeTransferredOutsideEUArticle47c: section8.whyWillDataBeTransferredOutsideEUArticle47c,
-    whyWillDataBeTransferredOutsideEUArticle48: section8.whyWillDataBeTransferredOutsideEUArticle48,
-    whyWillDataBeTransferredOutsideEUArticle48a: section8.whyWillDataBeTransferredOutsideEUArticle48a,
-    whyWillDataBeTransferredOutsideEUArticle48b: section8.whyWillDataBeTransferredOutsideEUArticle48b,
-    whyWillDataBeTransferredOutsideEUArticle48bOptions: section8.whyWillDataBeTransferredOutsideEUArticle48bOptions?.map((v) => v.value),
-    whyWillDataBeTransferredOutsideEUArticle48c: section8.whyWillDataBeTransferredOutsideEUArticle48c,
-    whyWillDataBeTransferredOutsideEUArticle48cOpt: rawText(section8.whyWillDataBeTransferredOutsideEUArticle48cOpt),
-    whyWillDataBeTransferredOutsideEUArticle48d: section8.whyWillDataBeTransferredOutsideEUArticle48d,
-    whyWillDataBeTransferredOutsideEUArticle48e: section8.whyWillDataBeTransferredOutsideEUArticle48e,
-    whyWillDataBeTransferredOutsideEUArticle49: section8.whyWillDataBeTransferredOutsideEUArticle49,
-    legalBasisForTransferringTheDataOutsideEU: rawText(section8.legalBasisForTransferringTheDataOutsideEU),
-    legalBasisForTransferringTheDataOutsideEUOtherOptions: section8.legalBasisForTransferringTheDataOutsideEUOtherOptions?.map((v) => v.value),
-    safeguardsAreProvidedByReferringGDCP: section8.safeguardsAreProvidedByReferringGDCP?.map((v) => v.value),
-    safeguardsAreProvidedByOtherExceptionalLegalBases: rawText(section8.safeguardsAreProvidedByOtherExceptionalLegalBases),
+    whyWillDataBeTransferredOutsideEUArticle47:
+      section8.whyWillDataBeTransferredOutsideEUArticle47,
+    whyWillDataBeTransferredOutsideEUArticle47Options:
+      section8.whyWillDataBeTransferredOutsideEUArticle47Options?.map(
+        (v) => v.value,
+      ),
+    whyWillDataBeTransferredOutsideEUArticle47a:
+      section8.whyWillDataBeTransferredOutsideEUArticle47a,
+    whyWillDataBeTransferredOutsideEUArticle47b:
+      section8.whyWillDataBeTransferredOutsideEUArticle47b,
+    whyWillDataBeTransferredOutsideEUArticle47c:
+      section8.whyWillDataBeTransferredOutsideEUArticle47c,
+    whyWillDataBeTransferredOutsideEUArticle48:
+      section8.whyWillDataBeTransferredOutsideEUArticle48,
+    whyWillDataBeTransferredOutsideEUArticle48a:
+      section8.whyWillDataBeTransferredOutsideEUArticle48a,
+    whyWillDataBeTransferredOutsideEUArticle48b:
+      section8.whyWillDataBeTransferredOutsideEUArticle48b,
+    whyWillDataBeTransferredOutsideEUArticle48bOptions:
+      section8.whyWillDataBeTransferredOutsideEUArticle48bOptions?.map(
+        (v) => v.value,
+      ),
+    whyWillDataBeTransferredOutsideEUArticle48c:
+      section8.whyWillDataBeTransferredOutsideEUArticle48c,
+    whyWillDataBeTransferredOutsideEUArticle48cOpt: rawText(
+      section8.whyWillDataBeTransferredOutsideEUArticle48cOpt,
+    ),
+    whyWillDataBeTransferredOutsideEUArticle48d:
+      section8.whyWillDataBeTransferredOutsideEUArticle48d,
+    whyWillDataBeTransferredOutsideEUArticle48e:
+      section8.whyWillDataBeTransferredOutsideEUArticle48e,
+    whyWillDataBeTransferredOutsideEUArticle49:
+      section8.whyWillDataBeTransferredOutsideEUArticle49,
+    legalBasisForTransferringTheDataOutsideEU: rawText(
+      section8.legalBasisForTransferringTheDataOutsideEU,
+    ),
+    legalBasisForTransferringTheDataOutsideEUOtherOptions:
+      section8.legalBasisForTransferringTheDataOutsideEUOtherOptions?.map(
+        (v) => v.value,
+      ),
+    safeguardsAreProvidedByReferringGDCP:
+      section8.safeguardsAreProvidedByReferringGDCP?.map((v) => v.value),
+    safeguardsAreProvidedByOtherExceptionalLegalBases: rawText(
+      section8.safeguardsAreProvidedByOtherExceptionalLegalBases,
+    ),
     dataController: section8.whichOrganizationWillBeTheControllerOfData,
     dataMinimisationCompliance: section8.complyWithDataMinimisationPrinciple,
-    complyWithDataMinimisationPrincipleNotEUMember: section8.complyWithDataMinimisationPrincipleNotEUMember,
+    complyWithDataMinimisationPrincipleNotEUMember:
+      section8.complyWithDataMinimisationPrincipleNotEUMember,
     protectionStatement1: section8.protectionAndSecurityStatementsA,
     protectionStatement2: section8.protectionAndSecurityStatementsB,
     protectionStatement3: section8.protectionAndSecurityStatementsC,
     protectionStatement4: section8.protectionAndSecurityStatementsD,
     protectionStatement5: section8.protectionAndSecurityStatementsE,
     dataProcessingPersonnel: section8.peopleWhoWillBeProcessingTheData?.map(
-      (p) => `${p.fullName}${p.affiliation ? ` (${p.affiliation})` : ''} <${p.emailAddress}>`,
+      (p) =>
+        `${p.fullName}${p.affiliation ? ` (${p.affiliation})` : ''} <${p.emailAddress}>`,
     ),
-    lawfulnessOfProcessing: section8.legalBasisForProcessingPersonalData?.map((kv) => kv.value),
-    lawfulnessLegalBasisOther: section8.otherLegalBasisForProcessingPersonalData,
-    lawfulForProcessingPersonalData: section8.lawfulForProcessingPersonalData?.map((v) => v.value),
-    europeanUnionInstitution: section8.europeanUnionInstitution?.map((v) => v.value),
-    legalBasisForProcessingCombinedData: section8.legalBasisForProcessingCombinedData?.map((v) => v.value),
-    otherLegalBasisForProcessingCombinedData: section8.otherLegalBasisForProcessingCombinedData,
-    legalBasisForProcessingApplicationData: section8.legalBasisForProcessingApplicationData?.map((v) => v.value),
-    otherLegalBasisForProcessingApplicationData: section8.otherLegalBasisForProcessingApplicationData,
-    legalBasisForProcessingCombinedApplicationData: section8.legalBasisForProcessingCombinedApplicationData?.map((v) => v.value),
-    otherLegalBasisForProcessingCombinedApplicationData: section8.otherLegalBasisForProcessingCombinedApplicationData,
+    lawfulnessOfProcessing: section8.legalBasisForProcessingPersonalData?.map(
+      (kv) => kv.value,
+    ),
+    lawfulnessLegalBasisOther:
+      section8.otherLegalBasisForProcessingPersonalData,
+    lawfulForProcessingPersonalData:
+      section8.lawfulForProcessingPersonalData?.map((v) => v.value),
+    europeanUnionInstitution: section8.europeanUnionInstitution?.map(
+      (v) => v.value,
+    ),
+    legalBasisForProcessingCombinedData:
+      section8.legalBasisForProcessingCombinedData?.map((v) => v.value),
+    otherLegalBasisForProcessingCombinedData:
+      section8.otherLegalBasisForProcessingCombinedData,
+    legalBasisForProcessingApplicationData:
+      section8.legalBasisForProcessingApplicationData?.map((v) => v.value),
+    otherLegalBasisForProcessingApplicationData:
+      section8.otherLegalBasisForProcessingApplicationData,
+    legalBasisForProcessingCombinedApplicationData:
+      section8.legalBasisForProcessingCombinedApplicationData?.map(
+        (v) => v.value,
+      ),
+    otherLegalBasisForProcessingCombinedApplicationData:
+      section8.otherLegalBasisForProcessingCombinedApplicationData,
 
     // §9 (Data Access) / §7 (Data Request — Release 7 Table 46)
-    additionalInformation: section9.additionalInformation || section7.additionalInformation,
+    additionalInformation:
+      section9.additionalInformation || section7.additionalInformation,
     attachments,
 
     // §10 (Data Access) / §8 (Data Request — Release 7 Table 47)
-    consentAwareProcessingFee: section10.awareProcessingFee ?? section8.awareProcessingFee,
+    consentAwareProcessingFee:
+      section10.awareProcessingFee ?? section8.awareProcessingFee,
     consentAwareChargeFee: section10.awareChargeFee ?? section8.awareChargeFee,
-    consentAwareInformationCorrect: section10.awareInformationCorrect ?? section8.awareInformationCorrect,
+    consentAwareInformationCorrect:
+      section10.awareInformationCorrect ?? section8.awareInformationCorrect,
     consentNoAccessToUnderlyingData: section10.noAccessToUnderlyingData,
     consentAcceptHealthDataBody: section8.acceptHealthDataBody,
   };
@@ -1293,9 +1590,13 @@ export function mapNcpDetailZipToHdeuPayload(zipBuffer: Buffer): HdeuPayload {
   try {
     const metadataEntry = zip.getEntry('application_metadata.json');
     if (!metadataEntry) {
-      throw new Error('NCP detail archive has no application_metadata.json entry');
+      throw new Error(
+        'NCP detail archive has no application_metadata.json entry',
+      );
     }
-    const meta = JSON.parse(metadataEntry.getData().toString('utf-8')) as NcpMetadata;
+    const meta = JSON.parse(
+      metadataEntry.getData().toString('utf-8'),
+    ) as NcpMetadata;
     const payload = mapMetadataToHdeuPayload(meta);
     // Extract and persist attachment bytes now, while the archive is open —
     // the NCP is a message gateway, not a store, so nothing downstream
@@ -1309,7 +1610,9 @@ export function mapNcpDetailZipToHdeuPayload(zipBuffer: Buffer): HdeuPayload {
       }))
       .filter((a) => {
         if (!a.content) {
-          console.warn(`Attachment "${a.filename}" (${a.description ?? 'no id'}) not found in NCP detail archive; skipping`);
+          console.warn(
+            `Attachment "${a.filename}" (${a.description ?? 'no id'}) not found in NCP detail archive; skipping`,
+          );
         }
         return Boolean(a.content);
       });

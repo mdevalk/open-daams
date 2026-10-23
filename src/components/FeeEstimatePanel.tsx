@@ -3,7 +3,15 @@
 import { useTranslations } from 'next-intl';
 
 import { useState } from 'react';
-import { Application, FeeEstimate, FinancialLineCategory, FinancialLineItem, Invoice, SpeOperator, User } from '@prisma/client';
+import {
+  Application,
+  FeeEstimate,
+  FinancialLineCategory,
+  FinancialLineItem,
+  Invoice,
+  SpeOperator,
+  User,
+} from '@prisma/client';
 import { useRouter } from 'next/navigation';
 import { formatDate, formatDateTime, readErrorMessage } from '@/lib/utils';
 import { SpeType } from './SpeTypeList';
@@ -40,16 +48,34 @@ const STATUS_STYLES: Record<string, string> = {
 // Manually addable/removable rows. SPE_SETUP/SPE_USAGE are managed
 // exclusively via the operator/type picker below, since their amounts are
 // derived from the chosen SpeType, not typed in freely.
-const MANUAL_CATEGORIES: FinancialLineCategory[] = ['ADMINISTRATIVE', 'DATA_PREPARATION', 'DATA_HOLDER', 'ADDITIONAL_SERVICES'];
+const MANUAL_CATEGORIES: FinancialLineCategory[] = [
+  'ADMINISTRATIVE',
+  'DATA_PREPARATION',
+  'DATA_HOLDER',
+  'ADDITIONAL_SERVICES',
+];
 
-type Row = { key: string; category: FinancialLineCategory; amount: string; description: string; dataHolderId: string };
+type Row = {
+  key: string;
+  category: FinancialLineCategory;
+  amount: string;
+  description: string;
+  dataHolderId: string;
+};
 
 function fmtAmount(v: unknown, currency: string): string {
   if (v === null || v === undefined) return '—';
-  return new Intl.NumberFormat('nl-NL', { style: 'currency', currency }).format(Number(v));
+  return new Intl.NumberFormat('nl-NL', { style: 'currency', currency }).format(
+    Number(v),
+  );
 }
 
-export function FeeEstimatePanel({ application, currentUser, speOperators, dataHolders }: Props) {
+export function FeeEstimatePanel({
+  application,
+  currentUser,
+  speOperators,
+  dataHolders,
+}: Props) {
   const router = useRouter();
   const t = useTranslations('feeEstimatePanel');
   const tc = useTranslations('financialLineCategory');
@@ -63,7 +89,9 @@ export function FeeEstimatePanel({ application, currentUser, speOperators, dataH
 
   const [rows, setRows] = useState<Row[]>(() =>
     (estimate?.lineItems ?? [])
-      .filter((li) => li.category !== 'SPE_SETUP' && li.category !== 'SPE_USAGE')
+      .filter(
+        (li) => li.category !== 'SPE_SETUP' && li.category !== 'SPE_USAGE',
+      )
       .map((li) => ({
         key: li.id,
         category: li.category,
@@ -73,16 +101,23 @@ export function FeeEstimatePanel({ application, currentUser, speOperators, dataH
       })),
   );
   const [notes, setNotes] = useState(estimate?.notes ?? '');
-  const [speOperatorId, setSpeOperatorId] = useState(estimate?.speOperatorId ?? '');
+  const [speOperatorId, setSpeOperatorId] = useState(
+    estimate?.speOperatorId ?? '',
+  );
   const [speTypeId, setSpeTypeId] = useState(estimate?.speTypeId ?? '');
   const [speSetupFee, setSpeSetupFee] = useState(
-    estimate?.lineItems.find((li) => li.category === 'SPE_SETUP')?.amount?.toString() ?? '',
+    estimate?.lineItems
+      .find((li) => li.category === 'SPE_SETUP')
+      ?.amount?.toString() ?? '',
   );
   const [speUsageFee, setSpeUsageFee] = useState(
-    estimate?.lineItems.find((li) => li.category === 'SPE_USAGE')?.amount?.toString() ?? '',
+    estimate?.lineItems
+      .find((li) => li.category === 'SPE_USAGE')
+      ?.amount?.toString() ?? '',
   );
 
-  const speTypes = speOperators.find((op) => op.id === speOperatorId)?.types ?? [];
+  const speTypes =
+    speOperators.find((op) => op.id === speOperatorId)?.types ?? [];
 
   function selectSpeOperator(id: string) {
     setSpeOperatorId(id);
@@ -99,11 +134,22 @@ export function FeeEstimatePanel({ application, currentUser, speOperators, dataH
   }
 
   function addRow() {
-    setRows((r) => [...r, { key: crypto.randomUUID(), category: 'ADMINISTRATIVE', amount: '', description: '', dataHolderId: '' }]);
+    setRows((r) => [
+      ...r,
+      {
+        key: crypto.randomUUID(),
+        category: 'ADMINISTRATIVE',
+        amount: '',
+        description: '',
+        dataHolderId: '',
+      },
+    ]);
   }
 
   function updateRow(key: string, patch: Partial<Row>) {
-    setRows((r) => r.map((row) => (row.key === key ? { ...row, ...patch } : row)));
+    setRows((r) =>
+      r.map((row) => (row.key === key ? { ...row, ...patch } : row)),
+    );
   }
 
   function removeRow(key: string) {
@@ -113,23 +159,38 @@ export function FeeEstimatePanel({ application, currentUser, speOperators, dataH
   // Only relevant while the application is being assessed — unless an
   // estimate (and possibly its provisional invoice) already exists, in
   // which case it should remain visible after the decision is issued.
-  if (!estimate && !['PRE_SCREENING', 'PROCESSING', 'AWAITING_ADDITIONAL_INFORMATION'].includes(application.status)) {
+  if (
+    !estimate &&
+    ![
+      'PRE_SCREENING',
+      'PROCESSING',
+      'AWAITING_ADDITIONAL_INFORMATION',
+    ].includes(application.status)
+  ) {
     return null;
   }
 
-  const canManage = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(currentUser.role);
-  const canIssueInvoice = ['DECISION_MAKER', 'ADMIN'].includes(currentUser.role);
+  const canManage = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(
+    currentUser.role,
+  );
+  const canIssueInvoice = ['DECISION_MAKER', 'ADMIN'].includes(
+    currentUser.role,
+  );
 
   async function issueProvisionalInvoice() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/applications/${application.id}/provisional-invoice`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ actingUserId: currentUser.id }),
-      });
-      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
+      const res = await fetch(
+        `/api/applications/${application.id}/provisional-invoice`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ actingUserId: currentUser.id }),
+        },
+      );
+      if (!res.ok)
+        throw new Error(await readErrorMessage(res, terr('requestFailed')));
       router.refresh();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : terr('unexpected'));
@@ -138,7 +199,10 @@ export function FeeEstimatePanel({ application, currentUser, speOperators, dataH
     }
   }
 
-  async function updateInvoice(invoiceId: string, action: 'mark_paid' | 'cancel') {
+  async function updateInvoice(
+    invoiceId: string,
+    action: 'mark_paid' | 'cancel',
+  ) {
     setLoading(true);
     setError(null);
     try {
@@ -147,7 +211,8 @@ export function FeeEstimatePanel({ application, currentUser, speOperators, dataH
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ actingUserId: currentUser.id, action }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
+      if (!res.ok)
+        throw new Error(await readErrorMessage(res, terr('requestFailed')));
       router.refresh();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : terr('unexpected'));
@@ -161,27 +226,40 @@ export function FeeEstimatePanel({ application, currentUser, speOperators, dataH
     setError(null);
     try {
       const lineItems = [
-        ...rows.filter((r) => r.amount.trim() !== '').map((r) => ({
-          category: r.category,
-          amount: r.amount,
-          description: r.description || undefined,
-          dataHolderId: r.category === 'DATA_HOLDER' && r.dataHolderId ? r.dataHolderId : undefined,
-        })),
-        ...(speSetupFee.trim() !== '' ? [{ category: 'SPE_SETUP' as const, amount: speSetupFee }] : []),
-        ...(speUsageFee.trim() !== '' ? [{ category: 'SPE_USAGE' as const, amount: speUsageFee }] : []),
+        ...rows
+          .filter((r) => r.amount.trim() !== '')
+          .map((r) => ({
+            category: r.category,
+            amount: r.amount,
+            description: r.description || undefined,
+            dataHolderId:
+              r.category === 'DATA_HOLDER' && r.dataHolderId
+                ? r.dataHolderId
+                : undefined,
+          })),
+        ...(speSetupFee.trim() !== ''
+          ? [{ category: 'SPE_SETUP' as const, amount: speSetupFee }]
+          : []),
+        ...(speUsageFee.trim() !== ''
+          ? [{ category: 'SPE_USAGE' as const, amount: speUsageFee }]
+          : []),
       ];
-      const res = await fetch(`/api/applications/${application.id}/fee-estimate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          lineItems,
-          speOperatorId: speOperatorId || undefined,
-          speTypeId: speTypeId || undefined,
-          notes,
-          actingUserId: currentUser.id,
-        }),
-      });
-      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
+      const res = await fetch(
+        `/api/applications/${application.id}/fee-estimate`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            lineItems,
+            speOperatorId: speOperatorId || undefined,
+            speTypeId: speTypeId || undefined,
+            notes,
+            actingUserId: currentUser.id,
+          }),
+        },
+      );
+      if (!res.ok)
+        throw new Error(await readErrorMessage(res, terr('requestFailed')));
       setEditing(false);
       router.refresh();
     } catch (e: unknown) {
@@ -195,12 +273,16 @@ export function FeeEstimatePanel({ application, currentUser, speOperators, dataH
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/applications/${application.id}/fee-estimate`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status, actingUserId: currentUser.id }),
-      });
-      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
+      const res = await fetch(
+        `/api/applications/${application.id}/fee-estimate`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status, actingUserId: currentUser.id }),
+        },
+      );
+      if (!res.ok)
+        throw new Error(await readErrorMessage(res, terr('requestFailed')));
       router.refresh();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : terr('unexpected'));
@@ -217,7 +299,9 @@ export function FeeEstimatePanel({ application, currentUser, speOperators, dataH
       <div className="flex items-center justify-between">
         <h2 className="font-semibold text-gray-900 text-sm">{t('title')}</h2>
         {estimate && (
-          <span className={`text-xs font-medium px-2 py-0.5 rounded ${STATUS_STYLES[estimate.status]}`}>
+          <span
+            className={`text-xs font-medium px-2 py-0.5 rounded ${STATUS_STYLES[estimate.status]}`}
+          >
             {t(`status${estimate.status}`)}
           </span>
         )}
@@ -229,21 +313,41 @@ export function FeeEstimatePanel({ application, currentUser, speOperators, dataH
             <div key={item.id} className="flex justify-between">
               <span className="text-gray-500">
                 {tc(item.category)}
-                {(item.category === 'SPE_SETUP' || item.category === 'SPE_USAGE') && estimate.speType && ` — ${estimate.speType.name}`}
-                {(item.category === 'SPE_SETUP' || item.category === 'SPE_USAGE') && estimate.speOperator && ` (${estimate.speOperator.name})`}
-                {item.category === 'DATA_HOLDER' && item.dataHolderId && ` — ${dataHolders.find((dh) => dh.id === item.dataHolderId)?.name ?? item.dataHolderId}`}
+                {(item.category === 'SPE_SETUP' ||
+                  item.category === 'SPE_USAGE') &&
+                  estimate.speType &&
+                  ` — ${estimate.speType.name}`}
+                {(item.category === 'SPE_SETUP' ||
+                  item.category === 'SPE_USAGE') &&
+                  estimate.speOperator &&
+                  ` (${estimate.speOperator.name})`}
+                {item.category === 'DATA_HOLDER' &&
+                  item.dataHolderId &&
+                  ` — ${dataHolders.find((dh) => dh.id === item.dataHolderId)?.name ?? item.dataHolderId}`}
               </span>
               <span>{fmtAmount(item.amount, item.currency)}</span>
             </div>
           ))}
           {estimate.lineItems.map((item) =>
             item.description ? (
-              <p key={`${item.id}-description`} className="text-xs text-gray-500 -mt-0.5">{item.description}</p>
+              <p
+                key={`${item.id}-description`}
+                className="text-xs text-gray-500 -mt-0.5"
+              >
+                {item.description}
+              </p>
             ) : null,
           )}
-          <div className="flex justify-between font-semibold border-t border-gray-200 pt-1 mt-1"><span>{t('total')}</span><span>{fmtAmount(estimate.totalAmount, estimate.currency)}</span></div>
-          {estimate.notes && <p className="text-xs text-gray-500 mt-1">{estimate.notes}</p>}
-          <p className="text-xs text-gray-400 mt-1">{t('sentOn')} {formatDateTime(estimate.sentAt)}</p>
+          <div className="flex justify-between font-semibold border-t border-gray-200 pt-1 mt-1">
+            <span>{t('total')}</span>
+            <span>{fmtAmount(estimate.totalAmount, estimate.currency)}</span>
+          </div>
+          {estimate.notes && (
+            <p className="text-xs text-gray-500 mt-1">{estimate.notes}</p>
+          )}
+          <p className="text-xs text-gray-400 mt-1">
+            {t('sentOn')} {formatDateTime(estimate.sentAt)}
+          </p>
         </div>
       )}
 
@@ -251,38 +355,77 @@ export function FeeEstimatePanel({ application, currentUser, speOperators, dataH
         <div className="border-t border-gray-100 pt-3">
           {estimate.invoice && (
             <div className="flex items-center justify-between mb-1">
-              <p className="text-xs font-medium text-gray-700">{t('provisionalInvoice')}</p>
-              <span className={`text-xs font-medium px-2 py-0.5 rounded ${INVOICE_STATUS_STYLES[estimate.invoice.status]}`}>
+              <p className="text-xs font-medium text-gray-700">
+                {t('provisionalInvoice')}
+              </p>
+              <span
+                className={`text-xs font-medium px-2 py-0.5 rounded ${INVOICE_STATUS_STYLES[estimate.invoice.status]}`}
+              >
                 {ti(`status${estimate.invoice.status}`)}
               </span>
             </div>
           )}
           {estimate.invoice ? (
             <div className="text-sm space-y-1">
-              <div className="flex justify-between"><span className="text-gray-500 font-mono text-xs">{estimate.invoice.invoiceNumber}</span><span>{fmtAmount(estimate.invoice.totalAmount, estimate.invoice.currency)}</span></div>
+              <div className="flex justify-between">
+                <span className="text-gray-500 font-mono text-xs">
+                  {estimate.invoice.invoiceNumber}
+                </span>
+                <span>
+                  {fmtAmount(
+                    estimate.invoice.totalAmount,
+                    estimate.invoice.currency,
+                  )}
+                </span>
+              </div>
               <p className="text-xs text-gray-400">
-                {t('sentOn')} {formatDate(estimate.invoice.issuedAt)} · {t('dueOn')} {formatDate(estimate.invoice.dueAt)}
-                {estimate.invoice.paidAt && <> · {t('paidOn')} {formatDate(estimate.invoice.paidAt)}</>}
+                {t('sentOn')} {formatDate(estimate.invoice.issuedAt)} ·{' '}
+                {t('dueOn')} {formatDate(estimate.invoice.dueAt)}
+                {estimate.invoice.paidAt && (
+                  <>
+                    {' '}
+                    · {t('paidOn')} {formatDate(estimate.invoice.paidAt)}
+                  </>
+                )}
               </p>
               {canManage && estimate.invoice.status === 'ISSUED' && (
                 <div className="flex gap-3 pt-1">
-                  <button type="button" disabled={loading} onClick={() => updateInvoice(estimate.invoice!.id, 'mark_paid')} className="text-xs text-emerald-700 hover:underline">
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={() =>
+                      updateInvoice(estimate.invoice!.id, 'mark_paid')
+                    }
+                    className="text-xs text-emerald-700 hover:underline"
+                  >
                     {t('markPaid')}
                   </button>
-                  <button type="button" disabled={loading} onClick={() => updateInvoice(estimate.invoice!.id, 'cancel')} className="text-xs text-red-600 hover:underline">
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={() =>
+                      updateInvoice(estimate.invoice!.id, 'cancel')
+                    }
+                    className="text-xs text-red-600 hover:underline"
+                  >
                     {t('cancel')}
                   </button>
                 </div>
               )}
             </div>
+          ) : canIssueInvoice ? (
+            <button
+              type="button"
+              disabled={loading}
+              onClick={issueProvisionalInvoice}
+              className="text-xs text-[#01689b] hover:underline"
+            >
+              {t('issueProvisionalInvoice')}
+            </button>
           ) : (
-            canIssueInvoice ? (
-              <button type="button" disabled={loading} onClick={issueProvisionalInvoice} className="text-xs text-[#01689b] hover:underline">
-                {t('issueProvisionalInvoice')}
-              </button>
-            ) : (
-              <p className="text-xs text-gray-500">{t('noProvisionalInvoiceYet')}</p>
-            )
+            <p className="text-xs text-gray-500">
+              {t('noProvisionalInvoiceYet')}
+            </p>
           )}
         </div>
       )}
@@ -295,55 +438,85 @@ export function FeeEstimatePanel({ application, currentUser, speOperators, dataH
             <div key={row.key} className="flex gap-2 items-start">
               <select
                 value={row.category}
-                onChange={(e) => updateRow(row.key, { category: e.target.value as FinancialLineCategory })}
+                onChange={(e) =>
+                  updateRow(row.key, {
+                    category: e.target.value as FinancialLineCategory,
+                  })
+                }
                 className="rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
               >
                 {MANUAL_CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>{tc(cat)}</option>
+                  <option key={cat} value={cat}>
+                    {tc(cat)}
+                  </option>
                 ))}
               </select>
               {row.category === 'DATA_HOLDER' && (
                 <select
                   value={row.dataHolderId}
-                  onChange={(e) => updateRow(row.key, { dataHolderId: e.target.value })}
+                  onChange={(e) =>
+                    updateRow(row.key, { dataHolderId: e.target.value })
+                  }
                   className="rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
                 >
                   <option value="">{t('noneSelected')}</option>
                   {dataHolders.map((dh) => (
-                    <option key={dh.id} value={dh.id}>{dh.name}</option>
+                    <option key={dh.id} value={dh.id}>
+                      {dh.name}
+                    </option>
                   ))}
                 </select>
               )}
               <input
-                type="number" step="0.01" placeholder={t('amountPlaceholder')} value={row.amount}
+                type="number"
+                step="0.01"
+                placeholder={t('amountPlaceholder')}
+                value={row.amount}
                 onChange={(e) => updateRow(row.key, { amount: e.target.value })}
                 className="w-28 rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
               <input
-                type="text" placeholder={t('descriptionPlaceholder')} value={row.description}
-                onChange={(e) => updateRow(row.key, { description: e.target.value })}
+                type="text"
+                placeholder={t('descriptionPlaceholder')}
+                value={row.description}
+                onChange={(e) =>
+                  updateRow(row.key, { description: e.target.value })
+                }
                 className="flex-1 rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
               />
-              <button type="button" onClick={() => removeRow(row.key)} className="text-xs text-red-600 hover:underline px-1 py-1.5" aria-label={t('removeRow')}>
+              <button
+                type="button"
+                onClick={() => removeRow(row.key)}
+                className="text-xs text-red-600 hover:underline px-1 py-1.5"
+                aria-label={t('removeRow')}
+              >
                 ✕
               </button>
             </div>
           ))}
-          <button type="button" onClick={addRow} className="text-xs text-[#01689b] hover:underline">
+          <button
+            type="button"
+            onClick={addRow}
+            className="text-xs text-[#01689b] hover:underline"
+          >
             + {t('addRow')}
           </button>
 
           {showSpe && (
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">{t('speOperator')}</label>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                {t('speOperator')}
+              </label>
               <select
                 value={speOperatorId}
-                onChange={e => selectSpeOperator(e.target.value)}
+                onChange={(e) => selectSpeOperator(e.target.value)}
                 className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
               >
                 <option value="">{t('noneSelected')}</option>
-                {speOperators.map(op => (
-                  <option key={op.id} value={op.id}>{op.name}</option>
+                {speOperators.map((op) => (
+                  <option key={op.id} value={op.id}>
+                    {op.name}
+                  </option>
                 ))}
               </select>
             </div>
@@ -351,16 +524,19 @@ export function FeeEstimatePanel({ application, currentUser, speOperators, dataH
 
           {showSpe && speTypes.length > 0 && (
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">{t('speType')}</label>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                {t('speType')}
+              </label>
               <select
                 value={speTypeId}
-                onChange={e => selectSpeType(e.target.value)}
+                onChange={(e) => selectSpeType(e.target.value)}
                 className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
               >
                 <option value="">{t('noneSelected')}</option>
-                {speTypes.map(type => (
+                {speTypes.map((type) => (
                   <option key={type.id} value={type.id}>
-                    {type.name} (€{String(type.setupFee)} / €{String(type.monthlyFee)})
+                    {type.name} (€{String(type.setupFee)} / €
+                    {String(type.monthlyFee)})
                   </option>
                 ))}
               </select>
@@ -370,38 +546,74 @@ export function FeeEstimatePanel({ application, currentUser, speOperators, dataH
           {showSpe && (
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">{t('speSetupFee')}</label>
-                <input type="number" step="0.01" value={speSetupFee} readOnly={!!speTypeId} onChange={e => setSpeSetupFee(e.target.value)}
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  {t('speSetupFee')}
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={speSetupFee}
+                  readOnly={!!speTypeId}
+                  onChange={(e) => setSpeSetupFee(e.target.value)}
                   className={`w-full rounded border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b] ${
-                    speTypeId ? 'border-gray-200 bg-gray-100 cursor-not-allowed' : 'border-gray-300'
-                  }`} />
+                    speTypeId
+                      ? 'border-gray-200 bg-gray-100 cursor-not-allowed'
+                      : 'border-gray-300'
+                  }`}
+                />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">{t('speUsageFee')}</label>
-                <input type="number" step="0.01" value={speUsageFee} readOnly={!!speTypeId} onChange={e => setSpeUsageFee(e.target.value)}
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  {t('speUsageFee')}
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={speUsageFee}
+                  readOnly={!!speTypeId}
+                  onChange={(e) => setSpeUsageFee(e.target.value)}
                   className={`w-full rounded border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b] ${
-                    speTypeId ? 'border-gray-200 bg-gray-100 cursor-not-allowed' : 'border-gray-300'
-                  }`} />
+                    speTypeId
+                      ? 'border-gray-200 bg-gray-100 cursor-not-allowed'
+                      : 'border-gray-300'
+                  }`}
+                />
               </div>
               {speTypeId && (
-                <p className="col-span-2 text-xs text-gray-500 -mt-1">{t('speFeeDerived')}</p>
+                <p className="col-span-2 text-xs text-gray-500 -mt-1">
+                  {t('speFeeDerived')}
+                </p>
               )}
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">{t('notes')}</label>
-            <textarea rows={2} value={notes} onChange={e => setNotes(e.target.value)}
-              className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              {t('notes')}
+            </label>
+            <textarea
+              rows={2}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
+            />
           </div>
           <div className="flex gap-2">
-            <button type="button" disabled={loading} onClick={sendEstimate}
-              className="flex-1 rounded px-3 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors">
+            <button
+              type="button"
+              disabled={loading}
+              onClick={sendEstimate}
+              className="flex-1 rounded px-3 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors"
+            >
               {loading ? t('loading') : t('sendEstimate')}
             </button>
             {estimate && (
-              <button type="button" disabled={loading} onClick={() => setEditing(false)}
-                className="rounded px-3 py-2 text-sm border border-gray-300 hover:bg-gray-50">
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => setEditing(false)}
+                className="rounded px-3 py-2 text-sm border border-gray-300 hover:bg-gray-50"
+              >
                 {t('cancel')}
               </button>
             )}
@@ -411,15 +623,29 @@ export function FeeEstimatePanel({ application, currentUser, speOperators, dataH
 
       {canManage && estimate && !showForm && (
         <div className="flex gap-2">
-          <button type="button" onClick={() => setEditing(true)} className="text-xs text-[#01689b] hover:underline">
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className="text-xs text-[#01689b] hover:underline"
+          >
             {t('edit')}
           </button>
           {estimate.status === 'PENDING' && (
             <>
-              <button type="button" disabled={loading} onClick={() => respond('ACCEPTED')} className="text-xs text-emerald-700 hover:underline">
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => respond('ACCEPTED')}
+                className="text-xs text-emerald-700 hover:underline"
+              >
                 {t('markAccepted')}
               </button>
-              <button type="button" disabled={loading} onClick={() => respond('REJECTED')} className="text-xs text-red-700 hover:underline">
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => respond('REJECTED')}
+                className="text-xs text-red-700 hover:underline"
+              >
                 {t('markRejected')}
               </button>
             </>

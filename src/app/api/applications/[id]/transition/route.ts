@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Prisma, Application, ApplicationStatus, DecisionOutcome } from '@prisma/client';
+import {
+  Prisma,
+  Application,
+  ApplicationStatus,
+  DecisionOutcome,
+} from '@prisma/client';
 import { prisma } from '@/lib/db';
 import {
   getAvailableTransitions,
@@ -26,7 +31,9 @@ async function generateDecisionId(year: number): Promise<string> {
     where: { decisionId: { startsWith: prefix } },
     orderBy: { decisionId: 'desc' },
   });
-  const lastSeq = last ? Number.parseInt(last.decisionId!.slice(prefix.length), 10) || 0 : 0;
+  const lastSeq = last
+    ? Number.parseInt(last.decisionId!.slice(prefix.length), 10) || 0
+    : 0;
   return `${prefix}${String(lastSeq + 1).padStart(4, '0')}`;
 }
 
@@ -47,7 +54,10 @@ function computeStatusUpdates(
 
   if (toStatus === 'SUBMITTED') {
     updates.submittedAt = now;
-    updates.decisionDeadline = calculateDecisionDeadline(now, application.decisionTrack);
+    updates.decisionDeadline = calculateDecisionDeadline(
+      now,
+      application.decisionTrack,
+    );
     // Art. 57(1)(j)(ii): publish without undue delay after initial reception
     updates.publishedAt = now;
   }
@@ -71,7 +81,11 @@ function computeStatusUpdates(
     updates.additionalInfoDeadline = null;
     updates.additionalInfoReceivedAt = now;
     updates.additionalInfoRequestedFromStatus = null;
-    updates.decisionDeadline = calculateDecisionDeadline(now, application.decisionTrack, application.deadlineExtended);
+    updates.decisionDeadline = calculateDecisionDeadline(
+      now,
+      application.decisionTrack,
+      application.deadlineExtended,
+    );
   }
 
   if (toStatus === 'DECISION_ISSUED') {
@@ -120,7 +134,13 @@ async function issueDecision(
       title: true,
       type: true,
       legalBasis: true,
-      applicant: { select: { name: true, email: true, dataUser: { select: { name: true } } } },
+      applicant: {
+        select: {
+          name: true,
+          email: true,
+          dataUser: { select: { name: true } },
+        },
+      },
     },
   });
   // generateDecisionPdf expects a plain applicant.organisation string —
@@ -141,7 +161,12 @@ async function issueDecision(
 
     const signed =
       outcome === 'NEGATIVE'
-        ? await signDecisionCard({ decisionId, applicationId: id, decisionOutcome: outcome, decisionAt: now })
+        ? await signDecisionCard({
+            decisionId,
+            applicationId: id,
+            decisionOutcome: outcome,
+            decisionAt: now,
+          })
         : null;
 
     const pdf = await generateDecisionPdf({
@@ -221,17 +246,28 @@ async function recordTransition(
   return updated;
 }
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await params;
     const body = await req.json();
     // body: { toStatus, comment, decisionOutcome? }
 
-    const application = await prisma.application.findUnique({ where: { id }, include: { feeEstimate: true } });
-    if (!application) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    const application = await prisma.application.findUnique({
+      where: { id },
+      include: { feeEstimate: true },
+    });
+    if (!application)
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     const found = await findActingUser(await actingUserId());
-    if (!found.ok) return NextResponse.json({ error: found.error }, { status: found.status });
+    if (!found.ok)
+      return NextResponse.json(
+        { error: found.error },
+        { status: found.status },
+      );
 
     const feeEstimateAccepted = application.feeEstimate?.status === 'ACCEPTED';
     const available = getAvailableTransitions(
@@ -244,45 +280,81 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const transition = available.find(
       (t) =>
         t.to === body.toStatus &&
-        (!t.requiresDecisionOutcome || t.requiresDecisionOutcome === body.decisionOutcome),
+        (!t.requiresDecisionOutcome ||
+          t.requiresDecisionOutcome === body.decisionOutcome),
     );
 
     if (!transition) {
       // A positive decision is blocked by the fee-estimate gate specifically
       // (not role/status) — give an accurate reason rather than the generic
       // "not allowed for role X" message below.
-      const wouldMatchWithoutFeeGate = (TRANSITIONS[application.status] ?? []).find(
+      const wouldMatchWithoutFeeGate = (
+        TRANSITIONS[application.status] ?? []
+      ).find(
         (t) =>
           t.to === body.toStatus &&
           t.requiredRole.includes(found.user.role) &&
-          (!t.requiresDecisionOutcome || t.requiresDecisionOutcome === body.decisionOutcome),
+          (!t.requiresDecisionOutcome ||
+            t.requiresDecisionOutcome === body.decisionOutcome),
       );
-      if (wouldMatchWithoutFeeGate?.requiresFeeEstimateAccepted && !feeEstimateAccepted) {
+      if (
+        wouldMatchWithoutFeeGate?.requiresFeeEstimateAccepted &&
+        !feeEstimateAccepted
+      ) {
         return NextResponse.json(
-          { error: 'A positive decision requires an accepted fee estimate first.' },
+          {
+            error:
+              'A positive decision requires an accepted fee estimate first.',
+          },
           { status: 422 },
         );
       }
       return NextResponse.json(
-        { error: `Transition to ${body.toStatus} not allowed from ${application.status} for role ${found.user.role}` },
+        {
+          error: `Transition to ${body.toStatus} not allowed from ${application.status} for role ${found.user.role}`,
+        },
         { status: 422 },
       );
     }
 
     const now = new Date();
     const toStatus = body.toStatus as ApplicationStatus;
-    const updates = computeStatusUpdates(toStatus, application, body.comment, body.decisionOutcome, now);
+    const updates = computeStatusUpdates(
+      toStatus,
+      application,
+      body.comment,
+      body.decisionOutcome,
+      now,
+    );
 
     const logLabel = transitionLogLabel(transition.key);
     const updated =
       toStatus === 'DECISION_ISSUED'
-        ? await issueDecision(id, application, updates, toStatus, logLabel, body.comment, found.user.id, now)
-        : await recordTransition(id, application, toStatus, logLabel, updates, body.comment, found.user.id);
+        ? await issueDecision(
+            id,
+            application,
+            updates,
+            toStatus,
+            logLabel,
+            body.comment,
+            found.user.id,
+            now,
+          )
+        : await recordTransition(
+            id,
+            application,
+            toStatus,
+            logLabel,
+            updates,
+            body.comment,
+            found.user.id,
+          );
 
     return NextResponse.json(updated);
   } catch (e) {
     console.error('Failed to transition application', e);
-    const message = e instanceof Error ? e.message : 'Failed to transition application';
+    const message =
+      e instanceof Error ? e.message : 'Failed to transition application';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

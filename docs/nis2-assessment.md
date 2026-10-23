@@ -5,7 +5,7 @@ unauthorized attempts and the remaining case-workflow actions now logged; databa
 now exists). Revised 2026-08-30: (i)/(j) re-assessed following the Keycloak/OIDC integration._
 
 This assesses the open-daams codebase against **NIS2** (Directive (EU) 2022/2555), as transposed
-into Dutch law via the *Cyberbeveiligingswet* (Cbw). It complements `docs/owasp-top10-assessment.md`
+into Dutch law via the _Cyberbeveiligingswet_ (Cbw). It complements `docs/owasp-top10-assessment.md`
 and `docs/bio2-assessment.md` — NIS2 Art. 21(2)'s ten measures are largely the same underlying
 facts as those two documents, read through NIS2's coarser lens; this doc cross-references both
 rather than re-deriving their evidence.
@@ -16,6 +16,7 @@ rather than re-deriving their evidence.
 >
 > **Scope boundary — narrower than `docs/bio2-assessment.md`'s, read carefully**: this assesses
 > the **application code only**. Three things are explicitly out of scope, not silently omitted:
+>
 > 1. **Datacenter/hosting/facilities** — a separate DAAMS work package (same as the BIO2 doc).
 > 2. **The health data itself** — DAAMS never handles it; that happens at the data holder/SPE,
 >    outside this back-office application's boundary (per `CLAUDE.md`'s scope note).
@@ -23,7 +24,7 @@ rather than re-deriving their evidence.
 >    CSIRT-reporting chain, registration/self-classification, management-liability structures
 >    (Art. 20), training programs, and vendor-risk-management processes are all organizational
 >    activities with no application-code artifact — they're stated as out of scope below, not
->    assessed as gaps "the codebase should fix." Where a NIS2 measure has *both* a code-checkable
+>    assessed as gaps "the codebase should fix." Where a NIS2 measure has _both_ a code-checkable
 >    slice and a procedural slice (e.g. (b) incident handling: logging is code, response process
 >    is procedure), only the code slice is assessed; the procedural slice is named and set aside.
 >
@@ -36,25 +37,25 @@ rather than re-deriving their evidence.
 
 ## Summary
 
-| NIS2 Art. 21(2) | Status | Key finding | → BIO2 controls |
-|---|---|---|---|
-| (a) Risk analysis & security policy | ➖ Out of scope (procedural) | Risk-analysis methodology and policy documents are organizational artifacts, no code slice exists | 5.1, 5.9/5.12 |
-| (b) Incident handling | ✅ Fixed, code slice only | Logging now covers every mutation — status transitions, other successful actions, and rejected/unauthorized attempts (OWASP A09, fully closed) — the response process/CSIRT chain remains out of scope (procedural) | 5.24–5.28 |
-| (c) Business continuity | ✅ Fixed, code slice only | `npm run db:backup`/`db:restore` now exist and were verified via a real dump-and-restore round trip; facility continuity, continuity *planning*, and replication/HA are out of scope | 5.30, 8.13 |
-| (d) Supply chain security | ✅ Fixed, code slice only | Both dependencies now pinned to exact versions; vendor-risk process remains out of scope (procedural) | 5.19/5.21/5.22 |
-| (e) Secure development, vulnerability handling | ✅ Fixed | `npm audit` clean, now enforced on every push via `.github/workflows/ci.yml` | 8.8, 8.25–8.29 |
-| (f) Effectiveness assessment | ✅ Fixed, code slice only | `.github/workflows/ci.yml` runs the test suite on every push; broader assessment process remains out of scope (procedural) | 5.35/5.36 |
-| (g) Cyber hygiene & training | ➖ Out of scope (procedural) | Training program — organizational | 6.3 |
-| (h) Cryptography | ✅ Clean | Ed25519 signing (OWASP A02); TLS termination is a deployment concern | 8.24 |
-| (i) HR security, access control, asset management | ✅ Fixed, code slice only | Role enforcement real and consistent, now backed by a real Keycloak-verified identity; HR-security aspects out of scope (procedural) | 5.15–5.18, 8.2/8.3 |
-| (j) MFA / secure comms | ◑ Delegated, not enabled | Keycloak (the IdP) supports MFA; not configured in the demo realm. Secure comms (CSP/HSTS) already covered under A05/A10 | 8.5, 8.20/8.21 |
+| NIS2 Art. 21(2)                                   | Status                       | Key finding                                                                                                                                                                                                         | → BIO2 controls    |
+| ------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| (a) Risk analysis & security policy               | ➖ Out of scope (procedural) | Risk-analysis methodology and policy documents are organizational artifacts, no code slice exists                                                                                                                   | 5.1, 5.9/5.12      |
+| (b) Incident handling                             | ✅ Fixed, code slice only    | Logging now covers every mutation — status transitions, other successful actions, and rejected/unauthorized attempts (OWASP A09, fully closed) — the response process/CSIRT chain remains out of scope (procedural) | 5.24–5.28          |
+| (c) Business continuity                           | ✅ Fixed, code slice only    | `npm run db:backup`/`db:restore` now exist and were verified via a real dump-and-restore round trip; facility continuity, continuity _planning_, and replication/HA are out of scope                                | 5.30, 8.13         |
+| (d) Supply chain security                         | ✅ Fixed, code slice only    | Both dependencies now pinned to exact versions; vendor-risk process remains out of scope (procedural)                                                                                                               | 5.19/5.21/5.22     |
+| (e) Secure development, vulnerability handling    | ✅ Fixed                     | `npm audit` clean, now enforced on every push via `.github/workflows/ci.yml`                                                                                                                                        | 8.8, 8.25–8.29     |
+| (f) Effectiveness assessment                      | ✅ Fixed, code slice only    | `.github/workflows/ci.yml` runs the test suite on every push; broader assessment process remains out of scope (procedural)                                                                                          | 5.35/5.36          |
+| (g) Cyber hygiene & training                      | ➖ Out of scope (procedural) | Training program — organizational                                                                                                                                                                                   | 6.3                |
+| (h) Cryptography                                  | ✅ Clean                     | Ed25519 signing (OWASP A02); TLS termination is a deployment concern                                                                                                                                                | 8.24               |
+| (i) HR security, access control, asset management | ✅ Fixed, code slice only    | Role enforcement real and consistent, now backed by a real Keycloak-verified identity; HR-security aspects out of scope (procedural)                                                                                | 5.15–5.18, 8.2/8.3 |
+| (j) MFA / secure comms                            | ◑ Delegated, not enabled     | Keycloak (the IdP) supports MFA; not configured in the demo realm. Secure comms (CSP/HSTS) already covered under A05/A10                                                                                            | 8.5, 8.20/8.21     |
 
 ## Findings
 
 ### (a) Risk analysis & security policy ➖ Out of scope (procedural)
 
 A risk-analysis methodology and an information-security policy document are organizational
-artifacts with no application-code equivalent — there's nothing in a codebase that *is* a risk
+artifacts with no application-code equivalent — there's nothing in a codebase that _is_ a risk
 analysis. Not assessed as a gap; named so the boundary is explicit rather than silently skipped.
 
 ### (b) Incident handling ✅ Fixed — code slice only
@@ -66,7 +67,7 @@ invoices, trusted-data-holder) that were the last unlogged gap; and `AuthzFailur
 (`src/lib/authz.ts`) records rejected/unauthorized attempts — missing/invalid user id, unknown
 user, and role-not-permitted, each via one shared logging path rather than per-route changes.
 Verified live via real requests for both the rejection cases and a representative sample of the
-case-workflow actions. **Still out of scope**: the incident-*response* process (triage, containment)
+case-workflow actions. **Still out of scope**: the incident-_response_ process (triage, containment)
 and the NIS2 Art. 23 reporting chain (24-hour early warning, 72-hour notification, 1-month final
 report to the CSIRT/competent authority) are procedural — logging existing is necessary but not
 sufficient for either, and neither has a code artifact to check.
@@ -82,7 +83,7 @@ against disposable containers, confirming `Bytea`/`Decimal`-equivalent data and 
 correctly, plus a second restore over the same target to confirm the dump's `--clean --if-exists`
 self-cleaning makes it idempotent. **Still out of scope**: facility-level continuity (power,
 physical redundancy, alternate sites — the same datacenter boundary as
-`docs/bio2-assessment.md`'s 8.14), continuity *planning* as a document/process (procedural), and
+`docs/bio2-assessment.md`'s 8.14), continuity _planning_ as a document/process (procedural), and
 replication/HA — a different Postgres topology (a standby instance), not applicable to this
 single-node docker-compose reference setup, named explicitly rather than left implied by "backup."
 
@@ -91,7 +92,7 @@ single-node docker-compose reference setup, named explicitly rather than left im
 Two dependencies previously pinned to `"*"` in `package.json` (OWASP A06), a non-reproducible-build
 gap, are now pinned to exact versions; confirmed a behavioural no-op (`npx tsc --noEmit` clean,
 55/55 tests before and after). **Still out of scope**:
-vendor-risk-assessment process (procedural) — the codebase can show *what* is depended on, not
+vendor-risk-assessment process (procedural) — the codebase can show _what_ is depended on, not
 whether a supplier was vetted.
 
 ### (e) Secure development & vulnerability handling ✅ Fixed
@@ -149,7 +150,7 @@ application's own database (c) are also fixed. Cryptography (h) is clean. The on
 code-slice item is (j): Keycloak supports MFA but the demo realm doesn't enable it — a config
 change, not a missing feature.
 **Explicitly out of scope, and correctly so given this is an application-only review**:
-risk-analysis/policy documents (a), incident-*response* process and the Art. 23 CSIRT-reporting
+risk-analysis/policy documents (a), incident-_response_ process and the Art. 23 CSIRT-reporting
 chain (b), training programs (g), vendor-risk process (d), HR-security process (i), and
 emergency-communication systems (j) — none of these have an application-code artifact, and a
 reference implementation with no real organization behind it has nowhere to put one even if it

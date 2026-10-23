@@ -30,11 +30,20 @@ const PDF_INCLUDE = {
       legalBasis: true,
       dataProcessingCountry: true,
       isCrossBorder: true,
-      applicant: { select: { name: true, email: true, dataUser: { select: { name: true } } } },
+      applicant: {
+        select: {
+          name: true,
+          email: true,
+          dataUser: { select: { name: true } },
+        },
+      },
     },
   },
   authorizedPersons: { orderBy: { addedAt: 'asc' as const } },
-  grantedDatasets: { orderBy: { createdAt: 'asc' as const }, include: { storageLocation: true } },
+  grantedDatasets: {
+    orderBy: { createdAt: 'asc' as const },
+    include: { storageLocation: true },
+  },
   previousPermit: { select: { permitNumber: true, version: true } },
   lineItems: true,
 } satisfies Prisma.DataPermitInclude;
@@ -50,7 +59,10 @@ const PDF_INCLUDE = {
  * so callers that already hold a transaction can keep the PDF write atomic
  * with the state change that triggered it.
  */
-export async function regenerateStoredPermitPdf(permitId: string, client: Client): Promise<void> {
+export async function regenerateStoredPermitPdf(
+  permitId: string,
+  client: Client,
+): Promise<void> {
   const permit = await client.dataPermit.findUniqueOrThrow({
     where: { id: permitId },
     include: PDF_INCLUDE,
@@ -68,5 +80,8 @@ export async function regenerateStoredPermitPdf(permitId: string, client: Client
       },
     },
   });
-  await client.dataPermit.update({ where: { id: permitId }, data: { pdf: Buffer.from(pdfBytes) } });
+  await client.dataPermit.update({
+    where: { id: permitId },
+    data: { pdf: Buffer.from(pdfBytes) },
+  });
 }

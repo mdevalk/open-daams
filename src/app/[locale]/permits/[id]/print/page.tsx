@@ -29,7 +29,13 @@ export default async function PermitPrintPage({
           legalBasis: true,
           dataProcessingCountry: true,
           purposeCategory: true,
-          applicant: { select: { name: true, email: true, dataUser: { select: { name: true } } } },
+          applicant: {
+            select: {
+              name: true,
+              email: true,
+              dataUser: { select: { name: true } },
+            },
+          },
         },
       },
     },
@@ -43,7 +49,10 @@ export default async function PermitPrintPage({
     <html lang="nl">
       <head>
         <meta charSet="utf-8" />
-        <title>Vergunning {formatPermitId(permit.permitNumber, permit.version)} — {APP_NAME}</title>
+        <title>
+          Vergunning {formatPermitId(permit.permitNumber, permit.version)} —{' '}
+          {APP_NAME}
+        </title>
         <style nonce={nonce}>{`
           * { box-sizing: border-box; margin: 0; padding: 0; }
           body { font-family: Arial, Helvetica, sans-serif; font-size: 11pt; color: #000; background: #fff; }
@@ -99,19 +108,28 @@ export default async function PermitPrintPage({
           <span className="save-hint">
             Kies ‘Opslaan als PDF’ in het printvenster om te downloaden.
           </span>
-          <button type="button" onClick={() => window.print()}>Afdrukken / PDF opslaan</button>
+          <button type="button" onClick={() => window.print()}>
+            Afdrukken / PDF opslaan
+          </button>
         </div>
 
         <div className="page">
           <div className="header">
             <h1>{APP_NAME}</h1>
-            <p>Health Data Access Body Nederland (HDAB-NL) — EHDS Dataverwerkingsvergunning</p>
+            <p>
+              Health Data Access Body Nederland (HDAB-NL) — EHDS
+              Dataverwerkingsvergunning
+            </p>
           </div>
 
           <div className="permit-box">
             <div className="label">Vergunningsnummer</div>
-            <div className="number">{formatPermitId(permit.permitNumber, permit.version)}</div>
-            <div className={`status-badge${permit.status === 'REVOKED' ? ' revoked' : ''}`}>
+            <div className="number">
+              {formatPermitId(permit.permitNumber, permit.version)}
+            </div>
+            <div
+              className={`status-badge${permit.status === 'REVOKED' ? ' revoked' : ''}`}
+            >
               {tps(permit.status)}
             </div>
           </div>
@@ -135,21 +153,52 @@ export default async function PermitPrintPage({
             <>
               <div className="section">
                 <div className="section-title">Aanvrager</div>
-                <div className="field"><span className="lbl">Naam</span><span className="val">{app.applicant.name}</span></div>
-                <div className="field"><span className="lbl">Organisatie</span><span className="val">{app.applicant.dataUser?.name ?? '—'}</span></div>
-                <div className="field"><span className="lbl">E-mail</span><span className="val">{app.applicant.email}</span></div>
+                <div className="field">
+                  <span className="lbl">Naam</span>
+                  <span className="val">{app.applicant.name}</span>
+                </div>
+                <div className="field">
+                  <span className="lbl">Organisatie</span>
+                  <span className="val">
+                    {app.applicant.dataUser?.name ?? '—'}
+                  </span>
+                </div>
+                <div className="field">
+                  <span className="lbl">E-mail</span>
+                  <span className="val">{app.applicant.email}</span>
+                </div>
               </div>
 
               <div className="section">
                 <div className="section-title">Aanvraaggegevens</div>
-                <div className="field"><span className="lbl">Kenmerk</span><span className="val">{app.referenceNumber}</span></div>
-                <div className="field"><span className="lbl">Titel</span><span className="val">{app.title}</span></div>
+                <div className="field">
+                  <span className="lbl">Kenmerk</span>
+                  <span className="val">{app.referenceNumber}</span>
+                </div>
+                <div className="field">
+                  <span className="lbl">Titel</span>
+                  <span className="val">{app.title}</span>
+                </div>
                 <div className="field">
                   <span className="lbl">Type</span>
-                  <span className="val">{app.type === 'DATA_ACCESS_APPLICATION' ? 'Data-toegangsaanvraag (Art. 67 EHDS)' : 'Dataverzoek (Art. 69 EHDS)'}</span>
+                  <span className="val">
+                    {app.type === 'DATA_ACCESS_APPLICATION'
+                      ? 'Data-toegangsaanvraag (Art. 67 EHDS)'
+                      : 'Dataverzoek (Art. 69 EHDS)'}
+                  </span>
                 </div>
-                {app.legalBasis && <div className="field"><span className="lbl">Juridische grondslag</span><span className="val">{app.legalBasis}</span></div>}
-                {app.dataProcessingCountry && <div className="field"><span className="lbl">Verwerkingsland</span><span className="val">{app.dataProcessingCountry}</span></div>}
+                {app.legalBasis && (
+                  <div className="field">
+                    <span className="lbl">Juridische grondslag</span>
+                    <span className="val">{app.legalBasis}</span>
+                  </div>
+                )}
+                {app.dataProcessingCountry && (
+                  <div className="field">
+                    <span className="lbl">Verwerkingsland</span>
+                    <span className="val">{app.dataProcessingCountry}</span>
+                  </div>
+                )}
               </div>
             </>
           )}
@@ -162,13 +211,16 @@ export default async function PermitPrintPage({
           )}
 
           <div className="notice">
-            Deze vergunning is afgegeven op grond van de EHDS Verordening (EU) 2025/327 en de nationale implementatie
-            daarvan. De vergunning is persoonsgebonden en niet overdraagbaar. Gebruik van de verleende gegevens is
-            uitsluitend toegestaan voor het omschreven doel. TEHDAS2 D6.4 §9.
+            Deze vergunning is afgegeven op grond van de EHDS Verordening (EU)
+            2025/327 en de nationale implementatie daarvan. De vergunning is
+            persoonsgebonden en niet overdraagbaar. Gebruik van de verleende
+            gegevens is uitsluitend toegestaan voor het omschreven doel. TEHDAS2
+            D6.4 §9.
           </div>
 
           <div className="footer-bar">
-            {APP_NAME} | Health Data Access Body Nederland (HDAB-NL) | EHDS Verordening (EU) 2025/327
+            {APP_NAME} | Health Data Access Body Nederland (HDAB-NL) | EHDS
+            Verordening (EU) 2025/327
           </div>
         </div>
       </body>

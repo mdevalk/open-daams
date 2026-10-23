@@ -28,12 +28,20 @@ export async function AuthorizedPersonsPanel({ persons, locale }: Props) {
               {p.name}
               {p.role && (
                 <span className="ml-2 text-xs font-medium px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700">
-                  {t(p.role === 'RESEARCHER' ? 'roleResearcher' : 'roleOutputController')}
+                  {t(
+                    p.role === 'RESEARCHER'
+                      ? 'roleResearcher'
+                      : 'roleOutputController',
+                  )}
                 </span>
               )}
             </p>
             <p className="text-xs text-gray-500">{p.affiliation}</p>
-            {p.did && <p className="text-xs text-gray-400 font-mono">{t('did')}: {p.did}</p>}
+            {p.did && (
+              <p className="text-xs text-gray-400 font-mono">
+                {t('did')}: {p.did}
+              </p>
+            )}
           </li>
         ))}
       </ul>

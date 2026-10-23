@@ -5,7 +5,12 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { readErrorMessage } from '@/lib/utils';
 
-export type SpeType = { id: string; name: string; setupFee: unknown; monthlyFee: unknown };
+export type SpeType = {
+  id: string;
+  name: string;
+  setupFee: unknown;
+  monthlyFee: unknown;
+};
 
 type Props = {
   speOperatorId: string;
@@ -21,7 +26,13 @@ type Props = {
 const fieldCls =
   'rounded border border-gray-300 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-[#01689b]';
 
-export function SpeTypeList({ speOperatorId, types, isAdmin, currentUserId, editable }: Props) {
+export function SpeTypeList({
+  speOperatorId,
+  types,
+  isAdmin,
+  currentUserId,
+  editable,
+}: Props) {
   const router = useRouter();
   const t = useTranslations('speOperators');
   const terr = useTranslations('errors');
@@ -53,9 +64,15 @@ export function SpeTypeList({ speOperatorId, types, isAdmin, currentUserId, edit
       const res = await fetch(`/api/spe-types/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: editName, setupFee: editSetupFee, monthlyFee: editMonthlyFee, actingUserId: currentUserId }),
+        body: JSON.stringify({
+          name: editName,
+          setupFee: editSetupFee,
+          monthlyFee: editMonthlyFee,
+          actingUserId: currentUserId,
+        }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
+      if (!res.ok)
+        throw new Error(await readErrorMessage(res, terr('requestFailed')));
       setEditingId(null);
       router.refresh();
     } catch (e: unknown) {
@@ -74,7 +91,8 @@ export function SpeTypeList({ speOperatorId, types, isAdmin, currentUserId, edit
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ actingUserId: currentUserId }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
+      if (!res.ok)
+        throw new Error(await readErrorMessage(res, terr('requestFailed')));
       router.refresh();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : terr('unexpected'));
@@ -90,9 +108,15 @@ export function SpeTypeList({ speOperatorId, types, isAdmin, currentUserId, edit
       const res = await fetch(`/api/spe-operators/${speOperatorId}/types`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newName, setupFee: newSetupFee, monthlyFee: newMonthlyFee, actingUserId: currentUserId }),
+        body: JSON.stringify({
+          name: newName,
+          setupFee: newSetupFee,
+          monthlyFee: newMonthlyFee,
+          actingUserId: currentUserId,
+        }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
+      if (!res.ok)
+        throw new Error(await readErrorMessage(res, terr('requestFailed')));
       setNewName('');
       setNewSetupFee('');
       setNewMonthlyFee('');
@@ -117,9 +141,15 @@ export function SpeTypeList({ speOperatorId, types, isAdmin, currentUserId, edit
         <table className="w-full text-xs border-collapse">
           <thead>
             <tr className="text-gray-500">
-              <th className="text-left font-medium py-1 pr-2">{t('typeName')}</th>
-              <th className="text-right font-medium py-1 px-2">{t('setupFee')}</th>
-              <th className="text-right font-medium py-1 px-2">{t('monthlyFee')}</th>
+              <th className="text-left font-medium py-1 pr-2">
+                {t('typeName')}
+              </th>
+              <th className="text-right font-medium py-1 px-2">
+                {t('setupFee')}
+              </th>
+              <th className="text-right font-medium py-1 px-2">
+                {t('monthlyFee')}
+              </th>
               {editable && isAdmin && <th className="py-1 pl-2" />}
             </tr>
           </thead>
@@ -129,28 +159,78 @@ export function SpeTypeList({ speOperatorId, types, isAdmin, currentUserId, edit
                 {editable && editingId === type.id ? (
                   <>
                     <td className="py-1 pr-2">
-                      <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder={t('typeName')} className={`${fieldCls} w-full`} />
+                      <input
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        placeholder={t('typeName')}
+                        className={`${fieldCls} w-full`}
+                      />
                     </td>
                     <td className="py-1 px-2">
-                      <input type="number" step="0.01" value={editSetupFee} onChange={(e) => setEditSetupFee(e.target.value)} placeholder={t('setupFee')} className={`${fieldCls} w-20 text-right`} />
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={editSetupFee}
+                        onChange={(e) => setEditSetupFee(e.target.value)}
+                        placeholder={t('setupFee')}
+                        className={`${fieldCls} w-20 text-right`}
+                      />
                     </td>
                     <td className="py-1 px-2">
-                      <input type="number" step="0.01" value={editMonthlyFee} onChange={(e) => setEditMonthlyFee(e.target.value)} placeholder={t('monthlyFee')} className={`${fieldCls} w-20 text-right`} />
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={editMonthlyFee}
+                        onChange={(e) => setEditMonthlyFee(e.target.value)}
+                        placeholder={t('monthlyFee')}
+                        className={`${fieldCls} w-20 text-right`}
+                      />
                     </td>
                     <td className="py-1 pl-2 whitespace-nowrap">
-                      <button type="button" disabled={loading || !editName.trim()} onClick={() => saveEdit(type.id)} className="text-[#01689b] hover:underline">{t('save')}</button>
-                      <button type="button" disabled={loading} onClick={() => setEditingId(null)} className="ml-2 text-gray-500 hover:underline">{t('cancel')}</button>
+                      <button
+                        type="button"
+                        disabled={loading || !editName.trim()}
+                        onClick={() => saveEdit(type.id)}
+                        className="text-[#01689b] hover:underline"
+                      >
+                        {t('save')}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={loading}
+                        onClick={() => setEditingId(null)}
+                        className="ml-2 text-gray-500 hover:underline"
+                      >
+                        {t('cancel')}
+                      </button>
                     </td>
                   </>
                 ) : (
                   <>
                     <td className="py-1 pr-2 text-gray-700">{type.name}</td>
-                    <td className="py-1 px-2 text-right text-gray-700">€{String(type.setupFee)}</td>
-                    <td className="py-1 px-2 text-right text-gray-700">€{String(type.monthlyFee)}</td>
+                    <td className="py-1 px-2 text-right text-gray-700">
+                      €{String(type.setupFee)}
+                    </td>
+                    <td className="py-1 px-2 text-right text-gray-700">
+                      €{String(type.monthlyFee)}
+                    </td>
                     {editable && isAdmin && (
                       <td className="py-1 pl-2 whitespace-nowrap">
-                        <button type="button" onClick={() => startEdit(type)} className="text-[#01689b] hover:underline">{t('edit')}</button>
-                        <button type="button" disabled={loading} onClick={() => deleteType(type.id)} className="ml-2 text-red-600 hover:underline">{t('delete')}</button>
+                        <button
+                          type="button"
+                          onClick={() => startEdit(type)}
+                          className="text-[#01689b] hover:underline"
+                        >
+                          {t('edit')}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={loading}
+                          onClick={() => deleteType(type.id)}
+                          className="ml-2 text-red-600 hover:underline"
+                        >
+                          {t('delete')}
+                        </button>
                       </td>
                     )}
                   </>
@@ -160,17 +240,50 @@ export function SpeTypeList({ speOperatorId, types, isAdmin, currentUserId, edit
             {editable && isAdmin && showAdd && (
               <tr className="border-t border-gray-100">
                 <td className="py-1 pr-2">
-                  <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder={t('typeName')} className={`${fieldCls} w-full`} />
+                  <input
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    placeholder={t('typeName')}
+                    className={`${fieldCls} w-full`}
+                  />
                 </td>
                 <td className="py-1 px-2">
-                  <input type="number" step="0.01" value={newSetupFee} onChange={(e) => setNewSetupFee(e.target.value)} placeholder={t('setupFee')} className={`${fieldCls} w-20 text-right`} />
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={newSetupFee}
+                    onChange={(e) => setNewSetupFee(e.target.value)}
+                    placeholder={t('setupFee')}
+                    className={`${fieldCls} w-20 text-right`}
+                  />
                 </td>
                 <td className="py-1 px-2">
-                  <input type="number" step="0.01" value={newMonthlyFee} onChange={(e) => setNewMonthlyFee(e.target.value)} placeholder={t('monthlyFee')} className={`${fieldCls} w-20 text-right`} />
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={newMonthlyFee}
+                    onChange={(e) => setNewMonthlyFee(e.target.value)}
+                    placeholder={t('monthlyFee')}
+                    className={`${fieldCls} w-20 text-right`}
+                  />
                 </td>
                 <td className="py-1 pl-2 whitespace-nowrap">
-                  <button type="button" disabled={loading || !newName.trim()} onClick={submitNew} className="text-[#01689b] hover:underline">{t('addTypeSubmit')}</button>
-                  <button type="button" disabled={loading} onClick={() => setShowAdd(false)} className="ml-2 text-gray-500 hover:underline">{t('cancel')}</button>
+                  <button
+                    type="button"
+                    disabled={loading || !newName.trim()}
+                    onClick={submitNew}
+                    className="text-[#01689b] hover:underline"
+                  >
+                    {t('addTypeSubmit')}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={() => setShowAdd(false)}
+                    className="ml-2 text-gray-500 hover:underline"
+                  >
+                    {t('cancel')}
+                  </button>
                 </td>
               </tr>
             )}
@@ -179,7 +292,13 @@ export function SpeTypeList({ speOperatorId, types, isAdmin, currentUserId, edit
       )}
 
       {editable && isAdmin && !showAdd && (
-        <button type="button" onClick={() => setShowAdd(true)} className="text-xs text-[#01689b] hover:underline">+ {t('addType')}</button>
+        <button
+          type="button"
+          onClick={() => setShowAdd(true)}
+          className="text-xs text-[#01689b] hover:underline"
+        >
+          + {t('addType')}
+        </button>
       )}
     </div>
   );

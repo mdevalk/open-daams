@@ -3,8 +3,17 @@
 import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { DataPermitStatus, PermitChangeType, PermitChangeStatus } from '@prisma/client';
-import { CHANGE_STATUS_COLORS, requestableTypes, buildChangeRequestDecisionBody, resolveChangeRequestNavigation } from '@/lib/capabilities/permit-lifecycle/permit-change';
+import {
+  DataPermitStatus,
+  PermitChangeType,
+  PermitChangeStatus,
+} from '@prisma/client';
+import {
+  CHANGE_STATUS_COLORS,
+  requestableTypes,
+  buildChangeRequestDecisionBody,
+  resolveChangeRequestNavigation,
+} from '@/lib/capabilities/permit-lifecycle/permit-change';
 import { formatDate, readErrorMessage } from '@/lib/utils';
 
 // Swaps the trailing path segment (this permit's id) for another version's id,
@@ -87,7 +96,8 @@ export function PermitChangeRequestPanel({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ actingUserId: currentUserId }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
+      if (!res.ok)
+        throw new Error(await readErrorMessage(res, terr('requestFailed')));
       router.push(replaceLastPathSegment(pathname, pendingVersion.id));
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : terr('unexpected'));
@@ -98,7 +108,9 @@ export function PermitChangeRequestPanel({
 
   // Output controller affiliation can be a data holder or a data user
   // (applicant) organisation — merged into one alphabetical option list.
-  const affiliationOptions = [...dataHolders, ...dataUsers].sort((a, b) => a.name.localeCompare(b.name));
+  const affiliationOptions = [...dataHolders, ...dataUsers].sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
 
   const available = requestableTypes(permitStatus);
   const [newType, setNewType] = useState<PermitChangeType | ''>('');
@@ -114,7 +126,8 @@ export function PermitChangeRequestPanel({
   // amendment (see AuthorizedPersonsPanel's read-only framing) — blank
   // means "keep the current version's output controller unchanged."
   const [outputControllerName, setOutputControllerName] = useState('');
-  const [outputControllerAffiliation, setOutputControllerAffiliation] = useState('');
+  const [outputControllerAffiliation, setOutputControllerAffiliation] =
+    useState('');
 
   async function submitRequest() {
     if (!newType) return;
@@ -124,9 +137,14 @@ export function PermitChangeRequestPanel({
       const res = await fetch(`/api/permits/${permitId}/change-requests`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: newType, justification, requestedById: currentUserId }),
+        body: JSON.stringify({
+          type: newType,
+          justification,
+          requestedById: currentUserId,
+        }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
+      if (!res.ok)
+        throw new Error(await readErrorMessage(res, terr('requestFailed')));
       setNewType('');
       setJustification('');
       router.refresh();
@@ -137,29 +155,39 @@ export function PermitChangeRequestPanel({
     }
   }
 
-  async function decide(request: ChangeRequest, decision: 'APPROVED' | 'REJECTED') {
+  async function decide(
+    request: ChangeRequest,
+    decision: 'APPROVED' | 'REJECTED',
+  ) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/permits/${permitId}/change-requests/${request.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(
-          buildChangeRequestDecisionBody({
-            decision,
-            requestType: request.type,
-            actingUserId: currentUserId,
-            comment: decisionComment,
-            newValidUntil,
-            effectiveDate,
-            speOperatorId,
-            outputControllerName,
-            outputControllerAffiliation,
-          }),
-        ),
-      });
-      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
-      const data = (await res.json().catch(() => null)) as { newPermitId?: string; pending?: boolean } | null;
+      const res = await fetch(
+        `/api/permits/${permitId}/change-requests/${request.id}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(
+            buildChangeRequestDecisionBody({
+              decision,
+              requestType: request.type,
+              actingUserId: currentUserId,
+              comment: decisionComment,
+              newValidUntil,
+              effectiveDate,
+              speOperatorId,
+              outputControllerName,
+              outputControllerAffiliation,
+            }),
+          ),
+        },
+      );
+      if (!res.ok)
+        throw new Error(await readErrorMessage(res, terr('requestFailed')));
+      const data = (await res.json().catch(() => null)) as {
+        newPermitId?: string;
+        pending?: boolean;
+      } | null;
       setDecideFor(null);
       setDecisionComment('');
       setNewValidUntil('');
@@ -190,13 +218,18 @@ export function PermitChangeRequestPanel({
             {t('pendingActivation', { version: pendingVersion.version })}
           </p>
           <p className="text-xs text-amber-800 mt-0.5">
-            {t('pendingActivationDate', { date: formatDate(pendingVersion.effectiveAt) })}
+            {t('pendingActivationDate', {
+              date: formatDate(pendingVersion.effectiveAt),
+            })}
           </p>
           {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
           {canDecide && (
             <button
               type="button"
-              disabled={loading || new Date(pendingVersion.effectiveAt).getTime() > Date.now()}
+              disabled={
+                loading ||
+                new Date(pendingVersion.effectiveAt).getTime() > Date.now()
+              }
               onClick={activate}
               className="mt-2 rounded px-3 py-1.5 text-xs font-semibold text-white bg-amber-700 hover:bg-amber-800 disabled:opacity-50"
             >
@@ -213,18 +246,24 @@ export function PermitChangeRequestPanel({
       {requests.map((r) => (
         <div key={r.id} className="rounded border border-gray-200 p-3 text-sm">
           <div className="flex items-center justify-between">
-            <span className="font-medium" title={tth(r.type)}>{tt(r.type)}</span>
-            <span className={`text-xs font-medium px-2 py-0.5 rounded ${CHANGE_STATUS_COLORS[r.status]}`}>
+            <span className="font-medium" title={tth(r.type)}>
+              {tt(r.type)}
+            </span>
+            <span
+              className={`text-xs font-medium px-2 py-0.5 rounded ${CHANGE_STATUS_COLORS[r.status]}`}
+            >
               {tstat(r.status)}
             </span>
           </div>
           <p className="text-xs text-gray-600 mt-1 italic">{r.justification}</p>
           <p className="text-xs text-gray-400 mt-1">
-            {t('requestedBy')} {r.requestedBy.name} · {formatDate(r.requestedAt)}
+            {t('requestedBy')} {r.requestedBy.name} ·{' '}
+            {formatDate(r.requestedAt)}
           </p>
           {r.status !== 'REQUESTED' && (
             <p className="text-xs text-gray-400">
-              {tstat(r.status)} · {r.decidedBy?.name ?? '—'} · {formatDate(r.decidedAt)}
+              {tstat(r.status)} · {r.decidedBy?.name ?? '—'} ·{' '}
+              {formatDate(r.decidedAt)}
               {r.decisionComment ? ` — ${r.decisionComment}` : ''}
             </p>
           )}
@@ -235,49 +274,85 @@ export function PermitChangeRequestPanel({
                 <div className="space-y-2">
                   {r.type === 'RENEWAL' && (
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">{t('newExpiry')}</label>
-                      <input type="date" value={newValidUntil} onChange={(e) => setNewValidUntil(e.target.value)} className={inputCls} />
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        {t('newExpiry')}
+                      </label>
+                      <input
+                        type="date"
+                        value={newValidUntil}
+                        onChange={(e) => setNewValidUntil(e.target.value)}
+                        className={inputCls}
+                      />
                     </div>
                   )}
                   {r.type === 'AMENDMENT' && (
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">{t('effectiveDate')}</label>
-                      <input type="date" value={effectiveDate} onChange={(e) => setEffectiveDate(e.target.value)} className={inputCls} />
-                      <p className="text-xs text-gray-400 mt-1">{t('effectiveDateHint')}</p>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        {t('effectiveDate')}
+                      </label>
+                      <input
+                        type="date"
+                        value={effectiveDate}
+                        onChange={(e) => setEffectiveDate(e.target.value)}
+                        className={inputCls}
+                      />
+                      <p className="text-xs text-gray-400 mt-1">
+                        {t('effectiveDateHint')}
+                      </p>
                     </div>
                   )}
                   {r.type === 'AMENDMENT' && !isDataRequest && (
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">{t('speOperator')}</label>
-                      <select value={speOperatorId} onChange={(e) => setSpeOperatorId(e.target.value)} className={inputCls}>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        {t('speOperator')}
+                      </label>
+                      <select
+                        value={speOperatorId}
+                        onChange={(e) => setSpeOperatorId(e.target.value)}
+                        className={inputCls}
+                      >
                         <option value="">{t('speOperatorUnchanged')}</option>
                         {speOperators.map((op) => (
-                          <option key={op.id} value={op.id}>{op.name}</option>
+                          <option key={op.id} value={op.id}>
+                            {op.name}
+                          </option>
                         ))}
                       </select>
                     </div>
                   )}
                   {r.type === 'AMENDMENT' && (
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">{t('outputController')}</label>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        {t('outputController')}
+                      </label>
                       <input
                         type="text"
                         value={outputControllerName}
-                        onChange={(e) => setOutputControllerName(e.target.value)}
+                        onChange={(e) =>
+                          setOutputControllerName(e.target.value)
+                        }
                         placeholder={t('outputControllerNameUnchanged')}
                         className={inputCls}
                       />
                       <select
                         value={outputControllerAffiliation}
-                        onChange={(e) => setOutputControllerAffiliation(e.target.value)}
+                        onChange={(e) =>
+                          setOutputControllerAffiliation(e.target.value)
+                        }
                         className={`${inputCls} mt-1`}
                       >
-                        <option value="">{t('outputControllerAffiliationUnchanged')}</option>
+                        <option value="">
+                          {t('outputControllerAffiliationUnchanged')}
+                        </option>
                         {affiliationOptions.map((o) => (
-                          <option key={o.id} value={o.name}>{o.name}</option>
+                          <option key={o.id} value={o.name}>
+                            {o.name}
+                          </option>
                         ))}
                       </select>
-                      <p className="text-xs text-gray-400 mt-1">{t('outputControllerHint')}</p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {t('outputControllerHint')}
+                      </p>
                     </div>
                   )}
                   <textarea
@@ -290,7 +365,9 @@ export function PermitChangeRequestPanel({
                   <div className="flex gap-2">
                     <button
                       type="button"
-                      disabled={loading || (r.type === 'RENEWAL' && !newValidUntil)}
+                      disabled={
+                        loading || (r.type === 'RENEWAL' && !newValidUntil)
+                      }
                       onClick={() => decide(r, 'APPROVED')}
                       className="flex-1 rounded px-3 py-1.5 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50"
                     >
@@ -340,11 +417,19 @@ export function PermitChangeRequestPanel({
 
       {canRequest && available.length > 0 && (
         <div className="border-t border-gray-200 pt-3 space-y-2">
-          <p className="text-xs font-semibold text-gray-900">{t('documentNew')}</p>
-          <select value={newType} onChange={(e) => setNewType(e.target.value as PermitChangeType)} className={inputCls}>
+          <p className="text-xs font-semibold text-gray-900">
+            {t('documentNew')}
+          </p>
+          <select
+            value={newType}
+            onChange={(e) => setNewType(e.target.value as PermitChangeType)}
+            className={inputCls}
+          >
             <option value="">{t('selectType')}</option>
             {available.map((ct) => (
-              <option key={ct} value={ct} title={tth(ct)}>{tt(ct)}</option>
+              <option key={ct} value={ct} title={tth(ct)}>
+                {tt(ct)}
+              </option>
             ))}
           </select>
           {newType && <p className="text-xs text-gray-500">{tth(newType)}</p>}

@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import AdmZip from 'adm-zip';
-import { getNcpApplicationDetail, guessAttachmentMimeType, resolveAttachmentBytes } from '@/lib/capabilities/external-ingestion/ncp-client';
+import {
+  getNcpApplicationDetail,
+  guessAttachmentMimeType,
+  resolveAttachmentBytes,
+} from '@/lib/capabilities/external-ingestion/ncp-client';
 import { fileResponse } from '@/lib/http';
 import { requireRole } from '@/lib/authz';
 import { actingUserId } from '@/auth';
@@ -15,24 +19,41 @@ import { actingUserId } from '@/auth';
  * archive from the NCP on every call (same as the POST import route); there
  * is nothing to persist yet since no application row exists at this point.
  */
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string; filename: string }> }) {
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string; filename: string }> },
+) {
   const { id, filename } = await params;
 
-  const auth = await requireRole(await actingUserId(), ['CASE_HANDLER', 'ADMIN']);
-  if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+  const auth = await requireRole(await actingUserId(), [
+    'CASE_HANDLER',
+    'ADMIN',
+  ]);
+  if (!auth.ok)
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   try {
     const zipBuffer = await getNcpApplicationDetail(id);
     const zip = new AdmZip(zipBuffer);
     const bytes = resolveAttachmentBytes(zip, undefined, filename);
     if (!bytes) {
-      return NextResponse.json({ error: `${filename} not found in NCP application ${id}` }, { status: 404 });
+      return NextResponse.json(
+        { error: `${filename} not found in NCP application ${id}` },
+        { status: 404 },
+      );
     }
 
-    return fileResponse(bytes, filename, { mimeType: guessAttachmentMimeType(filename), disposition: 'inline' });
+    return fileResponse(bytes, filename, {
+      mimeType: guessAttachmentMimeType(filename),
+      disposition: 'inline',
+    });
   } catch (e) {
-    console.error(`Failed to fetch NCP attachment ${filename} for application ${id}`, e);
-    const message = e instanceof Error ? e.message : 'Failed to fetch attachment';
+    console.error(
+      `Failed to fetch NCP attachment ${filename} for application ${id}`,
+      e,
+    );
+    const message =
+      e instanceof Error ? e.message : 'Failed to fetch attachment';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

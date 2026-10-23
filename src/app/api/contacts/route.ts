@@ -22,14 +22,25 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
 
     const auth = await requireRole(await actingUserId(), ['ADMIN']);
-    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+    if (!auth.ok)
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const ownerType = body.ownerType as OwnerType;
-    if (typeof ownerType !== 'string' || !Object.hasOwn(OWNER_FIELD, ownerType) || !body.ownerId) {
-      return NextResponse.json({ error: 'ownerType and ownerId are required' }, { status: 422 });
+    if (
+      typeof ownerType !== 'string' ||
+      !Object.hasOwn(OWNER_FIELD, ownerType) ||
+      !body.ownerId
+    ) {
+      return NextResponse.json(
+        { error: 'ownerType and ownerId are required' },
+        { status: 422 },
+      );
     }
     if (!body.name && !body.email) {
-      return NextResponse.json({ error: 'At least a name or email is required' }, { status: 422 });
+      return NextResponse.json(
+        { error: 'At least a name or email is required' },
+        { status: 422 },
+      );
     }
 
     const contact = await prisma.contact.create({

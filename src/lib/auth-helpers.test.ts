@@ -8,7 +8,10 @@ vi.mock('@/lib/db', () => ({
 }));
 
 import { prisma } from '@/lib/db';
-import { resolveSignInClaims, resolveImpersonationUpdate } from '@/lib/auth-helpers';
+import {
+  resolveSignInClaims,
+  resolveImpersonationUpdate,
+} from '@/lib/auth-helpers';
 
 const findUnique = vi.mocked(prisma.user.findUnique);
 
@@ -30,15 +33,23 @@ describe('resolveSignInClaims', () => {
 
   it('does nothing without a profile email', async () => {
     const token = makeToken();
-    await resolveSignInClaims(token, { provider: 'keycloak' } as never, undefined);
+    await resolveSignInClaims(
+      token,
+      { provider: 'keycloak' } as never,
+      undefined,
+    );
     expect(findUnique).not.toHaveBeenCalled();
   });
 
   it('sets internalUserId/role from the matching User row', async () => {
     findUnique.mockResolvedValue({ id: 'u-1', role: 'ADMIN' } as never);
     const token = makeToken();
-    await resolveSignInClaims(token, { provider: 'keycloak' } as never, { email: 'admin@hdab.nl' });
-    expect(findUnique).toHaveBeenCalledWith({ where: { email: 'admin@hdab.nl' } });
+    await resolveSignInClaims(token, { provider: 'keycloak' } as never, {
+      email: 'admin@hdab.nl',
+    });
+    expect(findUnique).toHaveBeenCalledWith({
+      where: { email: 'admin@hdab.nl' },
+    });
     expect(token.internalUserId).toBe('u-1');
     expect(token.role).toBe('ADMIN');
   });
@@ -46,16 +57,22 @@ describe('resolveSignInClaims', () => {
   it('leaves internalUserId/role unset when no matching User row exists', async () => {
     findUnique.mockResolvedValue(null);
     const token = makeToken();
-    await resolveSignInClaims(token, { provider: 'keycloak' } as never, { email: 'ghost@hdab.nl' });
+    await resolveSignInClaims(token, { provider: 'keycloak' } as never, {
+      email: 'ghost@hdab.nl',
+    });
     expect(token.internalUserId).toBeUndefined();
   });
 
   it('stashes the raw id_token when present', async () => {
     findUnique.mockResolvedValue(null);
     const token = makeToken();
-    await resolveSignInClaims(token, { provider: 'keycloak', id_token: 'raw-id-token' } as never, {
-      email: 'admin@hdab.nl',
-    });
+    await resolveSignInClaims(
+      token,
+      { provider: 'keycloak', id_token: 'raw-id-token' } as never,
+      {
+        email: 'admin@hdab.nl',
+      },
+    );
     expect(token.idToken).toBe('raw-id-token');
   });
 });
@@ -63,7 +80,9 @@ describe('resolveSignInClaims', () => {
 describe('resolveImpersonationUpdate', () => {
   it('does nothing when trigger is not "update"', async () => {
     const token = makeToken({ internalUserId: 'u-1' });
-    await resolveImpersonationUpdate(token, undefined, { impersonatedUserId: 'u-2' });
+    await resolveImpersonationUpdate(token, undefined, {
+      impersonatedUserId: 'u-2',
+    });
     expect(findUnique).not.toHaveBeenCalled();
   });
 
@@ -75,23 +94,33 @@ describe('resolveImpersonationUpdate', () => {
 
   it('does nothing when the real user cannot be resolved (no internalUserId yet)', async () => {
     const token = makeToken();
-    await resolveImpersonationUpdate(token, 'update', { impersonatedUserId: 'u-2' });
+    await resolveImpersonationUpdate(token, 'update', {
+      impersonatedUserId: 'u-2',
+    });
     expect(findUnique).not.toHaveBeenCalled();
   });
 
   it('rejects the update when the real user is not ADMIN', async () => {
     findUnique.mockResolvedValue({ id: 'u-1', role: 'CASE_HANDLER' } as never);
     const token = makeToken({ internalUserId: 'u-1' });
-    await resolveImpersonationUpdate(token, 'update', { impersonatedUserId: 'u-2' });
+    await resolveImpersonationUpdate(token, 'update', {
+      impersonatedUserId: 'u-2',
+    });
     expect(token.impersonatedUserId).toBeUndefined();
   });
 
   it('sets impersonatedUserId/name/role when the real user is ADMIN and the target exists', async () => {
     findUnique
       .mockResolvedValueOnce({ id: 'u-1', role: 'ADMIN' } as never) // real user lookup
-      .mockResolvedValueOnce({ id: 'u-2', name: 'S. Bakker', role: 'CASE_HANDLER' } as never); // target lookup
+      .mockResolvedValueOnce({
+        id: 'u-2',
+        name: 'S. Bakker',
+        role: 'CASE_HANDLER',
+      } as never); // target lookup
     const token = makeToken({ internalUserId: 'u-1' });
-    await resolveImpersonationUpdate(token, 'update', { impersonatedUserId: 'u-2' });
+    await resolveImpersonationUpdate(token, 'update', {
+      impersonatedUserId: 'u-2',
+    });
     expect(token.impersonatedUserId).toBe('u-2');
     expect(token.impersonatedName).toBe('S. Bakker');
     expect(token.impersonatedRole).toBe('CASE_HANDLER');
@@ -102,7 +131,9 @@ describe('resolveImpersonationUpdate', () => {
       .mockResolvedValueOnce({ id: 'u-1', role: 'ADMIN' } as never)
       .mockResolvedValueOnce(null);
     const token = makeToken({ internalUserId: 'u-1' });
-    await resolveImpersonationUpdate(token, 'update', { impersonatedUserId: 'ghost' });
+    await resolveImpersonationUpdate(token, 'update', {
+      impersonatedUserId: 'ghost',
+    });
     expect(token.impersonatedUserId).toBeUndefined();
   });
 
@@ -114,7 +145,9 @@ describe('resolveImpersonationUpdate', () => {
       impersonatedName: 'S. Bakker',
       impersonatedRole: 'CASE_HANDLER',
     });
-    await resolveImpersonationUpdate(token, 'update', { impersonatedUserId: null });
+    await resolveImpersonationUpdate(token, 'update', {
+      impersonatedUserId: null,
+    });
     expect(token.impersonatedUserId).toBeUndefined();
     expect(token.impersonatedName).toBeUndefined();
     expect(token.impersonatedRole).toBeUndefined();

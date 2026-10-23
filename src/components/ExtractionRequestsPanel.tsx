@@ -29,7 +29,13 @@ const NEXT_STATUSES: Record<string, string[]> = {
   DECLINED: [],
 };
 
-export function ExtractionRequestsPanel({ applicationId, currentUserId, requests, dataHolders, canManage }: Props) {
+export function ExtractionRequestsPanel({
+  applicationId,
+  currentUserId,
+  requests,
+  dataHolders,
+  canManage,
+}: Props) {
   const router = useRouter();
   const t = useTranslations('extractionRequestsPanel');
   const ts = useTranslations('extractionRequestStatus');
@@ -45,12 +51,20 @@ export function ExtractionRequestsPanel({ applicationId, currentUserId, requests
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/applications/${applicationId}/extraction-requests`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dataHolderId, datasetDescription, requestedById: currentUserId }),
-      });
-      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
+      const res = await fetch(
+        `/api/applications/${applicationId}/extraction-requests`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            dataHolderId,
+            datasetDescription,
+            requestedById: currentUserId,
+          }),
+        },
+      );
+      if (!res.ok)
+        throw new Error(await readErrorMessage(res, terr('requestFailed')));
       setDataHolderId('');
       setDatasetDescription('');
       setShowForm(false);
@@ -71,7 +85,8 @@ export function ExtractionRequestsPanel({ applicationId, currentUserId, requests
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
+      if (!res.ok)
+        throw new Error(await readErrorMessage(res, terr('requestFailed')));
       router.refresh();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : terr('unexpected'));
@@ -85,7 +100,11 @@ export function ExtractionRequestsPanel({ applicationId, currentUserId, requests
       <div className="flex items-center justify-between">
         <h2 className="font-semibold text-gray-900 text-sm">{t('title')}</h2>
         {canManage && !showForm && (
-          <button type="button" onClick={() => setShowForm(true)} className="text-xs text-[#01689b] hover:underline">
+          <button
+            type="button"
+            onClick={() => setShowForm(true)}
+            className="text-xs text-[#01689b] hover:underline"
+          >
             + {t('registerRequest')}
           </button>
         )}
@@ -99,17 +118,34 @@ export function ExtractionRequestsPanel({ applicationId, currentUserId, requests
 
       <div className="space-y-3">
         {requests.map((r) => (
-          <div key={r.id} className="border border-gray-100 rounded p-3 text-sm space-y-1">
+          <div
+            key={r.id}
+            className="border border-gray-100 rounded p-3 text-sm space-y-1"
+          >
             <div className="flex items-center justify-between">
               <span className="font-medium">{r.dataHolder?.name ?? '—'}</span>
-              <span className={`text-xs font-medium px-2 py-0.5 rounded ${STATUS_STYLES[r.status]}`}>
+              <span
+                className={`text-xs font-medium px-2 py-0.5 rounded ${STATUS_STYLES[r.status]}`}
+              >
                 {ts(r.status)}
               </span>
             </div>
-            <p className="text-gray-700 text-xs whitespace-pre-wrap">{r.datasetDescription}</p>
-            <p className="text-xs text-gray-400">{t('requestedOn')} {formatDate(r.requestedAt)}</p>
-            {r.deliveredAt && <p className="text-xs text-gray-400">{t('deliveredOn')} {formatDate(r.deliveredAt)}</p>}
-            {r.deliveryNotes && <p className="text-xs text-gray-700 border-t border-gray-100 pt-1 mt-1">{r.deliveryNotes}</p>}
+            <p className="text-gray-700 text-xs whitespace-pre-wrap">
+              {r.datasetDescription}
+            </p>
+            <p className="text-xs text-gray-400">
+              {t('requestedOn')} {formatDate(r.requestedAt)}
+            </p>
+            {r.deliveredAt && (
+              <p className="text-xs text-gray-400">
+                {t('deliveredOn')} {formatDate(r.deliveredAt)}
+              </p>
+            )}
+            {r.deliveryNotes && (
+              <p className="text-xs text-gray-700 border-t border-gray-100 pt-1 mt-1">
+                {r.deliveryNotes}
+              </p>
+            )}
             {canManage && NEXT_STATUSES[r.status]?.length > 0 && (
               <div className="flex gap-2 pt-1">
                 {NEXT_STATUSES[r.status].map((next) => (
@@ -132,26 +168,48 @@ export function ExtractionRequestsPanel({ applicationId, currentUserId, requests
       {canManage && showForm && (
         <div className="space-y-2 border-t border-gray-100 pt-3">
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">{t('dataHolderLabel')}</label>
-            <select value={dataHolderId} onChange={e => setDataHolderId(e.target.value)}
-              className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]">
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              {t('dataHolderLabel')}
+            </label>
+            <select
+              value={dataHolderId}
+              onChange={(e) => setDataHolderId(e.target.value)}
+              className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
+            >
               <option value="">{t('selectDataHolder')}</option>
               {dataHolders.map((dh) => (
-                <option key={dh.id} value={dh.id}>{dh.name}</option>
+                <option key={dh.id} value={dh.id}>
+                  {dh.name}
+                </option>
               ))}
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">{t('descriptionLabel')}</label>
-            <textarea rows={3} value={datasetDescription} onChange={e => setDatasetDescription(e.target.value)}
-              className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              {t('descriptionLabel')}
+            </label>
+            <textarea
+              rows={3}
+              value={datasetDescription}
+              onChange={(e) => setDatasetDescription(e.target.value)}
+              className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
+            />
           </div>
           <div className="flex gap-2">
-            <button type="button" disabled={loading || !dataHolderId || !datasetDescription.trim()} onClick={submitRequest}
-              className="flex-1 rounded px-3 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors">
+            <button
+              type="button"
+              disabled={loading || !dataHolderId || !datasetDescription.trim()}
+              onClick={submitRequest}
+              className="flex-1 rounded px-3 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors"
+            >
               {loading ? t('loading') : t('registerRequest')}
             </button>
-            <button type="button" disabled={loading} onClick={() => setShowForm(false)} className="rounded px-3 py-2 text-sm border border-gray-300 hover:bg-gray-50">
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => setShowForm(false)}
+              className="rounded px-3 py-2 text-sm border border-gray-300 hover:bg-gray-50"
+            >
               {t('cancel')}
             </button>
           </div>

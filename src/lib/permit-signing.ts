@@ -3,7 +3,11 @@ import { sha512 } from '@noble/hashes/sha512';
 import { concatBytes } from '@noble/hashes/utils';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { AppealStatus, DataPermitStatus, DecisionOutcome } from '@prisma/client';
+import {
+  AppealStatus,
+  DataPermitStatus,
+  DecisionOutcome,
+} from '@prisma/client';
 import { formatPermitId } from './capabilities/permit-lifecycle/permit';
 
 // Required by @noble/ed25519 v2's sync sign/verify (no Web Crypto dependency).
@@ -19,7 +23,11 @@ let cachedKey: PrivateKeyJwk | null = null;
 
 function loadPrivateKeyJwk(): PrivateKeyJwk {
   if (cachedKey) return cachedKey;
-  const keyPath = path.join(process.cwd(), 'keys', 'permit-signing-key.private.json');
+  const keyPath = path.join(
+    process.cwd(),
+    'keys',
+    'permit-signing-key.private.json',
+  );
   let raw: string;
   try {
     raw = readFileSync(keyPath, 'utf-8');
@@ -47,8 +55,8 @@ function stableStringify(value: unknown): string {
     return `[${value.map(stableStringify).join(',')}]`;
   }
   if (value !== null && typeof value === 'object') {
-    const entries = Object.entries(value as Record<string, unknown>).sort(([a], [b]) =>
-      a < b ? -1 : a > b ? 1 : 0,
+    const entries = Object.entries(value as Record<string, unknown>).sort(
+      ([a], [b]) => (a < b ? -1 : a > b ? 1 : 0),
     );
     return `{${entries.map(([k, v]) => `${JSON.stringify(k)}:${stableStringify(v)}`).join(',')}}`;
   }
@@ -76,7 +84,10 @@ export type DatasetEntry = {
   distributions: Distribution[];
   storageLocation: SignableStorageLocation | null;
 };
-export type GrantedDatasetGroup = { dataHolderName: string; datasets: DatasetEntry[] };
+export type GrantedDatasetGroup = {
+  dataHolderName: string;
+  datasets: DatasetEntry[];
+};
 
 /**
  * Groups flat (dataHolderName, name, url, ...) rows — as stored in
@@ -112,14 +123,20 @@ export function groupDatasetsByHolder(
       // what was actually signed (see the issuance route, which already
       // passes the narrow shape) and breaking signature verification.
       storageLocation: row.storageLocation
-        ? { reference: row.storageLocation.reference, writerDid: row.storageLocation.writerDid }
+        ? {
+            reference: row.storageLocation.reference,
+            writerDid: row.storageLocation.writerDid,
+          }
         : null,
     };
     const existing = byHolder.get(row.dataHolderName);
     if (existing) existing.push(entry);
     else byHolder.set(row.dataHolderName, [entry]);
   }
-  return Array.from(byHolder.entries()).map(([dataHolderName, datasets]) => ({ dataHolderName, datasets }));
+  return Array.from(byHolder.entries()).map(([dataHolderName, datasets]) => ({
+    dataHolderName,
+    datasets,
+  }));
 }
 
 // Frozen snapshots, not live FK references — same rationale as
@@ -189,7 +206,10 @@ export type SignablePermit = {
  * --force`), an older permit's payload must reflect the kid that actually
  * signed it, not today's active key.
  */
-export function canonicalPermitPayload(permit: SignablePermit, issuerKid: string) {
+export function canonicalPermitPayload(
+  permit: SignablePermit,
+  issuerKid: string,
+) {
   return {
     permitNumber: permit.permitNumber,
     version: permit.version,
@@ -213,12 +233,21 @@ export async function signPermit(
   const payload = canonicalPermitPayload(permit, kid);
   const encoded = new TextEncoder().encode(stableStringify(payload));
   const sigBytes = ed.sign(encoded, privateKeyBytes);
-  return { signature: toBase64Url(sigBytes), signedAt: new Date(), signingKeyId: kid };
+  return {
+    signature: toBase64Url(sigBytes),
+    signedAt: new Date(),
+    signingKeyId: kid,
+  };
 }
 
-export type VerifiablePermit = SignablePermit & { signature: string | null; signingKeyId: string | null };
+export type VerifiablePermit = SignablePermit & {
+  signature: string | null;
+  signingKeyId: string | null;
+};
 
-export async function verifyPermitSignature(permit: VerifiablePermit): Promise<boolean> {
+export async function verifyPermitSignature(
+  permit: VerifiablePermit,
+): Promise<boolean> {
   if (!permit.signature || !permit.signingKeyId) return false;
   const { x, kid } = loadPrivateKeyJwk();
   if (permit.signingKeyId !== kid) return false; // signed with a key we no longer hold
@@ -263,7 +292,10 @@ export type SignableDecisionCard = {
  * by design (R9.2.2 — a pre-permit for review, not a final document), so
  * there's no equivalent function for the positive path.
  */
-export function canonicalDecisionCardPayload(card: SignableDecisionCard, issuerKid: string) {
+export function canonicalDecisionCardPayload(
+  card: SignableDecisionCard,
+  issuerKid: string,
+) {
   return {
     decisionId: card.decisionId,
     applicationId: card.applicationId,
@@ -281,7 +313,11 @@ export async function signDecisionCard(
   const payload = canonicalDecisionCardPayload(card, kid);
   const encoded = new TextEncoder().encode(stableStringify(payload));
   const sigBytes = ed.sign(encoded, privateKeyBytes);
-  return { signature: toBase64Url(sigBytes), signedAt: new Date(), signingKeyId: kid };
+  return {
+    signature: toBase64Url(sigBytes),
+    signedAt: new Date(),
+    signingKeyId: kid,
+  };
 }
 
 export type SignableAppealDecision = {
@@ -299,7 +335,10 @@ export type SignableAppealDecision = {
  * state for either, so both get signed. WITHDRAWN isn't a decision on the
  * merits, so it's never passed here.
  */
-export function canonicalAppealDecisionPayload(appeal: SignableAppealDecision, issuerKid: string) {
+export function canonicalAppealDecisionPayload(
+  appeal: SignableAppealDecision,
+  issuerKid: string,
+) {
   return {
     appealId: appeal.appealId,
     applicationId: appeal.applicationId,
@@ -317,10 +356,16 @@ export async function signAppealDecision(
   const payload = canonicalAppealDecisionPayload(appeal, kid);
   const encoded = new TextEncoder().encode(stableStringify(payload));
   const sigBytes = ed.sign(encoded, privateKeyBytes);
-  return { signature: toBase64Url(sigBytes), signedAt: new Date(), signingKeyId: kid };
+  return {
+    signature: toBase64Url(sigBytes),
+    signedAt: new Date(),
+    signingKeyId: kid,
+  };
 }
 
-export type DigitalPermitDocument = ReturnType<typeof canonicalPermitPayload> & {
+export type DigitalPermitDocument = ReturnType<
+  typeof canonicalPermitPayload
+> & {
   permitId: string;
   status: DataPermitStatus;
   revocationReason: string | null;
@@ -347,23 +392,27 @@ export type DigitalPermitDocument = ReturnType<typeof canonicalPermitPayload> & 
  * attachment, so there's a single definition of what the digital permit
  * document contains.
  */
-export function buildDigitalPermitDocument(permit: SignablePermit & {
-  status: DataPermitStatus;
-  revocationReason: string | null;
-  revocationAt: Date | null;
-  signature: string | null;
-  signingKeyId: string | null;
-  purposeCategory: string | null;
-  purposeCategories: string[];
-  electronicHealthDataFormat: string | null;
-}): DigitalPermitDocument {
+export function buildDigitalPermitDocument(
+  permit: SignablePermit & {
+    status: DataPermitStatus;
+    revocationReason: string | null;
+    revocationAt: Date | null;
+    signature: string | null;
+    signingKeyId: string | null;
+    purposeCategory: string | null;
+    purposeCategories: string[];
+    electronicHealthDataFormat: string | null;
+  },
+): DigitalPermitDocument {
   const payload = canonicalPermitPayload(permit, permit.signingKeyId ?? '');
   return {
     ...payload,
     permitId: formatPermitId(permit.permitNumber, permit.version),
     status: permit.status,
     revocationReason: permit.revocationReason,
-    revocationAt: permit.revocationAt ? permit.revocationAt.toISOString() : null,
+    revocationAt: permit.revocationAt
+      ? permit.revocationAt.toISOString()
+      : null,
     signature: permit.signature,
     signingKeyId: permit.signingKeyId,
     algorithm: SIGNING_ALGORITHM,

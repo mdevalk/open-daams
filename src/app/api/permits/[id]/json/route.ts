@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { buildDigitalPermitDocument, groupDatasetsByHolder } from '@/lib/permit-signing';
+import {
+  buildDigitalPermitDocument,
+  groupDatasetsByHolder,
+} from '@/lib/permit-signing';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -11,14 +14,20 @@ export const runtime = 'nodejs';
  * The PDF is a human-readable rendering derived from this; this document is
  * the artifact independently verifiable against /.well-known/jwks.json.
  */
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const { id } = await params;
 
   try {
     const permit = await prisma.dataPermit.findUnique({
       where: { id },
       include: {
-        grantedDatasets: { orderBy: { createdAt: 'asc' }, include: { storageLocation: true } },
+        grantedDatasets: {
+          orderBy: { createdAt: 'asc' },
+          include: { storageLocation: true },
+        },
         authorizedPersons: true,
       },
     });
@@ -26,10 +35,17 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Permit not found' }, { status: 404 });
     }
 
-    const researcherRow = permit.authorizedPersons.find((p) => p.role === 'RESEARCHER');
-    const outputControllerRow = permit.authorizedPersons.find((p) => p.role === 'OUTPUT_CONTROLLER');
+    const researcherRow = permit.authorizedPersons.find(
+      (p) => p.role === 'RESEARCHER',
+    );
+    const outputControllerRow = permit.authorizedPersons.find(
+      (p) => p.role === 'OUTPUT_CONTROLLER',
+    );
     if (!outputControllerRow?.did) {
-      return NextResponse.json({ error: 'Permit has no output controller on record' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Permit has no output controller on record' },
+        { status: 500 },
+      );
     }
 
     // Read the frozen snapshot columns, not a live join — see the schema
@@ -42,13 +58,18 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
             id: permit.speOperatorId,
             name: permit.speOperatorName ?? '',
             providerName: permit.speOperatorProviderName,
-            type: permit.speTypeId ? { id: permit.speTypeId, name: permit.speTypeName ?? '' } : null,
+            type: permit.speTypeId
+              ? { id: permit.speTypeId, name: permit.speTypeName ?? '' }
+              : null,
           }
         : null,
       researcher: researcherRow?.did
         ? { affiliation: researcherRow.affiliation, did: researcherRow.did }
         : null,
-      outputController: { affiliation: outputControllerRow.affiliation, did: outputControllerRow.did },
+      outputController: {
+        affiliation: outputControllerRow.affiliation,
+        did: outputControllerRow.did,
+      },
     });
     const filename = `${document.permitId.replaceAll('/', '-')}.json`;
 
@@ -62,7 +83,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     });
   } catch (e) {
     console.error(`Failed to serve digital permit document for ${id}`, e);
-    const message = e instanceof Error ? e.message : 'Failed to serve digital permit document';
+    const message =
+      e instanceof Error
+        ? e.message
+        : 'Failed to serve digital permit document';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

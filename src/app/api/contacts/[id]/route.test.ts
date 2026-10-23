@@ -23,8 +23,18 @@ const contactFindUnique = vi.mocked(prisma.contact.findUnique);
 const contactDelete = vi.mocked(prisma.contact.delete);
 const auditLogCreate = vi.mocked(prisma.auditLog.create);
 
-const ADMIN = { id: 'u-1', role: 'ADMIN' as const, name: 'Admin', email: 'admin@hdab.nl' };
-const APPLICANT = { id: 'u-2', role: 'APPLICANT' as const, name: 'A. de Vries', email: 'researcher@umcu.nl' };
+const ADMIN = {
+  id: 'u-1',
+  role: 'ADMIN' as const,
+  name: 'Admin',
+  email: 'admin@hdab.nl',
+};
+const APPLICANT = {
+  id: 'u-2',
+  role: 'APPLICANT' as const,
+  name: 'A. de Vries',
+  email: 'researcher@umcu.nl',
+};
 
 beforeEach(() => {
   userFindUnique.mockReset();
@@ -45,7 +55,14 @@ describe('buildContactUpdateData', () => {
   });
 
   it('produces the full data object when every field is set', () => {
-    expect(buildContactUpdateData({ name: 'Jane', email: 'j@x.com', phone: '0612345678', role: 'PRIMARY' })).toEqual({
+    expect(
+      buildContactUpdateData({
+        name: 'Jane',
+        email: 'j@x.com',
+        phone: '0612345678',
+        role: 'PRIMARY',
+      }),
+    ).toEqual({
       name: 'Jane',
       email: 'j@x.com',
       phone: '0612345678',
@@ -54,7 +71,9 @@ describe('buildContactUpdateData', () => {
   });
 
   it('sets the FK for the given ownerType and nulls the other three when reassigning', () => {
-    expect(buildContactUpdateData({ ownerType: 'SpeOperator', ownerId: 'so-1' })).toEqual({
+    expect(
+      buildContactUpdateData({ ownerType: 'SpeOperator', ownerId: 'so-1' }),
+    ).toEqual({
       dataUserId: null,
       dataHolderId: null,
       speOperatorId: 'so-1',
@@ -66,9 +85,15 @@ describe('buildContactUpdateData', () => {
     // OWNER_FIELD is a plain object literal — bracket access on 'constructor'/'toString'/etc.
     // resolves inherited Object.prototype members, not a real owner field. Confirms the
     // Object.hasOwn() guard rejects these instead of treating them as a valid reassignment.
-    expect(buildContactUpdateData({ ownerType: 'constructor', ownerId: 'x' })).toEqual({});
-    expect(buildContactUpdateData({ ownerType: 'toString', ownerId: 'x' })).toEqual({});
-    expect(buildContactUpdateData({ ownerType: 'hasOwnProperty', ownerId: 'x' })).toEqual({});
+    expect(
+      buildContactUpdateData({ ownerType: 'constructor', ownerId: 'x' }),
+    ).toEqual({});
+    expect(
+      buildContactUpdateData({ ownerType: 'toString', ownerId: 'x' }),
+    ).toEqual({});
+    expect(
+      buildContactUpdateData({ ownerType: 'hasOwnProperty', ownerId: 'x' }),
+    ).toEqual({});
   });
 
   it('leaves the owner untouched when ownerType/ownerId are absent', () => {
@@ -82,13 +107,19 @@ describe('buildContactUpdateData', () => {
 
 describe('PATCH /api/contacts/[id]', () => {
   function makeRequest(body: unknown) {
-    return new NextRequest('http://localhost/api/contacts/c-1', { method: 'PATCH', body: JSON.stringify(body) });
+    return new NextRequest('http://localhost/api/contacts/c-1', {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    });
   }
 
   it('rejects a non-ADMIN acting user', async () => {
     userFindUnique.mockResolvedValue(APPLICANT as never);
 
-    const res = await PATCH(makeRequest({ actingUserId: 'u-2', name: 'New Name' }), { params: Promise.resolve({ id: 'c-1' }) });
+    const res = await PATCH(
+      makeRequest({ actingUserId: 'u-2', name: 'New Name' }),
+      { params: Promise.resolve({ id: 'c-1' }) },
+    );
 
     expect(res.status).toBe(403);
     expect(contactUpdate).not.toHaveBeenCalled();
@@ -106,12 +137,24 @@ describe('PATCH /api/contacts/[id]', () => {
       speProvider: null,
     } as never);
 
-    const res = await PATCH(makeRequest({ actingUserId: 'u-1', name: 'New Name' }), { params: Promise.resolve({ id: 'c-1' }) });
+    const res = await PATCH(
+      makeRequest({ actingUserId: 'u-1', name: 'New Name' }),
+      { params: Promise.resolve({ id: 'c-1' }) },
+    );
 
     expect(res.status).toBe(200);
-    expect(contactUpdate).toHaveBeenCalledWith({ where: { id: 'c-1' }, data: { name: 'New Name' }, include: expect.anything() });
+    expect(contactUpdate).toHaveBeenCalledWith({
+      where: { id: 'c-1' },
+      data: { name: 'New Name' },
+      include: expect.anything(),
+    });
     expect(auditLogCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ entityType: 'Contact', entityId: 'c-1' }) }),
+      expect.objectContaining({
+        data: expect.objectContaining({
+          entityType: 'Contact',
+          entityId: 'c-1',
+        }),
+      }),
     );
   });
 
@@ -127,14 +170,26 @@ describe('PATCH /api/contacts/[id]', () => {
       speProvider: null,
     } as never);
 
-    const res = await PATCH(makeRequest({ actingUserId: 'u-1', ownerType: 'SpeOperator', ownerId: 'so-1' }), {
-      params: Promise.resolve({ id: 'c-1' }),
-    });
+    const res = await PATCH(
+      makeRequest({
+        actingUserId: 'u-1',
+        ownerType: 'SpeOperator',
+        ownerId: 'so-1',
+      }),
+      {
+        params: Promise.resolve({ id: 'c-1' }),
+      },
+    );
 
     expect(res.status).toBe(200);
     expect(contactUpdate).toHaveBeenCalledWith({
       where: { id: 'c-1' },
-      data: { dataUserId: null, dataHolderId: null, speOperatorId: 'so-1', speProviderId: null },
+      data: {
+        dataUserId: null,
+        dataHolderId: null,
+        speOperatorId: 'so-1',
+        speProviderId: null,
+      },
       include: expect.anything(),
     });
   });
@@ -142,13 +197,18 @@ describe('PATCH /api/contacts/[id]', () => {
 
 describe('DELETE /api/contacts/[id]', () => {
   function makeRequest(body: unknown) {
-    return new NextRequest('http://localhost/api/contacts/c-1', { method: 'DELETE', body: JSON.stringify(body) });
+    return new NextRequest('http://localhost/api/contacts/c-1', {
+      method: 'DELETE',
+      body: JSON.stringify(body),
+    });
   }
 
   it('rejects a non-ADMIN acting user', async () => {
     userFindUnique.mockResolvedValue(APPLICANT as never);
 
-    const res = await DELETE(makeRequest({ actingUserId: 'u-2' }), { params: Promise.resolve({ id: 'c-1' }) });
+    const res = await DELETE(makeRequest({ actingUserId: 'u-2' }), {
+      params: Promise.resolve({ id: 'c-1' }),
+    });
 
     expect(res.status).toBe(403);
     expect(contactDelete).not.toHaveBeenCalled();
@@ -158,7 +218,9 @@ describe('DELETE /api/contacts/[id]', () => {
     userFindUnique.mockResolvedValue(ADMIN as never);
     contactFindUnique.mockResolvedValue(null);
 
-    const res = await DELETE(makeRequest({ actingUserId: 'u-1' }), { params: Promise.resolve({ id: 'c-1' }) });
+    const res = await DELETE(makeRequest({ actingUserId: 'u-1' }), {
+      params: Promise.resolve({ id: 'c-1' }),
+    });
 
     expect(res.status).toBe(404);
     expect(contactDelete).not.toHaveBeenCalled();
@@ -166,14 +228,25 @@ describe('DELETE /api/contacts/[id]', () => {
 
   it('deletes the contact and logs it', async () => {
     userFindUnique.mockResolvedValue(ADMIN as never);
-    contactFindUnique.mockResolvedValue({ id: 'c-1', name: 'Jane Doe', email: null } as never);
+    contactFindUnique.mockResolvedValue({
+      id: 'c-1',
+      name: 'Jane Doe',
+      email: null,
+    } as never);
 
-    const res = await DELETE(makeRequest({ actingUserId: 'u-1' }), { params: Promise.resolve({ id: 'c-1' }) });
+    const res = await DELETE(makeRequest({ actingUserId: 'u-1' }), {
+      params: Promise.resolve({ id: 'c-1' }),
+    });
 
     expect(res.status).toBe(200);
     expect(contactDelete).toHaveBeenCalledWith({ where: { id: 'c-1' } });
     expect(auditLogCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ entityType: 'Contact', entityId: 'c-1' }) }),
+      expect.objectContaining({
+        data: expect.objectContaining({
+          entityType: 'Contact',
+          entityId: 'c-1',
+        }),
+      }),
     );
   });
 });

@@ -14,16 +14,20 @@ export async function GET(req: NextRequest) {
     where: {
       ...(status ? { status } : {}),
       ...(type ? { type } : {}),
-      ...(search ? {
-        OR: [
-          { referenceNumber: { contains: search, mode: 'insensitive' } },
-          { title: { contains: search, mode: 'insensitive' } },
-          { hdeuApplicationId: { contains: search, mode: 'insensitive' } },
-        ],
-      } : {}),
+      ...(search
+        ? {
+            OR: [
+              { referenceNumber: { contains: search, mode: 'insensitive' } },
+              { title: { contains: search, mode: 'insensitive' } },
+              { hdeuApplicationId: { contains: search, mode: 'insensitive' } },
+            ],
+          }
+        : {}),
     },
     include: {
-      applicant: { select: { id: true, name: true, dataUser: { select: { name: true } } } },
+      applicant: {
+        select: { id: true, name: true, dataUser: { select: { name: true } } },
+      },
       caseHandler: { select: { id: true, name: true } },
     },
     orderBy: { updatedAt: 'desc' },
@@ -48,7 +52,9 @@ export function dataAccessApplicationFields(body: any) {
     speName: body.speName || null,
     speTechnicalRequirements: body.speTechnicalRequirements || null,
     dataAccessTiming: body.dataAccessTiming || null,
-    dataAccessLaterDate: body.dataAccessLaterDate ? new Date(body.dataAccessLaterDate) : null,
+    dataAccessLaterDate: body.dataAccessLaterDate
+      ? new Date(body.dataAccessLaterDate)
+      : null,
     transfersOutsideEuEea: body.transfersOutsideEuEea ?? false,
     transferCountries: body.transferCountries ?? [],
     transferLegalBasis: body.transferLegalBasis || null,
@@ -83,7 +89,10 @@ export function dataAccessApplicationDefaults() {
 
 /** Builds the full prisma.application.create() `data` payload (minus referenceNumber). */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- body mirrors POST's untyped req.json() result
-export function buildApplicationCreateData(body: any, isDataAccessApplication: boolean) {
+export function buildApplicationCreateData(
+  body: any,
+  isDataAccessApplication: boolean,
+) {
   return {
     type: body.type,
     status: 'DRAFT' as const,
@@ -97,12 +106,17 @@ export function buildApplicationCreateData(body: any, isDataAccessApplication: b
     exclusionCriteria: body.exclusionCriteria ?? '',
     dataStartDate: body.dataStartDate ? new Date(body.dataStartDate) : null,
     dataEndDate: body.dataEndDate ? new Date(body.dataEndDate) : null,
-    projectStartDate: body.projectStartDate ? new Date(body.projectStartDate) : null,
+    projectStartDate: body.projectStartDate
+      ? new Date(body.projectStartDate)
+      : null,
     projectEndDate: body.projectEndDate ? new Date(body.projectEndDate) : null,
     legalBasis: body.legalBasis ?? '',
     dataProcessingCountry: body.dataProcessingCountry ?? 'NL',
     isCrossBorder: body.isCrossBorder ?? false,
-    decisionTrack: body.decisionTrack === 'EXPEDITED' ? 'EXPEDITED' as const : 'STANDARD' as const,
+    decisionTrack:
+      body.decisionTrack === 'EXPEDITED'
+        ? ('EXPEDITED' as const)
+        : ('STANDARD' as const),
 
     // Cohort/dataset extraction (Annex 5 §6.1 / Annex 6 §6.1 — shared)
     cohortSizeIsEstimate: body.cohortSizeIsEstimate ?? null,
@@ -121,10 +135,14 @@ export function buildApplicationCreateData(body: any, isDataAccessApplication: b
     optOutExceptionJustification: body.optOutExceptionJustification || null,
 
     // Data access application only (Annex 5 §6.1–6.3, 7, 8)
-    ...(isDataAccessApplication ? dataAccessApplicationFields(body) : dataAccessApplicationDefaults()),
+    ...(isDataAccessApplication
+      ? dataAccessApplicationFields(body)
+      : dataAccessApplicationDefaults()),
 
     // Data request only (Annex 6 §6)
-    tabulationPlan: !isDataAccessApplication ? (body.tabulationPlan || null) : null,
+    tabulationPlan: !isDataAccessApplication
+      ? body.tabulationPlan || null
+      : null,
   };
 }
 
@@ -135,7 +153,10 @@ export function buildApplicationCreateData(body: any, isDataAccessApplication: b
  * max whenever rows are missing, and generateDecisionId in
  * transition/route.ts for the same retry-loop pattern.
  */
-async function createApplicationWithRetry(applicationData: ReturnType<typeof buildApplicationCreateData>, year: number) {
+async function createApplicationWithRetry(
+  applicationData: ReturnType<typeof buildApplicationCreateData>,
+  year: number,
+) {
   const MAX_ATTEMPTS = 5;
   for (let attempt = 1; ; attempt++) {
     const referenceNumber = await generateReferenceNumber(year);
@@ -158,8 +179,10 @@ async function createRequestedDatasets(
   applicationId: string,
   requestedDatasets: unknown,
 ) {
-  const dataHolderGroups: { dataHolderId: string; datasets: { name: string; url?: string | null }[] }[] =
-    Array.isArray(requestedDatasets) ? requestedDatasets : [];
+  const dataHolderGroups: {
+    dataHolderId: string;
+    datasets: { name: string; url?: string | null }[];
+  }[] = Array.isArray(requestedDatasets) ? requestedDatasets : [];
   if (dataHolderGroups.length === 0) return;
 
   const dataHolders = await prisma.dataHolder.findMany({
@@ -183,16 +206,30 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    const auth = await requireRole(await actingUserId(), ['APPLICANT', 'CASE_HANDLER', 'ADMIN']);
-    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+    const auth = await requireRole(await actingUserId(), [
+      'APPLICANT',
+      'CASE_HANDLER',
+      'ADMIN',
+    ]);
+    if (!auth.ok)
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     if (auth.user.role === 'APPLICANT' && body.applicantId !== auth.user.id) {
-      return NextResponse.json({ error: 'An applicant may only create their own application' }, { status: 403 });
+      return NextResponse.json(
+        { error: 'An applicant may only create their own application' },
+        { status: 403 },
+      );
     }
 
     const now = new Date();
     const isDataAccessApplication = body.type === 'DATA_ACCESS_APPLICATION';
-    const applicationData = buildApplicationCreateData(body, isDataAccessApplication);
-    const application = await createApplicationWithRetry(applicationData, now.getFullYear());
+    const applicationData = buildApplicationCreateData(
+      body,
+      isDataAccessApplication,
+    );
+    const application = await createApplicationWithRetry(
+      applicationData,
+      now.getFullYear(),
+    );
 
     await createRequestedDatasets(application.id, body.requestedDatasets);
 
@@ -208,7 +245,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(application, { status: 201 });
   } catch (e) {
     console.error('Failed to create application', e);
-    const message = e instanceof Error ? e.message : 'Failed to create application';
+    const message =
+      e instanceof Error ? e.message : 'Failed to create application';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
@@ -226,6 +264,8 @@ async function generateReferenceNumber(year: number): Promise<string> {
     where: { referenceNumber: { startsWith: prefix } },
     orderBy: { referenceNumber: 'desc' },
   });
-  const lastSeq = last ? Number.parseInt(last.referenceNumber.slice(prefix.length), 10) || 0 : 0;
+  const lastSeq = last
+    ? Number.parseInt(last.referenceNumber.slice(prefix.length), 10) || 0
+    : 0;
   return `${prefix}${String(lastSeq + 1).padStart(4, '0')}`;
 }

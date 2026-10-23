@@ -1,16 +1,33 @@
 'use client';
 
 import { useState } from 'react';
-import { Application, DataPermit, FeeEstimate, FinancialLineItem, SpeOperator, SpeType, User } from '@prisma/client';
+import {
+  Application,
+  DataPermit,
+  FeeEstimate,
+  FinancialLineItem,
+  SpeOperator,
+  SpeType,
+  User,
+} from '@prisma/client';
 import { useTranslations } from 'next-intl';
 import { PermitCard } from './PermitCard';
 import { useRouter } from 'next/navigation';
 import { readErrorMessage } from '@/lib/utils';
 
 type Props = {
-  application: Pick<Application, 'id' | 'type' | 'status' | 'decisionOutcome' | 'permitAcceptanceStatus'> & {
+  application: Pick<
+    Application,
+    'id' | 'type' | 'status' | 'decisionOutcome' | 'permitAcceptanceStatus'
+  > & {
     dataPermit: DataPermit | null;
-    feeEstimate?: (FeeEstimate & { speOperator: SpeOperator | null; speType: SpeType | null; lineItems: FinancialLineItem[] }) | null;
+    feeEstimate?:
+      | (FeeEstimate & {
+          speOperator: SpeOperator | null;
+          speType: SpeType | null;
+          lineItems: FinancialLineItem[];
+        })
+      | null;
   };
   currentUser: User;
   contacts: { id: string; name: string; ownerName: string | null }[];
@@ -25,19 +42,27 @@ export function PermitPanel({ application, currentUser, contacts }: Props) {
   const [loading, setLoading] = useState(false);
 
   // Issue form state
-  const [validFrom, setValidFrom] = useState(new Date().toISOString().slice(0, 10));
+  const [validFrom, setValidFrom] = useState(
+    new Date().toISOString().slice(0, 10),
+  );
   const [validUntil, setValidUntil] = useState(
-    new Date(Date.now() + 2 * 365.25 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+    new Date(Date.now() + 2 * 365.25 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .slice(0, 10),
   );
   // The output controller is selected by HDAB at the moment of issuance from
   // the masterdata contacts list — can be HDAB staff, a data holder's
   // employee, or an external expert. Affiliation is derived server-side from
   // the selected contact's own owner (see AuthorizedPerson.affiliation).
-  const [outputControllerContactId, setOutputControllerContactId] = useState('');
+  const [outputControllerContactId, setOutputControllerContactId] =
+    useState('');
   const estimate = application.feeEstimate;
 
   // Only show if positive decision
-  if (application.status !== 'DECISION_ISSUED' || application.decisionOutcome !== 'POSITIVE') {
+  if (
+    application.status !== 'DECISION_ISSUED' ||
+    application.decisionOutcome !== 'POSITIVE'
+  ) {
     return null;
   }
 
@@ -67,7 +92,8 @@ export function PermitPanel({ application, currentUser, contacts }: Props) {
           issuedByUserId: currentUser.id,
         }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
+      if (!res.ok)
+        throw new Error(await readErrorMessage(res, terr('requestFailed')));
       router.refresh();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : terr('unexpected'));
@@ -81,59 +107,85 @@ export function PermitPanel({ application, currentUser, contacts }: Props) {
     const canIssue = ['DECISION_MAKER', 'ADMIN'].includes(currentUser.role);
     return (
       <div className="rounded border border-emerald-200 bg-emerald-50 p-5">
-        <h2 className="font-semibold text-emerald-900 mb-1">{tp('issueTitle')}</h2>
+        <h2 className="font-semibold text-emerald-900 mb-1">
+          {tp('issueTitle')}
+        </h2>
         <p className="text-xs text-emerald-700 mb-4">{tp('issueSubtitle')}</p>
         {canIssue ? (
           <div className="space-y-3">
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">{tp('validFrom')}</label>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                {tp('validFrom')}
+              </label>
               <input
                 type="date"
                 value={validFrom}
-                onChange={e => setValidFrom(e.target.value)}
+                onChange={(e) => setValidFrom(e.target.value)}
                 className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">{tp('validUntil')}</label>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                {tp('validUntil')}
+              </label>
               <input
                 type="date"
                 value={validUntil}
-                onChange={e => setValidUntil(e.target.value)}
+                onChange={(e) => setValidUntil(e.target.value)}
                 className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
               />
             </div>
 
             <div className="border-t border-emerald-200 pt-3 space-y-2">
-              <p className="text-xs font-semibold text-emerald-900">{tp('outputControllerTitle')}</p>
+              <p className="text-xs font-semibold text-emerald-900">
+                {tp('outputControllerTitle')}
+              </p>
               <select
                 value={outputControllerContactId}
-                onChange={e => setOutputControllerContactId(e.target.value)}
+                onChange={(e) => setOutputControllerContactId(e.target.value)}
                 className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
               >
                 <option value="">{tp('outputControllerContact')}...</option>
                 {contacts.map((c) => (
-                  <option key={c.id} value={c.id}>{c.ownerName ? `${c.name} — ${c.ownerName}` : c.name}</option>
+                  <option key={c.id} value={c.id}>
+                    {c.ownerName ? `${c.name} — ${c.ownerName}` : c.name}
+                  </option>
                 ))}
               </select>
             </div>
 
             {estimate && estimate.lineItems.length > 0 && (
               <div className="border-t border-emerald-200 pt-3 space-y-1">
-                <p className="text-xs font-semibold text-emerald-900 mb-1">{tp('feesTitle')}</p>
+                <p className="text-xs font-semibold text-emerald-900 mb-1">
+                  {tp('feesTitle')}
+                </p>
                 {estimate.lineItems.map((item) => (
-                  <div key={item.id} className="flex justify-between text-xs text-gray-700">
+                  <div
+                    key={item.id}
+                    className="flex justify-between text-xs text-gray-700"
+                  >
                     <span>
                       {tc(item.category)}
-                      {(item.category === 'SPE_SETUP' || item.category === 'SPE_USAGE') && estimate.speType && ` — ${estimate.speType.name}`}
-                      {(item.category === 'SPE_SETUP' || item.category === 'SPE_USAGE') && estimate.speOperator && ` (${estimate.speOperator.name})`}
+                      {(item.category === 'SPE_SETUP' ||
+                        item.category === 'SPE_USAGE') &&
+                        estimate.speType &&
+                        ` — ${estimate.speType.name}`}
+                      {(item.category === 'SPE_SETUP' ||
+                        item.category === 'SPE_USAGE') &&
+                        estimate.speOperator &&
+                        ` (${estimate.speOperator.name})`}
                     </span>
                     <span>€{String(item.amount)}</span>
                   </div>
                 ))}
                 {estimate.lineItems.map((item) =>
                   item.description ? (
-                    <p key={`${item.id}-description`} className="text-xs text-gray-500">{item.description}</p>
+                    <p
+                      key={`${item.id}-description`}
+                      className="text-xs text-gray-500"
+                    >
+                      {item.description}
+                    </p>
                   ) : null,
                 )}
               </div>
@@ -165,7 +217,10 @@ export function PermitPanel({ application, currentUser, contacts }: Props) {
       <div className="flex items-center justify-between mb-3">
         <h2 className="font-semibold text-gray-900">{tp('title')}</h2>
       </div>
-      <a href={`/permits/${permit.id}`} className="block hover:opacity-80 transition-opacity">
+      <a
+        href={`/permits/${permit.id}`}
+        className="block hover:opacity-80 transition-opacity"
+      >
         <PermitCard permit={permit} compact />
       </a>
     </div>

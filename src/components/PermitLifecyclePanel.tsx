@@ -19,7 +19,12 @@ type Props = {
 // which handles data-user-initiated requests (amendment/renewal/revocation
 // appeal) that need approval. Lives on the permit's own detail page,
 // alongside the other permit-management panels.
-export function PermitLifecyclePanel({ permitId, permitStatus, currentUserId, currentUserRole }: Props) {
+export function PermitLifecyclePanel({
+  permitId,
+  permitStatus,
+  currentUserId,
+  currentUserRole,
+}: Props) {
   const router = useRouter();
   const tp = useTranslations('permitPanel');
   const tps = useTranslations('permitStatus');
@@ -27,12 +32,14 @@ export function PermitLifecyclePanel({ permitId, permitStatus, currentUserId, cu
   const terr = useTranslations('errors');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [selectedTransition, setSelectedTransition] = useState<string | null>(null);
+  const [selectedTransition, setSelectedTransition] = useState<string | null>(
+    null,
+  );
   const [comment, setComment] = useState('');
   const [revokeReason, setRevokeReason] = useState('');
 
   const availableTransitions = (PERMIT_TRANSITIONS[permitStatus] ?? []).filter(
-    tr => tr.requiredRole.includes(currentUserRole)
+    (tr) => tr.requiredRole.includes(currentUserRole),
   );
 
   if (availableTransitions.length === 0) return null;
@@ -50,7 +57,8 @@ export function PermitLifecyclePanel({ permitId, permitStatus, currentUserId, cu
           comment: toStatus === 'REVOKED' ? revokeReason : comment,
         }),
       });
-      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
+      if (!res.ok)
+        throw new Error(await readErrorMessage(res, terr('requestFailed')));
       setSelectedTransition(null);
       setComment('');
       setRevokeReason('');
@@ -64,9 +72,11 @@ export function PermitLifecyclePanel({ permitId, permitStatus, currentUserId, cu
 
   return (
     <div className="rounded border border-gray-200 bg-white p-4">
-      <h3 className="text-sm font-semibold text-gray-900 mb-3">{tp('actionsTitle')}</h3>
+      <h3 className="text-sm font-semibold text-gray-900 mb-3">
+        {tp('actionsTitle')}
+      </h3>
       <div className="space-y-2">
-        {availableTransitions.map(tr => {
+        {availableTransitions.map((tr) => {
           const isSelected = selectedTransition === tr.to;
           const isDestructive = tr.to === 'REVOKED';
           const baseStyle = isDestructive
@@ -96,17 +106,23 @@ export function PermitLifecyclePanel({ permitId, permitStatus, currentUserId, cu
         <div className="mt-3 space-y-2">
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">
-              {selectedTransition === 'REVOKED' ? tp('revocationReason') : tp('comment')}
+              {selectedTransition === 'REVOKED'
+                ? tp('revocationReason')
+                : tp('comment')}
             </label>
             <textarea
               rows={2}
               value={selectedTransition === 'REVOKED' ? revokeReason : comment}
-              onChange={e =>
+              onChange={(e) =>
                 selectedTransition === 'REVOKED'
                   ? setRevokeReason(e.target.value)
                   : setComment(e.target.value)
               }
-              placeholder={selectedTransition === 'REVOKED' ? tp('revocationPlaceholder') : tp('commentPlaceholder')}
+              placeholder={
+                selectedTransition === 'REVOKED'
+                  ? tp('revocationPlaceholder')
+                  : tp('commentPlaceholder')
+              }
               className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
             />
           </div>
@@ -124,7 +140,9 @@ export function PermitLifecyclePanel({ permitId, permitStatus, currentUserId, cu
                 : 'bg-[#154273] hover:bg-[#01689b]'
             }`}
           >
-            {loading ? tp('loading') : `${tp('confirm')}: ${tps(selectedTransition)}`}
+            {loading
+              ? tp('loading')
+              : `${tp('confirm')}: ${tps(selectedTransition)}`}
           </button>
         </div>
       )}

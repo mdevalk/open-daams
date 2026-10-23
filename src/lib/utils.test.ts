@@ -99,7 +99,9 @@ describe('serializePrisma', () => {
 
 describe('readErrorMessage', () => {
   it('returns the error field from a JSON body', async () => {
-    const res = { json: () => Promise.resolve({ error: 'Something broke' }) } as Response;
+    const res = {
+      json: () => Promise.resolve({ error: 'Something broke' }),
+    } as Response;
     expect(await readErrorMessage(res, 'fallback')).toBe('Something broke');
   });
 
@@ -109,7 +111,9 @@ describe('readErrorMessage', () => {
   });
 
   it('returns the fallback when the body is not valid JSON', async () => {
-    const res = { json: () => Promise.reject(new Error('not json')) } as Response;
+    const res = {
+      json: () => Promise.reject(new Error('not json')),
+    } as Response;
     expect(await readErrorMessage(res, 'fallback')).toBe('fallback');
   });
 });
@@ -122,7 +126,9 @@ describe('label lookups', () => {
 
   it('cohortFormationLabel returns undefined for a missing code', () => {
     expect(cohortFormationLabel(null)).toBeUndefined();
-    expect(cohortFormationLabel('CRITERIA')).toBe('Formed based on the given criteria');
+    expect(cohortFormationLabel('CRITERIA')).toBe(
+      'Formed based on the given criteria',
+    );
   });
 
   it('extractionMethodLabel maps a known code, falls back to the raw code, and returns undefined for a missing code', () => {
@@ -158,7 +164,9 @@ describe('yesNoLabel', () => {
 
 describe('populationLabel', () => {
   it('returns undefined when size is null', () => {
-    expect(populationLabel({ size: null, sizeIsEstimate: null }, t)).toBeUndefined();
+    expect(
+      populationLabel({ size: null, sizeIsEstimate: null }, t),
+    ).toBeUndefined();
   });
 
   it('returns the bare size when sizeIsEstimate is null', () => {
@@ -166,40 +174,73 @@ describe('populationLabel', () => {
   });
 
   it('appends "estimate" or "exact" when sizeIsEstimate is set', () => {
-    expect(populationLabel({ size: 500, sizeIsEstimate: true }, t)).toBe('500 (estimate)');
-    expect(populationLabel({ size: 500, sizeIsEstimate: false }, t)).toBe('500 (exact)');
+    expect(populationLabel({ size: 500, sizeIsEstimate: true }, t)).toBe(
+      '500 (estimate)',
+    );
+    expect(populationLabel({ size: 500, sizeIsEstimate: false }, t)).toBe(
+      '500 (exact)',
+    );
   });
 });
 
 describe('dataPeriodLabel', () => {
   it('prefers timePeriod when set', () => {
-    expect(dataPeriodLabel({ timePeriod: '2020-2022', dataStartDate: null, dataEndDate: null })).toBe('2020-2022');
+    expect(
+      dataPeriodLabel({
+        timePeriod: '2020-2022',
+        dataStartDate: null,
+        dataEndDate: null,
+      }),
+    ).toBe('2020-2022');
   });
 
   it('falls back to a formatted start–end range', () => {
     expect(
-      dataPeriodLabel({ timePeriod: null, dataStartDate: '2020-01-01', dataEndDate: '2020-06-01' }),
+      dataPeriodLabel({
+        timePeriod: null,
+        dataStartDate: '2020-01-01',
+        dataEndDate: '2020-06-01',
+      }),
     ).toContain('–');
   });
 
   it('returns undefined when neither is set', () => {
-    expect(dataPeriodLabel({ timePeriod: null, dataStartDate: null, dataEndDate: null })).toBeUndefined();
+    expect(
+      dataPeriodLabel({
+        timePeriod: null,
+        dataStartDate: null,
+        dataEndDate: null,
+      }),
+    ).toBeUndefined();
   });
 });
 
 describe('extractionIntervalDisplay', () => {
   it('returns undefined when there is no interval', () => {
-    expect(extractionIntervalDisplay({ extractionInterval: null, extractionIntervalOther: null })).toBeUndefined();
+    expect(
+      extractionIntervalDisplay({
+        extractionInterval: null,
+        extractionIntervalOther: null,
+      }),
+    ).toBeUndefined();
   });
 
   it('formats a known interval', () => {
-    expect(extractionIntervalDisplay({ extractionInterval: 'QUARTERLY', extractionIntervalOther: null })).toBe('Quarterly');
+    expect(
+      extractionIntervalDisplay({
+        extractionInterval: 'QUARTERLY',
+        extractionIntervalOther: null,
+      }),
+    ).toBe('Quarterly');
   });
 
   it('appends the "other" detail when the interval is OTHER', () => {
-    expect(extractionIntervalDisplay({ extractionInterval: 'OTHER', extractionIntervalOther: 'Twice a year' })).toBe(
-      'Other — Twice a year',
-    );
+    expect(
+      extractionIntervalDisplay({
+        extractionInterval: 'OTHER',
+        extractionIntervalOther: 'Twice a year',
+      }),
+    ).toBe('Other — Twice a year');
   });
 });
 
@@ -207,7 +248,12 @@ describe('informationProviderLabel', () => {
   it('returns "sameAsContactPerson" when flagged as such', () => {
     expect(
       informationProviderLabel(
-        { informationProviderSameAsContactPerson: true, informationProviderName: 'X', informationProviderEmail: null, informationProviderPhone: null },
+        {
+          informationProviderSameAsContactPerson: true,
+          informationProviderName: 'X',
+          informationProviderEmail: null,
+          informationProviderPhone: null,
+        },
         t,
       ),
     ).toBe('sameAsContactPerson');
@@ -249,7 +295,11 @@ describe('hasBaseSectionData', () => {
   });
 
   it('returns true when any single field is set', () => {
-    expect(hasBaseSectionData({ ...empty, hdabContacts: 'Dr. Jansen' })).toBe(true);
-    expect(hasBaseSectionData({ ...empty, dataSubjectsInformed: false })).toBe(true);
+    expect(hasBaseSectionData({ ...empty, hdabContacts: 'Dr. Jansen' })).toBe(
+      true,
+    );
+    expect(hasBaseSectionData({ ...empty, dataSubjectsInformed: false })).toBe(
+      true,
+    );
   });
 });

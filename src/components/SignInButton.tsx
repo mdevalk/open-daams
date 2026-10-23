@@ -2,7 +2,13 @@
 
 import { signIn } from 'next-auth/react';
 
-export function SignInButton({ callbackUrl, label }: { callbackUrl: string; label: string }) {
+export function SignInButton({
+  callbackUrl,
+  label,
+}: {
+  callbackUrl: string;
+  label: string;
+}) {
   return (
     <button
       type="button"

@@ -3,7 +3,11 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
 import { actingUserId } from '@/auth';
-import { signPermit, groupDatasetsByHolder, type GrantedDatasetGroup } from '@/lib/permit-signing';
+import {
+  signPermit,
+  groupDatasetsByHolder,
+  type GrantedDatasetGroup,
+} from '@/lib/permit-signing';
 import { regenerateStoredPermitPdf } from '@/lib/capabilities/permit-lifecycle/permit-pdf-store';
 import { generateSampleDid } from '@/lib/capabilities/permit-lifecycle/did';
 
@@ -15,7 +19,8 @@ function slugify(value: string): string {
   let result = '';
   let pendingHyphen = false;
   for (const char of value.toLowerCase()) {
-    const isAlphanumeric = (char >= 'a' && char <= 'z') || (char >= '0' && char <= '9');
+    const isAlphanumeric =
+      (char >= 'a' && char <= 'z') || (char >= '0' && char <= '9');
     if (isAlphanumeric) {
       if (pendingHyphen && result.length > 0) result += '-';
       pendingHyphen = false;
@@ -42,7 +47,9 @@ async function generatePermitNumber(year: number): Promise<string> {
     where: { permitNumber: { startsWith: prefix } },
     orderBy: { permitNumber: 'desc' },
   });
-  const lastSeq = last ? Number.parseInt(last.permitNumber.slice(prefix.length), 10) || 0 : 0;
+  const lastSeq = last
+    ? Number.parseInt(last.permitNumber.slice(prefix.length), 10) || 0
+    : 0;
   return `${prefix}${String(lastSeq + 1).padStart(4, '0')}`;
 }
 
@@ -54,9 +61,13 @@ type ApplicationWithRelations = Prisma.ApplicationGetPayload<{
   };
 }>;
 
-type RequestedDatasetRow = ApplicationWithRelations['requestedDatasets'][number];
+type RequestedDatasetRow =
+  ApplicationWithRelations['requestedDatasets'][number];
 
-type StorageLocationsByDataset = Map<string, { reference: string; writerDid: string }>;
+type StorageLocationsByDataset = Map<
+  string,
+  { reference: string; writerDid: string }
+>;
 
 type ResearcherInfo = { name: string; affiliation: string; did: string };
 
@@ -68,7 +79,9 @@ type OutputControllerInfo = { name: string; affiliation: string; did: string };
  * actually gets persisted (see persistGrantedDatasetsAndAuthorizedPersons) —
  * not regenerated and potentially drifting from the signature.
  */
-export function buildStorageLocations(requestedDatasets: RequestedDatasetRow[]): StorageLocationsByDataset {
+export function buildStorageLocations(
+  requestedDatasets: RequestedDatasetRow[],
+): StorageLocationsByDataset {
   return new Map(
     requestedDatasets.map((rd) => [
       rd.id,
@@ -85,9 +98,14 @@ export function buildStorageLocations(requestedDatasets: RequestedDatasetRow[]):
  * mirroring the form's own alternation between "person responsible for
  * the research" and "person responsible for data use."
  */
-export function resolveResearcher(application: ApplicationWithRelations): ResearcherInfo | null {
-  const researcherName = application.personResearchName ?? application.personResponsibleName;
-  const researcherAffiliation = application.personResearchAffiliation ?? application.personResponsibleAffiliation;
+export function resolveResearcher(
+  application: ApplicationWithRelations,
+): ResearcherInfo | null {
+  const researcherName =
+    application.personResearchName ?? application.personResponsibleName;
+  const researcherAffiliation =
+    application.personResearchAffiliation ??
+    application.personResponsibleAffiliation;
   return researcherName
     ? {
         name: researcherName,
@@ -102,11 +120,16 @@ export function resolveResearcher(application: ApplicationWithRelations): Resear
  * itself (speOperatorName/etc.) — see the schema comment on those columns
  * for why this can't just be a live join at verify time.
  */
-export async function resolveSpeSelection(feeEstimate: ApplicationWithRelations['feeEstimate']) {
+export async function resolveSpeSelection(
+  feeEstimate: ApplicationWithRelations['feeEstimate'],
+) {
   const speOperatorId = feeEstimate?.speOperatorId ?? null;
   const speTypeId = feeEstimate?.speTypeId ?? null;
   const estimateLineItems = feeEstimate?.lineItems ?? [];
-  const totalAmount = estimateLineItems.reduce((sum, item) => sum + Number(item.amount), 0);
+  const totalAmount = estimateLineItems.reduce(
+    (sum, item) => sum + Number(item.amount),
+    0,
+  );
 
   const [speOperatorRow, speTypeRow] = await Promise.all([
     speOperatorId
@@ -115,9 +138,7 @@ export async function resolveSpeSelection(feeEstimate: ApplicationWithRelations[
           include: { speProvider: { select: { name: true } } },
         })
       : null,
-    speTypeId
-      ? prisma.speType.findUnique({ where: { id: speTypeId } })
-      : null,
+    speTypeId ? prisma.speType.findUnique({ where: { id: speTypeId } }) : null,
   ]);
   const speType = speTypeRow && { id: speTypeRow.id, name: speTypeRow.name };
   const speOperator = speOperatorRow && {
@@ -127,7 +148,14 @@ export async function resolveSpeSelection(feeEstimate: ApplicationWithRelations[
     type: speType || null,
   };
 
-  return { speOperatorId, speTypeId, speOperator, speType, estimateLineItems, totalAmount };
+  return {
+    speOperatorId,
+    speTypeId,
+    speOperator,
+    speType,
+    estimateLineItems,
+    totalAmount,
+  };
 }
 
 type SpeSelection = Awaited<ReturnType<typeof resolveSpeSelection>>;
@@ -155,7 +183,10 @@ function buildPermitCreateData(
     signature: signature.signature,
     signedAt: signature.signedAt,
     signingKeyId: signature.signingKeyId,
-    totalAmount: speSelection.estimateLineItems.length > 0 ? speSelection.totalAmount : null,
+    totalAmount:
+      speSelection.estimateLineItems.length > 0
+        ? speSelection.totalAmount
+        : null,
     lineItems: {
       create: speSelection.estimateLineItems.map((item) => ({
         category: item.category,
@@ -169,8 +200,12 @@ function buildPermitCreateData(
     },
     speOperatorId: speSelection.speOperatorId,
     speTypeId: speSelection.speTypeId,
-    speOperatorName: speSelection.speOperator ? speSelection.speOperator.name : null,
-    speOperatorProviderName: speSelection.speOperator ? speSelection.speOperator.providerName : null,
+    speOperatorName: speSelection.speOperator
+      ? speSelection.speOperator.name
+      : null,
+    speOperatorProviderName: speSelection.speOperator
+      ? speSelection.speOperator.providerName
+      : null,
     speTypeName: speSelection.speType ? speSelection.speType.name : null,
     // Frozen at issuance (D6.4 R7.3.2/R7.4.2) — see the schema comment.
     purposeCategory: application.purposeCategory,
@@ -205,12 +240,26 @@ async function createPermitWithRetry(params: {
       speOperator: speSelection.speOperator || null,
       // Name/email stay in the AuthorizedPerson DB row only (below) — the
       // signed/printed permit itself carries just organisation + identity.
-      researcher: params.researcher ? { affiliation: params.researcher.affiliation, did: params.researcher.did } : null,
-      outputController: { affiliation: params.outputController.affiliation, did: params.outputController.did },
+      researcher: params.researcher
+        ? {
+            affiliation: params.researcher.affiliation,
+            did: params.researcher.did,
+          }
+        : null,
+      outputController: {
+        affiliation: params.outputController.affiliation,
+        did: params.outputController.did,
+      },
     });
     try {
       return await prisma.dataPermit.create({
-        data: buildPermitCreateData(permitNumber, application, params, signature, speSelection),
+        data: buildPermitCreateData(
+          permitNumber,
+          application,
+          params,
+          signature,
+          speSelection,
+        ),
       });
     } catch (e) {
       const isUniqueClash =
@@ -266,7 +315,15 @@ async function persistGrantedDatasetsAndAuthorizedPersons(
   await prisma.authorizedPerson.createMany({
     data: [
       ...(researcher
-        ? [{ permitId: permit.id, name: researcher.name, affiliation: researcher.affiliation, role: 'RESEARCHER' as const, did: researcher.did }]
+        ? [
+            {
+              permitId: permit.id,
+              name: researcher.name,
+              affiliation: researcher.affiliation,
+              role: 'RESEARCHER' as const,
+              did: researcher.did,
+            },
+          ]
         : []),
       {
         permitId: permit.id,
@@ -293,8 +350,12 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     // body: { applicationId, validFrom, validUntil }
 
-    const auth = await requireRole(await actingUserId(), ['DECISION_MAKER', 'ADMIN']);
-    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+    const auth = await requireRole(await actingUserId(), [
+      'DECISION_MAKER',
+      'ADMIN',
+    ]);
+    if (!auth.ok)
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     if (!body.outputControllerContactId) {
       return NextResponse.json(
@@ -312,8 +373,14 @@ export async function POST(req: NextRequest) {
         speProvider: { select: { name: true } },
       },
     });
-    if (!outputControllerContact || !(outputControllerContact.name || outputControllerContact.email)) {
-      return NextResponse.json({ error: 'Output controller contact not found' }, { status: 404 });
+    if (
+      !outputControllerContact ||
+      !(outputControllerContact.name || outputControllerContact.email)
+    ) {
+      return NextResponse.json(
+        { error: 'Output controller contact not found' },
+        { status: 404 },
+      );
     }
 
     const application = await prisma.application.findUnique({
@@ -329,18 +396,29 @@ export async function POST(req: NextRequest) {
     });
 
     if (!application)
-      return NextResponse.json({ error: 'Application not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Application not found' },
+        { status: 404 },
+      );
     if (application.decisionOutcome !== 'POSITIVE')
-      return NextResponse.json({ error: 'Permit can only be issued for a positive decision' }, { status: 422 });
+      return NextResponse.json(
+        { error: 'Permit can only be issued for a positive decision' },
+        { status: 422 },
+      );
     if (application.dataPermits.length > 0)
-      return NextResponse.json({ error: 'A permit has already been issued for this application' }, { status: 409 });
+      return NextResponse.json(
+        { error: 'A permit has already been issued for this application' },
+        { status: 409 },
+      );
 
     const year = new Date().getFullYear();
     const issuedAt = new Date();
     const validFrom = new Date(body.validFrom);
     const validUntil = new Date(body.validUntil);
 
-    const storageLocationsByDataset = buildStorageLocations(application.requestedDatasets);
+    const storageLocationsByDataset = buildStorageLocations(
+      application.requestedDatasets,
+    );
 
     // Reshape to the flat {dataHolderName,name,url} shape groupDatasetsByHolder
     // expects — keeps signPermit()'s input byte-for-byte identical regardless
@@ -364,7 +442,10 @@ export async function POST(req: NextRequest) {
     // an external expert. Affiliation is derived from whichever owner
     // (DataUser/DataHolder/SpeOperator/SpeProvider) the contact belongs to.
     const outputController = {
-      name: outputControllerContact.name ?? outputControllerContact.email ?? 'Unknown',
+      name:
+        outputControllerContact.name ??
+        outputControllerContact.email ??
+        'Unknown',
       affiliation:
         outputControllerContact.dataUser?.name ??
         outputControllerContact.dataHolder?.name ??

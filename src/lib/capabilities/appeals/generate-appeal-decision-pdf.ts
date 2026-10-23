@@ -32,7 +32,9 @@ export type AppealDecisionPdfData = {
   signingKeyId: string;
 };
 
-export async function generateAppealDecisionPdf(decision: AppealDecisionPdfData): Promise<Uint8Array> {
+export async function generateAppealDecisionPdf(
+  decision: AppealDecisionPdfData,
+): Promise<Uint8Array> {
   const upheld = decision.status === 'UPHELD';
 
   const doc = new Doc();
@@ -43,13 +45,27 @@ export async function generateAppealDecisionPdf(decision: AppealDecisionPdfData)
 
   doc.rect(0, 0, 595, 90, C.darkBlue);
   doc.text(APP_NAME, 40, 24, doc.bold, 14, C.white);
-  doc.text('Health Data Access Body Nederland (HDAB-NL)', 40, 44, doc.regular, 9, C.white);
+  doc.text(
+    'Health Data Access Body Nederland (HDAB-NL)',
+    40,
+    44,
+    doc.regular,
+    9,
+    C.white,
+  );
   doc.text('BESLISSING OP BEZWAAR', 40, 62, doc.bold, 12, C.white);
   doc.y = 110;
 
   doc.rect(40, doc.y, 515, 56, upheld ? C.greenBg : C.redBg);
   doc.text('Uitkomst', 48, doc.y + 8, doc.regular, 7.5, C.gray);
-  doc.text(STATUS_LABEL[decision.status], 48, doc.y + 20, doc.bold, 11, upheld ? C.green : C.redText);
+  doc.text(
+    STATUS_LABEL[decision.status],
+    48,
+    doc.y + 20,
+    doc.bold,
+    11,
+    upheld ? C.green : C.redText,
+  );
   doc.text('Datum beslissing', 300, doc.y + 8, doc.regular, 7.5, C.gray);
   doc.text(fmt(decision.decisionAt), 300, doc.y + 20, doc.bold, 10, C.black);
   doc.y += 70;
@@ -61,7 +77,8 @@ export async function generateAppealDecisionPdf(decision: AppealDecisionPdfData)
 
   doc.heading('2', 'BEZWAAR');
   doc.field('Indiener', decision.submittedBy);
-  if (decision.authority) doc.field('Behandelende instantie', decision.authority);
+  if (decision.authority)
+    doc.field('Behandelende instantie', decision.authority);
   doc.paragraph(decision.grounds);
   doc.spacer(4);
 

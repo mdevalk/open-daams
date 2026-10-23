@@ -26,7 +26,10 @@ function makePerson(overrides: Partial<Persons[number]> = {}): Persons[number] {
 
 describe('AuthorizedPersonsPanel — empty state', () => {
   it('shows the empty message when there are no persons', async () => {
-    const element = await AuthorizedPersonsPanel({ persons: [] as Persons, locale: 'nl' });
+    const element = await AuthorizedPersonsPanel({
+      persons: [] as Persons,
+      locale: 'nl',
+    });
     render(element);
     expect(screen.getByText('empty')).toBeInTheDocument();
   });
@@ -34,7 +37,10 @@ describe('AuthorizedPersonsPanel — empty state', () => {
 
 describe('AuthorizedPersonsPanel — listing persons', () => {
   it('renders a person with name, affiliation and researcher role badge', async () => {
-    const element = await AuthorizedPersonsPanel({ persons: [makePerson()], locale: 'nl' });
+    const element = await AuthorizedPersonsPanel({
+      persons: [makePerson()],
+      locale: 'nl',
+    });
     render(element);
     expect(screen.getByText('Dr. A. de Vries')).toBeInTheDocument();
     expect(screen.getByText('UMC Utrecht')).toBeInTheDocument();
@@ -43,7 +49,13 @@ describe('AuthorizedPersonsPanel — listing persons', () => {
 
   it('renders the output controller role badge for that role', async () => {
     const element = await AuthorizedPersonsPanel({
-      persons: [makePerson({ id: 'ap-2', name: 'B. Jansen', role: 'OUTPUT_CONTROLLER' })],
+      persons: [
+        makePerson({
+          id: 'ap-2',
+          name: 'B. Jansen',
+          role: 'OUTPUT_CONTROLLER',
+        }),
+      ],
       locale: 'nl',
     });
     render(element);
@@ -51,16 +63,33 @@ describe('AuthorizedPersonsPanel — listing persons', () => {
   });
 
   it('shows the did line only when did is set', async () => {
-    const { rerender } = render(await AuthorizedPersonsPanel({ persons: [makePerson({ did: null })], locale: 'nl' }));
+    const { rerender } = render(
+      await AuthorizedPersonsPanel({
+        persons: [makePerson({ did: null })],
+        locale: 'nl',
+      }),
+    );
     expect(screen.queryByText(/did:/)).not.toBeInTheDocument();
 
-    rerender(await AuthorizedPersonsPanel({ persons: [makePerson({ did: 'did:web:umcu.nl:a-de-vries' })], locale: 'nl' }));
+    rerender(
+      await AuthorizedPersonsPanel({
+        persons: [makePerson({ did: 'did:web:umcu.nl:a-de-vries' })],
+        locale: 'nl',
+      }),
+    );
     expect(screen.getByText(/did:web:umcu.nl:a-de-vries/)).toBeInTheDocument();
   });
 
   it('renders multiple persons as separate list items', async () => {
     const element = await AuthorizedPersonsPanel({
-      persons: [makePerson(), makePerson({ id: 'ap-2', name: 'B. Jansen', role: 'OUTPUT_CONTROLLER' })],
+      persons: [
+        makePerson(),
+        makePerson({
+          id: 'ap-2',
+          name: 'B. Jansen',
+          role: 'OUTPUT_CONTROLLER',
+        }),
+      ],
       locale: 'nl',
     });
     render(element);

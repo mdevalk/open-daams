@@ -36,45 +36,45 @@ predictable places:
 
 ## What's actually built — and how deeply
 
-| Function | Prescribed by | In the project | Depth |
-|---|---|---|---|
-| Two application types (data access application + data request) | Art. 67 / 69 | `ApplicationType`, full distinct field sets | **Strong** — fields cover cohort formation, tabulation plan, controls/relatives, transfers outside EU/EEA, GDPR 6(1) grounds |
-| Application lifecycle + statutory deadlines | Art. 68(4)/69(4) | `ApplicationStatus` + deadline fields, void/recalc on info requests | **Strong** |
-| Cost estimate → applicant acceptance | Art. 62(5) | `FeeEstimate` (header) + `FinancialLineItem` (breakdown, incl. SPE setup/usage and additional-services lines) | **Strong** |
-| Decision + permit issuance, permit document | Art. 68 | `DataPermit` + `generate-permit-pdf.ts` (real, signed PDF) | **Strong** |
-| Permit lifecycle + change requests (amendment / renewal / revocation appeal) | Art. 68(12), 63(1) | `DataPermitStatus` + `PermitChangeRequest` + `DataPermitLog` | **Strong** |
-| Invoicing (provisional + final) | Art. 62 | `Invoice` (header) + `FinancialLineItem` (line items, snapshotted from the accepted estimate/permit) | **Strong** |
-| Authorized persons in the SPE | Art. 73 | `AuthorizedPerson` | Present (list only) |
-| Appeals (bezwaar/beroep) | Art. 63 / national law | `Appeal` | Present |
-| Public transparency register | Art. 57(1)(j)(ii), 58, 61(4) | `publishedAt` / `decisionPublishedAt` + public route | Present |
-| Opt-out exception | Art. 71(4) | flag + justification field | Present (flag only) |
-| Immutable audit trail | supports Art. 57(1) record-keeping | `AuditLog`, `DataPermitLog`, `SpeProvisioningLog` | **Strong** |
+| Function                                                                     | Prescribed by                      | In the project                                                                                                | Depth                                                                                                                        |
+| ---------------------------------------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Two application types (data access application + data request)               | Art. 67 / 69                       | `ApplicationType`, full distinct field sets                                                                   | **Strong** — fields cover cohort formation, tabulation plan, controls/relatives, transfers outside EU/EEA, GDPR 6(1) grounds |
+| Application lifecycle + statutory deadlines                                  | Art. 68(4)/69(4)                   | `ApplicationStatus` + deadline fields, void/recalc on info requests                                           | **Strong**                                                                                                                   |
+| Cost estimate → applicant acceptance                                         | Art. 62(5)                         | `FeeEstimate` (header) + `FinancialLineItem` (breakdown, incl. SPE setup/usage and additional-services lines) | **Strong**                                                                                                                   |
+| Decision + permit issuance, permit document                                  | Art. 68                            | `DataPermit` + `generate-permit-pdf.ts` (real, signed PDF)                                                    | **Strong**                                                                                                                   |
+| Permit lifecycle + change requests (amendment / renewal / revocation appeal) | Art. 68(12), 63(1)                 | `DataPermitStatus` + `PermitChangeRequest` + `DataPermitLog`                                                  | **Strong**                                                                                                                   |
+| Invoicing (provisional + final)                                              | Art. 62                            | `Invoice` (header) + `FinancialLineItem` (line items, snapshotted from the accepted estimate/permit)          | **Strong**                                                                                                                   |
+| Authorized persons in the SPE                                                | Art. 73                            | `AuthorizedPerson`                                                                                            | Present (list only)                                                                                                          |
+| Appeals (bezwaar/beroep)                                                     | Art. 63 / national law             | `Appeal`                                                                                                      | Present                                                                                                                      |
+| Public transparency register                                                 | Art. 57(1)(j)(ii), 58, 61(4)       | `publishedAt` / `decisionPublishedAt` + public route                                                          | Present                                                                                                                      |
+| Opt-out exception                                                            | Art. 71(4)                         | flag + justification field                                                                                    | Present (flag only)                                                                                                          |
+| Immutable audit trail                                                        | supports Art. 57(1) record-keeping | `AuditLog`, `DataPermitLog`, `SpeProvisioningLog`                                                             | **Strong**                                                                                                                   |
 
 ## Present-but-simulated (shell exists, no real integration)
 
 Modelled as state machines, but they do not perform the real-world action. Important to be
 explicit about for a compliance-themed demo.
 
-| Function | Ref | Reality in code |
-|---|---|---|
-| **Secure Processing Environment** | Art. 73 | `SpeProvisioningOrder` tracks the environment's `REQUESTED → ACTIVE → DECOMMISSIONED` lifecycle and hands over permit info (id, version, authorised persons, validity) to it. Operating the environment itself — real access, in-SPE user-activity logging, "data cannot leave" enforcement — is the SPE component's own responsibility, not the DAAMS's; it's out of scope here rather than a DAAMS shortfall. |
-| **Data extraction from health data holders** | Art. 60, 68(7) | `DataExtractionRequest` tracks `REQUESTED → DELIVERED`. No real data-holder connection or data movement. |
-| **HealthData@EU cross-border** | Art. 75 | A fixed mock NCP queue; no real National Contact Point node. |
-| **Anonymisation / pseudonymisation** | Art. 64 | Exists only as a fee line item (`dataPreparationFee`); no actual data transformation. |
+| Function                                     | Ref            | Reality in code                                                                                                                                                                                                                                                                                                                                                                                                 |
+| -------------------------------------------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Secure Processing Environment**            | Art. 73        | `SpeProvisioningOrder` tracks the environment's `REQUESTED → ACTIVE → DECOMMISSIONED` lifecycle and hands over permit info (id, version, authorised persons, validity) to it. Operating the environment itself — real access, in-SPE user-activity logging, "data cannot leave" enforcement — is the SPE component's own responsibility, not the DAAMS's; it's out of scope here rather than a DAAMS shortfall. |
+| **Data extraction from health data holders** | Art. 60, 68(7) | `DataExtractionRequest` tracks `REQUESTED → DELIVERED`. No real data-holder connection or data movement.                                                                                                                                                                                                                                                                                                        |
+| **HealthData@EU cross-border**               | Art. 75        | A fixed mock NCP queue; no real National Contact Point node.                                                                                                                                                                                                                                                                                                                                                    |
+| **Anonymisation / pseudonymisation**         | Art. 64        | Exists only as a fee line item (`dataPreparationFee`); no actual data transformation.                                                                                                                                                                                                                                                                                                                           |
 
 ## Genuine gaps — prescribed, but absent
 
-| Prescribed function | Ref | Status |
-|---|---|---|
-| **Dataset metadata catalogue** — *out of DAAMS scope* | Art. 77–80 | The catalogue is a **separate adjacent deliverable**, not the DAAMS. Dataset **selection** against it is also out of scope — done in the central platform / applicant front-end; open-daams receives applications with datasets already chosen. |
-| **Data quality & utility labelling** of datasets | Art. 78 | Catalogue-adjacent, same out-of-scope reasoning as above. **Absent** |
-| **Trusted data holder** procedure | Art. 72 | **Absent** |
-| **Mutual recognition** of another HDAB's permit | Art. 68(5) | **Absent** |
-| **Compliance monitoring** during permit validity | Art. 57(1)(a)(ii) | **Absent** (revocation exists, but nothing monitors for the conditions that would trigger it) |
-| **Results-publication tracking** (data user must publish findings) | Art. 61(4) | **Absent** |
-| **Periodic HDAB activity report** | Art. 59 | **Absent** |
-| **IPR / trade-secret contractual safeguards** | Art. 52 | **Absent** |
-| **Applicant identity / qualification verification** | Art. 67 | Form captures it; no verification step |
+| Prescribed function                                                | Ref               | Status                                                                                                                                                                                                                                          |
+| ------------------------------------------------------------------ | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Dataset metadata catalogue** — _out of DAAMS scope_              | Art. 77–80        | The catalogue is a **separate adjacent deliverable**, not the DAAMS. Dataset **selection** against it is also out of scope — done in the central platform / applicant front-end; open-daams receives applications with datasets already chosen. |
+| **Data quality & utility labelling** of datasets                   | Art. 78           | Catalogue-adjacent, same out-of-scope reasoning as above. **Absent**                                                                                                                                                                            |
+| **Trusted data holder** procedure                                  | Art. 72           | **Absent**                                                                                                                                                                                                                                      |
+| **Mutual recognition** of another HDAB's permit                    | Art. 68(5)        | **Absent**                                                                                                                                                                                                                                      |
+| **Compliance monitoring** during permit validity                   | Art. 57(1)(a)(ii) | **Absent** (revocation exists, but nothing monitors for the conditions that would trigger it)                                                                                                                                                   |
+| **Results-publication tracking** (data user must publish findings) | Art. 61(4)        | **Absent**                                                                                                                                                                                                                                      |
+| **Periodic HDAB activity report**                                  | Art. 59           | **Absent**                                                                                                                                                                                                                                      |
+| **IPR / trade-secret contractual safeguards**                      | Art. 52           | **Absent**                                                                                                                                                                                                                                      |
+| **Applicant identity / qualification verification**                | Art. 67           | Form captures it; no verification step                                                                                                                                                                                                          |
 
 ## Cross-cutting / correctness flags
 
@@ -108,7 +108,7 @@ explicit about for a compliance-themed demo.
    diverged from the permit PDF's (`STATISTICS`, `EDUCATION`, `CARE_IMPROVEMENT`), so the PDF
    fell back to raw enum strings for those values. All three surfaces now share the PDF's
    canonical set `{PUBLIC_HEALTH, POLICY_MAKING, STATISTICS, EDUCATION, SCIENTIFIC_RESEARCH,
-   CARE_IMPROVEMENT}` with its Art. 53(1)(a)–(f) labels. Residual caveat: those specific
+CARE_IMPROVEMENT}` with its Art. 53(1)(a)–(f) labels. Residual caveat: those specific
    sub-letters are the PDF author's mapping and have not been reconciled against the full,
    exact Art. 53(1) list in the consolidated OJ text.
 

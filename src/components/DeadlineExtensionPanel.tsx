@@ -5,16 +5,26 @@ import { Application, User } from '@prisma/client';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { readErrorMessage } from '@/lib/utils';
-import { isDeadlineExtensionHidden, deadlineExtensionViewState } from '@/lib/capabilities/application-lifecycle/deadline-extension';
+import {
+  isDeadlineExtensionHidden,
+  deadlineExtensionViewState,
+} from '@/lib/capabilities/application-lifecycle/deadline-extension';
 
 type Props = {
-  application: Pick<Application, 'id' | 'status' | 'deadlineExtended' | 'deadlineExtensionReason'>;
+  application: Pick<
+    Application,
+    'id' | 'status' | 'deadlineExtended' | 'deadlineExtensionReason'
+  >;
   currentUser: User;
   /** Render as a row inside TransitionPanel's "Beschikbare acties" card instead of its own card. */
   embedded?: boolean;
 };
 
-export function DeadlineExtensionPanel({ application, currentUser, embedded }: Props) {
+export function DeadlineExtensionPanel({
+  application,
+  currentUser,
+  embedded,
+}: Props) {
   const router = useRouter();
   const t = useTranslations('deadlineExtensionPanel');
   const terr = useTranslations('errors');
@@ -23,19 +33,32 @@ export function DeadlineExtensionPanel({ application, currentUser, embedded }: P
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const canManage = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(currentUser.role);
-  if (isDeadlineExtensionHidden(application.status, canManage, application.deadlineExtended)) return null;
+  const canManage = ['CASE_HANDLER', 'DECISION_MAKER', 'ADMIN'].includes(
+    currentUser.role,
+  );
+  if (
+    isDeadlineExtensionHidden(
+      application.status,
+      canManage,
+      application.deadlineExtended,
+    )
+  )
+    return null;
 
   async function submit() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/applications/${application.id}/extend-deadline`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reason, actingUserId: currentUser.id }),
-      });
-      if (!res.ok) throw new Error(await readErrorMessage(res, terr('requestFailed')));
+      const res = await fetch(
+        `/api/applications/${application.id}/extend-deadline`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason, actingUserId: currentUser.id }),
+        },
+      );
+      if (!res.ok)
+        throw new Error(await readErrorMessage(res, terr('requestFailed')));
       setEditing(false);
       router.refresh();
     } catch (e: unknown) {
@@ -55,10 +78,22 @@ export function DeadlineExtensionPanel({ application, currentUser, embedded }: P
   let body: React.ReactNode = null;
   if (viewState === 'extended') {
     body = (
-      <div className={embedded ? 'rounded border border-gray-200 bg-gray-50 px-4 py-3 text-sm' : 'text-sm space-y-1'}>
-        <p className="text-xs text-emerald-700 font-medium">{t('extendedLabel')}</p>
-        <p className="text-xs text-gray-500 mt-0.5">{application.deadlineExtensionReason}</p>
-        <p className="text-xs text-gray-400 mt-1">{t('transmittedToApplicant')}</p>
+      <div
+        className={
+          embedded
+            ? 'rounded border border-gray-200 bg-gray-50 px-4 py-3 text-sm'
+            : 'text-sm space-y-1'
+        }
+      >
+        <p className="text-xs text-emerald-700 font-medium">
+          {t('extendedLabel')}
+        </p>
+        <p className="text-xs text-gray-500 mt-0.5">
+          {application.deadlineExtensionReason}
+        </p>
+        <p className="text-xs text-gray-400 mt-1">
+          {t('transmittedToApplicant')}
+        </p>
       </div>
     );
   } else if (viewState === 'editing') {
@@ -84,7 +119,10 @@ export function DeadlineExtensionPanel({ application, currentUser, embedded }: P
           <button
             type="button"
             disabled={loading}
-            onClick={() => { setEditing(false); setError(null); }}
+            onClick={() => {
+              setEditing(false);
+              setError(null);
+            }}
             className="rounded px-3 py-2 text-sm border border-gray-300 hover:bg-gray-50"
           >
             {t('cancelButton')}
@@ -105,7 +143,11 @@ export function DeadlineExtensionPanel({ application, currentUser, embedded }: P
     );
   } else if (viewState === 'prompt') {
     body = (
-      <button type="button" onClick={() => setEditing(true)} className="text-xs text-[#01689b] hover:underline">
+      <button
+        type="button"
+        onClick={() => setEditing(true)}
+        className="text-xs text-[#01689b] hover:underline"
+      >
         {t('extendButton')}
       </button>
     );

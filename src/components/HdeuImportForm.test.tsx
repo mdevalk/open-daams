@@ -20,10 +20,14 @@ beforeEach(() => {
 describe('HdeuImportForm — mode toggle', () => {
   it('shows the paste textarea by default and switches to the file input in "file" mode', () => {
     render(<HdeuImportForm />);
-    expect(screen.getByPlaceholderText('{ "hdeuApplicationId": "...", ... }')).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText('{ "hdeuApplicationId": "...", ... }'),
+    ).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('modeFile'));
-    expect(screen.queryByPlaceholderText('{ "hdeuApplicationId": "...", ... }')).not.toBeInTheDocument();
+    expect(
+      screen.queryByPlaceholderText('{ "hdeuApplicationId": "...", ... }'),
+    ).not.toBeInTheDocument();
     expect(screen.getByText('uploadLabel')).toBeInTheDocument();
   });
 });
@@ -31,7 +35,9 @@ describe('HdeuImportForm — mode toggle', () => {
 describe('HdeuImportForm — load sample', () => {
   it('populates the textarea with sample JSON when "loadSample" is clicked', () => {
     render(<HdeuImportForm />);
-    const textarea = screen.getByPlaceholderText('{ "hdeuApplicationId": "...", ... }') as HTMLTextAreaElement;
+    const textarea = screen.getByPlaceholderText(
+      '{ "hdeuApplicationId": "...", ... }',
+    ) as HTMLTextAreaElement;
     expect(textarea.value).toBe('');
 
     fireEvent.click(screen.getByText('loadSample'));
@@ -47,17 +53,25 @@ describe('HdeuImportForm — submit', () => {
     render(<HdeuImportForm />);
     expect(screen.getByText('importButton').closest('button')).toBeDisabled();
 
-    fireEvent.change(screen.getByPlaceholderText('{ "hdeuApplicationId": "...", ... }'), {
-      target: { value: '{"a":1}' },
-    });
-    expect(screen.getByText('importButton').closest('button')).not.toBeDisabled();
+    fireEvent.change(
+      screen.getByPlaceholderText('{ "hdeuApplicationId": "...", ... }'),
+      {
+        target: { value: '{"a":1}' },
+      },
+    );
+    expect(
+      screen.getByText('importButton').closest('button'),
+    ).not.toBeDisabled();
   });
 
   it('shows the invalidJson error without calling fetch when the textarea has malformed JSON', async () => {
     render(<HdeuImportForm />);
-    fireEvent.change(screen.getByPlaceholderText('{ "hdeuApplicationId": "...", ... }'), {
-      target: { value: '{not valid' },
-    });
+    fireEvent.change(
+      screen.getByPlaceholderText('{ "hdeuApplicationId": "...", ... }'),
+      {
+        target: { value: '{not valid' },
+      },
+    );
     fireEvent.click(screen.getByText('importButton'));
 
     expect(await screen.findByText('✗ invalidJson')).toBeInTheDocument();
@@ -69,14 +83,21 @@ describe('HdeuImportForm — submit', () => {
       'fetch',
       vi.fn().mockResolvedValue({
         ok: true,
-        json: async () => ({ referenceNumber: 'HDAB-2026-0099', id: 'app-99', decisionDeadline: '2026-03-01T00:00:00.000Z' }),
+        json: async () => ({
+          referenceNumber: 'HDAB-2026-0099',
+          id: 'app-99',
+          decisionDeadline: '2026-03-01T00:00:00.000Z',
+        }),
       }),
     );
 
     render(<HdeuImportForm locale="nl" />);
-    fireEvent.change(screen.getByPlaceholderText('{ "hdeuApplicationId": "...", ... }'), {
-      target: { value: '{"title":"Test"}' },
-    });
+    fireEvent.change(
+      screen.getByPlaceholderText('{ "hdeuApplicationId": "...", ... }'),
+      {
+        target: { value: '{"title":"Test"}' },
+      },
+    );
     fireEvent.click(screen.getByText('importButton'));
 
     expect(await screen.findByText('✓ importSuccess')).toBeInTheDocument();
@@ -85,7 +106,10 @@ describe('HdeuImportForm — submit', () => {
     const fetchMock = vi.mocked(fetch);
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/import/hdeu',
-      expect.objectContaining({ method: 'POST', body: JSON.stringify({ title: 'Test' }) }),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ title: 'Test' }),
+      }),
     );
 
     const link = screen.getByText('openApplication →');
@@ -97,14 +121,20 @@ describe('HdeuImportForm — submit', () => {
       'fetch',
       vi.fn().mockResolvedValue({
         ok: false,
-        json: async () => ({ error: 'Validation failed', details: ['title is required', 'legalBasis is required'] }),
+        json: async () => ({
+          error: 'Validation failed',
+          details: ['title is required', 'legalBasis is required'],
+        }),
       }),
     );
 
     render(<HdeuImportForm />);
-    fireEvent.change(screen.getByPlaceholderText('{ "hdeuApplicationId": "...", ... }'), {
-      target: { value: '{"title":""}' },
-    });
+    fireEvent.change(
+      screen.getByPlaceholderText('{ "hdeuApplicationId": "...", ... }'),
+      {
+        target: { value: '{"title":""}' },
+      },
+    );
     fireEvent.click(screen.getByText('importButton'));
 
     expect(await screen.findByText('✗ Validation failed')).toBeInTheDocument();

@@ -16,14 +16,18 @@ type LineItemInput = {
 
 function buildLineItemsCreate(items: LineItemInput[], applicationId: string) {
   return items
-    .filter((item) => item.amount !== undefined && item.amount !== null && item.amount !== '')
+    .filter(
+      (item) =>
+        item.amount !== undefined && item.amount !== null && item.amount !== '',
+    )
     .map((item) => ({
       category: item.category,
       glCode: LINE_CATEGORY_META[item.category].glCode,
       description: item.description || null,
       amount: Number(item.amount),
       applicationId,
-      dataHolderId: item.category === 'DATA_HOLDER' ? item.dataHolderId || null : null,
+      dataHolderId:
+        item.category === 'DATA_HOLDER' ? item.dataHolderId || null : null,
     }));
 }
 
@@ -34,16 +38,21 @@ function buildLineItemsCreate(items: LineItemInput[], applicationId: string) {
  * body: { lineItems: {category, amount, description?}[], speOperatorId?, speTypeId?,
  *          notes?, currency? }
  */
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await params;
     const body = await req.json();
 
     const auth = await requireRole(await actingUserId(), [...MANAGE_ROLES]);
-    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+    if (!auth.ok)
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const application = await prisma.application.findUnique({ where: { id } });
-    if (!application) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    if (!application)
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     const lineItems = buildLineItemsCreate(body.lineItems ?? [], id);
     const totalAmount = lineItems.reduce((sum, item) => sum + item.amount, 0);
@@ -78,7 +87,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json(feeEstimate, { status: 201 });
   } catch (e) {
     console.error('Failed to save fee estimate', e);
-    const message = e instanceof Error ? e.message : 'Failed to save fee estimate';
+    const message =
+      e instanceof Error ? e.message : 'Failed to save fee estimate';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
@@ -88,20 +98,33 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
  * Record the applicant's response to a pending cost estimate.
  * body: { status: 'ACCEPTED' | 'REJECTED' }
  */
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await params;
     const body = await req.json();
 
     const auth = await requireRole(await actingUserId(), [...MANAGE_ROLES]);
-    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+    if (!auth.ok)
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     if (body.status !== 'ACCEPTED' && body.status !== 'REJECTED') {
-      return NextResponse.json({ error: 'status must be ACCEPTED or REJECTED' }, { status: 422 });
+      return NextResponse.json(
+        { error: 'status must be ACCEPTED or REJECTED' },
+        { status: 422 },
+      );
     }
 
-    const existing = await prisma.feeEstimate.findUnique({ where: { applicationId: id } });
-    if (!existing) return NextResponse.json({ error: 'No fee estimate found' }, { status: 404 });
+    const existing = await prisma.feeEstimate.findUnique({
+      where: { applicationId: id },
+    });
+    if (!existing)
+      return NextResponse.json(
+        { error: 'No fee estimate found' },
+        { status: 404 },
+      );
 
     const feeEstimate = await prisma.feeEstimate.update({
       where: { applicationId: id },
@@ -111,7 +134,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json(feeEstimate);
   } catch (e) {
     console.error('Failed to update fee estimate', e);
-    const message = e instanceof Error ? e.message : 'Failed to update fee estimate';
+    const message =
+      e instanceof Error ? e.message : 'Failed to update fee estimate';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

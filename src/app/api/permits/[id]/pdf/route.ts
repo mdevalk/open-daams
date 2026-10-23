@@ -39,10 +39,14 @@ export async function GET(
 
     const filename = `vergunning-${permit.permitNumber.replaceAll('/', '-')}-v${permit.version}.pdf`;
 
-    return fileResponse(Buffer.from(permit.pdf!), filename, { mimeType: 'application/pdf', cacheControl: 'no-store' });
+    return fileResponse(Buffer.from(permit.pdf!), filename, {
+      mimeType: 'application/pdf',
+      cacheControl: 'no-store',
+    });
   } catch (e) {
     console.error(`Failed to serve permit PDF for ${id}`, e);
-    const message = e instanceof Error ? e.message : 'Failed to serve permit PDF';
+    const message =
+      e instanceof Error ? e.message : 'Failed to serve permit PDF';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

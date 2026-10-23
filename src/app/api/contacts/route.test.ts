@@ -21,8 +21,18 @@ const userFindUnique = vi.mocked(prisma.user.findUnique);
 const contactCreate = vi.mocked(prisma.contact.create);
 const auditLogCreate = vi.mocked(prisma.auditLog.create);
 
-const ADMIN = { id: 'u-1', role: 'ADMIN' as const, name: 'Admin', email: 'admin@hdab.nl' };
-const APPLICANT = { id: 'u-2', role: 'APPLICANT' as const, name: 'A. de Vries', email: 'researcher@umcu.nl' };
+const ADMIN = {
+  id: 'u-1',
+  role: 'ADMIN' as const,
+  name: 'Admin',
+  email: 'admin@hdab.nl',
+};
+const APPLICANT = {
+  id: 'u-2',
+  role: 'APPLICANT' as const,
+  name: 'A. de Vries',
+  email: 'researcher@umcu.nl',
+};
 
 beforeEach(() => {
   userFindUnique.mockReset();
@@ -32,13 +42,23 @@ beforeEach(() => {
 
 describe('POST /api/contacts', () => {
   function makeRequest(body: unknown) {
-    return new NextRequest('http://localhost/api/contacts', { method: 'POST', body: JSON.stringify(body) });
+    return new NextRequest('http://localhost/api/contacts', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
   }
 
   it('rejects a non-ADMIN acting user', async () => {
     userFindUnique.mockResolvedValue(APPLICANT as never);
 
-    const res = await POST(makeRequest({ actingUserId: 'u-2', ownerType: 'DataHolder', ownerId: 'dh-1', name: 'Jane' }));
+    const res = await POST(
+      makeRequest({
+        actingUserId: 'u-2',
+        ownerType: 'DataHolder',
+        ownerId: 'dh-1',
+        name: 'Jane',
+      }),
+    );
 
     expect(res.status).toBe(403);
     expect(contactCreate).not.toHaveBeenCalled();
@@ -50,7 +70,9 @@ describe('POST /api/contacts', () => {
     const res = await POST(makeRequest({ actingUserId: 'u-1', name: 'Jane' }));
 
     expect(res.status).toBe(422);
-    expect(await res.json()).toEqual({ error: 'ownerType and ownerId are required' });
+    expect(await res.json()).toEqual({
+      error: 'ownerType and ownerId are required',
+    });
     expect(contactCreate).not.toHaveBeenCalled();
   });
 
@@ -59,7 +81,14 @@ describe('POST /api/contacts', () => {
     // inherited Object.prototype members, not a real owner field.
     userFindUnique.mockResolvedValue(ADMIN as never);
 
-    const res = await POST(makeRequest({ actingUserId: 'u-1', ownerType: 'constructor', ownerId: 'x', name: 'Jane' }));
+    const res = await POST(
+      makeRequest({
+        actingUserId: 'u-1',
+        ownerType: 'constructor',
+        ownerId: 'x',
+        name: 'Jane',
+      }),
+    );
 
     expect(res.status).toBe(422);
     expect(contactCreate).not.toHaveBeenCalled();
@@ -68,10 +97,19 @@ describe('POST /api/contacts', () => {
   it('rejects a body with neither name nor email', async () => {
     userFindUnique.mockResolvedValue(ADMIN as never);
 
-    const res = await POST(makeRequest({ actingUserId: 'u-1', ownerType: 'DataHolder', ownerId: 'dh-1', phone: '0612345678' }));
+    const res = await POST(
+      makeRequest({
+        actingUserId: 'u-1',
+        ownerType: 'DataHolder',
+        ownerId: 'dh-1',
+        phone: '0612345678',
+      }),
+    );
 
     expect(res.status).toBe(422);
-    expect(await res.json()).toEqual({ error: 'At least a name or email is required' });
+    expect(await res.json()).toEqual({
+      error: 'At least a name or email is required',
+    });
     expect(contactCreate).not.toHaveBeenCalled();
   });
 
@@ -88,18 +126,31 @@ describe('POST /api/contacts', () => {
     } as never);
 
     const res = await POST(
-      makeRequest({ actingUserId: 'u-1', ownerType: 'SpeOperator', ownerId: 'so-1', name: 'Jane Doe', role: 'PRIMARY' }),
+      makeRequest({
+        actingUserId: 'u-1',
+        ownerType: 'SpeOperator',
+        ownerId: 'so-1',
+        name: 'Jane Doe',
+        role: 'PRIMARY',
+      }),
     );
 
     expect(res.status).toBe(201);
     expect(contactCreate).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ speOperatorId: 'so-1', name: 'Jane Doe', role: 'PRIMARY' }),
+        data: expect.objectContaining({
+          speOperatorId: 'so-1',
+          name: 'Jane Doe',
+          role: 'PRIMARY',
+        }),
       }),
     );
     expect(auditLogCreate).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ entityType: 'Contact', entityId: 'c-1' }),
+        data: expect.objectContaining({
+          entityType: 'Contact',
+          entityId: 'c-1',
+        }),
       }),
     );
   });
