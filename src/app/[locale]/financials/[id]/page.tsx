@@ -79,7 +79,7 @@ export default async function InvoiceDetailPage({
           <h1 className="text-xl font-bold text-gray-900 font-mono flex items-center gap-2">
             {invoice.invoiceNumber}
             {invoice.provisional && (
-              <span className="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium bg-purple-100 text-purple-700">
+              <span className="inline-flex items-center rounded-sm px-1.5 py-0.5 text-xs font-medium bg-purple-100 text-purple-700">
                 {t('provisional')}
               </span>
             )}

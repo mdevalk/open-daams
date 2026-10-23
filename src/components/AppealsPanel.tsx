@@ -120,7 +120,7 @@ export function AppealsPanel({ applicationId, appeals, canManage, currentUserId 
   }
 
   return (
-    <div className="rounded border border-gray-200 bg-white p-4 space-y-3">
+    <div className="rounded-sm border border-gray-200 bg-white p-4 space-y-3">
       <div className="flex items-center justify-between">
         <h2 className="font-semibold text-gray-900 text-sm">{t('title')}</h2>
         {canManage && !showForm && (
@@ -138,10 +138,10 @@ export function AppealsPanel({ applicationId, appeals, canManage, currentUserId 
 
       <div className="space-y-3">
         {appeals.map((appeal) => (
-          <div key={appeal.id} className="border border-gray-100 rounded p-3 text-sm space-y-1">
+          <div key={appeal.id} className="border border-gray-100 rounded-sm p-3 text-sm space-y-1">
             <div className="flex items-center justify-between">
               <span className="font-medium">{appeal.submittedBy}</span>
-              <span className={`text-xs font-medium px-2 py-0.5 rounded ${STATUS_STYLES[appeal.status]}`}>
+              <span className={`text-xs font-medium px-2 py-0.5 rounded-sm ${STATUS_STYLES[appeal.status]}`}>
                 {ts(appeal.status)}
               </span>
             </div>
@@ -218,25 +218,25 @@ export function AppealsPanel({ applicationId, appeals, canManage, currentUserId 
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">{t('submittedByLabel')}</label>
             <input type="text" value={submittedBy} onChange={e => setSubmittedBy(e.target.value)}
-              className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
+              className="w-full rounded-sm border border-gray-300 px-3 py-1.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#01689b]" />
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">{t('groundsLabel')}</label>
             <textarea rows={3} value={grounds} onChange={e => setGrounds(e.target.value)}
-              className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
+              className="w-full rounded-sm border border-gray-300 px-3 py-1.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#01689b]" />
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">{t('authorityLabel')}</label>
             <input type="text" value={authority} onChange={e => setAuthority(e.target.value)}
               placeholder={t('authorityPlaceholder')}
-              className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
+              className="w-full rounded-sm border border-gray-300 px-3 py-1.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#01689b]" />
           </div>
           <div className="flex gap-2">
             <button type="button" disabled={loading || !submittedBy.trim() || !grounds.trim()} onClick={submitAppeal}
-              className="flex-1 rounded px-3 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors">
+              className="flex-1 rounded-sm px-3 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors">
               {loading ? t('loading') : t('register')}
             </button>
-            <button type="button" disabled={loading} onClick={() => setShowForm(false)} className="rounded px-3 py-2 text-sm border border-gray-300 hover:bg-gray-50">
+            <button type="button" disabled={loading} onClick={() => setShowForm(false)} className="rounded-sm px-3 py-2 text-sm border border-gray-300 hover:bg-gray-50">
               {t('cancel')}
             </button>
           </div>

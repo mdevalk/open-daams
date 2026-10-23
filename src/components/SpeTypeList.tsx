@@ -19,7 +19,7 @@ type Props = {
 };
 
 const fieldCls =
-  'rounded border border-gray-300 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-[#01689b]';
+  'rounded-sm border border-gray-300 px-2 py-1 text-xs focus:outline-hidden focus:ring-2 focus:ring-[#01689b]';
 
 export function SpeTypeList({ speOperatorId, types, isAdmin, currentUserId, editable }: Props) {
   const router = useRouter();

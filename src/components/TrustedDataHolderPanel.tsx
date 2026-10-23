@@ -47,7 +47,7 @@ export function TrustedDataHolderPanel({ application, dataHolders, currentUser }
   }
 
   return (
-    <div className="rounded border border-gray-200 bg-white p-4 space-y-3">
+    <div className="rounded-sm border border-gray-200 bg-white p-4 space-y-3">
       <h2 className="font-semibold text-gray-900 text-sm">{t('title')}</h2>
 
       {!editing && (
@@ -65,7 +65,7 @@ export function TrustedDataHolderPanel({ application, dataHolders, currentUser }
           <select
             value={selectedId}
             onChange={(e) => setSelectedId(e.target.value)}
-            className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
+            className="w-full rounded-sm border border-gray-300 px-3 py-1.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#01689b]"
           >
             <option value="">{t('noneSelected')}</option>
             {dataHolders.map((dh) => (
@@ -74,11 +74,11 @@ export function TrustedDataHolderPanel({ application, dataHolders, currentUser }
           </select>
           <div className="flex gap-2">
             <button type="button" disabled={loading} onClick={save}
-              className="flex-1 rounded px-3 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors">
+              className="flex-1 rounded-sm px-3 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors">
               {loading ? t('saving') : t('save')}
             </button>
             <button type="button" disabled={loading} onClick={() => { setEditing(false); setSelectedId(application.trustedDataHolderId ?? ''); }}
-              className="rounded px-3 py-2 text-sm border border-gray-300 hover:bg-gray-50">
+              className="rounded-sm px-3 py-2 text-sm border border-gray-300 hover:bg-gray-50">
               {t('cancel')}
             </button>
           </div>

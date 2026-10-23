@@ -14,7 +14,7 @@ export async function AuthorizedPersonsPanel({ persons, locale }: Props) {
   const t = await getTranslations({ locale, namespace: 'authorizedPersons' });
 
   return (
-    <div className="rounded border border-gray-200 bg-white p-4 space-y-3">
+    <div className="rounded-sm border border-gray-200 bg-white p-4 space-y-3">
       <h2 className="font-semibold text-gray-900 text-sm">{t('title')}</h2>
 
       {persons.length === 0 && (
@@ -23,11 +23,11 @@ export async function AuthorizedPersonsPanel({ persons, locale }: Props) {
 
       <ul className="space-y-2">
         {persons.map((p) => (
-          <li key={p.id} className="text-sm border border-gray-100 rounded p-2">
+          <li key={p.id} className="text-sm border border-gray-100 rounded-sm p-2">
             <p className="font-medium">
               {p.name}
               {p.role && (
-                <span className="ml-2 text-xs font-medium px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700">
+                <span className="ml-2 text-xs font-medium px-1.5 py-0.5 rounded-sm bg-emerald-100 text-emerald-700">
                   {t(p.role === 'RESEARCHER' ? 'roleResearcher' : 'roleOutputController')}
                 </span>
               )}

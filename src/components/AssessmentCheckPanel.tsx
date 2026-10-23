@@ -81,7 +81,7 @@ export function AssessmentCheckPanel({ applicationId, currentUserId, canManage, 
   }
 
   return (
-    <div className="rounded border border-gray-200 bg-white p-4 space-y-3">
+    <div className="rounded-sm border border-gray-200 bg-white p-4 space-y-3">
       <button
         type="button"
         onClick={() => setExpanded((e) => !e)}
@@ -91,7 +91,7 @@ export function AssessmentCheckPanel({ applicationId, currentUserId, canManage, 
       >
         <h2 className="font-semibold text-gray-900 text-sm">{t('title')}</h2>
         <div className="flex items-center gap-2">
-          <span className={`text-xs font-medium px-2 py-0.5 rounded ${RESULT_STYLES[result]}`}>
+          <span className={`text-xs font-medium px-2 py-0.5 rounded-sm ${RESULT_STYLES[result]}`}>
             {t(`result${result}`)}
           </span>
           <span aria-hidden="true" className={`text-gray-400 transition-transform ${expanded ? 'rotate-90' : ''}`}>
@@ -127,7 +127,7 @@ export function AssessmentCheckPanel({ applicationId, currentUserId, canManage, 
               readOnly={!canManage}
               onChange={(e) => setRemarks(e.target.value)}
               rows={2}
-              className="mt-1 w-full rounded border border-gray-300 px-2 py-1.5 text-sm disabled:bg-gray-50"
+              className="mt-1 w-full rounded-sm border border-gray-300 px-2 py-1.5 text-sm disabled:bg-gray-50"
             />
           </div>
 
@@ -138,7 +138,7 @@ export function AssessmentCheckPanel({ applicationId, currentUserId, canManage, 
               type="button"
               disabled={loading || result === 'COMPLETE'}
               onClick={markComplete}
-              className="w-full rounded px-3 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+              className="w-full rounded-sm px-3 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 transition-colors"
             >
               {t('markComplete')}
             </button>

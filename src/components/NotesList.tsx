@@ -48,7 +48,7 @@ export function NotesList({
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder={t('placeholder')}
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
         />
         <div className="flex items-center justify-between">
           {isStaff && (
@@ -57,7 +57,7 @@ export function NotesList({
                 type="checkbox"
                 checked={isInternal}
                 onChange={(e) => setIsInternal(e.target.checked)}
-                className="rounded"
+                className="rounded-sm"
               />
               {t('internal')}
             </label>

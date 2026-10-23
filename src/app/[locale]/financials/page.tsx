@@ -106,7 +106,7 @@ export default async function FinancialsPage({
                     <span className="font-mono text-sm font-bold text-gray-900">{estimate.application.referenceNumber}</span>
                     <p className="text-xs text-gray-500 mt-0.5">{estimate.application.title}</p>
                   </div>
-                  <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold ${ESTIMATE_STATUS_COLORS[estimate.status]}`}>
+                  <span className={`inline-flex items-center rounded-sm px-2 py-0.5 text-xs font-semibold ${ESTIMATE_STATUS_COLORS[estimate.status]}`}>
                     {t(`estimateStatus${estimate.status}`)}
                   </span>
                 </div>
@@ -252,15 +252,15 @@ export default async function FinancialsPage({
                         className="flex items-center justify-between gap-4 px-4 py-2.5 hover:bg-gray-50 transition-colors"
                       >
                         <div className="flex items-center gap-2 min-w-0">
-                          <span className="font-mono text-xs font-medium text-gray-700 flex-shrink-0">{invoice.invoiceNumber}</span>
+                          <span className="font-mono text-xs font-medium text-gray-700 shrink-0">{invoice.invoiceNumber}</span>
                           <span className="text-xs text-gray-500 truncate">{recipientLabel(invoice, t)}</span>
                           {invoice.recipientType !== 'APPLICANT' && (
-                            <span className="flex-shrink-0 inline-flex items-center rounded-full bg-purple-100 text-purple-700 px-2 py-0.5 text-xs font-medium">
+                            <span className="shrink-0 inline-flex items-center rounded-full bg-purple-100 text-purple-700 px-2 py-0.5 text-xs font-medium">
                               {t('selfBilled')}
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-3 flex-shrink-0">
+                        <div className="flex items-center gap-3 shrink-0">
                           <span className="text-sm font-medium text-gray-900">{invoice.totalAmount.toString()} {invoice.currency}</span>
                           <span
                             className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold ${

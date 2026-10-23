@@ -63,7 +63,7 @@ export function InvoicePanel({
   }
 
   return (
-    <div className="rounded border border-gray-200 bg-white p-4 space-y-3">
+    <div className="rounded-sm border border-gray-200 bg-white p-4 space-y-3">
       <div className="flex items-center justify-between">
         <h2 className="font-semibold text-gray-900 text-sm">{t('panelTitle')}</h2>
         <div className="flex items-center gap-3">
@@ -98,7 +98,7 @@ export function InvoicePanel({
           {invoices.map((invoice) => {
             const overdue = isOverdue(invoice);
             return (
-              <li key={invoice.id} className="border border-gray-100 rounded p-3 text-sm flex items-center justify-between">
+              <li key={invoice.id} className="border border-gray-100 rounded-sm p-3 text-sm flex items-center justify-between">
                 <a
                   href={`/${locale}/financials/${invoice.id}`}
                   className="font-mono font-medium text-[#01689b] hover:underline"

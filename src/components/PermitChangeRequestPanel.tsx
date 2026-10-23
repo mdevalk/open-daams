@@ -52,7 +52,7 @@ type Props = {
 };
 
 const inputCls =
-  'w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]';
+  'w-full rounded-sm border border-gray-300 px-3 py-1.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#01689b]';
 
 export function PermitChangeRequestPanel({
   permitId,
@@ -181,11 +181,11 @@ export function PermitChangeRequestPanel({
   }
 
   return (
-    <div className="rounded border border-gray-200 bg-white p-4 space-y-3">
+    <div className="rounded-sm border border-gray-200 bg-white p-4 space-y-3">
       <h3 className="text-sm font-semibold text-gray-900">{t('title')}</h3>
 
       {pendingVersion && (
-        <div className="rounded border border-amber-300 bg-amber-50 p-3 text-sm">
+        <div className="rounded-sm border border-amber-300 bg-amber-50 p-3 text-sm">
           <p className="font-medium text-amber-900">
             {t('pendingActivation', { version: pendingVersion.version })}
           </p>
@@ -198,7 +198,7 @@ export function PermitChangeRequestPanel({
               type="button"
               disabled={loading || new Date(pendingVersion.effectiveAt).getTime() > Date.now()}
               onClick={activate}
-              className="mt-2 rounded px-3 py-1.5 text-xs font-semibold text-white bg-amber-700 hover:bg-amber-800 disabled:opacity-50"
+              className="mt-2 rounded-sm px-3 py-1.5 text-xs font-semibold text-white bg-amber-700 hover:bg-amber-800 disabled:opacity-50"
             >
               {loading ? t('activating') : t('activateNow')}
             </button>
@@ -211,10 +211,10 @@ export function PermitChangeRequestPanel({
       )}
 
       {requests.map((r) => (
-        <div key={r.id} className="rounded border border-gray-200 p-3 text-sm">
+        <div key={r.id} className="rounded-sm border border-gray-200 p-3 text-sm">
           <div className="flex items-center justify-between">
             <span className="font-medium" title={tth(r.type)}>{tt(r.type)}</span>
-            <span className={`text-xs font-medium px-2 py-0.5 rounded ${CHANGE_STATUS_COLORS[r.status]}`}>
+            <span className={`text-xs font-medium px-2 py-0.5 rounded-sm ${CHANGE_STATUS_COLORS[r.status]}`}>
               {tstat(r.status)}
             </span>
           </div>
@@ -292,7 +292,7 @@ export function PermitChangeRequestPanel({
                       type="button"
                       disabled={loading || (r.type === 'RENEWAL' && !newValidUntil)}
                       onClick={() => decide(r, 'APPROVED')}
-                      className="flex-1 rounded px-3 py-1.5 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50"
+                      className="flex-1 rounded-sm px-3 py-1.5 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50"
                     >
                       {t('approve')}
                     </button>
@@ -300,7 +300,7 @@ export function PermitChangeRequestPanel({
                       type="button"
                       disabled={loading}
                       onClick={() => decide(r, 'REJECTED')}
-                      className="flex-1 rounded px-3 py-1.5 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50"
+                      className="flex-1 rounded-sm px-3 py-1.5 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50"
                     >
                       {t('reject')}
                     </button>
@@ -308,7 +308,7 @@ export function PermitChangeRequestPanel({
                       type="button"
                       disabled={loading}
                       onClick={() => setDecideFor(null)}
-                      className="rounded px-3 py-1.5 text-sm border border-gray-300 hover:bg-gray-50"
+                      className="rounded-sm px-3 py-1.5 text-sm border border-gray-300 hover:bg-gray-50"
                     >
                       {t('cancel')}
                     </button>
@@ -359,7 +359,7 @@ export function PermitChangeRequestPanel({
             type="button"
             disabled={loading || !newType || !justification.trim()}
             onClick={submitRequest}
-            className="w-full rounded px-3 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors"
+            className="w-full rounded-sm px-3 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors"
           >
             {loading ? t('saving') : t('submit')}
           </button>

@@ -125,7 +125,7 @@ export function NcpFetchForm({ locale }: { locale?: string }) {
                   <p className="font-medium text-gray-900">{entry.title}</p>
                   <p className="mt-1 text-xs text-gray-500">
                     {entry.applicationId} · v{entry.version} ·{' '}
-                    <span className="rounded bg-gray-100 px-1.5 py-0.5 font-medium">{entry.status}</span> ·{' '}
+                    <span className="rounded-sm bg-gray-100 px-1.5 py-0.5 font-medium">{entry.status}</span> ·{' '}
                     {entry.applicationType === 'DATA_ACCESS_APPLICATION' ? ta('typeDataAccess') : ta('typeDataRequest')}
                   </p>
                   <p className="mt-1 text-xs text-gray-500">
@@ -166,7 +166,7 @@ export function NcpFetchForm({ locale }: { locale?: string }) {
                     </>
                   ) : (
                     <>
-                      <pre className="whitespace-pre-wrap break-words font-mono text-xs max-h-96 overflow-y-auto">
+                      <pre className="whitespace-pre-wrap wrap-break-word font-mono text-xs max-h-96 overflow-y-auto">
                         ✗ {result.error}
                       </pre>
                       {result.attachments && result.attachments.length > 0 && (
@@ -177,7 +177,7 @@ export function NcpFetchForm({ locale }: { locale?: string }) {
                               href={`/api/import/ncp-applications/${entry.applicationId}/attachments/${encodeURIComponent(filename)}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="rounded border border-red-300 bg-white px-2 py-1 text-xs font-medium text-red-800 hover:bg-red-100"
+                              className="rounded-sm border border-red-300 bg-white px-2 py-1 text-xs font-medium text-red-800 hover:bg-red-100"
                             >
                               {t('openFile', { filename })} →
                             </a>

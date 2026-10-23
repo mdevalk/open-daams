@@ -63,7 +63,7 @@ export function PermitLifecyclePanel({ permitId, permitStatus, currentUserId, cu
   }
 
   return (
-    <div className="rounded border border-gray-200 bg-white p-4">
+    <div className="rounded-sm border border-gray-200 bg-white p-4">
       <h3 className="text-sm font-semibold text-gray-900 mb-3">{tp('actionsTitle')}</h3>
       <div className="space-y-2">
         {availableTransitions.map(tr => {
@@ -107,7 +107,7 @@ export function PermitLifecyclePanel({ permitId, permitStatus, currentUserId, cu
                   : setComment(e.target.value)
               }
               placeholder={selectedTransition === 'REVOKED' ? tp('revocationPlaceholder') : tp('commentPlaceholder')}
-              className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
+              className="w-full rounded-sm border border-gray-300 px-3 py-1.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#01689b]"
             />
           </div>
           {error && <p className="text-xs text-red-600">{error}</p>}

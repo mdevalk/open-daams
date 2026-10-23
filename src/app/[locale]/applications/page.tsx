@@ -49,7 +49,7 @@ export default async function ApplicationsPage({
         <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
         <a
           href={`/${locale}/applications/new`}
-          className="hdab-btn-primary px-4 py-1.5 rounded text-sm font-semibold bg-[#154273] text-white hover:bg-[#01689b] transition-colors"
+          className="hdab-btn-primary px-4 py-1.5 rounded-sm text-sm font-semibold bg-[#154273] text-white hover:bg-[#01689b] transition-colors"
         >
           {tNav('newApplication')}
         </a>
@@ -63,12 +63,12 @@ export default async function ApplicationsPage({
             defaultValue={search}
             placeholder={t('searchPlaceholder')}
             suppressHydrationWarning
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
+            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#01689b]"
           />
         </div>
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">{t('statusLabel')}</label>
-          <select name="status" defaultValue={status ?? ''} className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]">
+          <select name="status" defaultValue={status ?? ''} className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#01689b]">
             <option value="">{t('allStatuses')}</option>
             {(['DRAFT','SUBMITTED','PRE_SCREENING','AWAITING_ADDITIONAL_INFORMATION','PROCESSING','DECISION_ISSUED','WITHDRAWN'] as ApplicationStatus[]).map((s) => (
               <option key={s} value={s}>{tStatus(s)}</option>
@@ -77,7 +77,7 @@ export default async function ApplicationsPage({
         </div>
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">{t('typeLabel')}</label>
-          <select name="type" defaultValue={type ?? ''} className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]">
+          <select name="type" defaultValue={type ?? ''} className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#01689b]">
             <option value="">{t('allTypes')}</option>
             <option value="DATA_ACCESS_APPLICATION">{t('typeDataAccess')}</option>
             <option value="DATA_REQUEST">{t('typeDataRequest')}</option>
@@ -85,7 +85,7 @@ export default async function ApplicationsPage({
         </div>
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">{t('sourceLabel')}</label>
-          <select name="source" defaultValue={source ?? ''} className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]">
+          <select name="source" defaultValue={source ?? ''} className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#01689b]">
             <option value="">{t('allSources')}</option>
             <option value="NATIONAL">{t('sourceNational')}</option>
             <option value="HDEU">{t('sourceHdeu')}</option>

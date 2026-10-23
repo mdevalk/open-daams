@@ -21,13 +21,13 @@ export function ApplicationCard({ application: app, locale = 'nl' }: Props) {
 
   return (
     <Link href={`/${locale}/applications/${app.id}`} className="block group">
-      <article className="rounded border border-gray-200 bg-white p-5 group-hover:shadow-md group-hover:border-[#01689b] transition-all">
+      <article className="rounded-sm border border-gray-200 bg-white p-5 group-hover:shadow-md group-hover:border-[#01689b] transition-all">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs text-gray-400 font-mono">{app.referenceNumber}</span>
               {app.source === 'HDEU' && (
-                <span className="rounded text-xs bg-purple-100 text-purple-700 px-2 py-0.5 font-medium border border-purple-200">
+                <span className="rounded-sm text-xs bg-purple-100 text-purple-700 px-2 py-0.5 font-medium border border-purple-200">
                   HD@EU • {app.hdeuSendingCountry}
                 </span>
               )}

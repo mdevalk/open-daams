@@ -14,7 +14,7 @@ const LAWFULNESS_VALUES = ['CONSENT', 'CONTRACT', 'LEGAL_OBLIGATION', 'VITAL_INT
 
 type AppType = 'DATA_ACCESS_APPLICATION' | 'DATA_REQUEST';
 
-const inputCls = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+const inputCls = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500';
 const labelCls = 'block text-sm font-medium text-gray-700 mb-1';
 
 type Applicant = User & { dataUser: { name: string } | null };
@@ -140,7 +140,7 @@ export function NewApplicationForm({
             { value: 'DATA_ACCESS_APPLICATION', label: t('typeDataAccessLabel'), desc: t('typeDataAccessDesc') },
             { value: 'DATA_REQUEST', label: t('typeDataRequestLabel'), desc: t('typeDataRequestDesc') },
           ].map((opt) => (
-            <label key={opt.value} className="flex items-start gap-3 rounded-lg border border-gray-200 p-3 cursor-pointer has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+            <label key={opt.value} className="flex items-start gap-3 rounded-lg border border-gray-200 p-3 cursor-pointer has-checked:border-blue-500 has-checked:bg-blue-50">
               <input
                 type="radio"
                 name="type"
@@ -266,7 +266,7 @@ export function NewApplicationForm({
                         <button
                           type="button"
                           onClick={() => removeDatasetFromGroup(group.id, dataset.id)}
-                          className="text-xs text-red-600 hover:underline flex-shrink-0"
+                          className="text-xs text-red-600 hover:underline shrink-0"
                         >
                           {t('remove')}
                         </button>
@@ -352,7 +352,7 @@ export function NewApplicationForm({
             </div>
           )}
           <div className="flex items-center gap-3">
-            <input type="checkbox" id="includesControls" checked={includesControls} onChange={(e) => setIncludesControls(e.target.checked)} className="rounded" />
+            <input type="checkbox" id="includesControls" checked={includesControls} onChange={(e) => setIncludesControls(e.target.checked)} className="rounded-sm" />
             <label htmlFor="includesControls" className="text-sm text-gray-700">{t('includesControlsLabel')}</label>
           </div>
           {includesControls && (
@@ -362,7 +362,7 @@ export function NewApplicationForm({
             </div>
           )}
           <div className="flex items-center gap-3">
-            <input type="checkbox" id="includesRelatives" checked={includesRelatives} onChange={(e) => setIncludesRelatives(e.target.checked)} className="rounded" />
+            <input type="checkbox" id="includesRelatives" checked={includesRelatives} onChange={(e) => setIncludesRelatives(e.target.checked)} className="rounded-sm" />
             <label htmlFor="includesRelatives" className="text-sm text-gray-700">{t('includesRelativesLabel')}</label>
           </div>
           {includesRelatives && (
@@ -466,7 +466,7 @@ export function NewApplicationForm({
         <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-3">
           <h2 className="font-semibold text-gray-900">{t('otherDataTitle')}</h2>
           <div className="flex items-center gap-3">
-            <input type="checkbox" id="otherDataToCombine" checked={otherDataToCombine} onChange={(e) => setOtherDataToCombine(e.target.checked)} className="rounded" />
+            <input type="checkbox" id="otherDataToCombine" checked={otherDataToCombine} onChange={(e) => setOtherDataToCombine(e.target.checked)} className="rounded-sm" />
             <label htmlFor="otherDataToCombine" className="text-sm text-gray-700">
               {t('otherDataCheckboxLabel')}
             </label>
@@ -514,7 +514,7 @@ export function NewApplicationForm({
             )}
           </div>
           <div className="flex items-center gap-3">
-            <input type="checkbox" id="transfersOutsideEuEea" checked={transfersOutsideEuEea} onChange={(e) => setTransfersOutsideEuEea(e.target.checked)} className="rounded" />
+            <input type="checkbox" id="transfersOutsideEuEea" checked={transfersOutsideEuEea} onChange={(e) => setTransfersOutsideEuEea(e.target.checked)} className="rounded-sm" />
             <label htmlFor="transfersOutsideEuEea" className="text-sm text-gray-700">{t('transfersOutsideEuEeaLabel')}</label>
           </div>
           {transfersOutsideEuEea && (
@@ -534,7 +534,7 @@ export function NewApplicationForm({
             <div className="grid grid-cols-2 gap-2">
               {LAWFULNESS_VALUES.map((v) => (
                 <label key={v} className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input type="checkbox" checked={lawfulness.includes(v)} onChange={() => toggleLawfulness(v)} className="rounded" />
+                  <input type="checkbox" checked={lawfulness.includes(v)} onChange={() => toggleLawfulness(v)} className="rounded-sm" />
                   <span className="text-gray-700">{t(`lawfulnessOption.${v}`)}</span>
                 </label>
               ))}
@@ -547,7 +547,7 @@ export function NewApplicationForm({
       <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-3">
         <h2 className="font-semibold text-gray-900">{t('optOutTitle')}</h2>
         <div className="flex items-center gap-3">
-          <input type="checkbox" id="usesOptOutException" checked={usesOptOutException} onChange={(e) => setUsesOptOutException(e.target.checked)} className="rounded" />
+          <input type="checkbox" id="usesOptOutException" checked={usesOptOutException} onChange={(e) => setUsesOptOutException(e.target.checked)} className="rounded-sm" />
           <label htmlFor="usesOptOutException" className="text-sm text-gray-700">
             {t('optOutCheckboxLabel')}
           </label>
@@ -576,7 +576,7 @@ export function NewApplicationForm({
       <div className="rounded-xl border border-gray-200 bg-white p-5">
         <h2 className="font-semibold text-gray-900 mb-3">{t('crossBorderTitle')}</h2>
         <div className="flex items-center gap-3">
-          <input type="checkbox" name="isCrossBorder" id="isCrossBorder" className="rounded" />
+          <input type="checkbox" name="isCrossBorder" id="isCrossBorder" className="rounded-sm" />
           <label htmlFor="isCrossBorder" className="text-sm text-gray-700">
             {t('isCrossBorderLabel')}
           </label>

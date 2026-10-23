@@ -147,7 +147,7 @@ function isValidDutchPhone(value: string): boolean {
 }
 
 const inputCls =
-  'w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]';
+  'w-full rounded-sm border border-gray-300 px-2 py-1 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#01689b]';
 
 export function MasterdataManager({ apiBasePath, namespace, entities, relationOptions, hasTrustedFlag, hasSpeTypes, hasBillingDetails, hasBillingDetailsDisplay, isAdmin, currentUserId }: Props) {
   const router = useRouter();
@@ -205,7 +205,7 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
         </div>
         <div>
           <p className="text-xs text-gray-500 mb-1">{t('invoiceType')}</p>
-          <div className="inline-flex rounded border border-gray-300 overflow-hidden text-xs">
+          <div className="inline-flex rounded-sm border border-gray-300 overflow-hidden text-xs">
             <button
               type="button"
               onClick={() => setBilling({ ...billing, invoiceType: billing.invoiceType === 'PAPER' ? '' : 'PAPER' })}
@@ -322,7 +322,7 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
 
       <div className="space-y-2">
         {entities.map((entity) => (
-          <div key={entity.id} className="rounded border border-gray-200 bg-white p-3">
+          <div key={entity.id} className="rounded-sm border border-gray-200 bg-white p-3">
             {editingId === entity.id ? (
               <div className="space-y-2">
                 <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder={t('name')} className={inputCls} />
@@ -357,11 +357,11 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
                 {hasBillingDetails && renderBillingFields(editBilling, setEditBilling)}
                 <div className="flex gap-2">
                   <button type="button" disabled={loading || !editName.trim() || editPhoneInvalid} onClick={() => saveEdit(entity.id)}
-                    className="rounded px-3 py-1.5 text-xs font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50">
+                    className="rounded-sm px-3 py-1.5 text-xs font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50">
                     {t('save')}
                   </button>
                   <button type="button" disabled={loading} onClick={() => setEditingId(null)}
-                    className="rounded px-3 py-1.5 text-xs border border-gray-300 hover:bg-gray-50">
+                    className="rounded-sm px-3 py-1.5 text-xs border border-gray-300 hover:bg-gray-50">
                     {t('cancel')}
                   </button>
                 </div>
@@ -372,7 +372,7 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
                   <p className="font-medium text-gray-900">
                     {entity.name}
                     {hasTrustedFlag && entity.isTrusted && (
-                      <span className="ml-2 text-xs font-medium px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700">
+                      <span className="ml-2 text-xs font-medium px-1.5 py-0.5 rounded-sm bg-emerald-100 text-emerald-700">
                         {t('trustedBadge')}
                       </span>
                     )}
@@ -415,7 +415,7 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
                   )}
                 </div>
                 {isAdmin && (
-                  <div className="flex gap-2 flex-shrink-0">
+                  <div className="flex gap-2 shrink-0">
                     <button type="button" onClick={() => startEdit(entity)} className="text-xs text-[#01689b] hover:underline">{t('edit')}</button>
                     <button type="button" disabled={loading} onClick={() => deleteEntity(entity.id)} className="text-xs text-red-600 hover:underline">{t('delete')}</button>
                   </div>
@@ -437,7 +437,7 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
 
       {isAdmin && (
         showAddForm ? (
-          <div className="rounded border border-gray-200 bg-white p-3 space-y-2">
+          <div className="rounded-sm border border-gray-200 bg-white p-3 space-y-2">
             <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder={t('name')} className={inputCls} />
             <div className="grid grid-cols-2 gap-2">
               <input value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder={t('contactEmail')} className={inputCls} />
@@ -470,11 +470,11 @@ export function MasterdataManager({ apiBasePath, namespace, entities, relationOp
             {hasBillingDetails && renderBillingFields(newBilling, setNewBilling)}
             <div className="flex gap-2">
               <button type="button" disabled={loading || !newName.trim() || newPhoneInvalid} onClick={submitNew}
-                className="rounded px-3 py-1.5 text-xs font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50">
+                className="rounded-sm px-3 py-1.5 text-xs font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50">
                 {loading ? t('save') : t('addNew')}
               </button>
               <button type="button" disabled={loading} onClick={() => setShowAddForm(false)}
-                className="rounded px-3 py-1.5 text-xs border border-gray-300 hover:bg-gray-50">
+                className="rounded-sm px-3 py-1.5 text-xs border border-gray-300 hover:bg-gray-50">
                 {t('cancel')}
               </button>
             </div>

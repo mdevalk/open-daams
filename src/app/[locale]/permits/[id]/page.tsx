@@ -27,7 +27,7 @@ function Field({ label, value, wide }: { label: string; value: React.ReactNode; 
   return (
     <div className={wide ? 'col-span-2' : undefined}>
       <dt className="text-gray-500">{label}</dt>
-      <dd className="font-medium whitespace-pre-wrap break-words">{value}</dd>
+      <dd className="font-medium whitespace-pre-wrap wrap-break-word">{value}</dd>
     </div>
   );
 }
@@ -180,7 +180,7 @@ export default async function PermitDetailPage({
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-bold text-gray-900 font-mono">{formatPermitId(permit.permitNumber, permit.version)}</h1>
-            <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold ${PERMIT_STATUS_COLORS[permit.status]}`}>
+            <span className={`inline-flex items-center rounded-sm px-2 py-0.5 text-xs font-semibold ${PERMIT_STATUS_COLORS[permit.status]}`}>
               {tps(permit.status)}
             </span>
           </div>
@@ -191,7 +191,7 @@ export default async function PermitDetailPage({
         </div>
         <a
           href={`/${locale}/applications/${permit.application?.id}`}
-          className="shrink-0 rounded border border-[#01689b] px-3 py-1.5 text-sm font-medium text-[#154273] hover:bg-[#e8f4fb] transition-colors"
+          className="shrink-0 rounded-sm border border-[#01689b] px-3 py-1.5 text-sm font-medium text-[#154273] hover:bg-[#e8f4fb] transition-colors"
         >
           {t('viewApplication')}
         </a>
@@ -342,7 +342,7 @@ export default async function PermitDetailPage({
 
         <div className="space-y-4">
           {versions.length > 1 && (
-            <div className="rounded border border-gray-200 bg-white p-4 space-y-2">
+            <div className="rounded-sm border border-gray-200 bg-white p-4 space-y-2">
               <h3 className="text-sm font-semibold text-gray-900">{t('versionsTitle')} (D6.4 §9.3)</h3>
               <ol className="space-y-1.5">
                 {versions.map((v) => {
@@ -353,7 +353,7 @@ export default async function PermitDetailPage({
                         <span className="font-mono text-xs font-semibold">{formatPermitId(v.permitNumber, v.version)}</span>
                         {v.isCurrent && <span className="text-[10px] font-medium text-emerald-700">{t('current')}</span>}
                       </div>
-                      <span className={`mt-0.5 inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold ${PERMIT_STATUS_COLORS[v.status]}`}>
+                      <span className={`mt-0.5 inline-flex items-center rounded-sm px-1.5 py-0.5 text-[10px] font-semibold ${PERMIT_STATUS_COLORS[v.status]}`}>
                         {tps(v.status)}
                       </span>
                     </>
@@ -361,14 +361,14 @@ export default async function PermitDetailPage({
                   return (
                     <li key={v.id}>
                       {isViewed ? (
-                        <div className="rounded border border-[#154273] bg-[#eef4fb] px-2 py-1.5">
+                        <div className="rounded-sm border border-[#154273] bg-[#eef4fb] px-2 py-1.5">
                           {inner}
                           <p className="text-[10px] text-gray-500 mt-0.5">{t('viewingThisVersion')}</p>
                         </div>
                       ) : (
                         <a
                           href={`/${locale}/permits/${v.id}`}
-                          className="block rounded border border-gray-200 hover:border-[#01689b] px-2 py-1.5 transition-colors"
+                          className="block rounded-sm border border-gray-200 hover:border-[#01689b] px-2 py-1.5 transition-colors"
                         >
                           {inner}
                         </a>
@@ -442,7 +442,7 @@ export default async function PermitDetailPage({
               <a
                 href={`/api/permits/${permit.id}/pdf`}
                 download
-                className="inline-flex items-center gap-1.5 rounded border border-[#154273] px-3 py-1.5 text-sm font-medium text-[#154273] hover:bg-[#e8f4fb] transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-sm border border-[#154273] px-3 py-1.5 text-sm font-medium text-[#154273] hover:bg-[#e8f4fb] transition-colors"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
                   <path d="M10.75 2.75a.75.75 0 0 0-1.5 0v8.614L6.295 8.235a.75.75 0 1 0-1.09 1.03l4.25 4.5a.75.75 0 0 0 1.09 0l4.25-4.5a.75.75 0 0 0-1.09-1.03l-2.955 3.129V2.75Z" />
@@ -462,7 +462,7 @@ export default async function PermitDetailPage({
                 {chainLogs.map((log, i) => (
                   <li key={log.id} className="flex gap-3 text-sm">
                     <div className="flex flex-col items-center">
-                      <span className="w-6 h-6 rounded-full bg-[#154273] text-white text-xs flex items-center justify-center font-bold flex-shrink-0">{i + 1}</span>
+                      <span className="w-6 h-6 rounded-full bg-[#154273] text-white text-xs flex items-center justify-center font-bold shrink-0">{i + 1}</span>
                       {i < chainLogs.length - 1 && <div className="w-px flex-1 bg-gray-200 my-1" />}
                     </div>
                     <div className="pb-3">
