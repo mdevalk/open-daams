@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { DataPermitStatus, PermitChangeType, PermitChangeStatus } from '@prisma/client';
 import { CHANGE_STATUS_COLORS, requestableTypes, buildChangeRequestDecisionBody, resolveChangeRequestNavigation } from '@/lib/capabilities/permit-lifecycle/permit-change';
-import { formatDate, readErrorMessage } from '@/lib/utils';
+import { formatDate, readErrorMessage, useCurrentTime } from '@/lib/utils';
 
 // Swaps the trailing path segment (this permit's id) for another version's id,
 // e.g. "/en/permits/abc" -> "/en/permits/xyz". Avoids a trailing-`$`-anchored
@@ -76,6 +76,7 @@ export function PermitChangeRequestPanel({
   const terr = useTranslations('errors');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const currentTime = useCurrentTime();
 
   async function activate() {
     if (!pendingVersion) return;
@@ -196,7 +197,7 @@ export function PermitChangeRequestPanel({
           {canDecide && (
             <button
               type="button"
-              disabled={loading || new Date(pendingVersion.effectiveAt).getTime() > Date.now()}
+              disabled={loading || new Date(pendingVersion.effectiveAt).getTime() > currentTime}
               onClick={activate}
               className="mt-2 rounded px-3 py-1.5 text-xs font-semibold text-white bg-amber-700 hover:bg-amber-800 disabled:opacity-50"
             >

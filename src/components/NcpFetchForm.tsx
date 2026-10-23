@@ -61,8 +61,9 @@ export function NcpFetchForm({ locale }: { locale?: string }) {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchList();
-  }, []);
+  });
 
   async function importEntry(entry: NcpApplicationSummary) {
     setImportingId(entry.applicationId);

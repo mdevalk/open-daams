@@ -738,6 +738,7 @@ export async function createStudyCohorts(applicationId: string, studyCohorts: Hd
     .map((c, index) => ({ c, index }))
     .filter(({ c }) => c.role === 'COHORT');
   for (const { c, index } of cohortEntries) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { relatesToIndex: _relatesToIndex, ...data } = c;
     const created = await prisma.studyCohort.create({
       data: {

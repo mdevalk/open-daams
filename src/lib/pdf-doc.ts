@@ -46,7 +46,6 @@ function sanitizeText(str: string): string {
   // € (U+20AC) sits outside Latin-1 but WinAnsiEncoding (used by pdf-lib's
   // standard fonts) can render it directly, so it's exempted from the filter
   // below rather than being replaced like the truly unsupported characters.
-  // eslint-disable-next-line no-control-regex
   return replaced.replace(/[^\x00-\xFF€]/g, '?');
 }
 

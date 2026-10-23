@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { readErrorMessage } from '@/lib/utils';
 import type { AssessmentItem } from '@/app/api/applications/[id]/assessment-check/route';
@@ -51,9 +51,11 @@ export function AssessmentCheckPanel({ applicationId, currentUserId, canManage, 
   // expanded while actively being worked on, and auto-collapses the moment
   // canManage flips to false (e.g. after a decision is issued).
   const [expanded, setExpanded] = useState(canManage);
-  useEffect(() => {
-    if (!canManage) setExpanded(false);
-  }, [canManage]);
+  const [canManageState, setCanManageState] = useState(canManage);
+  if (canManage !== canManageState) {
+    setCanManageState(canManage);
+    setExpanded(canManage);
+  }
 
   const allPassed = items.every((i) => i.passed);
 

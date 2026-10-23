@@ -1,8 +1,24 @@
 import { clsx, type ClassValue } from 'clsx';
+import { useEffect, useState } from 'react';
 
 export function cn(...inputs: ClassValue[]) {
   return clsx(inputs);
 }
+
+// from: https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent
+export function useCurrentTime() {
+  const [time, setTime] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setTime(Date.now());
+    }, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  return time;
+}
+
 
 export function formatDate(date: Date | string | null | undefined): string {
   if (!date) return '—';

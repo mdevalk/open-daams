@@ -1,4 +1,4 @@
-import { PrismaClient, UserRole, ApplicationType, ApplicationStatus, DecisionOutcome, DecisionTrack } from '@prisma/client';
+import { PrismaClient, UserRole, ApplicationType, ApplicationStatus, DecisionTrack } from '@prisma/client';
 import { addMonths, subDays, subWeeks } from 'date-fns';
 
 const prisma = new PrismaClient();
@@ -44,6 +44,7 @@ async function main() {
     update: {},
     create: { name: 'S. Bakker', email: 'casehandler@hdab.nl', role: UserRole.CASE_HANDLER, dataUserId: dataUserIdByName['HDAB-NL'] },
   });
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const decisionMaker = await prisma.user.upsert({
     where: { email: 'director@hdab.nl' },
     update: {},

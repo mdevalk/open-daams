@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
 import pocDemoPayload from '@/lib/capabilities/external-ingestion/poc-demo-hdeu-payload.json';
 
 // Real NCP application 6a70b4d104db074a00fd905d (HDAB-2026-0008), mapped
@@ -24,7 +23,6 @@ function buildSamplePayload(): string {
 
 export function HdeuImportForm({ locale }: { locale?: string }) {
   const t = useTranslations('hdeuImportForm');
-  const router = useRouter();
   const applicationHref = (id: string) => (locale ? `/${locale}/applications/${id}` : `/applications/${id}`);
   const [mode, setMode] = useState<'paste' | 'file'>('paste');
   const [json, setJson] = useState('');
