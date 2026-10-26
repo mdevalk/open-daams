@@ -133,11 +133,14 @@ npm install
 # 4. Generate a permit-signing key (Ed25519, used to sign issued data permits)
 npm run generate-signing-key
 
-# 5. Push schema and seed demo data
+# 5. Generate prisma client
+npx prisma generate
+
+# 6. Push schema and seed demo data
 npm run db:push
 npm run db:seed
 
-# 6. Start dev server
+# 7. Start dev server
 npm run dev
 ```
 

@@ -1,7 +1,11 @@
+import "dotenv/config";
+import { env } from "prisma/config";
+import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient, UserRole, ApplicationType, ApplicationStatus, DecisionOutcome, DecisionTrack } from '@prisma/client';
 import { addMonths, subDays, subWeeks } from 'date-fns';
 
-const prisma = new PrismaClient();
+const adapter = new PrismaPg({ connectionString: env("DATABASE_URL") })
+const prisma = new PrismaClient( { adapter });
 
 async function main() {
   const dataUserNames = ['UMC Utrecht', 'RIVM', 'HDAB-NL'];
@@ -77,7 +81,7 @@ async function main() {
             {
               dataHolderId: dataHolderIdByName['CBS'],
               name: "Overleden inwoners van Nederland naar doodsoorzaak (uitgebreide lijst van 'drie-teken categorieën'), leeftijd en geslacht",
-              url: 'https://acceptance.data.health.europa.eu/healthdata-central-platform/datasets/24b6a9b2-4519-4f94-8c0f-c4c85f295806?locale=nl',
+	      url: 'https://acceptance.data.health.europa.eu/healthdata-central-platform/datasets/24b6a9b2-4519-4f94-8c0f-c4c85f295806?locale=nl',
             },
           ],
         },
