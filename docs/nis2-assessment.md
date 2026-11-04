@@ -2,7 +2,8 @@
 
 _Snapshot date: 2026-08-13 (updated same day: dependency pinning + CI landed; rejected/
 unauthorized attempts and the remaining case-workflow actions now logged; database backup/restore
-now exists). Revised 2026-08-30: (i)/(j) re-assessed following the Keycloak/OIDC integration._
+now exists). Revised 2026-08-30: (i)/(j) re-assessed following the Keycloak/OIDC integration. Revised 2026-11-04: (e) updated for the
+Next.js 16.4.5 security patch and the CI audit gate moving to `high`._
 
 This assesses the open-daams codebase against **NIS2** (Directive (EU) 2022/2555), as transposed
 into Dutch law via the *Cyberbeveiligingswet* (Cbw). It complements `docs/owasp-top10-assessment.md`
@@ -42,7 +43,7 @@ rather than re-deriving their evidence.
 | (b) Incident handling | ✅ Fixed, code slice only | Logging now covers every mutation — status transitions, other successful actions, and rejected/unauthorized attempts (OWASP A09, fully closed) — the response process/CSIRT chain remains out of scope (procedural) | 5.24–5.28 |
 | (c) Business continuity | ✅ Fixed, code slice only | `npm run db:backup`/`db:restore` now exist and were verified via a real dump-and-restore round trip; facility continuity, continuity *planning*, and replication/HA are out of scope | 5.30, 8.13 |
 | (d) Supply chain security | ✅ Fixed, code slice only | Both dependencies now pinned to exact versions; vendor-risk process remains out of scope (procedural) | 5.19/5.21/5.22 |
-| (e) Secure development, vulnerability handling | ✅ Fixed | `npm audit` clean, now enforced on every push via `.github/workflows/ci.yml` | 8.8, 8.25–8.29 |
+| (e) Secure development, vulnerability handling | ✅ Fixed | `npm audit`: 0 high/critical, enforced on every push via `.github/workflows/ci.yml` (`--audit-level=high` since 2026-11-04; 23 moderate dev-/script-only advisories accepted — see OWASP Top 10 A06) | 8.8, 8.25–8.29 |
 | (f) Effectiveness assessment | ✅ Fixed, code slice only | `.github/workflows/ci.yml` runs the test suite on every push; broader assessment process remains out of scope (procedural) | 5.35/5.36 |
 | (g) Cyber hygiene & training | ➖ Out of scope (procedural) | Training program — organizational | 6.3 |
 | (h) Cryptography | ✅ Clean | Ed25519 signing (OWASP A02); TLS termination is a deployment concern | 8.24 |

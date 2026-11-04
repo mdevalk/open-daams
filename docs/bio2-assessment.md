@@ -20,7 +20,8 @@ facet of a much broader control, evidence for 8.13 instead), legal/PII complianc
 Organizational: segregation of duties (5.3), access control/identity/authentication/access rights
 (5.15–5.18), evidence collection (5.28), protection of records (5.33) — each backed by a genuine,
 checkable mechanism (RBAC constants, Keycloak + `authz.ts`, audit-log tables, the retention-
-deadline derivation) actually present in the code, not just named by BIO2's theme label._
+deadline derivation) actually present in the code, not just named by BIO2's theme label. Revised 2026-11-04: critical
+Next.js advisories caught by CI's `npm audit` gate and patched same-day; gate moved to `high` (8.8)._
 
 This assesses the open-daams codebase against **BIO2**, the Dutch public sector's information
 security baseline built on **ISO/IEC 27002:2022** — a structurally different control set from the
@@ -335,6 +336,17 @@ This would have failed the next push's CI run. Fixed same-day via `npm audit fix
 536/536 tests unchanged). Net takeaway: this is evidence the control *works*, not a lapse — the
 whole point of running `npm audit` on every push is to catch exactly this kind of
 newly-disclosed, time-sensitive finding before it ships.
+
+**2026-11-04 — the gate did its job again.** A fresh `npm audit` surfaced 1 critical and 6 high
+advisories disclosed since September, the critical one in `next` 16.3.5 itself (three
+unauthenticated remote-code-execution advisories, plus SSRF and DoS). Patched same-day within the
+existing version ranges (`next` → 16.4.5 plus the high transitive packages; commit `b9d1a34`),
+confirmed a behavioural no-op: `tsc` clean, 567/567 tests, production build, browser smoke test.
+The 23 remaining moderate advisories have no genuine fix and sit outside the production bundle
+(`exceljs`, used only by the local traceability-export script; the dev-only eslint plugin chain),
+so the gate moved from `--audit-level=moderate` to `--audit-level=high` — a documented, scoped
+risk acceptance (full list and rationale in `docs/owasp-top10-assessment.md` A06), not a
+loosening for high or critical findings, which still fail the build.
 
 ### 8.13 — Backup ✅ Fixed
 

@@ -1,6 +1,6 @@
 # OWASP Top 10 (2021) assessment: open-daams
 
-_Snapshot date: 2026-08-13 (updated same day: entity-scoped case-workflow actions now logged too — A09 fully closed). Revised 2026-08-30: A07 closed by the Keycloak/OIDC integration._
+_Snapshot date: 2026-08-13 (updated same day: entity-scoped case-workflow actions now logged too — A09 fully closed). Revised 2026-08-30: A07 closed by the Keycloak/OIDC integration. Revised 2026-11-04: A06 — Next.js 16.4.5 security patch, CI audit gate moved to `high` with the remaining moderate advisories documented as accepted._
 
 This is a security assessment of the open-daams codebase mapped to the
 **OWASP Top 10 (2021)** categories.
@@ -21,7 +21,7 @@ This is a security assessment of the open-daams codebase mapped to the
 | **A03 – Injection** | ✅ Clean | All DB access via Prisma's typed query builder; zero raw SQL anywhere |
 | **A04 – Insecure Design** | ✅ Fixed | The former baseline design gap (no real authentication) is closed — see A07; the amplifying factors (open user directory, open sensitive reads) were already closed |
 | **A05 – Security Misconfiguration** | ✅ Fixed | Nonce-based CSP + full security-header set now set in `src/proxy.ts`; error handling remains disciplined |
-| **A06 – Vulnerable Components** | ✅ Fixed | `npm audit`: **0 vulnerabilities**, now enforced on every push via `.github/workflows/ci.yml`; the two previously-`"*"`-pinned dependencies are now pinned to exact versions |
+| **A06 – Vulnerable Components** | ✅ Fixed | `npm audit`: **0 high/critical** (23 moderate dev-/script-only advisories accepted, see A06), enforced on every push via `.github/workflows/ci.yml` (`--audit-level=high`); the two previously-`"*"`-pinned dependencies are now pinned to exact versions |
 | **A07 – Identification and Authentication Failures** | ✅ Fixed | Real OIDC login via Keycloak (Auth.js); RBAC now fed a server-verified `userId` from the session instead of a client-supplied one. Scoped to 5 seeded demo identities, not DigiD/eHerkenning |
 | **A08 – Software and Data Integrity Failures** | ℹ️ Note | `verifyPermitSignature` exists but is never called in-app — verification happens in the separate external permit-validator app (by design); dependency pinning gap closed |
 | **A09 – Security Logging and Monitoring Failures** | ✅ Fixed | Rejected/unauthorized attempts (`AuthzFailureLog`) and all case-workflow actions (`AuditLog`) are now logged; no more unlogged mutation paths found |
@@ -117,8 +117,34 @@ v4-mandatory requirements were already satisfied).
 gap: non-reproducible builds, auto-pulls any future publish including a compromised one) — are now
 pinned to the exact versions already in use (`15.1.2`/`16.1.0`), confirmed a behavioural no-op
 (`npx tsc --noEmit` clean, 55/55 tests passing before and after). `npm audit` is also no longer a
-manual step: `.github/workflows/ci.yml` (new) runs `npm ci` + `npm audit --audit-level=moderate` +
+manual step: `.github/workflows/ci.yml` (new) runs `npm ci` + `npm audit --audit-level=moderate` (raised to `high` on 2026-11-04, see below) +
 `npm run test` on every push and pull request.
+
+**2026-11-04 — critical Next.js advisories caught, gate raised to `high`.** A fresh `npm audit`
+found 34 advisories (1 critical, 6 high, 27 moderate) disclosed since the last pass; CI's
+`moderate` gate would have failed the next push. The critical one was `next` 16.3.5 itself — three
+unauthenticated remote-code-execution advisories (Image Optimization API with SVG files,
+GHSA-2464-fhr4-w9xw; `use cache` functions returning typed arrays, GHSA-673q-mjm6-r5xr; `next/og`
+ImageResponse, GHSA-vcvr-r3jv-pc5j), plus SSRF in Image Optimization (GHSA-cjq9-62q9-8jv4), a
+Server Actions DoS and several cache-poisoning/leak advisories. Fixed in commit `b9d1a34` via
+`npm update` + `npm audit fix` (no `--force`, no version-range changes): `next` → 16.4.5, the
+high transitive advisories (`sharp`, `undici`, `vite`, `zod`, `brace-expansion`,
+`source-map-js`) patched, React 19.3.1 and vitest 4.1.12 along the way. Verified: `npx tsc
+--noEmit` clean, 567/567 tests passing, `npm run build` succeeds, browser smoke test (Keycloak
+login, application list/detail, decision-card PDF, permit PDF and attachment download).
+
+**Accepted residual risk — 23 moderate advisories with no genuine fix**, both outside the
+production bundle:
+
+- `exceljs` (via `archiver`/`archiver-utils`/`glob`/`readdir-glob`/`zip-stream`) — used only by
+  the local `npm run requirements:xlsx` export script, never by the app. npm's proposed "fix" is a
+  downgrade to exceljs 4.1.1.
+- The `eslint`/`typescript-eslint`/`eslint-config-next` plugin chain — dev tooling only. npm's
+  proposed "fix" is a downgrade to eslint 4 / eslint-config-next 12.
+
+The CI gate therefore moved from `--audit-level=moderate` to `--audit-level=high`: every high or
+critical advisory still fails the build, these known dev-/script-only moderates no longer block
+it. Re-evaluate when eslint-config-next supports eslint 10 or exceljs ships a fixed release.
 
 ### A07 — Identification and Authentication Failures ✅ Fixed
 

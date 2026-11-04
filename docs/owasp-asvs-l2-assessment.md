@@ -1,7 +1,8 @@
 # OWASP ASVS 5.0 (Level 2) assessment: open-daams
 
 _Snapshot date: 2026-08-26, revised 2026-08-30 following the Keycloak/OIDC authentication
-integration (V6/V7/V9/V10/V14.2.1 re-assessed; everything else unchanged from the original pass)._
+integration (V6/V7/V9/V10/V14.2.1 re-assessed; everything else unchanged from the original pass). Revised 2026-11-04: 3.7.1/15.2.1 updated for the
+Next.js 16.4.5 security patch and the CI audit gate moving to `high` (cite OWASP Top 10 A06)._
 
 This assesses the open-daams codebase against **OWASP Application Security Verification Standard
 5.0**, Level 2 (L2 is cumulative — every Level 1 requirement plus the additional Level 2 set). ASVS
@@ -134,7 +135,7 @@ app has no cookies at all, including no locale cookie (routing is path-based, `/
 | 3.5.3 | 1 | Sensitive functionality uses POST/PUT/PATCH/DELETE, not GET/HEAD | ✅ | Confirmed REST convention across every route read this session — all mutations are POST/PATCH/DELETE |
 | 3.5.4 | 2 | Separate applications on separate hostnames | ➖ | N/A — single application |
 | 3.5.5 | 2 | `postMessage` origin/syntax validation | ➖ | N/A — confirmed zero `postMessage`/`message` event-listener usage anywhere |
-| 3.7.1 | 2 | Only supported, secure client-side technologies used | ✅ | Cite A06 — Next.js 16.3.0/React current, `npm audit` clean |
+| 3.7.1 | 2 | Only supported, secure client-side technologies used | ✅ | Cite A06 — Next.js 16.4.5/React 19.3 current, `npm audit`: 0 high/critical (23 moderate dev-/script-only advisories accepted) |
 | 3.7.2 | 2 | Auto-redirects only to hosts the application controls | ➖ | N/A — no redirect-to-user-supplied-URL feature exists anywhere in the app (confirmed via search for `redirect(` call sites) |
 
 ### V4 — API and Web Service ✅ Clean
@@ -343,7 +344,7 @@ was found and fixed as a real bug **during this same session**, before this asse
 | ID | Level | Requirement | Status | Note |
 |---|:---:|---|:---:|---|
 | 15.1.1–15.1.3 | 1/2 | Documented remediation timeframes, SBOM, resource-intensive-functionality docs | ✗ | No SBOM or remediation-timeframe policy document exists; `npm audit` (cite A06) is the closest existing practice, run ad hoc + in CI, not against a documented SLA |
-| 15.2.1 | 1 | No components past their remediation deadline | ◑ | No deadline policy exists to measure against (see 15.1.1), but `npm audit` reports 0 vulnerabilities currently (cite A06) |
+| 15.2.1 | 1 | No components past their remediation deadline | ◑ | No deadline policy exists to measure against (see 15.1.1), but `npm audit` reports 0 high/critical currently; 23 moderate dev-/script-only advisories accepted (cite A06) |
 | 15.2.2 | 2 | Defenses against availability loss from expensive functionality | ➖ | Not assessed — no resource-intensive functionality (batch processing, heavy computation) exists in this app to need defending |
 | 15.2.3 | 2 | Production only includes required functionality | ✅ | No debug/admin-only routes found exposed without the standard `requireRole` gate; no unused example/scaffold routes found in `src/app/api` |
 | 15.3.1 | 1 | Only the required subset of fields returned, not entire objects | ◑ | Most routes use Prisma `select`/`include` scoping (e.g. `select: { name: true }` patterns seen throughout this session's own new routes), but some `findUnique`/`findMany` calls return full model objects to already-authorized staff roles without field-level trimming — consistent with the 8.1.2/8.2.3 field-level-authorization gap, not a new finding |
