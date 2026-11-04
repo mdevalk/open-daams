@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';
 import { actingUserId } from '@/auth';
 import { REQUEST_ROLES, requestableTypes } from '@/lib/capabilities/permit-lifecycle/permit-change';
-import { PermitChangeType } from '@prisma/client';
+import { PermitChangeType } from '@/generated/prisma/client';
 
 /**
  * POST /api/permits/[id]/change-requests

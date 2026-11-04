@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/db';
 import { ApplicationCard } from '@/components/ApplicationCard';
-import { ApplicationStatus } from '@prisma/client';
+import { ApplicationStatus } from '@/generated/prisma/client';
 import { getTranslations } from 'next-intl/server';
 import { cn, formatDate, daysUntil } from '@/lib/utils';
 import { formatPermitId } from '@/lib/capabilities/permit-lifecycle/permit';

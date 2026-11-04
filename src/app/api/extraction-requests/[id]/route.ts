@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { ExtractionStatus } from '@prisma/client';
+import { ExtractionStatus } from '@/generated/prisma/client';
 import { requireRole } from '@/lib/authz';
 import { actingUserId } from '@/auth';
 

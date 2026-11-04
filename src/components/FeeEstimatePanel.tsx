@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl';
 
 import { useState } from 'react';
-import { Application, FeeEstimate, FinancialLineCategory, FinancialLineItem, Invoice, SpeOperator, User } from '@prisma/client';
+import { Application, FeeEstimate, FinancialLineCategory, FinancialLineItem, Invoice, SpeOperator, User } from '@/generated/prisma/browser';
 import { useRouter } from 'next/navigation';
 import { formatDate, formatDateTime, readErrorMessage } from '@/lib/utils';
 import { SpeType } from './SpeTypeList';

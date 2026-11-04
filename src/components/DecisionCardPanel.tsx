@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Application, User } from '@prisma/client';
+import { Application, User } from '@/generated/prisma/browser';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { deadlineStatus } from '@/lib/capabilities/application-lifecycle/workflow';

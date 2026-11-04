@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { prisma } from '@/lib/db';
-import { NcpCallDirection, NcpCallOutcome } from '@prisma/client';
+import { NcpCallDirection, NcpCallOutcome } from '@/generated/prisma/client';
 import { IntegrationLogTable } from '@/components/IntegrationLogTable';
 
 export const dynamic = 'force-dynamic';

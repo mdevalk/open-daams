@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Application, DataPermit, FeeEstimate, FinancialLineItem, SpeOperator, SpeType, User } from '@prisma/client';
+import { Application, DataPermit, FeeEstimate, FinancialLineItem, SpeOperator, SpeType, User } from '@/generated/prisma/browser';
 import { useTranslations } from 'next-intl';
 import { PermitCard } from './PermitCard';
 import { useRouter } from 'next/navigation';

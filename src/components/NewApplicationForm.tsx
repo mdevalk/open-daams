@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl';
 
 import { useState } from 'react';
-import { User } from '@prisma/client';
+import { User } from '@/generated/prisma/browser';
 import { useRouter } from 'next/navigation';
 import { buildApplicationCreateBody } from '@/lib/capabilities/application-lifecycle/application-form';
 

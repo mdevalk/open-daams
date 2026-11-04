@@ -1,4 +1,4 @@
-import { SpeProvisioningStatus, UserRole } from '@prisma/client';
+import { SpeProvisioningStatus, UserRole } from '@/generated/prisma/client';
 
 export type SpeTransition = {
   to: SpeProvisioningStatus;

@@ -1,4 +1,4 @@
-import { AppealStatus } from '@prisma/client';
+import { AppealStatus } from '@/generated/prisma/client';
 import { Doc, C, fmt } from '@/lib/pdf-doc';
 import { APP_NAME } from '@/lib/branding';
 

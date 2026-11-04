@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Prisma, Application, ApplicationStatus, DecisionOutcome } from '@prisma/client';
+import { Prisma, Application, ApplicationStatus, DecisionOutcome } from '@/generated/prisma/client';
 import { prisma } from '@/lib/db';
 import {
   getAvailableTransitions,

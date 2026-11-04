@@ -1,4 +1,4 @@
-import { PermitChangeType, PermitChangeStatus, DataPermitStatus, UserRole } from '@prisma/client';
+import { PermitChangeType, PermitChangeStatus, DataPermitStatus, UserRole } from '@/generated/prisma/client';
 
 /**
  * TEHDAS2 D6.4 §9.3/§9.4 — workflow for a change requested against an already-issued

@@ -1,5 +1,5 @@
 import { useTranslations } from 'next-intl';
-import { ApplicationLog, User } from '@prisma/client';
+import { ApplicationLog, User } from '@/generated/prisma/client';
 import { formatDateTime } from '@/lib/utils';
 
 type LogEntry = ApplicationLog & { user: Pick<User, 'id' | 'name' | 'role'> };

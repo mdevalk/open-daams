@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSession, signIn, signOut } from 'next-auth/react';
-import { UserRole } from '@prisma/client';
+import { UserRole } from '@/generated/prisma/browser';
 
 type UserOption = { id: string; name: string; role: UserRole };
 

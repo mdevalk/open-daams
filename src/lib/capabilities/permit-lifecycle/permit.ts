@@ -1,4 +1,4 @@
-import { DataPermitStatus, UserRole } from '@prisma/client';
+import { DataPermitStatus, UserRole } from '@/generated/prisma/client';
 
 export type PermitTransition = {
   to: DataPermitStatus;

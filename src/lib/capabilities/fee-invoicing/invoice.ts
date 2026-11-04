@@ -1,4 +1,4 @@
-import type { FinancialLineItem, Invoice, InvoiceRecipientType, InvoiceStatus, Prisma } from '@prisma/client';
+import type { FinancialLineItem, Invoice, InvoiceRecipientType, InvoiceStatus, Prisma } from '@/generated/prisma/client';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/authz';

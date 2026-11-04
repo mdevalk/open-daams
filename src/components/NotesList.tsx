@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Note, User } from '@prisma/client';
+import { Note, User } from '@/generated/prisma/browser';
 import { useTranslations } from 'next-intl';
 import { formatDateTime } from '@/lib/utils';
 import { useRouter } from 'next/navigation';

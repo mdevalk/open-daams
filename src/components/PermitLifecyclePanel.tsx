@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { DataPermitStatus, UserRole } from '@prisma/client';
+import { DataPermitStatus, UserRole } from '@/generated/prisma/browser';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { PERMIT_TRANSITIONS } from '@/lib/capabilities/permit-lifecycle/permit';

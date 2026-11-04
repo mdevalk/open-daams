@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { DataPermitStatus, PermitChangeType, PermitChangeStatus } from '@prisma/client';
+import { DataPermitStatus, PermitChangeType, PermitChangeStatus } from '@/generated/prisma/browser';
 import { CHANGE_STATUS_COLORS, requestableTypes, buildChangeRequestDecisionBody, resolveChangeRequestNavigation } from '@/lib/capabilities/permit-lifecycle/permit-change';
 import { formatDate, readErrorMessage } from '@/lib/utils';
 

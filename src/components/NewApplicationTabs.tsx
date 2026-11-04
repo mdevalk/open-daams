@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { User } from '@prisma/client';
+import { User } from '@/generated/prisma/browser';
 import { NewApplicationForm } from './NewApplicationForm';
 import { HdeuImportForm } from './HdeuImportForm';
 import { NcpFetchForm } from './NcpFetchForm';

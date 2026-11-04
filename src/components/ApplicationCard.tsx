@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Application, User } from '@prisma/client';
+import { Application, User } from '@/generated/prisma/client';
 import { useTranslations } from 'next-intl';
 import { StatusBadge } from './StatusBadge';
 import { formatDate, daysUntil } from '@/lib/utils';

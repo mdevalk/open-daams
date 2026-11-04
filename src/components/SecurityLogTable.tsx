@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { AuthzFailureLog } from '@prisma/client';
+import { AuthzFailureLog } from '@/generated/prisma/client';
 import { formatDateTime } from '@/lib/utils';
 import { LogTable } from '@/components/LogTable';
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Application } from '@prisma/client';
+import { Application } from '@/generated/prisma/browser';
 import { cn } from '@/lib/utils';
 
 type Props = Pick<Application, 'status'>;

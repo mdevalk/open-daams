@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { PrismaClient, UserRole, ApplicationType, ApplicationStatus, DecisionOutcome, DecisionTrack } from '@prisma/client';
+import { PrismaClient, UserRole, ApplicationType, ApplicationStatus, DecisionOutcome, DecisionTrack } from '../src/generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { addMonths, subDays, subWeeks } from 'date-fns';
 

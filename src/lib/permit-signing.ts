@@ -3,7 +3,7 @@ import { sha512 } from '@noble/hashes/sha512';
 import { concatBytes } from '@noble/hashes/utils';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { AppealStatus, DataPermitStatus, DecisionOutcome } from '@prisma/client';
+import { AppealStatus, DataPermitStatus, DecisionOutcome } from '@/generated/prisma/client';
 import { formatPermitId } from './capabilities/permit-lifecycle/permit';
 
 // Required by @noble/ed25519 v2's sync sign/verify (no Web Crypto dependency).

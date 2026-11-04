@@ -83,8 +83,10 @@ specifications. Always use the **final** Regulation numbering, not the draft-pro
   `npx prisma db push` no longer regenerates the client (the npm script chains `prisma generate`),
   and field names over PostgreSQL's 63-char identifier limit need an explicit `@map` to the
   truncated name, or every push drops and re-adds the column.
-- **After `npm install`**, run `npx prisma generate` (the postinstall is often blocked), or
-  the `@prisma/client` import will be stale/missing.
+- **After `npm install`** or a fresh clone, run `npx prisma generate`: the client is generated
+  into `src/generated/prisma` (gitignored, `prisma-client` generator), so imports fail until it
+  exists. Server code imports `@/generated/prisma/client`; `'use client'` components import
+  `@/generated/prisma/browser` (types/enums only, never the DB client).
 - The **PostgreSQL database runs locally** (see `docker-compose.yml`); the app is seeded with
   `npm run db:seed`. **Real authentication** runs via Keycloak (OIDC, `docker-compose.yml`'s
   `keycloak` service, self-provisioned realm in `keycloak/realm-export.json`) — RBAC

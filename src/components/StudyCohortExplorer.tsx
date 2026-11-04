@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Attachment, StudyCohort } from '@prisma/client';
+import { Attachment, StudyCohort } from '@/generated/prisma/browser';
 import {
   cohortFormationLabel,
   extractionFrequencyLabel,

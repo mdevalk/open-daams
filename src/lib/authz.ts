@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db';
-import { UserRole } from '@prisma/client';
+import { UserRole } from '@/generated/prisma/client';
 
 export type FindUserResult =
   | { ok: true; user: { id: string; role: UserRole; name: string; email: string } }

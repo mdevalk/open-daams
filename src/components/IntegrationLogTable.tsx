@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { NcpIntegrationLog, Application, User } from '@prisma/client';
+import { NcpIntegrationLog, Application, User } from '@/generated/prisma/client';
 import { formatDateTime } from '@/lib/utils';
 import { LogTable } from '@/components/LogTable';
 

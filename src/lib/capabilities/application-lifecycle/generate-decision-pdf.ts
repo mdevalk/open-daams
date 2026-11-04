@@ -1,4 +1,4 @@
-import { DecisionOutcome } from '@prisma/client';
+import { DecisionOutcome } from '@/generated/prisma/client';
 import { addWeeks } from 'date-fns';
 import { Doc, C, fmt } from '@/lib/pdf-doc';
 import { APP_NAME } from '@/lib/branding';

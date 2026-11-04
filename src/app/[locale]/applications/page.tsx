@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/db';
 import { ApplicationCard } from '@/components/ApplicationCard';
-import { ApplicationStatus, ApplicationType } from '@prisma/client';
+import { ApplicationStatus, ApplicationType } from '@/generated/prisma/client';
 import { getTranslations } from 'next-intl/server';
 
 export const dynamic = 'force-dynamic';

@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl';
 
 import { useState } from 'react';
-import { AppealStatus } from '@prisma/client';
+import { AppealStatus } from '@/generated/prisma/browser';
 import { useRouter } from 'next/navigation';
 import { formatDate, readErrorMessage } from '@/lib/utils';
 

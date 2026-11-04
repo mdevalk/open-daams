@@ -1,5 +1,5 @@
 import { rgb } from 'pdf-lib';
-import { DataPermitStatus, FinancialLineCategory } from '@prisma/client';
+import { DataPermitStatus, FinancialLineCategory } from '@/generated/prisma/client';
 import { APP_NAME } from '@/lib/branding';
 import { formatPermitId } from './permit';
 import { buildDigitalPermitDocument, groupDatasetsByHolder, type DatasetEntry, type GrantedDatasetGroup } from '@/lib/permit-signing';

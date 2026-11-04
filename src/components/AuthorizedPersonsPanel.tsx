@@ -1,4 +1,4 @@
-import { AuthorizedPerson } from '@prisma/client';
+import { AuthorizedPerson } from '@/generated/prisma/client';
 import { getTranslations } from 'next-intl/server';
 
 type Props = {

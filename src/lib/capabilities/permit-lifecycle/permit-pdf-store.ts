@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient, Prisma } from '@/generated/prisma/client';
 import { generatePermitPdf } from './generate-permit-pdf';
 
 type Client = PrismaClient | Prisma.TransactionClient;

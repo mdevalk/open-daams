@@ -1,4 +1,4 @@
-import { DataPermit, Application } from '@prisma/client';
+import { DataPermit, Application } from '@/generated/prisma/client';
 import { useTranslations } from 'next-intl';
 import { PERMIT_STATUS_COLORS, formatPermitId } from '@/lib/capabilities/permit-lifecycle/permit';
 import { formatDate } from '@/lib/utils';

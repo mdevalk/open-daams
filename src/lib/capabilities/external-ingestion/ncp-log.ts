@@ -1,4 +1,4 @@
-import { NcpCallDirection, NcpCallOutcome } from '@prisma/client';
+import { NcpCallDirection, NcpCallOutcome } from '@/generated/prisma/client';
 import { prisma } from '@/lib/db';
 
 /**

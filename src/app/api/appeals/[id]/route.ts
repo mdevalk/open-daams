@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { AppealStatus } from '@prisma/client';
+import { AppealStatus } from '@/generated/prisma/client';
 import { requireRole } from '@/lib/authz';
 import { actingUserId } from '@/auth';
 import { signAppealDecision } from '@/lib/permit-signing';

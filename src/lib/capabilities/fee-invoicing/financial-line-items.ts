@@ -1,4 +1,4 @@
-import { FinancialLineCategory } from '@prisma/client';
+import { FinancialLineCategory } from '@/generated/prisma/client';
 
 // Single source of truth for cost-line labels and GL/account codes, shared by
 // FeeEstimatePanel, PermitPanel, InvoicePanel/InvoiceActions, and

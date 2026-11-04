@@ -2,7 +2,7 @@ import NextAuth from 'next-auth';
 import type { DefaultSession } from 'next-auth';
 import Keycloak from 'next-auth/providers/keycloak';
 import { prisma } from '@/lib/db';
-import { UserRole } from '@prisma/client';
+import { UserRole } from '@/generated/prisma/client';
 import { resolveSignInClaims, resolveImpersonationUpdate } from '@/lib/auth-helpers';
 
 type ImpersonationClaims = {

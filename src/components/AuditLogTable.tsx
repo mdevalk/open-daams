@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { AuditLog, User } from '@prisma/client';
+import { AuditLog, User } from '@/generated/prisma/client';
 import { formatDateTime } from '@/lib/utils';
 import { LogTable } from '@/components/LogTable';
 

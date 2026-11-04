@@ -6,7 +6,7 @@ import { InvoiceActions } from '@/components/InvoiceActions';
 import { PermitCard } from '@/components/PermitCard';
 import { formatDate, serializePrisma } from '@/lib/utils';
 import { formatPermitId } from '@/lib/capabilities/permit-lifecycle/permit';
-import { InvoiceStatus } from '@prisma/client';
+import { InvoiceStatus } from '@/generated/prisma/client';
 
 export const dynamic = 'force-dynamic';
 

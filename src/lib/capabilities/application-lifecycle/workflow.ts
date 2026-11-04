@@ -1,4 +1,4 @@
-import { ApplicationStatus, ApplicationType, UserRole, DecisionTrack } from '@prisma/client';
+import { ApplicationStatus, ApplicationType, UserRole, DecisionTrack } from '@/generated/prisma/client';
 import nlMessages from '../../../../messages/nl.json';
 
 export type Transition = {
