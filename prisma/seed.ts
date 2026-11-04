@@ -1,7 +1,9 @@
+import 'dotenv/config';
 import { PrismaClient, UserRole, ApplicationType, ApplicationStatus, DecisionOutcome, DecisionTrack } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { addMonths, subDays, subWeeks } from 'date-fns';
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
 
 async function main() {
   const dataUserNames = ['UMC Utrecht', 'RIVM', 'HDAB-NL'];

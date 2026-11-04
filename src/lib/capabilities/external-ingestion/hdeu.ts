@@ -701,7 +701,8 @@ async function createAttachments(applicationId: string, attachments: HdeuAttachm
   );
   if (attachmentsWithContent.length === 0) return;
   await prisma.attachment.createMany({
-    data: attachmentsWithContent.map((a) => ({ applicationId, ...a })),
+    // Prisma 7 Bytes fields take Uint8Array<ArrayBuffer>; adm-zip's Buffer is typed ArrayBufferLike.
+    data: attachmentsWithContent.map((a) => ({ applicationId, ...a, content: new Uint8Array(a.content) })),
   });
 }
 

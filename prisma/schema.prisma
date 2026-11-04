@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 enum ApplicationType {
@@ -569,7 +568,9 @@ model StudyCohort {
 
   cohortFormationMethod                                            CohortFormationMethod? // COHORT only
   // Release 7 §6 — consent/permit basis for the cohort (COHORT only)
-  hasTheStudyCohortBeenFormedBasedOnInformationOfStudyParticipants Boolean?
+  // 64 chars > PostgreSQL's 63-char identifier limit: map to the truncated column name it actually
+  // has, or Prisma 7's db push drops and re-adds the column (losing its data) on every run
+  hasTheStudyCohortBeenFormedBasedOnInformationOfStudyParticipants Boolean? @map("hasTheStudyCohortBeenFormedBasedOnInformationOfStudyParticipant")
   doesTheInformedConsentCoverTheRequestedRegistryExtractions       Boolean?
   confirmThatDataPermitHasBeenGrantedForTheResearchProject         Boolean?
   howTheStudyCohortWasObtained                                     String?                @db.Text

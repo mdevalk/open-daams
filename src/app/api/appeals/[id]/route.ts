@@ -39,7 +39,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const decisionSummary = body.decisionSummary ?? appeal.decisionSummary;
 
     let signed: { signature: string; signedAt: Date; signingKeyId: string } | null = null;
-    let pdf: Buffer | null = null;
+    let pdf: Buffer<ArrayBuffer> | null = null;
     if (DECIDED_STATUSES.includes(status) && decisionAt) {
       signed = await signAppealDecision({ appealId: id, applicationId: appeal.applicationId, status, decisionAt });
       const bytes = await generateAppealDecisionPdf({

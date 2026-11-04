@@ -27,7 +27,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'filename and content are required' }, { status: 422 });
     }
 
-    let content: Buffer;
+    let content: Buffer<ArrayBuffer>;
     try {
       content = Buffer.from(body.content, 'base64');
     } catch {

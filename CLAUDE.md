@@ -79,7 +79,10 @@ specifications. Always use the **final** Regulation numbering, not the draft-pro
   `git add -A`/`git add -u` right after an `npm install`, as it sweeps `package-lock.json`
   churn into the commit and breaks `git pull`.
 - **Schema changes** require the developer to run `npm run db:push` locally (applies the
-  Prisma schema and regenerates the client), then restart `npm run dev`.
+  Prisma schema and regenerates the client), then restart `npm run dev`. Prisma 7: a bare
+  `npx prisma db push` no longer regenerates the client (the npm script chains `prisma generate`),
+  and field names over PostgreSQL's 63-char identifier limit need an explicit `@map` to the
+  truncated name, or every push drops and re-adds the column.
 - **After `npm install`**, run `npx prisma generate` (the postinstall is often blocked), or
   the `@prisma/client` import will be stale/missing.
 - The **PostgreSQL database runs locally** (see `docker-compose.yml`); the app is seeded with
