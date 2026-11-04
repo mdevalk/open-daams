@@ -1,7 +1,6 @@
-version: '3.8'
 services:
   db:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -9,7 +8,9 @@ services:
     ports:
       - '5432:5432'
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      # Postgres 18 images keep data in a versioned subdirectory under /var/lib/postgresql;
+      # a fresh volume, since a 16 data directory can't be opened by 18 (see README)
+      - pgdata18:/var/lib/postgresql
   keycloak:
     image: quay.io/keycloak/keycloak:26.8
     command: ['start-dev', '--import-realm']
@@ -30,7 +31,8 @@ services:
       - sonarqube_extensions:/opt/sonarqube/extensions
       - sonarqube_logs:/opt/sonarqube/logs
 volumes:
-  pgdata:
+  pgdata: # Postgres 16 data, no longer mounted; kept for rollback until removed by hand
+  pgdata18:
   keycloak_data:
   sonarqube_data:
   sonarqube_extensions:

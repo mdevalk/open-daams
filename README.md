@@ -169,6 +169,21 @@ Run the unit test suite with `npm run test` (or `npm run test:watch` while devel
 the port it publishes, so they work regardless of how `docker compose` named it. This is a manual,
 on-demand mechanism — no scheduling, retention, or offsite copy.
 
+### Upgrading an existing checkout from Postgres 16 to 18
+
+The database moved to Postgres 18 on a new volume (`pgdata18`); a 16 data directory can't be
+opened by 18. Without the steps below, an existing checkout starts with an empty database:
+
+```bash
+npm run db:backup                         # before pulling, while still on Postgres 16
+git pull && docker compose up -d db       # starts Postgres 18 on the new, empty volume
+npm run db:restore -- backups/<that file>.sql
+```
+
+With only demo data, `npm run db:push && npm run db:seed` on the new database is enough instead.
+The old `pgdata` volume is left untouched for rollback; remove it by hand
+(`docker volume rm open-daams_pgdata`) once the new one works.
+
 ## Assessments
 
 This app has **real authentication** via Keycloak (OIDC) — role-based access control is backed by
