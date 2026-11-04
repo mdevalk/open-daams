@@ -116,7 +116,9 @@ v4-mandatory requirements were already satisfied).
 `@rijkshuisstijl-community/design-tokens` — previously pinned to `"*"` (a supply-chain hygiene
 gap: non-reproducible builds, auto-pulls any future publish including a compromised one) — are now
 pinned to the exact versions already in use (`15.1.2`/`16.1.0`), confirmed a behavioural no-op
-(`npx tsc --noEmit` clean, 55/55 tests passing before and after). `npm audit` is also no longer a
+(`npx tsc --noEmit` clean, 55/55 tests passing before and after). Both were removed on 2026-11-04:
+neither was actually in effect (no component imported; the token CSS only applies under an unused
+`.rhc-theme` class). `npm audit` is also no longer a
 manual step: `.github/workflows/ci.yml` (new) runs `npm ci` + `npm audit --audit-level=moderate` (raised to `high` on 2026-11-04, see below) +
 `npm run test` on every push and pull request.
 
