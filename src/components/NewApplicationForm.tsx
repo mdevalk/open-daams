@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import { User } from '@/generated/prisma/browser';
 import { useRouter } from 'next/navigation';
@@ -23,10 +24,12 @@ export function NewApplicationForm({
   applicants,
   dataHolders,
   currentUser,
+  locale,
 }: {
   applicants: Applicant[];
   dataHolders: { id: string; name: string }[];
   currentUser: User;
+  locale?: string;
 }) {
   const router = useRouter();
   const t = useTranslations('newApplicationForm');
@@ -593,9 +596,9 @@ export function NewApplicationForm({
         >
           {saving ? t('creating') : t('createButton')}
         </button>
-        <a href="/applications" className="rounded-lg border border-gray-300 px-6 py-2 text-sm hover:bg-gray-100">
+        <Link href={locale ? `/${locale}/applications` : '/applications'} className="rounded-lg border border-gray-300 px-6 py-2 text-sm hover:bg-gray-100">
           {t('cancel')}
-        </a>
+        </Link>
       </div>
     </form>
   );

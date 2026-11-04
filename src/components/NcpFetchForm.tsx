@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { NcpApplicationSummary } from '@/lib/capabilities/external-ingestion/ncp-client';
 import { readErrorMessage } from '@/lib/utils';
 
@@ -14,55 +14,76 @@ type NcpQueueEntry = NcpApplicationSummary & {
   alreadyImported: { id: string; referenceNumber: string } | null;
 };
 
+// Untranslated so the mount effect needn't depend on `t`; translated at render.
+type LoadError = { kind: 'request'; message: string | null } | { kind: 'network' };
+type QueueResult = { ok: true; entries: NcpQueueEntry[] } | { ok: false; error: LoadError };
+
+async function loadQueue(): Promise<QueueResult> {
+  try {
+    const res = await fetch('/api/import/ncp-queue');
+    if (!res.ok) return { ok: false, error: { kind: 'request', message: (await readErrorMessage(res, '')) || null } };
+    const data = await res.json();
+    return { ok: true, entries: data.entries as NcpQueueEntry[] };
+  } catch {
+    return { ok: false, error: { kind: 'network' } };
+  }
+}
+
 export function NcpFetchForm({ locale }: { locale?: string }) {
   const applicationHref = (id: string) => (locale ? `/${locale}/applications/${id}` : `/applications/${id}`);
   const t = useTranslations('ncpFetchForm');
   const ta = useTranslations('applications');
   const terr = useTranslations('errors');
   const [entries, setEntries] = useState<NcpQueueEntry[] | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<LoadError | null>(null);
+  const [loading, setLoading] = useState(true); // the mount effect below starts the first load
   const [importingId, setImportingId] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, ImportResult>>({});
 
-  async function fetchList() {
+  const applyQueue = useCallback((result: QueueResult) => {
+    setLoading(false);
+    if (!result.ok) {
+      setLoadError(result.error);
+      return;
+    }
+    setLoadError(null);
+    setEntries(result.entries);
+    // Pre-populate results for entries the server already knows were
+    // imported (e.g. on a earlier visit), so they render the same
+    // "Imported" state as one just clicked in this session.
+    setResults((r) => {
+      const next = { ...r };
+      for (const entry of result.entries) {
+        if (entry.alreadyImported && !next[entry.applicationId]) {
+          next[entry.applicationId] = {
+            ok: true,
+            ref: entry.alreadyImported.referenceNumber,
+            id: entry.alreadyImported.id,
+          };
+        }
+      }
+      return next;
+    });
+  }, []);
+
+  function fetchList() {
     setLoading(true);
     setLoadError(null);
-    try {
-      const res = await fetch('/api/import/ncp-queue');
-      if (!res.ok) {
-        setLoadError(await readErrorMessage(res, terr('requestFailed')));
-        return;
-      }
-      const data = await res.json();
-      const fetchedEntries = data.entries as NcpQueueEntry[];
-      setEntries(fetchedEntries);
-      // Pre-populate results for entries the server already knows were
-      // imported (e.g. on a earlier visit), so they render the same
-      // "Imported" state as one just clicked in this session.
-      setResults((r) => {
-        const next = { ...r };
-        for (const entry of fetchedEntries) {
-          if (entry.alreadyImported && !next[entry.applicationId]) {
-            next[entry.applicationId] = {
-              ok: true,
-              ref: entry.alreadyImported.referenceNumber,
-              id: entry.alreadyImported.id,
-            };
-          }
-        }
-        return next;
-      });
-    } catch {
-      setLoadError(t('fetchFailed'));
-    } finally {
-      setLoading(false);
-    }
+    loadQueue().then(applyQueue);
   }
 
   useEffect(() => {
-    fetchList();
-  }, []);
+    let cancelled = false;
+    loadQueue().then((result) => {
+      if (!cancelled) applyQueue(result);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [applyQueue]);
+
+  const loadErrorMessage =
+    loadError && (loadError.kind === 'network' ? t('fetchFailed') : loadError.message ?? terr('requestFailed'));
 
   async function importEntry(entry: NcpApplicationSummary) {
     setImportingId(entry.applicationId);
@@ -106,7 +127,7 @@ export function NcpFetchForm({ locale }: { locale?: string }) {
       </div>
 
       {loadError && (
-        <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800">{loadError}</div>
+        <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800">{loadErrorMessage}</div>
       )}
 
       {entries && pendingCount === 0 && !loadError && (

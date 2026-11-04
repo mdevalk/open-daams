@@ -25,8 +25,8 @@ export function PermitPanel({ application, currentUser, contacts }: Props) {
   const [loading, setLoading] = useState(false);
 
   // Issue form state
-  const [validFrom, setValidFrom] = useState(new Date().toISOString().slice(0, 10));
-  const [validUntil, setValidUntil] = useState(
+  const [validFrom, setValidFrom] = useState(() => new Date().toISOString().slice(0, 10));
+  const [validUntil, setValidUntil] = useState(() =>
     new Date(Date.now() + 2 * 365.25 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
   );
   // The output controller is selected by HDAB at the moment of issuance from

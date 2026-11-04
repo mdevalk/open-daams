@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { PrismaClient, UserRole, ApplicationType, ApplicationStatus, DecisionOutcome, DecisionTrack } from '../src/generated/prisma/client';
+import { PrismaClient, UserRole, ApplicationType, ApplicationStatus, DecisionTrack } from '../src/generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { addMonths, subDays, subWeeks } from 'date-fns';
 
@@ -46,7 +46,7 @@ async function main() {
     update: {},
     create: { name: 'S. Bakker', email: 'casehandler@hdab.nl', role: UserRole.CASE_HANDLER, dataUserId: dataUserIdByName['HDAB-NL'] },
   });
-  const decisionMaker = await prisma.user.upsert({
+  await prisma.user.upsert({
     where: { email: 'director@hdab.nl' },
     update: {},
     create: { name: 'P. van den Berg', email: 'director@hdab.nl', role: UserRole.DECISION_MAKER, dataUserId: dataUserIdByName['HDAB-NL'] },

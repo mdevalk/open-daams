@@ -22,3 +22,5 @@ jobs:
       - run: npx prisma generate
 
       - run: npm run test
+
+      - run: npm run lint -- --max-warnings 0

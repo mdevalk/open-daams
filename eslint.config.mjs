@@ -5,7 +5,11 @@ import nextTs from 'eslint-config-next/typescript';
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-  globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts', 'src/generated/**']),
+  globalIgnores(['.next/**', 'out/**', 'build/**', 'coverage/**', 'next-env.d.ts', 'src/generated/**']),
+  {
+    // `const { omitted: _omitted, ...rest } = obj` is the idiomatic way to drop a field
+    rules: { '@typescript-eslint/no-unused-vars': ['warn', { ignoreRestSiblings: true }] },
+  },
 ]);
 
 export default eslintConfig;

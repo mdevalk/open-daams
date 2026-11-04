@@ -76,6 +76,9 @@ export function PermitChangeRequestPanel({
   const terr = useTranslations('errors');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Taken once at mount (render must stay pure); the activate route re-checks
+  // effectiveAt server-side, so a stale value only delays enabling the button.
+  const [mountedAt] = useState(() => Date.now());
 
   async function activate() {
     if (!pendingVersion) return;
@@ -196,7 +199,7 @@ export function PermitChangeRequestPanel({
           {canDecide && (
             <button
               type="button"
-              disabled={loading || new Date(pendingVersion.effectiveAt).getTime() > Date.now()}
+              disabled={loading || new Date(pendingVersion.effectiveAt).getTime() > mountedAt}
               onClick={activate}
               className="mt-2 rounded px-3 py-1.5 text-xs font-semibold text-white bg-amber-700 hover:bg-amber-800 disabled:opacity-50"
             >

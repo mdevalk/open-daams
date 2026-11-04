@@ -56,7 +56,7 @@ export function NewApplicationTabs({
       </div>
 
       {tab === 'manual' ? (
-        <NewApplicationForm applicants={applicants} dataHolders={dataHolders} currentUser={currentUser} />
+        <NewApplicationForm applicants={applicants} dataHolders={dataHolders} currentUser={currentUser} locale={locale} />
       ) : tab === 'hdeu' ? (
         <HdeuImportForm locale={locale} />
       ) : (
