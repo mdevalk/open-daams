@@ -87,7 +87,7 @@ function GroupFields({
           href={`/api/attachments/${variablesAttachment.id}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-3 inline-block rounded border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100"
+          className="mt-3 inline-block rounded-sm border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100"
         >
           {row.variablesAttachmentRef}
         </a>

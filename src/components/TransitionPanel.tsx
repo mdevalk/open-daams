@@ -61,7 +61,7 @@ export function TransitionPanel({ application, currentUser, children }: Props) {
   }
 
   return (
-    <div className="rounded border border-gray-200 bg-white p-5">
+    <div className="rounded-sm border border-gray-200 bg-white p-5">
       <h2 className="font-semibold text-gray-900 mb-3">{t('title')}</h2>
       <div className="space-y-2">
         {transitions.map((t, i) => {
@@ -88,7 +88,7 @@ export function TransitionPanel({ application, currentUser, children }: Props) {
               type="button"
               key={`${t.to}-${i}`}
               onClick={() => setSelected(isSelected ? null : t)}
-              className={`w-full text-left rounded border px-4 py-3 text-sm transition-colors ${baseStyle}`}
+              className={`w-full text-left rounded-sm border px-4 py-3 text-sm transition-colors ${baseStyle}`}
             >
               <p className="font-medium">{tw(`${t.key}.label`)}</p>
               <p className="text-xs opacity-70 mt-0.5">{tw(`${t.key}.description`)}</p>
@@ -110,7 +110,7 @@ export function TransitionPanel({ application, currentUser, children }: Props) {
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder={t('commentPlaceholder')}
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
+            className="w-full rounded-sm border border-gray-300 px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#01689b]"
           />
           {error && (
             <p role="alert" className="mt-1 text-xs text-[#d52b1e]">{error}</p>
@@ -119,7 +119,7 @@ export function TransitionPanel({ application, currentUser, children }: Props) {
             type="button"
             disabled={loading}
             onClick={submit}
-            className="mt-2 w-full rounded px-4 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors"
+            className="mt-2 w-full rounded-sm px-4 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors"
           >
             {loading ? t('loading') : t('confirmButton', { label: tw(`${selected.key}.label`) })}
           </button>

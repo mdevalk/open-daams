@@ -80,7 +80,7 @@ export function PermitPanel({ application, currentUser, contacts }: Props) {
   if (!permit) {
     const canIssue = ['DECISION_MAKER', 'ADMIN'].includes(currentUser.role);
     return (
-      <div className="rounded border border-emerald-200 bg-emerald-50 p-5">
+      <div className="rounded-sm border border-emerald-200 bg-emerald-50 p-5">
         <h2 className="font-semibold text-emerald-900 mb-1">{tp('issueTitle')}</h2>
         <p className="text-xs text-emerald-700 mb-4">{tp('issueSubtitle')}</p>
         {canIssue ? (
@@ -91,7 +91,7 @@ export function PermitPanel({ application, currentUser, contacts }: Props) {
                 type="date"
                 value={validFrom}
                 onChange={e => setValidFrom(e.target.value)}
-                className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
+                className="w-full rounded-sm border border-gray-300 px-3 py-1.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#01689b]"
               />
             </div>
             <div>
@@ -100,7 +100,7 @@ export function PermitPanel({ application, currentUser, contacts }: Props) {
                 type="date"
                 value={validUntil}
                 onChange={e => setValidUntil(e.target.value)}
-                className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
+                className="w-full rounded-sm border border-gray-300 px-3 py-1.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#01689b]"
               />
             </div>
 
@@ -109,7 +109,7 @@ export function PermitPanel({ application, currentUser, contacts }: Props) {
               <select
                 value={outputControllerContactId}
                 onChange={e => setOutputControllerContactId(e.target.value)}
-                className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
+                className="w-full rounded-sm border border-gray-300 px-3 py-1.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#01689b]"
               >
                 <option value="">{tp('outputControllerContact')}...</option>
                 {contacts.map((c) => (
@@ -144,7 +144,7 @@ export function PermitPanel({ application, currentUser, contacts }: Props) {
               type="button"
               disabled={loading || !outputControllerContactId}
               onClick={issuePermit}
-              className="w-full rounded px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+              className="w-full rounded-sm px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 transition-colors"
             >
               {loading ? tp('loading') : tp('issueButton')}
             </button>
@@ -161,7 +161,7 @@ export function PermitPanel({ application, currentUser, contacts }: Props) {
   // the other permit-management panels (change requests, authorised
   // persons, invoices, SPE provisioning).
   return (
-    <div className="rounded border border-gray-200 bg-white p-4">
+    <div className="rounded-sm border border-gray-200 bg-white p-4">
       <div className="flex items-center justify-between mb-3">
         <h2 className="font-semibold text-gray-900">{tp('title')}</h2>
       </div>

@@ -55,7 +55,7 @@ export function DeadlineExtensionPanel({ application, currentUser, embedded }: P
   let body: React.ReactNode = null;
   if (viewState === 'extended') {
     body = (
-      <div className={embedded ? 'rounded border border-gray-200 bg-gray-50 px-4 py-3 text-sm' : 'text-sm space-y-1'}>
+      <div className={embedded ? 'rounded-sm border border-gray-200 bg-gray-50 px-4 py-3 text-sm' : 'text-sm space-y-1'}>
         <p className="text-xs text-emerald-700 font-medium">{t('extendedLabel')}</p>
         <p className="text-xs text-gray-500 mt-0.5">{application.deadlineExtensionReason}</p>
         <p className="text-xs text-gray-400 mt-1">{t('transmittedToApplicant')}</p>
@@ -69,7 +69,7 @@ export function DeadlineExtensionPanel({ application, currentUser, embedded }: P
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           placeholder={t('reasonPlaceholder')}
-          className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
+          className="w-full rounded-sm border border-gray-300 px-3 py-1.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#01689b]"
         />
         {error && <p className="text-xs text-red-600">{error}</p>}
         <div className="flex gap-2">
@@ -77,7 +77,7 @@ export function DeadlineExtensionPanel({ application, currentUser, embedded }: P
             type="button"
             disabled={loading || !reason.trim()}
             onClick={submit}
-            className="flex-1 rounded px-3 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors"
+            className="flex-1 rounded-sm px-3 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors"
           >
             {loading ? t('loading') : t('confirmButton')}
           </button>
@@ -85,7 +85,7 @@ export function DeadlineExtensionPanel({ application, currentUser, embedded }: P
             type="button"
             disabled={loading}
             onClick={() => { setEditing(false); setError(null); }}
-            className="rounded px-3 py-2 text-sm border border-gray-300 hover:bg-gray-50"
+            className="rounded-sm px-3 py-2 text-sm border border-gray-300 hover:bg-gray-50"
           >
             {t('cancelButton')}
           </button>
@@ -97,7 +97,7 @@ export function DeadlineExtensionPanel({ application, currentUser, embedded }: P
       <button
         type="button"
         onClick={() => setEditing(true)}
-        className="w-full text-left rounded border px-4 py-3 text-sm transition-colors border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-800"
+        className="w-full text-left rounded-sm border px-4 py-3 text-sm transition-colors border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-800"
       >
         <p className="font-medium">{t('extendButton')}</p>
         <p className="text-xs opacity-70 mt-0.5">{t('title')}</p>
@@ -114,7 +114,7 @@ export function DeadlineExtensionPanel({ application, currentUser, embedded }: P
   if (embedded) return body;
 
   return (
-    <div className="rounded border border-gray-200 bg-white p-4 space-y-2">
+    <div className="rounded-sm border border-gray-200 bg-white p-4 space-y-2">
       <h2 className="font-semibold text-gray-900 text-sm">{t('title')}</h2>
       {body}
     </div>

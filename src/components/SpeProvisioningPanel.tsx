@@ -97,11 +97,11 @@ export function SpeProvisioningPanel({
   }
 
   return (
-    <div className="rounded border border-gray-200 bg-white p-4 space-y-3">
+    <div className="rounded-sm border border-gray-200 bg-white p-4 space-y-3">
       <div className="flex items-center justify-between">
         <h2 className="font-semibold text-gray-900 text-sm">{t('title')}</h2>
         {order && (
-          <span className={`text-xs font-medium px-2 py-0.5 rounded ${SPE_STATUS_COLORS[order.status]}`}>
+          <span className={`text-xs font-medium px-2 py-0.5 rounded-sm ${SPE_STATUS_COLORS[order.status]}`}>
             {ts(order.status)}
           </span>
         )}
@@ -160,13 +160,13 @@ export function SpeProvisioningPanel({
                       value={envRef}
                       onChange={(e) => setEnvRef(e.target.value)}
                       placeholder={t('envRefPlaceholder')}
-                      className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
+                      className="w-full rounded-sm border border-gray-300 px-3 py-1.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#01689b]"
                     />
                   )}
                   <select
                     value={operatorId}
                     onChange={(e) => setOperatorId(e.target.value)}
-                    className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
+                    className="w-full rounded-sm border border-gray-300 px-3 py-1.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#01689b]"
                   >
                     <option value="">{t('operatorLabel')}...</option>
                     {speOperators.map((op) => (
@@ -178,13 +178,13 @@ export function SpeProvisioningPanel({
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
                     placeholder={t('commentPlaceholder')}
-                    className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
+                    className="w-full rounded-sm border border-gray-300 px-3 py-1.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#01689b]"
                   />
                   <button
                     type="button"
                     disabled={loading}
                     onClick={() => transition(pendingTo)}
-                    className="rounded px-3 py-1.5 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors"
+                    className="rounded-sm px-3 py-1.5 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors"
                   >
                     {loading ? t('working') : t('confirm')}
                   </button>

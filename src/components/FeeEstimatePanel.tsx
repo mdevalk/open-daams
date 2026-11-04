@@ -213,11 +213,11 @@ export function FeeEstimatePanel({ application, currentUser, speOperators, dataH
   const showSpe = application.type === 'DATA_ACCESS_APPLICATION';
 
   return (
-    <div className="rounded border border-gray-200 bg-white p-4 space-y-3">
+    <div className="rounded-sm border border-gray-200 bg-white p-4 space-y-3">
       <div className="flex items-center justify-between">
         <h2 className="font-semibold text-gray-900 text-sm">{t('title')}</h2>
         {estimate && (
-          <span className={`text-xs font-medium px-2 py-0.5 rounded ${STATUS_STYLES[estimate.status]}`}>
+          <span className={`text-xs font-medium px-2 py-0.5 rounded-sm ${STATUS_STYLES[estimate.status]}`}>
             {t(`status${estimate.status}`)}
           </span>
         )}
@@ -252,7 +252,7 @@ export function FeeEstimatePanel({ application, currentUser, speOperators, dataH
           {estimate.invoice && (
             <div className="flex items-center justify-between mb-1">
               <p className="text-xs font-medium text-gray-700">{t('provisionalInvoice')}</p>
-              <span className={`text-xs font-medium px-2 py-0.5 rounded ${INVOICE_STATUS_STYLES[estimate.invoice.status]}`}>
+              <span className={`text-xs font-medium px-2 py-0.5 rounded-sm ${INVOICE_STATUS_STYLES[estimate.invoice.status]}`}>
                 {ti(`status${estimate.invoice.status}`)}
               </span>
             </div>
@@ -296,7 +296,7 @@ export function FeeEstimatePanel({ application, currentUser, speOperators, dataH
               <select
                 value={row.category}
                 onChange={(e) => updateRow(row.key, { category: e.target.value as FinancialLineCategory })}
-                className="rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
+                className="rounded-sm border border-gray-300 px-2 py-1.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#01689b]"
               >
                 {MANUAL_CATEGORIES.map((cat) => (
                   <option key={cat} value={cat}>{tc(cat)}</option>
@@ -306,7 +306,7 @@ export function FeeEstimatePanel({ application, currentUser, speOperators, dataH
                 <select
                   value={row.dataHolderId}
                   onChange={(e) => updateRow(row.key, { dataHolderId: e.target.value })}
-                  className="rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
+                  className="rounded-sm border border-gray-300 px-2 py-1.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#01689b]"
                 >
                   <option value="">{t('noneSelected')}</option>
                   {dataHolders.map((dh) => (
@@ -317,12 +317,12 @@ export function FeeEstimatePanel({ application, currentUser, speOperators, dataH
               <input
                 type="number" step="0.01" placeholder={t('amountPlaceholder')} value={row.amount}
                 onChange={(e) => updateRow(row.key, { amount: e.target.value })}
-                className="w-28 rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                className="w-28 rounded-sm border border-gray-300 px-2 py-1.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#01689b] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
               <input
                 type="text" placeholder={t('descriptionPlaceholder')} value={row.description}
                 onChange={(e) => updateRow(row.key, { description: e.target.value })}
-                className="flex-1 rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
+                className="flex-1 rounded-sm border border-gray-300 px-2 py-1.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#01689b]"
               />
               <button type="button" onClick={() => removeRow(row.key)} className="text-xs text-red-600 hover:underline px-1 py-1.5" aria-label={t('removeRow')}>
                 ✕
@@ -339,7 +339,7 @@ export function FeeEstimatePanel({ application, currentUser, speOperators, dataH
               <select
                 value={speOperatorId}
                 onChange={e => selectSpeOperator(e.target.value)}
-                className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
+                className="w-full rounded-sm border border-gray-300 px-3 py-1.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#01689b]"
               >
                 <option value="">{t('noneSelected')}</option>
                 {speOperators.map(op => (
@@ -355,7 +355,7 @@ export function FeeEstimatePanel({ application, currentUser, speOperators, dataH
               <select
                 value={speTypeId}
                 onChange={e => selectSpeType(e.target.value)}
-                className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
+                className="w-full rounded-sm border border-gray-300 px-3 py-1.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#01689b]"
               >
                 <option value="">{t('noneSelected')}</option>
                 {speTypes.map(type => (
@@ -372,14 +372,14 @@ export function FeeEstimatePanel({ application, currentUser, speOperators, dataH
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">{t('speSetupFee')}</label>
                 <input type="number" step="0.01" value={speSetupFee} readOnly={!!speTypeId} onChange={e => setSpeSetupFee(e.target.value)}
-                  className={`w-full rounded border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b] ${
+                  className={`w-full rounded border px-3 py-1.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#01689b] ${
                     speTypeId ? 'border-gray-200 bg-gray-100 cursor-not-allowed' : 'border-gray-300'
                   }`} />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">{t('speUsageFee')}</label>
                 <input type="number" step="0.01" value={speUsageFee} readOnly={!!speTypeId} onChange={e => setSpeUsageFee(e.target.value)}
-                  className={`w-full rounded border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b] ${
+                  className={`w-full rounded border px-3 py-1.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#01689b] ${
                     speTypeId ? 'border-gray-200 bg-gray-100 cursor-not-allowed' : 'border-gray-300'
                   }`} />
               </div>
@@ -392,16 +392,16 @@ export function FeeEstimatePanel({ application, currentUser, speOperators, dataH
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">{t('notes')}</label>
             <textarea rows={2} value={notes} onChange={e => setNotes(e.target.value)}
-              className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]" />
+              className="w-full rounded-sm border border-gray-300 px-3 py-1.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#01689b]" />
           </div>
           <div className="flex gap-2">
             <button type="button" disabled={loading} onClick={sendEstimate}
-              className="flex-1 rounded px-3 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors">
+              className="flex-1 rounded-sm px-3 py-2 text-sm font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50 transition-colors">
               {loading ? t('loading') : t('sendEstimate')}
             </button>
             {estimate && (
               <button type="button" disabled={loading} onClick={() => setEditing(false)}
-                className="rounded px-3 py-2 text-sm border border-gray-300 hover:bg-gray-50">
+                className="rounded-sm px-3 py-2 text-sm border border-gray-300 hover:bg-gray-50">
                 {t('cancel')}
               </button>
             )}

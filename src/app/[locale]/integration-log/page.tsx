@@ -45,7 +45,7 @@ export default async function IntegrationLogPage({
           <select
             name="direction"
             defaultValue={direction ?? ''}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
+            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#01689b]"
           >
             <option value="">{t('allDirections')}</option>
             <option value="OUTBOUND">{t('directionOutbound')}</option>
@@ -57,7 +57,7 @@ export default async function IntegrationLogPage({
           <select
             name="outcome"
             defaultValue={outcome ?? ''}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]"
+            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#01689b]"
           >
             <option value="">{t('allOutcomes')}</option>
             <option value="SUCCESS">{t('outcomeSuccess')}</option>

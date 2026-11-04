@@ -61,10 +61,10 @@ export function DecisionCardPanel({ application, currentUser }: Props) {
 
   if (application.decisionOutcome === 'NEGATIVE') {
     return (
-      <div className="rounded border border-gray-200 bg-white p-4 space-y-2">
+      <div className="rounded-sm border border-gray-200 bg-white p-4 space-y-2">
         <div className="flex items-center justify-between">
           <h2 className="font-semibold text-gray-900 text-sm">{t('negativeTitle')}</h2>
-          <span className={`text-xs font-medium px-2 py-0.5 rounded ${BADGE_STYLES.negative}`}>
+          <span className={`text-xs font-medium px-2 py-0.5 rounded-sm ${BADGE_STYLES.negative}`}>
             {application.decisionId}
           </span>
         </div>
@@ -87,10 +87,10 @@ export function DecisionCardPanel({ application, currentUser }: Props) {
   const canActOnBehalf = ['CASE_HANDLER', 'ADMIN'].includes(currentUser.role);
 
   return (
-    <div className="rounded border border-gray-200 bg-white p-4 space-y-3">
+    <div className="rounded-sm border border-gray-200 bg-white p-4 space-y-3">
       <div className="flex items-center justify-between">
         <h2 className="font-semibold text-gray-900 text-sm">{t('title')}</h2>
-        <span className={`text-xs font-medium px-2 py-0.5 rounded ${BADGE_STYLES[badgeKey]}`}>
+        <span className={`text-xs font-medium px-2 py-0.5 rounded-sm ${BADGE_STYLES[badgeKey]}`}>
           {t(`status.${status}`)}
         </span>
       </div>

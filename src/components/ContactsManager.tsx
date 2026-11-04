@@ -29,7 +29,7 @@ type Props = {
 const OWNER_TYPES: OwnerType[] = ['DataUser', 'DataHolder', 'SpeOperator', 'SpeProvider'];
 
 const inputCls =
-  'w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#01689b]';
+  'w-full rounded-sm border border-gray-300 px-2 py-1 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#01689b]';
 
 type FormFields = { name: string; email: string; phone: string; role: 'PRIMARY' | ''; ownerType: OwnerType | ''; ownerId: string };
 const EMPTY_FORM: FormFields = { name: '', email: '', phone: '', role: '', ownerType: '', ownerId: '' };
@@ -142,7 +142,7 @@ export function ContactsManager({ contacts, owners, isAdmin, currentUserId }: Pr
 
       <div className="space-y-2">
         {contacts.map((contact) => (
-          <div key={contact.id} className="rounded border border-gray-200 bg-white p-3">
+          <div key={contact.id} className="rounded-sm border border-gray-200 bg-white p-3">
             {editingId === contact.id ? (
               <div className="space-y-2">
                 <input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} placeholder={t('name')} className={inputCls} />
@@ -170,11 +170,11 @@ export function ContactsManager({ contacts, owners, isAdmin, currentUserId }: Pr
                 )}
                 <div className="flex gap-2">
                   <button type="button" disabled={loading || !(editForm.name.trim() || editForm.email.trim())} onClick={() => saveEdit(contact.id)}
-                    className="rounded px-3 py-1.5 text-xs font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50">
+                    className="rounded-sm px-3 py-1.5 text-xs font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50">
                     {t('save')}
                   </button>
                   <button type="button" disabled={loading} onClick={() => setEditingId(null)}
-                    className="rounded px-3 py-1.5 text-xs border border-gray-300 hover:bg-gray-50">
+                    className="rounded-sm px-3 py-1.5 text-xs border border-gray-300 hover:bg-gray-50">
                     {t('cancel')}
                   </button>
                 </div>
@@ -195,7 +195,7 @@ export function ContactsManager({ contacts, owners, isAdmin, currentUserId }: Pr
                   <p className="text-xs text-gray-400 mt-0.5">{contact.ownerName}</p>
                 </div>
                 {isAdmin && (
-                  <div className="flex gap-2 flex-shrink-0">
+                  <div className="flex gap-2 shrink-0">
                     <button type="button" onClick={() => startEdit(contact)} className="text-xs text-[#01689b] hover:underline">{t('edit')}</button>
                     <button type="button" disabled={loading} onClick={() => deleteContact(contact.id)} className="text-xs text-red-600 hover:underline">{t('delete')}</button>
                   </div>
@@ -208,7 +208,7 @@ export function ContactsManager({ contacts, owners, isAdmin, currentUserId }: Pr
 
       {isAdmin &&
         (showAddForm ? (
-          <div className="rounded border border-gray-200 bg-white p-3 space-y-2">
+          <div className="rounded-sm border border-gray-200 bg-white p-3 space-y-2">
             <input value={newForm.name} onChange={(e) => setNewForm({ ...newForm, name: e.target.value })} placeholder={t('name')} className={inputCls} />
             <div className="grid grid-cols-2 gap-2">
               <input value={newForm.email} onChange={(e) => setNewForm({ ...newForm, email: e.target.value })} placeholder={t('email')} className={inputCls} />
@@ -234,11 +234,11 @@ export function ContactsManager({ contacts, owners, isAdmin, currentUserId }: Pr
             )}
             <div className="flex gap-2">
               <button type="button" disabled={loading || !newFormValid} onClick={submitNew}
-                className="rounded px-3 py-1.5 text-xs font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50">
+                className="rounded-sm px-3 py-1.5 text-xs font-semibold text-white bg-[#154273] hover:bg-[#01689b] disabled:opacity-50">
                 {loading ? t('save') : t('addNew')}
               </button>
               <button type="button" disabled={loading} onClick={() => setShowAddForm(false)}
-                className="rounded px-3 py-1.5 text-xs border border-gray-300 hover:bg-gray-50">
+                className="rounded-sm px-3 py-1.5 text-xs border border-gray-300 hover:bg-gray-50">
                 {t('cancel')}
               </button>
             </div>

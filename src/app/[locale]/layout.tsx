@@ -78,7 +78,7 @@ export default async function LocaleLayout({
               <div className="flex items-center justify-between h-14">
                 <div className="flex items-center gap-3">
                   <a href={`/${locale}`} className="font-bold text-xl tracking-tight">{APP_NAME}</a>
-                  <span className="ml-1 rounded text-xs bg-amber-400/90 text-amber-950 px-2 py-0.5 font-semibold tracking-wide">
+                  <span className="ml-1 rounded-sm text-xs bg-amber-400/90 text-amber-950 px-2 py-0.5 font-semibold tracking-wide">
                     {t('testEnvironment')}
                   </span>
                 </div>
@@ -92,7 +92,7 @@ export default async function LocaleLayout({
                       <a
                         key={item.href}
                         href={item.href}
-                        className="px-3 py-1.5 rounded text-sm hover:bg-white/10 transition-colors"
+                        className="px-3 py-1.5 rounded-sm text-sm hover:bg-white/10 transition-colors"
                       >
                         {item.label}
                       </a>
@@ -115,7 +115,7 @@ export default async function LocaleLayout({
                       <a
                         key={item.href}
                         href={item.href}
-                        className="px-3 py-1.5 rounded text-sm hover:bg-white/10 transition-colors"
+                        className="px-3 py-1.5 rounded-sm text-sm hover:bg-white/10 transition-colors"
                       >
                         {item.label}
                       </a>

@@ -595,7 +595,7 @@ export function LegalBasisSection({
               href={attachmentHref(a)}
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100"
+              className="rounded-sm border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100"
             >
               {a.filename}
             </a>
@@ -708,7 +708,7 @@ export function DatasetsAndPopulationSection({
                 href={attachmentHref(a)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100"
+                className="rounded-sm border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100"
               >
                 {a.filename}
               </a>
@@ -764,7 +764,7 @@ export function DataRequestDetailsSection({
           </div>
         )}
         {application.tabulationPlans.map((tp, i) => (
-          <div key={tp.id} className="rounded border border-gray-100 p-3">
+          <div key={tp.id} className="rounded-sm border border-gray-100 p-3">
             <p className="text-gray-500 text-xs uppercase tracking-wide mb-2">
               {t('tabulationPlanEntry', { index: i + 1 })}
             </p>
@@ -1034,7 +1034,7 @@ export function AdditionalInfoSection({
               href={attachmentHref(a)}
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100"
+              className="rounded-sm border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100"
             >
               {a.filename}
             </a>

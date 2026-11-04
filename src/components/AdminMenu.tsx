@@ -78,7 +78,7 @@ export function AdminMenu({ locale, users }: { locale: string; users: UserOption
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-controls="admin-menu-panel"
-        className="px-3 py-1.5 rounded text-sm hover:bg-white/10 transition-colors"
+        className="px-3 py-1.5 rounded-sm text-sm hover:bg-white/10 transition-colors"
       >
         <span aria-hidden="true">⚙️</span>
         <span className="sr-only">{t('manage')}</span>
@@ -103,7 +103,7 @@ export function AdminMenu({ locale, users }: { locale: string; users: UserOption
                         value={session.user.impersonatedUserId ?? ''}
                         onChange={(e) => actAs(e.target.value)}
                         disabled={busy}
-                        className="mt-1 w-full appearance-none rounded border border-gray-300 bg-white text-sm text-gray-900 pl-2 pr-6 py-1"
+                        className="mt-1 w-full appearance-none rounded-sm border border-gray-300 bg-white text-sm text-gray-900 pl-2 pr-6 py-1"
                       >
                         <option value="">{ta('actAsSelf')}</option>
                         {users.map((u) => (

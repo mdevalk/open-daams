@@ -29,7 +29,7 @@ export function DeadlineBanner({
   const icon = { ok: '⏰', warning: '⚠️', overdue: '🔴' }[s];
 
   return (
-    <div className={`rounded px-4 py-3 text-sm flex items-start gap-3 ${cls}`} role="status">
+    <div className={`rounded-sm px-4 py-3 text-sm flex items-start gap-3 ${cls}`} role="status">
       <span aria-hidden="true" className="mt-0.5">{icon}</span>
       <div>
         <span className="font-semibold">{label}</span>

@@ -26,7 +26,7 @@ function AttentionTier({
 }) {
   const isEmpty = items.length === 0;
   return (
-    <div className={cn('rounded border-l-4 p-4', isEmpty ? 'border-gray-200 bg-gray-50' : cn(borderColor, bgColor))}>
+    <div className={cn('rounded-sm border-l-4 p-4', isEmpty ? 'border-gray-200 bg-gray-50' : cn(borderColor, bgColor))}>
       <div className="flex items-center gap-2 mb-3">
         <span aria-hidden="true">{emoji}</span>
         <h3 className={cn('font-semibold', isEmpty ? 'text-gray-500' : textColor)}>{title} ({items.length})</h3>
@@ -39,7 +39,7 @@ function AttentionTier({
             <a
               key={item.id}
               href={item.href}
-              className="block rounded border border-gray-200 bg-white px-3 py-2 hover:border-gray-300 transition-colors"
+              className="block rounded-sm border border-gray-200 bg-white px-3 py-2 hover:border-gray-300 transition-colors"
             >
               <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
               <p className="text-xs text-gray-500 truncate">{item.subtitle}</p>
@@ -255,7 +255,7 @@ export default async function DashboardPage({
           <div
             key={kpi.label}
             className={cn(
-              'rounded border p-5',
+              'rounded-sm border p-5',
               kpi.alert ? 'border-[#d52b1e] bg-[#fce8e6]' : 'border-gray-200 bg-white',
             )}
           >
