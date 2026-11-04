@@ -16,3 +16,4 @@ npm-debug.log*
 .vscode/
 .claude/settings.local.json
 .DS_Store
+AGENTS.md
