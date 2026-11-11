@@ -1,0 +1,7 @@
+keys
+.next
+node_modules
+.direnv
+keycloak
+docs
+src/generated
