@@ -22,18 +22,13 @@ services:
     volumes:
       - keycloak_data:/opt/keycloak/data
       - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
-  sonarqube:
-    image: sonarqube:community
+  open-daams:
+    build: .
+    image: open-daams:local
+    env_file: .env
     ports:
-      - '19000:9000'
-    volumes:
-      - sonarqube_data:/opt/sonarqube/data
-      - sonarqube_extensions:/opt/sonarqube/extensions
-      - sonarqube_logs:/opt/sonarqube/logs
+      - '3000:3000'
 volumes:
   pgdata: # Postgres 16 data, no longer mounted; kept for rollback until removed by hand
   pgdata18:
   keycloak_data:
-  sonarqube_data:
-  sonarqube_extensions:
-  sonarqube_logs:
