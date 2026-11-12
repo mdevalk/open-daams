@@ -24,6 +24,11 @@ services:
     build: .
     image: open-daams:local
     env_file: .env
+    # user and NODE_ENV based on
+    # https://github.com/nodejs/docker-node/blob/main/docs/BestPractices.md
+    user: node
+    environment:
+      NODE_ENV: production
     ports:
       - '3000:3000'
     extra_hosts:
