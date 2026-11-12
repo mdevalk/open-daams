@@ -26,6 +26,13 @@ services:
     env_file: .env
     ports:
       - '3000:3000'
+    extra_hosts:
+      # So that open-daams and the browser can connect to keycloak. Without
+      # this open-daams would see localhost as within the container.
+      - "localhost:host-gateway"
+    depends_on:
+      - db
+      - keycloak
 volumes:
   pgdata:
   keycloak_data:
