@@ -43,6 +43,7 @@ beforeAll(() => {
   const publicKeyBytes = ed.getPublicKey(privateKeyBytes);
   testPublicKeyBase64Url = toBase64Url(publicKeyBytes);
   const jwk = { d: toBase64Url(privateKeyBytes), x: testPublicKeyBase64Url, kid: TEST_KID };
+  vi.stubEnv('PERMIT_SIGNING_KEY_PATH', 'keys/permit-signing-key.private.json');
   vi.mocked(readFileSync).mockReturnValue(JSON.stringify(jwk));
 });
 
