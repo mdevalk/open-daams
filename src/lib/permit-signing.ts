@@ -2,7 +2,6 @@ import * as ed from '@noble/ed25519';
 import { sha512 } from '@noble/hashes/sha512';
 import { concatBytes } from '@noble/hashes/utils';
 import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { AppealStatus, DataPermitStatus, DecisionOutcome } from '@/generated/prisma/client';
 import { formatPermitId } from './capabilities/permit-lifecycle/permit';
 
@@ -19,7 +18,7 @@ let cachedKey: PrivateKeyJwk | null = null;
 
 function loadPrivateKeyJwk(): PrivateKeyJwk {
   if (cachedKey) return cachedKey;
-  const keyPath = path.join(process.cwd(), 'keys', 'permit-signing-key.private.json');
+  const keyPath = process.env.PERMIT_SIGNING_KEY_PATH!;
   let raw: string;
   try {
     raw = readFileSync(keyPath, 'utf-8');

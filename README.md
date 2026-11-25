@@ -130,7 +130,8 @@ docker compose up -d
 # 3. Install dependencies
 npm install
 
-# 4. Generate a permit-signing key (Ed25519, used to sign issued data permits)
+# 4. Generate a permit-signing key (Ed25519, used to sign issued data permits).
+#    Its location is set with PERMIT_SIGNING_KEY_PATH in .env (e.g. a Podman secret mount).
 npm run generate-signing-key
 
 # 5. Push schema and seed demo data
