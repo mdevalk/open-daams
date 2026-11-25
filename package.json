@@ -13,7 +13,7 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push && prisma generate",
     "db:migrate": "prisma migrate dev",
-    "db:seed": "tsx prisma/seed.ts",
+    "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
     "db:backup": "sh scripts/backup-db.sh",
     "db:restore": "sh scripts/restore-db.sh",
