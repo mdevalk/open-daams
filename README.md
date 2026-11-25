@@ -162,6 +162,21 @@ role-specific views. Keycloak's own admin console is at
 
 Run the unit test suite with `npm run test` (or `npm run test:watch` while developing).
 
+### Production-like stack
+
+`docker-compose.prod.yml` runs the whole app from the `Dockerfile` (Postgres, Keycloak, a one-shot
+`migrate` container that pushes the schema and seeds, then the Next.js standalone server) — no
+SonarQube. It needs the same `.env`, `keycloak/realm-export.json`, and `keys/` (signing key,
+mounted read-only) as the dev setup, and uses its own volumes, so your dev database is untouched.
+
+```bash
+docker compose down                                    # frees 8080 (shared host port)
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+Postgres isn't published to the host in this stack, so `db:backup`/`db:restore` only target the
+dev database. Keycloak still runs in `start-dev` mode.
+
 ### Backups
 
 `npm run db:backup` takes a `pg_dump` of the running database into `backups/` (git-ignored).
